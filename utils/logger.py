@@ -48,7 +48,8 @@ class Logger(object):
             print(f"{name} = {epoch:6d}  " +
                   f"elapsed = {self.get_elapsed()} " +
                   f"(+{self.get_epoch_duration()})  " +
-                  f"loss = {loss:.4e}  " + custom)
+                  f"loss = {loss:.4e}  " +
+                  f"error = {self.get_error_u():.4e}  " + custom)
 
     def log_train_opt(self, name):
         print(f"-- Starting {name} optimization --")

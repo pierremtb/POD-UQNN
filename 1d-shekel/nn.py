@@ -11,6 +11,7 @@ class NeuralNetwork(object):
         self.tf_epochs = hp["tf_epochs"]
         self.tf_optimizer = tf.keras.optimizers.Adam(
             learning_rate=hp["tf_lr"],
+            decay=hp["tf_decay"],
             beta_1=hp["tf_b1"],
             epsilon=hp["tf_eps"])
 
@@ -22,12 +23,16 @@ class NeuralNetwork(object):
         for width in layers[1:-1]:
             self.model.add(tf.keras.layers.Dense(
                 width, activation=tf.nn.tanh,
-                kernel_initializer="glorot_normal"))
+                kernel_initializer="glorot_normal",
+                kernel_regularizer=tf.keras.regularizers.l2(hp["lambda"])))
         self.model.add(tf.keras.layers.Dense(
                 layers[-1], activation=None,
-                kernel_initializer="glorot_normal"))
+                kernel_initializer="glorot_normal",
+                kernel_regularizer=tf.keras.regularizers.l2(hp["lambda"])))
 
         self.logger = logger
+
+        self.reg_l = hp["lambda"]
 
     # Defining custom loss
     @tf.function

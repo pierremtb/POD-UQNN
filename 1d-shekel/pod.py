@@ -4,6 +4,13 @@ from pyDOE import lhs
 import time
 import os
 
+def scarcify(X, u, N):
+    idx = np.random.choice(X.shape[0], N, replace=False)
+    # return X[idx, :], u[idx, :], 
+    mask = np.ones(X.shape[0], bool)
+    mask[idx] = False
+    return X[idx, :], u[idx, :], X[mask, :], u[mask, :] 
+
 
 # Defining the u_h function (here Shekel)
 def u_h(x, mu):
@@ -47,7 +54,6 @@ def prep_data(n_e, n_t):
         S[:, i] = u_h(x, mu)
 
     return x, S, R_var
-
 
 def get_pod_bases(S, n_e, n_t, eps=1e-10,
                   do_plots=False, write_file=False, verbose=False):
