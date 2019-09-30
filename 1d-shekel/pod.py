@@ -4,6 +4,7 @@ from pyDOE import lhs
 import time
 import os
 
+
 # Defining the u_h function (here Shekel)
 def u_h(x, mu):
     bet, gam = mu
@@ -13,14 +14,9 @@ def u_h(x, mu):
         for p in range(bet.shape[1]):
             S_i[j] -= 1/((x_j-gam[0, p])**2 + bet[0, p])
     return S_i
-    
-def get_pod_bases(eps=1e-10, n_t=100, do_plots=False, write_file=False, verbose=False):
-    start_time = time.time()
-    
-    # Space params
-    dx = 1/30
-    n_e = int(10/dx)
-    
+
+
+def prep_data(n_e, n_t):
     # Shekel parameters (t=10-sized)
     bet = 1/10 * np.array([[1, 2, 2, 4, 4, 6, 3, 7, 5, 5]]).T
     gam = 1. * np.array([[4, 1, 8, 6, 3, 2, 5, 8, 6, 7]]).T
@@ -48,6 +44,13 @@ def get_pod_bases(eps=1e-10, n_t=100, do_plots=False, write_file=False, verbose=
         mu[1][0:kxsi.shape[0], 0] = kxsi
         # Calling the Shekel function
         S[:, i] = u_h(x, mu)
+
+    return x, S
+
+
+def get_pod_bases(S, n_e, n_t, eps=1e-10,
+                  do_plots=False, write_file=False, verbose=False):
+    start_time = time.time()
     
     # Performing SVD
     W, D, ZT = np.linalg.svd(S, full_matrices=False)
@@ -86,10 +89,12 @@ def get_pod_bases(eps=1e-10, n_t=100, do_plots=False, write_file=False, verbose=
     
     if write_file:
         name = f"shek_Pod_bases_lhs_nxy_{n_e}_ns_{n_t}_epsi_{eps}.txt"
-        np.savetxt(os.path.join("1d-shekel", "results", name), V, delimiter="   ")
+        np.savetxt(os.path.join("1d-shekel", "results", name),
+                   V, delimiter="   ")
         print(f"Written {name}")
     
-    if do_plots:    
+    if do_plots: 
+        x = np.linspace(0, 10, n_e)
         for i in range(S.shape[1]):
             plt.plot(x, S[:, i])
         plt.plot(x, np.mean(S, axis=1))
@@ -100,8 +105,13 @@ def get_pod_bases(eps=1e-10, n_t=100, do_plots=False, write_file=False, verbose=
             plt.plot(x, V[:, i])
         plt.show()
 
-    return x, V
+    return V
 
 
 if __name__ == "__main__":
-    get_pod_bases(eps=1e-4, n_t=1000, do_plots=True, write_file=True, verbose=True)
+    n_e = 300
+    n_t = 100
+    eps = 1e-10
+    _, S = prep_data(n_e, n_t)
+    get_pod_bases(S, n_e, n_t, eps,
+                  do_plots=True, write_file=True, verbose=True)
