@@ -34,6 +34,7 @@ def prep_data(n_e, n_t):
     lb = p_var[:, 0] - np.sqrt(3)*p_var[:, 1]
     ub = p_var[:, 0] + np.sqrt(3)*p_var[:, 1]
     R_var = lb + (ub - lb)*X
+    print(R_var.shape)
     
     # Creating the snapshots
     S = np.zeros((n_e, n_t))
@@ -45,7 +46,7 @@ def prep_data(n_e, n_t):
         # Calling the Shekel function
         S[:, i] = u_h(x, mu)
 
-    return x, S
+    return x, S, R_var
 
 
 def get_pod_bases(S, n_e, n_t, eps=1e-10,
