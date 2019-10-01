@@ -18,51 +18,50 @@ def u_h(x, mu):
     S_i = np.zeros_like(x)
     for j, x_j in enumerate(x):
         S_i[j] = 0.
-        for p in range(bet.shape[1]):
-            S_i[j] -= 1/((x_j-gam[0, p])**2 + bet[0, p])
+        for p in range(bet.shape[0]):
+            S_i[j] -= 1/((x_j-gam[p, 0])**2 + bet[p, 0])
     return S_i
 
 
-def prep_data(n_e, n_t):
+def prep_data(n_e, n_t, bet_count=0, gam_count=3):
     # Shekel parameters (t=10-sized)
     bet = 1/10 * np.array([[1, 2, 2, 4, 4, 6, 3, 7, 5, 5]]).T
     gam = 1. * np.array([[4, 1, 8, 6, 3, 2, 5, 8, 6, 7]]).T
     mu = (bet, gam)
     
     # Perturbations
-    p_var = np.array([
-        [4, 0.4],
-        [1, 0.1],
-        [8, 0.8],
-        [6, 0.6],
-        [3, 0.3],
-        [2, 0.2],
-    ])
+    bet_var = np.hstack((bet, 0.1 * bet))[:bet_count, :]
+    gam_var = np.hstack((gam, 0.1 * gam))[:gam_count, :]
+    p_var = np.vstack((bet_var, gam_var))
     
     # LHS sampling (first uniform, then perturbated)
     X = lhs(n_t, p_var.shape[0]).T
     lb = p_var[:, 0] - np.sqrt(3)*p_var[:, 1]
     ub = p_var[:, 0] + np.sqrt(3)*p_var[:, 1]
-    R_var = lb + (ub - lb)*X
+    X_U_rb = lb + (ub - lb)*X
     
     # Creating the snapshots
-    S = np.zeros((n_e, n_t))
+    U_h = np.zeros((n_e, n_t))
     x = np.linspace(0, 10, n_e)
     for i in range(n_t):
-        # Altering the parameters with lhs perturbations
-        kxsi = R_var[i, :]
-        mu[1][0:kxsi.shape[0], 0] = kxsi
+        # Altering the beta params with lhs perturbations
+        bet_kxsi = X_U_rb[i, :bet_count]
+        mu[0][0:bet_kxsi.shape[0], 0] = bet_kxsi
+        # Altering the gamma params with lhs perturbations
+        gam_kxsi = X_U_rb[i, bet_count:]
+        mu[1][0:gam_kxsi.shape[0], 0] = gam_kxsi
+
         # Calling the Shekel function
-        S[:, i] = u_h(x, mu)
+        U_h[:, i] = u_h(x, mu)
 
-    return x, S, R_var
+    return U_h, X_U_rb
 
-def get_pod_bases(S, n_e, n_t, eps=1e-10,
+def get_pod_bases(U_h, n_e, n_t, eps=1e-10,
                   do_plots=False, write_file=False, verbose=False):
     start_time = time.time()
     
     # Performing SVD
-    W, D, ZT = np.linalg.svd(S, full_matrices=False)
+    W, D, ZT = np.linalg.svd(U_h, full_matrices=False)
     
     # Getting MATLAB-like orientation
     Z = ZT.T
@@ -86,7 +85,7 @@ def get_pod_bases(S, n_e, n_t, eps=1e-10,
     # Constructiong the reduced POD base V
     V = np.zeros((n_e, n_L))
     for i in range(n_L):
-        V[:, i] = S.dot(Z[:, i]) / np.sqrt(lambdas_trunc[i])
+        V[:, i] = U_h.dot(Z[:, i]) / np.sqrt(lambdas_trunc[i])
     
     if verbose:
         # Number of solutions and Stopping parameter
@@ -104,10 +103,10 @@ def get_pod_bases(S, n_e, n_t, eps=1e-10,
     
     if do_plots: 
         x = np.linspace(0, 10, n_e)
-        for i in range(S.shape[1]):
-            plt.plot(x, S[:, i])
-        plt.plot(x, np.mean(S, axis=1))
-        plt.plot(x, np.std(S, axis=1))
+        for i in range(U_h.shape[1]):
+            plt.plot(x, U_h[:, i])
+        plt.plot(x, np.mean(U_h, axis=1))
+        plt.plot(x, np.std(U_h, axis=1))
         plt.show()
         
         for i in range(n_L):
@@ -121,6 +120,6 @@ if __name__ == "__main__":
     n_e = 300
     n_t = 100
     eps = 1e-10
-    _, S = prep_data(n_e, n_t)
+    S, _ = prep_data(n_e, n_t)
     get_pod_bases(S, n_e, n_t, eps,
                   do_plots=True, write_file=True, verbose=True)

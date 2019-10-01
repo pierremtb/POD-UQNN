@@ -24,23 +24,26 @@ else:
     # Space (dx = 1/30, n_e = 10/dx)
     hp["n_e"] = 300
     # Snapshots count
-    hp["n_t"] = 300
+    hp["n_t"] = 10000
     # Train/Val repartition
     hp["train_test_ratio"] = 0.5
     # POD stopping param
     hp["eps"] = 1e-10
     # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
-    hp["tf_epochs"] = 10000
-    hp["tf_lr"] = 0.005
-    hp["tf_decay"] = 0
+    hp["tf_epochs"] = 100000
+    hp["tf_lr"] = 0.001
+    hp["tf_decay"] = 0.
     hp["tf_b1"] = 0.9
     hp["tf_eps"] = None
     hp["lambda"] = 1e-6
-    hp["log_frequency"] = 100
+    hp["log_frequency"] = 1000
+    # Shekel params
+    hp["bet_count"] = 10
+    hp["gam_count"] = 10
 
 # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
 # u_rb are the reduced coefficients we're looking for
-_, U_h, X_U_rb_star = prep_data(hp["n_e"], hp["n_t"])
+U_h, X_U_rb_star = prep_data(hp["n_e"], hp["n_t"], hp["bet_count"], hp["gam_count"])
 V = get_pod_bases(U_h, hp["n_e"], hp["n_t"], hp["eps"])
 
 # Sizes
@@ -69,7 +72,6 @@ def error():
 logger.set_error_fn(error)
 
 # Training
-print(X_U_rb_train.shape)
 model.fit(X_U_rb_train, U_rb_train)
 
 # Predicting the coefficients

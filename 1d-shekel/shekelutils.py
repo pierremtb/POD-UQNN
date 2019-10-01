@@ -43,16 +43,17 @@ def plot_results(X_U_rb_test, U_rb_test, U_rb_pred, U_h, U_h_pred, hp, save_path
     ax0.set_xlabel(r"$\gamma_1$")
 
     # plotting the first three coefficients u_rb
-    ax00 = fig.add_subplot(2, 2, 2)
-    for i in range(2):
-        ax00.plot(np.sort(X_U_rb_test[:, 1]), U_rb_pred[:, i][np.argsort(X_U_rb_test[:, 1])],
-                 "b-", label=r"$\hat{u_{rb}}(\gamma_2)$")
-        ax00.plot(np.sort(X_U_rb_test[:, 1]), U_rb_test[:, i][np.argsort(X_U_rb_test[:, 1])],
-                 "r--", label=r"$u_{rb}(\gamma_2)$")
-    ax00.legend() 
-    ax00.set_title(r"First two $U_{rb}$ coefficients")
-    ax00.set_xlabel(r"$\gamma_2$")
-    
+    if X_U_rb_test.shape[1] > 1:
+        ax00 = fig.add_subplot(2, 2, 2)
+        for i in range(2):
+            ax00.plot(np.sort(X_U_rb_test[:, 1]), U_rb_pred[:, i][np.argsort(X_U_rb_test[:, 1])],
+                     "b-", label=r"$\hat{u_{rb}}(\gamma_2)$")
+            ax00.plot(np.sort(X_U_rb_test[:, 1]), U_rb_test[:, i][np.argsort(X_U_rb_test[:, 1])],
+                     "r--", label=r"$u_{rb}(\gamma_2)$")
+        ax00.legend() 
+        ax00.set_title(r"First two $U_{rb}$ coefficients")
+        ax00.set_xlabel(r"$\gamma_2$")
+        
     # plotting the means
     ax1 = fig.add_subplot(2, 2, 3)
     ax1.plot(x, np.mean(U_h_pred, axis=1), "b-", label=r"$\hat{U_h}(x, \mu)$")
