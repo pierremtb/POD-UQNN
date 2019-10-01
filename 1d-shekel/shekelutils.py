@@ -56,23 +56,32 @@ def plot_results(X_u_rb_test, u_rb_test, u_rb_pred, u_h, u_h_pred, hp, save_path
     x = np.linspace(0, 10, hp["n_e"])
     fig = plt.figure(figsize=figsize(2, 2))
 
+    # Plotting the first three coefficients u_rb
     ax0 = fig.add_subplot(2, 2, 1)
     for i in range(3):
         ax0.plot(np.sort(X_u_rb_test[:, 0]), u_rb_test[:, i][np.argsort(X_u_rb_test[:, 0])], "--")
-        ax0.scatter(np.sort(X_u_rb_test[:, 0]), u_rb_pred[:, i][np.argsort(X_u_rb_test[:, 0])])
-    ax0.set_title(r"u_{rb} coefficients")
+        ax0.scatter(X_u_rb_test[:, 0], u_rb_pred[:, i], marker="+")
+    ax0.set_title(r"$u_{rb}$ coefficients for $\gamma_0$")
     
+    # Plotting the first three coefficients u_rb
+    ax00 = fig.add_subplot(2, 2, 2)
+    for i in range(3):
+        ax00.plot(np.sort(X_u_rb_test[:, 1]), u_rb_test[:, i][np.argsort(X_u_rb_test[:, 1])], "--")
+        ax00.scatter(X_u_rb_test[:, 1], u_rb_pred[:, i], marker="+")
+    ax00.set_title(r"$u_{rb}$ coefficients for $\gamma_0$")
+    
+    # Plotting the means
     ax1 = fig.add_subplot(2, 2, 3)
     ax1.plot(x, np.mean(u_h_pred, axis=1), "b-", label=r"$\hat{u_h}(x, \mu)$")
     ax1.plot(x, np.mean(u_h, axis=1), "r--", label=r"$u_h(x, \mu)$")
     ax1.legend()
-    ax1.set_title("Mean")
+    ax1.set_title("Means")
 
     ax2 = fig.add_subplot(2, 2, 4)
     ax2.plot(x, np.std(u_h_pred, axis=1), "b-", label=r"$\hat{u_h}(x, \mu)$")
     ax2.plot(x, np.std(u_h, axis=1), "r--", label=r"$u_h(x, \mu)$")
     ax2.legend()
-    ax2.set_title("Standard deviation")
+    ax2.set_title("Standard deviations")
     
     if save_path != None:
         saveResultDir(save_path, save_hp=hp)

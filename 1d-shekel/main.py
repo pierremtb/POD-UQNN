@@ -24,7 +24,7 @@ else:
     # Space (dx = 1/30, n_e = 10/dx)
     hp["n_e"] = 300
     # Snapshots count
-    hp["n_t"] = 200
+    hp["n_t"] = 500
     # Train/Val repartition
     hp["train_test_ratio"] = 0.5
     # POD stopping param
