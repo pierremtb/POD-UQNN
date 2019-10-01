@@ -34,6 +34,9 @@ def prep_data(n_e, n_t):
         [4, 0.4],
         [1, 0.1],
         [8, 0.8],
+        [6, 0.6],
+        [3, 0.3],
+        [2, 0.2],
     ])
     
     # LHS sampling (first uniform, then perturbated)
@@ -41,7 +44,6 @@ def prep_data(n_e, n_t):
     lb = p_var[:, 0] - np.sqrt(3)*p_var[:, 1]
     ub = p_var[:, 0] + np.sqrt(3)*p_var[:, 1]
     R_var = lb + (ub - lb)*X
-    print(R_var.shape)
     
     # Creating the snapshots
     S = np.zeros((n_e, n_t))

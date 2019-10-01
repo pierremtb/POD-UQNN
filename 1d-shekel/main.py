@@ -24,14 +24,14 @@ else:
     # Space (dx = 1/30, n_e = 10/dx)
     hp["n_e"] = 300
     # Snapshots count
-    hp["n_t"] = 500
+    hp["n_t"] = 300
     # Train/Val repartition
     hp["train_test_ratio"] = 0.5
     # POD stopping param
     hp["eps"] = 1e-10
     # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
     hp["tf_epochs"] = 10000
-    hp["tf_lr"] = 0.01
+    hp["tf_lr"] = 0.005
     hp["tf_decay"] = 0
     hp["tf_b1"] = 0.9
     hp["tf_eps"] = None
@@ -40,37 +40,46 @@ else:
 
 # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
 # u_rb are the reduced coefficients we're looking for
-_, u_h, X_u_rb_star = prep_data(hp["n_e"], hp["n_t"])
-V = get_pod_bases(u_h, hp["n_e"], hp["n_t"], hp["eps"])
+_, U_h, X_U_rb_star = prep_data(hp["n_e"], hp["n_t"])
+V = get_pod_bases(U_h, hp["n_e"], hp["n_t"], hp["eps"])
+
+# Sizes
+n_L = V.shape[1]
+n_d = X_U_rb_star.shape[1]
 
 # Projecting
-u_rb_star = (V.T.dot(u_h)).T
+U_rb_star = (V.T.dot(U_h)).T
 
 # Splitting data
 n_t_train = int(hp["train_test_ratio"] * hp["n_t"])
-X_u_rb_train, u_rb_train, X_u_rb_test, u_rb_test = \
-        scarcify(X_u_rb_star, u_rb_star, n_t_train)
+X_U_rb_train, U_rb_train, X_U_rb_test, U_rb_test = \
+        scarcify(X_U_rb_star, U_rb_star, n_t_train)
 
 # Creating the neural net model, and logger
 # In: (gam_0, gam_1, gam_2)
 # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
-hp["layers"] = [3, 10, 20, V.shape[1]]
+hp["layers"] = [n_d, 10, 20, n_L]
 logger = Logger(hp)
 model = NeuralNetwork(hp, logger)
 
 # Setting the error function
 def error():
-    u_rb_pred = model.predict(X_u_rb_test)
-    return 1/u_rb_pred.shape[0] * tf.reduce_sum(tf.square(u_rb_pred - u_rb_test))
+    U_rb_pred = model.predict(X_U_rb_test)
+    return 1/U_rb_pred.shape[0] * tf.reduce_sum(tf.square(U_rb_pred - U_rb_test))
 logger.set_error_fn(error)
 
 # Training
-model.fit(X_u_rb_train, u_rb_train)
+print(X_U_rb_train.shape)
+model.fit(X_U_rb_train, U_rb_train)
 
-# Predicting
-u_rb_pred = model.predict(X_u_rb_test)
+# Predicting the coefficients
+U_rb_pred = model.predict(X_U_rb_test)
 print(f"Error calculated on n_t_train = {n_t_train} samples" +
       f" ({int(100 * hp['train_test_ratio'])}%)")
 
-u_h_pred = V.dot(u_rb_pred.T)
-plot_results(X_u_rb_test, u_rb_test, u_rb_pred, u_h, u_h_pred, hp, eqnPath)
+# Retrieving the function with the predicted coefficients
+U_h_pred = V.dot(U_rb_pred.T)
+
+# Plotting and saving the results
+plot_results(X_U_rb_test, U_rb_test, U_rb_pred, U_h, U_h_pred, hp)
+plot_results(X_U_rb_test, U_rb_test, U_rb_pred, U_h, U_h_pred, hp, eqnPath)
