@@ -5,8 +5,11 @@ import sys
 import os
 import json
 
+eqnPath = "1d-shekel"
 sys.path.append("utils")
 from plotting import figsize
+sys.path.append(os.path.join("datagen", eqnPath))
+from names import X_FILE, U_MEAN_FILE, U_STD_FILE
 
 def saveresultdir(save_path, save_hp):
     now = datetime.now()
@@ -26,8 +29,14 @@ def savefig(filename):
     # plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0)
     plt.close()
 
-def plot_results(U_h, U_h_pred=None, X_U_rb_test=None, U_rb_test=None, U_rb_pred=None, hp=None, save_path=None):
-    x = np.linspace(0, 10, U_h.shape[0])
+def plot_results(U_h, U_h_pred=None,
+                 X_U_rb_test=None, U_rb_test=None,
+                 U_rb_pred=None, hp=None, save_path=None):
+
+    dirname = os.path.join(eqnPath, "data")
+    x = np.load(os.path.join(dirname, X_FILE))
+    u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
+    u_std = np.load(os.path.join(dirname, U_STD_FILE))
 
     fig = plt.figure(figsize=figsize(2, 1))
 
@@ -59,6 +68,7 @@ def plot_results(U_h, U_h_pred=None, X_U_rb_test=None, U_rb_test=None, U_rb_pred
     if U_h_pred is not None:
         ax1.plot(x, np.mean(U_h_pred, axis=1), "b-", label=r"$\hat{U_h}(x, \mu)$")
     ax1.plot(x, np.mean(U_h, axis=1), "r--", label=r"$U_h(x, \mu)$")
+    ax1.plot(x, u_mean, "r,", label=r"$U_{h-lhs}(x, \mu)$")
     ax1.legend()
     ax1.set_title("Means")
 
@@ -66,6 +76,7 @@ def plot_results(U_h, U_h_pred=None, X_U_rb_test=None, U_rb_test=None, U_rb_pred
     if U_h_pred is not None:
         ax2.plot(x, np.std(U_h_pred, axis=1), "b-", label=r"$\hat{U_h}(x, \mu)$")
     ax2.plot(x, np.std(U_h, axis=1), "r--", label=r"$U_h(x, \mu)$")
+    ax2.plot(x, u_std, "r,", label=r"$U_{h-lhs}(x, \mu)$")
     ax2.legend()
     ax2.set_title("Standard deviations")
     
