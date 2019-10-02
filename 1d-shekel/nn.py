@@ -3,7 +3,7 @@ import numpy as np
 
 
 class NeuralNetwork(object):
-    def __init__(self, hp, logger):
+    def __init__(self, hp, logger, ub, lb):
 
         layers = hp["layers"]
 
@@ -31,8 +31,12 @@ class NeuralNetwork(object):
                 kernel_regularizer=tf.keras.regularizers.l2(hp["lambda"])))
 
         self.logger = logger
-
+        self.ub = ub
+        self.lb = lb
         self.reg_l = hp["lambda"]
+
+    def normalize(self, X):
+        return (X - self.lb) - 0.5*(self.ub - self.lb)
 
     # Defining custom loss
     @tf.function
@@ -67,6 +71,7 @@ class NeuralNetwork(object):
         self.logger.log_train_start(self)
 
         # Creating the tensors
+        X_u = self.normalize(X_u)
         X_u = self.tensor(X_u)
         u = self.tensor(u)
 
@@ -75,8 +80,9 @@ class NeuralNetwork(object):
 
         self.logger.log_train_end(self.tf_epochs)
 
-    def predict(self, X_star):
-        u_pred = self.model(X_star)
+    def predict(self, X):
+        X = self.normalize(X)
+        u_pred = self.model(X)
         return u_pred.numpy()
 
     def summary(self):

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from pyDOE import lhs
 import time
 import os
+from tqdm import tqdm
 
 def scarcify(X, u, N):
     idx = np.random.choice(X.shape[0], N, replace=False)
@@ -35,15 +36,21 @@ def prep_data(n_e, n_t, bet_count=0, gam_count=3):
     p_var = np.vstack((bet_var, gam_var))
     
     # LHS sampling (first uniform, then perturbated)
+    print("Doing the LHS sampling")
+    pbar = tqdm(total=100)
     X = lhs(n_t, p_var.shape[0]).T
+    pbar.update(50)
     lb = p_var[:, 0] - np.sqrt(3)*p_var[:, 1]
     ub = p_var[:, 0] + np.sqrt(3)*p_var[:, 1]
     X_U_rb = lb + (ub - lb)*X
+    pbar.update(50)
+    pbar.close()
     
     # Creating the snapshots
+    print(f"Generating {n_t} corresponding snapshots")
     U_h = np.zeros((n_e, n_t))
     x = np.linspace(0, 10, n_e)
-    for i in range(n_t):
+    for i in tqdm(range(n_t)):
         # Altering the beta params with lhs perturbations
         bet_kxsi = X_U_rb[i, :bet_count]
         mu[0][0:bet_kxsi.shape[0], 0] = bet_kxsi
@@ -115,11 +122,3 @@ def get_pod_bases(U_h, n_e, n_t, eps=1e-10,
 
     return V
 
-
-if __name__ == "__main__":
-    n_e = 300
-    n_t = 100
-    eps = 1e-10
-    S, _ = prep_data(n_e, n_t)
-    get_pod_bases(S, n_e, n_t, eps,
-                  do_plots=True, write_file=True, verbose=True)

@@ -30,8 +30,8 @@ else:
     # POD stopping param
     hp["eps"] = 1e-10
     # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
-    hp["tf_epochs"] = 100000
-    hp["tf_lr"] = 0.001
+    hp["tf_epochs"] = 10000
+    hp["tf_lr"] = 0.005
     hp["tf_decay"] = 0.
     hp["tf_b1"] = 0.9
     hp["tf_eps"] = None
@@ -83,5 +83,5 @@ print(f"Error calculated on n_t_train = {n_t_train} samples" +
 U_h_pred = V.dot(U_rb_pred.T)
 
 # Plotting and saving the results
-plot_results(X_U_rb_test, U_rb_test, U_rb_pred, U_h, U_h_pred, hp)
-plot_results(X_U_rb_test, U_rb_test, U_rb_pred, U_h, U_h_pred, hp, eqnPath)
+plot_results(U_h, U_h_pred, X_U_rb_test, U_rb_test, U_rb_pred, hp)
+plot_results(U_h, U_h_pred, X_U_rb_test, U_rb_test, U_rb_pred, hp, eqnPath)
