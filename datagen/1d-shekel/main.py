@@ -1,4 +1,5 @@
 import sys
+import os
 import numpy as np
 
 eqnPath = "1d-shekel"
@@ -8,8 +9,9 @@ from shekelutils import plot_results
 
 U_h, _, _, _ = prep_data(n_e=300,
                          n_t=int(1e6),
-                         bet_count=0,
-                         gam_count=3)
+                         bet_count=10,
+                         gam_count=10)
 
+np.save(os.path.join(eqnPath, "data", "U_h.npy"), U_h) 
 plot_results(U_h)
 

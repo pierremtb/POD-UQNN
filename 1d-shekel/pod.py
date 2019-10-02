@@ -4,6 +4,8 @@ from pyDOE import lhs
 import time
 import os
 from tqdm import tqdm
+from deap.benchmarks import shekel
+
 
 def scarcify(X, u, N):
     idx = np.random.choice(X.shape[0], N, replace=False)
@@ -11,17 +13,6 @@ def scarcify(X, u, N):
     mask = np.ones(X.shape[0], bool)
     mask[idx] = False
     return X[idx, :], u[idx, :], X[mask, :], u[mask, :] 
-
-
-# Defining the u_h function (here Shekel)
-def u_h(x, mu):
-    bet, gam = mu
-    S_i = np.zeros_like(x)
-    for j, x_j in enumerate(x):
-        S_i[j] = 0.
-        for p in range(bet.shape[0]):
-            S_i[j] -= 1/((x_j-gam[p, 0])**2 + bet[p, 0])
-    return S_i
 
 
 def prep_data(n_e, n_t, bet_count=0, gam_count=3):
@@ -53,13 +44,13 @@ def prep_data(n_e, n_t, bet_count=0, gam_count=3):
     for i in tqdm(range(n_t)):
         # Altering the beta params with lhs perturbations
         bet_kxsi = X_U_rb[i, :bet_count]
-        mu[0][0:bet_kxsi.shape[0], 0] = bet_kxsi
+        bet[0:bet_kxsi.shape[0], 0] = bet_kxsi
         # Altering the gamma params with lhs perturbations
         gam_kxsi = X_U_rb[i, bet_count:]
-        mu[1][0:gam_kxsi.shape[0], 0] = gam_kxsi
+        gam[0:gam_kxsi.shape[0], 0] = gam_kxsi
 
         # Calling the Shekel function
-        U_h[:, i] = u_h(x, mu)
+        U_h[:, i] = -shekel(x[None, :], gam, bet)[0]
 
     return U_h, X_U_rb, lb, ub
 
