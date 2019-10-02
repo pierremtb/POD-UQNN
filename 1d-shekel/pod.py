@@ -54,7 +54,7 @@ def prep_data(n_e, n_t, bet_count=0, gam_count=3):
         # Calling the Shekel function
         U_h[:, i] = u_h(x, mu)
 
-    return U_h, X_U_rb
+    return U_h, X_U_rb, lb, ub
 
 def get_pod_bases(U_h, n_e, n_t, eps=1e-10,
                   do_plots=False, write_file=False, verbose=False):

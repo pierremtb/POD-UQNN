@@ -24,7 +24,7 @@ else:
     # Space (dx = 1/30, n_e = 10/dx)
     hp["n_e"] = 300
     # Snapshots count
-    hp["n_t"] = 10000
+    hp["n_t"] = 1000
     # Train/Val repartition
     hp["train_test_ratio"] = 0.5
     # POD stopping param
@@ -43,7 +43,7 @@ else:
 
 # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
 # u_rb are the reduced coefficients we're looking for
-U_h, X_U_rb_star = prep_data(hp["n_e"], hp["n_t"], hp["bet_count"], hp["gam_count"])
+U_h, X_U_rb_star, lb, ub = prep_data(hp["n_e"], hp["n_t"], hp["bet_count"], hp["gam_count"])
 V = get_pod_bases(U_h, hp["n_e"], hp["n_t"], hp["eps"])
 
 # Sizes
@@ -63,7 +63,7 @@ X_U_rb_train, U_rb_train, X_U_rb_test, U_rb_test = \
 # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
 hp["layers"] = [n_d, 10, 20, n_L]
 logger = Logger(hp)
-model = NeuralNetwork(hp, logger)
+model = NeuralNetwork(hp, logger, ub, lb)
 
 # Setting the error function
 def error():
