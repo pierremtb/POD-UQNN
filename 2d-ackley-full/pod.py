@@ -47,7 +47,7 @@ def prep_data(n_x, n_y, n_s):
         # Calling the function
         U_h[:, :, i] = u_h(X, Y, mu_i)
 
-    return U_h, X_U_rb, lb, ub
+    return X, Y, U_h, X_U_rb, lb, ub
 
 def get_pod_bases(U_h, n_x, n_y, n_s, eps=1e-10,
                   do_plots=False, write_file=False, verbose=False):

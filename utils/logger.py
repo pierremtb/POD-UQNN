@@ -2,6 +2,7 @@ import json
 import tensorflow as tf
 import time
 from datetime import datetime
+from tqdm import tqdm
 
 
 class Logger(object):
@@ -16,6 +17,7 @@ class Logger(object):
 
         self.start_time = time.time()
         self.prev_time = self.start_time
+        self.tf_epochs = hp["tf_epochs"]
         self.frequency = hp["log_frequency"]
 
     def get_epoch_duration(self):
@@ -39,17 +41,21 @@ class Logger(object):
         print("\nTraining started")
         print("================")
         self.model = model
+        self.pbar = tqdm(total=self.tf_epochs)
         if model_description:
             print(model.summary())
 
     def log_train_epoch(self, epoch, loss, custom="", is_iter=False):
+        self.pbar.update(1)
         if epoch % self.frequency == 0:
             name = 'nt_epoch' if is_iter else 'tf_epoch'
-            print(f"{name} = {epoch:6d}  " +
-                  f"elapsed = {self.get_elapsed()} " +
-                  f"(+{self.get_epoch_duration()})  " +
-                  f"loss = {loss:.4e}  " +
-                  f"error = {self.get_error_u():.4e}  " + custom)
+            message = f"{name} = {epoch:6d}  " + \
+                  f"elapsed = {self.get_elapsed()} " + \
+                  f"(+{self.get_epoch_duration()})  " + \
+                  f"loss = {loss:.4e}  " + \
+                  f"error = {self.get_error_u():.4e}  " + custom
+            self.pbar.set_description(f"l:{loss:.2e} e:{self.get_error_u():.2e}")
+            # print(message)
 
     def log_train_opt(self, name):
         print(f"-- Starting {name} optimization --")

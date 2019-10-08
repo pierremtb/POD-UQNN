@@ -1,7 +1,5 @@
 import sys
-import os
 import numpy as np
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
@@ -11,10 +9,10 @@ tf.random.set_seed(1111)
 eqnPath = "1d-shekel"
 sys.path.append(eqnPath)
 sys.path.append("utils")
-from pod import get_pod_bases
+from pod import get_pod_bases, prep_data, scarcify
 from neuralnetwork import NeuralNetwork
 from logger import Logger
-from shekelutils import plot_results, prep_data, restruct
+from shekelutils import plot_results
 
 # HYPER PARAMETERS
 
@@ -23,54 +21,44 @@ if len(sys.argv) > 1:
         hp = json.load(hpFile)
 else:
     hp = {}
-    # DOF per solution point
-    hp["n_h"] = 1
-    # Space coordinates
-    hp["n_x"] = 300
-    hp["x_min"] = 0.
-    hp["x_max"] = 10.
+    # Space (dx = 1/30, n_e = 10/dx)
+    hp["n_e"] = 300
     # Snapshots count
-    hp["n_t"] = 200
+    hp["n_t"] = 1000
     # Train/Val repartition
-    hp["train_val_ratio"] = 0.5
+    hp["train_val_ratio"] = 0.7
     # POD stopping param
     hp["eps"] = 1e-10
     # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
-    hp["tf_epochs"] = 3000
-    hp["tf_lr"] = 0.005
+    hp["tf_epochs"] = 35000
+    hp["tf_lr"] = 0.003
     hp["tf_decay"] = 0.
     hp["tf_b1"] = 0.9
     hp["tf_eps"] = None
     hp["lambda"] = 1e-6
-    hp["log_frequency"] = 1
+    hp["log_frequency"] = 100
     # Shekel params
     hp["bet_count"] = 10
     hp["gam_count"] = 10
 
-n_x = hp["n_x"]
-n_t = hp["n_t"]
-
 # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
 # u_rb are the reduced coefficients we're looking for
-U_h_train, X_U_rb_star, lb, ub = prep_data(hp["n_h"], hp["n_x"], hp["n_t"], hp["bet_count"], hp["gam_count"])
-V = get_pod_bases(U_h_train, hp["eps"])
+U_h, X_U_rb_star, lb, ub = prep_data(hp["n_e"], hp["n_t"], hp["bet_count"], hp["gam_count"])
+V = get_pod_bases(U_h, hp["n_e"], hp["n_t"], hp["eps"])
 
 # Sizes
 n_L = V.shape[1]
 n_d = X_U_rb_star.shape[1]
 
 # Projecting
-U_rb_star = (V.T.dot(U_h_train)).T
+U_rb_star = (V.T.dot(U_h)).T
 
 # Splitting data
-n_t_train = int(hp["train_val_ratio"] * hp["n_t"] * hp["n_x"])
-i_end_train = int(hp["train_val_ratio"] * hp["n_t"] * hp["n_x"])
-X_U_rb_train = X_U_rb_star[:i_end_train, :]
-U_rb_train = U_rb_star[:i_end_train, :]
-X_U_rb_val = X_U_rb_star[i_end_train:, :]
-U_rb_val = U_rb_star[i_end_train:, :]
+n_t_train = int(hp["train_val_ratio"] * hp["n_t"])
+X_U_rb_train, U_rb_train, X_U_rb_val, U_rb_val = \
+        scarcify(X_U_rb_star, U_rb_star, n_t_train)
 
-# Creating the neural net model, and Logger
+# Creating the neural net model, and logger
 # In: (gam_0, gam_1, gam_2)
 # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
 hp["layers"] = [n_d, 40, 60, n_L]
@@ -94,21 +82,6 @@ print(f"Error calculated on n_t_train = {n_t_train} samples" +
 # Retrieving the function with the predicted coefficients
 U_h_pred = V.dot(U_rb_pred.T)
 
-# Restructuring
-n_t_val = int(n_t * hp["train_val_ratio"])
-U_h_pred_struct = restruct(U_h_pred, n_x, n_t_val)
-U_h_train_struct = restruct(U_h_train, n_x, n_t)
-import matplotlib.pyplot as plt
-x_train = np.linspace(hp["x_min"], hp["x_max"], n_x)
-x_pred = x_train
-plt.plot(x_train, U_h_train_struct[:, 0])
-plt.plot(x_train, U_h_train_struct[:, 1])
-plt.plot(x_train, U_h_train_struct[:, 2])
-plt.show()
-plt.plot(x_pred, U_h_pred_struct[:, 0])
-plt.plot(x_pred, U_h_pred_struct[:, 1])
-plt.plot(x_pred, U_h_pred_struct[:, 2])
-plt.show()
 # Plotting and saving the results
-plot_results(U_h_train_struct, U_h_pred_struct, X_U_rb_val, U_rb_val, U_rb_pred, hp)
-# plot_results(U_h, U_h_pred, X_U_rb_val, U_rb_val, U_rb_pred, hp, eqnPath)
+plot_results(U_h, U_h_pred, X_U_rb_val, U_rb_val, U_rb_pred, hp)
+plot_results(U_h, U_h_pred, X_U_rb_val, U_rb_val, U_rb_pred, hp, eqnPath)

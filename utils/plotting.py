@@ -32,3 +32,24 @@ pgf_with_latex = {                      # setup matplotlib to use latex for outp
         ]
     }
 mpl.rcParams.update(pgf_with_latex)
+
+
+def saveresultdir(save_path, save_hp):
+    now = datetime.now()
+    scriptname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+    resdir = os.path.join(save_path, "results", f"{now.strftime('%y%m%d-%h%m%s')}-{scriptname}")
+    os.mkdir(resdir)
+    print("saving results to directory ", resdir)
+    with open(os.path.join(resdir, "hp.json"), "w") as f:
+        json.dump(save_hp, f)
+    filename = os.path.join(resdir, "graph")
+    savefig(filename)
+
+
+def savefig(filename):
+    plt.savefig("{}.pdf".format(filename))
+    plt.savefig("{}.png".format(filename))
+    # plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0)
+    # plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0)
+    plt.close()
+

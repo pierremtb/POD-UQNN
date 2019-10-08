@@ -10,7 +10,7 @@ import json
 
 eqnPath = "1d-shekel"
 sys.path.append("utils")
-from plotting import figsize
+from plotting import figsize, saveresultdir
 sys.path.append(os.path.join("datagen", eqnPath))
 from names import X_FILE, U_MEAN_FILE, U_STD_FILE
 
@@ -78,23 +78,6 @@ def prep_data(n_h, n_x, n_t, bet_count=0, gam_count=3):
 
     return U_h, X_U_rb, lb, ub
 
-def saveresultdir(save_path, save_hp):
-    now = datetime.now()
-    scriptname =  os.path.splitext(os.path.basename(sys.argv[0]))[0]
-    resdir = os.path.join(save_path, "results", f"{now.strftime('%y%m%d-%h%m%s')}-{scriptname}")
-    os.mkdir(resdir)
-    print("saving results to directory ", resdir)
-    with open(os.path.join(resdir, "hp.json"), "w") as f:
-        json.dump(save_hp, f)
-    filename = os.path.join(resdir, "graph")
-    savefig(filename)
-
-def savefig(filename):
-    plt.savefig("{}.pdf".format(filename))
-    plt.savefig("{}.png".format(filename))
-    # plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0)
-    # plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0)
-    plt.close()
 
 def plot_results(U_h_train, U_h_pred=None,
                  X_U_rb_test=None, U_rb_test=None,
@@ -107,29 +90,6 @@ def plot_results(U_h_train, U_h_pred=None,
 
     fig = plt.figure(figsize=figsize(2, 1))
 
-    # plotting the first three coefficients u_rb
-    # ax0 = fig.add_subplot(2, 2, 1)
-    # For i in range(2):
-    #     ax0.plot(np.sort(X_U_rb_test[:, 0]), U_rb_pred[:, i][np.argsort(X_U_rb_test[:, 0])],
-    #              "b-", label=r"$\hat{u_{rb}}(\gamma_1)$")
-    #     ax0.plot(np.sort(X_U_rb_test[:, 0]), U_rb_test[:, i][np.argsort(X_U_rb_test[:, 0])],
-    #              "r--", label=r"$u_{rb}(\gamma_1)$")
-    # ax0.legend() 
-    # ax0.set_title(r"First two $U_{rb}$ coefficients")
-    # ax0.set_xlabel(r"$\gamma_1$")
-
-    # # plotting the first three coefficients u_rb
-    # If X_U_rb_test.shape[1] > 1:
-    #     ax00 = fig.add_subplot(2, 2, 2)
-    #     for i in range(2):
-    #         ax00.plot(np.sort(X_U_rb_test[:, 1]), U_rb_pred[:, i][np.argsort(X_U_rb_test[:, 1])],
-    #                  "b-", label=r"$\hat{u_{rb}}(\gamma_2)$")
-    #         ax00.plot(np.sort(X_U_rb_test[:, 1]), U_rb_test[:, i][np.argsort(X_U_rb_test[:, 1])],
-    #                  "r--", label=r"$u_{rb}(\gamma_2)$")
-    #     ax00.legend() 
-    #     ax00.set_title(r"First two $U_{rb}$ coefficients")
-    #     ax00.set_xlabel(r"$\gamma_2$")
-        
     # plotting the means
     ax1 = fig.add_subplot(1, 2, 1)
     if U_h_pred is not None:

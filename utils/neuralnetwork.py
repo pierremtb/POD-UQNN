@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+from tqdm import tqdm
 
 
 class NeuralNetwork(object):
@@ -36,6 +37,7 @@ class NeuralNetwork(object):
         self.reg_l = hp["lambda"]
 
     def normalize(self, X):
+        return X
         return (X - self.lb) - 0.5*(self.ub - self.lb)
 
     # Defining custom loss
