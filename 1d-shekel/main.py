@@ -36,8 +36,8 @@ else:
     # POD stopping param
     hp["eps"] = 1e-10
     # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
-    hp["tf_epochs"] = 3000
-    hp["tf_lr"] = 0.005
+    hp["tf_epochs"] = 5000
+    hp["tf_lr"] = 0.001
     hp["tf_decay"] = 0.
     hp["tf_b1"] = 0.9
     hp["tf_eps"] = None
@@ -98,17 +98,7 @@ U_h_pred = V.dot(U_rb_pred.T)
 n_t_val = int(n_t * hp["train_val_ratio"])
 U_h_pred_struct = restruct(U_h_pred, n_x, n_t_val)
 U_h_train_struct = restruct(U_h_train, n_x, n_t)
-import matplotlib.pyplot as plt
-x_train = np.linspace(hp["x_min"], hp["x_max"], n_x)
-x_pred = x_train
-plt.plot(x_train, U_h_train_struct[:, 0])
-plt.plot(x_train, U_h_train_struct[:, 1])
-plt.plot(x_train, U_h_train_struct[:, 2])
-plt.show()
-plt.plot(x_pred, U_h_pred_struct[:, 0])
-plt.plot(x_pred, U_h_pred_struct[:, 1])
-plt.plot(x_pred, U_h_pred_struct[:, 2])
-plt.show()
+
 # Plotting and saving the results
 plot_results(U_h_train_struct, U_h_pred_struct, X_U_rb_val, U_rb_val, U_rb_pred, hp)
-# plot_results(U_h, U_h_pred, X_U_rb_val, U_rb_val, U_rb_pred, hp, eqnPath)
+plot_results(U_h, U_h_pred, X_U_rb_val, U_rb_val, U_rb_pred, hp, eqnPath)

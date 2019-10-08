@@ -8,13 +8,13 @@ import matplotlib.pyplot as plt
 np.random.seed(1111)
 tf.random.set_seed(1111)
 
-eqnPath = "1d-shekel"
+eqnPath = "2d-ackley"
 sys.path.append(eqnPath)
 sys.path.append("utils")
 from pod import get_pod_bases
 from neuralnetwork import NeuralNetwork
 from logger import Logger
-from shekelutils import plot_results, prep_data, scarcify, restruct
+from ackleyutils import plot_results, prep_data, restruct
 
 # HYPER PARAMETERS
 
@@ -26,11 +26,14 @@ else:
     # DOF per solution point
     hp["n_h"] = 1
     # Space coordinates
-    hp["n_x"] = 300
-    hp["x_min"] = 0.
-    hp["x_max"] = 10.
+    hp["n_x"] = 100
+    hp["x_min"] = -5.
+    hp["x_max"] = 1.
+    hp["n_y"] = 100
+    hp["y_min"] = -5.
+    hp["y_max"] = 5.
     # Snapshots count
-    hp["n_t"] = 200
+    hp["n_t"] = 100
     # Train/Val repartition
     hp["train_val_ratio"] = 0.5
     # POD stopping param
@@ -43,16 +46,18 @@ else:
     hp["tf_eps"] = None
     hp["lambda"] = 1e-6
     hp["log_frequency"] = 1
-    # Shekel params
-    hp["bet_count"] = 10
-    hp["gam_count"] = 10
 
 n_x = hp["n_x"]
+n_y = hp["n_y"]
 n_t = hp["n_t"]
+x_min = hp["x_min"]
+x_max = hp["x_max"]
+y_min = hp["y_min"]
+y_max = hp["y_max"]
 
 # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
 # u_rb are the reduced coefficients we're looking for
-U_h_train, X_U_rb_star, lb, ub = prep_data(hp["n_h"], hp["n_x"], hp["n_t"], hp["bet_count"], hp["gam_count"])
+X, Y, U_h_train, X_U_rb_star, lb, ub = prep_data(hp["n_h"], n_x, n_y, n_t, x_min, x_max, y_min, y_max)
 V = get_pod_bases(U_h_train, hp["eps"])
 
 # Sizes
