@@ -41,11 +41,11 @@ else:
     hp["tf_decay"] = 0.
     hp["tf_b1"] = 0.9
     hp["tf_eps"] = None
-    hp["lambda"] = 1e-6
+    hp["lambda"] = 1e-4
     # Batch size for mini-batch training (0 means full-batch)
     hp["batch_size"] = 0
     # Frequency of the logger
-    hp["log_frequency"] = 100
+    hp["log_frequency"] = 1000
 
 if __name__ == "__main__":
     n_x = hp["n_x"]
@@ -96,9 +96,9 @@ if __name__ == "__main__":
     #     layers.Dense(n_L)
     # ])
     optimizer = tf.keras.optimizers.RMSprop(0.001)
-    model.compile(loss="mse",
-                  optimizer=optimizer,
-                  metrics=["mse"],
+    # model.compile(loss="mse",
+    #               optimizer=optimizer,
+    #               metrics=["mse"],
 
 
     # Predicting the coefficients

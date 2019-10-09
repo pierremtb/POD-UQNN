@@ -81,14 +81,12 @@ def plot_results(U_h, U_h_pred=None,
 
     dirname = os.path.join(eqnPath, "data")
     X = np.load(os.path.join(dirname, X_FILE))
-    x = X[0, :]
     Y = np.load(os.path.join(dirname, Y_FILE))
-    y = Y[0, :]
     u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
     u_std = np.load(os.path.join(dirname, U_STD_FILE))
 
     levels = list(range(2, 15))
-    fig = plt.figure(figsize=figsize(2, 1))
+    fig = plt.figure(figsize=figsize(2, 2))
 
     # plotting the means
     ax1 = fig.add_subplot(221)
