@@ -33,7 +33,7 @@ else:
     hp["y_min"] = -5.
     hp["y_max"] = 5.
     # Snapshots count
-    hp["n_t"] = 100
+    hp["n_s"] = 100
     # Train/Val repartition
     hp["train_val_ratio"] = 0.5
     # POD stopping param
@@ -49,7 +49,7 @@ else:
 
 n_x = hp["n_x"]
 n_y = hp["n_y"]
-n_t = hp["n_t"]
+n_s = hp["n_s"]
 x_min = hp["x_min"]
 x_max = hp["x_max"]
 y_min = hp["y_min"]
@@ -57,7 +57,7 @@ y_max = hp["y_max"]
 
 # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
 # u_rb are the reduced coefficients we're looking for
-X, Y, U_h_train, X_U_rb_star, lb, ub = prep_data(hp["n_h"], n_x, n_y, n_t, x_min, x_max, y_min, y_max)
+X, Y, U_h_train, X_U_rb_star, lb, ub = prep_data(hp["n_h"], n_x, n_y, n_s, x_min, x_max, y_min, y_max)
 V = get_pod_bases(U_h_train, hp["eps"])
 
 # Sizes
@@ -68,10 +68,10 @@ n_d = X_U_rb_star.shape[1]
 U_rb_star = (V.T.dot(U_h_train)).T
 
 # Splitting data
-n_t_train = int(hp["train_val_ratio"] * hp["n_t"] * hp["n_x"])
+n_s_train = int(hp["train_val_ratio"] * hp["n_s"] * hp["n_x"])
 # X_U_rb_train, U_rb_train, X_U_rb_val, U_rb_val = \
-#         scarcify(X_U_rb_star, U_rb_star, n_t_train)
-i_end_train = int(hp["train_val_ratio"] * hp["n_t"] * hp["n_x"])
+#         scarcify(X_U_rb_star, U_rb_star, n_s_train)
+i_end_train = int(hp["train_val_ratio"] * hp["n_s"] * hp["n_x"])
 X_U_rb_train = X_U_rb_star[:i_end_train, :]
 U_rb_train = U_rb_star[:i_end_train, :]
 X_U_rb_val = X_U_rb_star[i_end_train:, :]
@@ -95,16 +95,16 @@ model.fit(X_U_rb_train, U_rb_train)
 
 # Predicting the coefficients
 U_rb_pred = model.predict(X_U_rb_val)
-print(f"Error calculated on n_t_train = {n_t_train} samples" +
+print(f"Error calculated on n_s_train = {n_s_train} samples" +
       f" ({int(100 * hp['train_val_ratio'])}%)")
 
 # Retrieving the function with the predicted coefficients
 U_h_pred = V.dot(U_rb_pred.T)
 
 # Restructuring
-n_t_val = int(n_t * hp["train_val_ratio"])
-U_h_pred_struct = restruct(U_h_pred, n_x, n_t_val)
-U_h_train_struct = restruct(U_h_train, n_x, n_t)
+n_s_val = int(n_s * hp["train_val_ratio"])
+U_h_pred_struct = restruct(U_h_pred, n_x, n_s_val)
+U_h_train_struct = restruct(U_h_train, n_x, n_s)
 import matplotlib.pyplot as plt
 x_train = np.linspace(hp["x_min"], hp["x_max"], n_x)
 x_pred = x_train

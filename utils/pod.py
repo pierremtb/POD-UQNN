@@ -10,8 +10,8 @@ def get_pod_bases(U_h, eps=1e-10):
     
     # Number of DOFs
     n_h = U_h.shape[0]
-    # Number of snapshots n_t x Number of space nodes (n_x * n_y * ...)
-    nn_t = U_h.shape[1]
+    # Number of snapshots n_s x Number of space nodes (n_x * n_y * ...)
+    nn_s = U_h.shape[1]
     
     # Performing SVD
     W, D, ZT = np.linalg.svd(U_h, full_matrices=False)
@@ -26,7 +26,7 @@ def get_pod_bases(U_h, eps=1e-10):
     # Finding n_L
     n_L = 0
     sum_lambdas_trunc = 0.
-    for i in range(nn_t):
+    for i in range(nn_s):
         sum_lambdas_trunc += lambdas[i]
         n_L += 1
         if sum_lambdas_trunc/sum_lambdas >= (1 - eps):

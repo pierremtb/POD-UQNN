@@ -24,7 +24,7 @@ else:
     # Space (dx = 1/30, n_e = 10/dx)
     hp["n_e"] = 300
     # Snapshots count
-    hp["n_t"] = 1000
+    hp["n_s"] = 1000
     # Train/Val repartition
     hp["train_val_ratio"] = 0.7
     # POD stopping param
@@ -46,7 +46,7 @@ else:
 
 # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
 # u_rb are the reduced coefficients we're looking for
-U_h, X_U_rb_star, lb, ub = prep_data(hp["n_e"], hp["n_t"], hp["bet_count"], hp["gam_count"])
+U_h, X_U_rb_star, lb, ub = prep_data(hp["n_e"], hp["n_s"], hp["bet_count"], hp["gam_count"])
 V = get_pod_bases(U_h, hp["eps"])
 
 # Sizes
@@ -57,9 +57,9 @@ n_d = X_U_rb_star.shape[1]
 U_rb_star = (V.T.dot(U_h)).T
 
 # Splitting data
-n_t_train = int(hp["train_val_ratio"] * hp["n_t"])
+n_s_train = int(hp["train_val_ratio"] * hp["n_s"])
 X_U_rb_train, U_rb_train, X_U_rb_val, U_rb_val = \
-        scarcify(X_U_rb_star, U_rb_star, n_t_train)
+        scarcify(X_U_rb_star, U_rb_star, n_s_train)
 
 # Creating the neural net model, and logger
 # In: (gam_0, gam_1, gam_2)
@@ -79,7 +79,7 @@ model.fit(X_U_rb_train, U_rb_train)
 
 # Predicting the coefficients
 U_rb_pred = model.predict(X_U_rb_val)
-print(f"Error calculated on n_t_train = {n_t_train} samples" +
+print(f"Error calculated on n_s_train = {n_s_train} samples" +
       f" ({int(100 * hp['train_val_ratio'])}%)")
 
 # Retrieving the function with the predicted coefficients

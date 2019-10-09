@@ -9,9 +9,9 @@ from shekelutils import plot_results, prep_data
 from names import X_FILE, U_MEAN_FILE, U_STD_FILE
 
 n_x = 300
-n_t = 1e6
+n_s = 1e6
 
-U_h, _, _, _ = prep_data(n_x, int(n_t),
+U_h, _, _, _ = prep_data(n_x, int(n_s),
                          bet_count=10,
                          gam_count=10)
 

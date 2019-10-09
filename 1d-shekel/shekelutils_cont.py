@@ -14,17 +14,17 @@ sys.path.append(os.path.join("datagen", eqnPath))
 from names import X_FILE, U_MEAN_FILE, U_STD_FILE
 
 
-def restruct(U_h, n_x, n_t):
-    U_h_struct = np.zeros((n_x, n_t))
-    idx = np.arange(n_t) * n_x
+def restruct(U_h, n_x, n_s):
+    U_h_struct = np.zeros((n_x, n_s))
+    idx = np.arange(n_s) * n_x
     for i in range(n_x):
         U_h_struct[i, :] = U_h[:, idx + i]
     return U_h_struct
 
 
-def prep_data(n_h, n_x, n_t, bet_count=0, gam_count=3):
+def prep_data(n_h, n_x, n_s, bet_count=0, gam_count=3):
     # Total number of snapshots
-    nn_t = n_x*n_t
+    nn_s = n_x*n_s
 
     x_min = 0.
     x_max = 10.
@@ -42,7 +42,7 @@ def prep_data(n_h, n_x, n_t, bet_count=0, gam_count=3):
     # LHS sampling (first uniform, then perturbated)
     print("Doing the LHS sampling")
     pbar = tqdm(total=100)
-    X = lhs(n_t, p_var.shape[0]).T
+    X = lhs(n_s, p_var.shape[0]).T
     pbar.update(50)
     lb = p_var[:, 0] - np.sqrt(3)*p_var[:, 1]
     ub = p_var[:, 0] + np.sqrt(3)*p_var[:, 1]
@@ -54,11 +54,11 @@ def prep_data(n_h, n_x, n_t, bet_count=0, gam_count=3):
     n_d = 1 + p_var.shape[0]
 
     # Creating the snapshots
-    print(f"Generating {nn_t} corresponding snapshots")
-    X_U_rb = np.zeros((nn_t, n_d))
-    U_h = np.zeros((n_h, nn_t))
+    print(f"Generating {nn_s} corresponding snapshots")
+    X_U_rb = np.zeros((nn_s, n_d))
+    U_h = np.zeros((n_h, nn_s))
     x = np.linspace(x_min, x_max, n_x)
-    for i in tqdm(range(n_t)):
+    for i in tqdm(range(n_s)):
         # Altering the beta params with lhs perturbations
         bet_kxsi = mu_lhs[i, :bet_count]
         bet[0:bet_kxsi.shape[0], 0] = bet_kxsi

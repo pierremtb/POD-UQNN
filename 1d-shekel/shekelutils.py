@@ -21,7 +21,7 @@ def scarcify(X, u, N):
     return X[idx, :], u[idx, :], X[mask, :], u[mask, :] 
 
 
-def prep_data(n_e, n_t, bet_count=0, gam_count=3):
+def prep_data(n_e, n_s, bet_count=0, gam_count=3):
     # Shekel parameters (t=10-sized)
     bet = 1/10 * np.array([[1, 2, 2, 4, 4, 6, 3, 7, 5, 5]]).T
     gam = 1. * np.array([[4, 1, 8, 6, 3, 2, 5, 8, 6, 7]]).T
@@ -35,7 +35,7 @@ def prep_data(n_e, n_t, bet_count=0, gam_count=3):
     # LHS sampling (first uniform, then perturbated)
     print("Doing the LHS sampling")
     pbar = tqdm(total=100)
-    X = lhs(n_t, p_var.shape[0]).T
+    X = lhs(n_s, p_var.shape[0]).T
     pbar.update(50)
     lb = p_var[:, 0] - np.sqrt(3)*p_var[:, 1]
     ub = p_var[:, 0] + np.sqrt(3)*p_var[:, 1]
@@ -44,10 +44,10 @@ def prep_data(n_e, n_t, bet_count=0, gam_count=3):
     pbar.close()
     
     # Creating the snapshots
-    print(f"Generating {n_t} corresponding snapshots")
-    U_h = np.zeros((n_e, n_t))
+    print(f"Generating {n_s} corresponding snapshots")
+    U_h = np.zeros((n_e, n_s))
     x = np.linspace(0, 10, n_e)
-    for i in tqdm(range(n_t)):
+    for i in tqdm(range(n_s)):
         # Altering the beta params with lhs perturbations
         bet_kxsi = X_U_rb[i, :bet_count]
         bet[0:bet_kxsi.shape[0], 0] = bet_kxsi
