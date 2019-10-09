@@ -1,7 +1,11 @@
 # From https://github.com/maziarraissi/PINNs (MIT Lincese, maziarraissi)
 import numpy as np
+import os
+import sys
+import json
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 
 def figsize(scale, nplots = 1):
@@ -37,7 +41,7 @@ mpl.rcParams.update(pgf_with_latex)
 def saveresultdir(save_path, save_hp):
     now = datetime.now()
     scriptname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
-    resdir = os.path.join(save_path, "results", f"{now.strftime('%y%m%d-%h%m%s')}-{scriptname}")
+    resdir = os.path.join(save_path, "results", f"{now.strftime('%y%m%d-%H%M%S')}-{scriptname}")
     os.mkdir(resdir)
     print("saving results to directory ", resdir)
     with open(os.path.join(resdir, "hp.json"), "w") as f:

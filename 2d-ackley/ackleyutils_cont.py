@@ -1,33 +1,84 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import datetime
 import sys
+from tqdm import tqdm
+from pyDOE import lhs
 import os
 import json
 
-eqnPath = "1d-shekel"
+eqnPath = "2d-ackley"
 sys.path.append("utils")
 from plotting import figsize
-sys.path.append(os.path.join("datagen", eqnPath))
-from names import X_FILE, U_MEAN_FILE, U_STD_FILE
+# sys.path.append(os.path.join("datagen", eqnPath))
+# from names import X_FILE, U_MEAN_FILE, U_STD_FILE
 
-def saveresultdir(save_path, save_hp):
-    now = datetime.now()
-    scriptname =  os.path.splitext(os.path.basename(sys.argv[0]))[0]
-    resdir = os.path.join(save_path, "results", f"{now.strftime('%y%m%d-%h%m%s')}-{scriptname}")
-    os.mkdir(resdir)
-    print("saving results to directory ", resdir)
-    with open(os.path.join(resdir, "hp.json"), "w") as f:
-        json.dump(save_hp, f)
-    filename = os.path.join(resdir, "graph")
-    savefig(filename)
 
-def savefig(filename):
-    plt.savefig("{}.pdf".format(filename))
-    plt.savefig("{}.png".format(filename))
-    # plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0)
-    # plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0)
-    plt.close()
+def scarcify(X, u, N):
+    idx = np.random.choice(X.shape[0], N, replace=False)
+    mask = np.ones(X.shape[0], bool)
+    mask[idx] = False
+    return X[idx, :], u[idx, :], X[mask, :], u[mask, :]
+
+
+def restruct(U_h, n_x, n_y, n_t):
+    U_h_struct = np.zeros((n_x, n_y, n_t))
+    idx = np.arange(n_t) * n_x * n_y
+    for i in range(n_x):
+        U_h_struct[i, :] = U_h[:, idx + i]
+    return U_h_struct
+
+
+# The custom stochastic Ackley 2D function
+def u_h(x, y, mu):
+    return - 20*(1+.1*mu[2])*np.exp(-.2*(1+.1*mu[1])*np.sqrt(.5*(x**2+y**2))) \
+           - np.exp(.5*(np.cos(2*np.pi*(1+.1*mu[0])*x) + np.cos(2*np.pi*(1+.1*mu[0])*y))) \
+           + 20 + np.exp(1)
+
+
+def prep_data(n_x, n_y, n_t, x_min, x_max, y_min, y_max):
+    # Number of degrees of freedom: the whole domain
+    n_h = n_x * n_y
+    # Since the grid is in the DOF
+    nn_t = n_t
+
+    # Auckley params mean
+    mu = np.array([0., 0., 0.])
+
+    # LHS sampling (first uniform, then perturbated)
+    print("Doing the LHS sampling")
+    pbar = tqdm(total=100)
+    X = lhs(n_t, mu.shape[0]).T
+    pbar.update(50)
+    lb = -1. * np.ones_like(mu)
+    ub = +1. * np.ones_like(mu)
+    mu_lhs = lb + (ub - lb)*X
+    pbar.update(50)
+    pbar.close()
+    
+    # Number of inputs in space plus number of parameters
+    n_d = 2 + mu.shape[0]
+
+    # Creating the snapshots
+    print(f"Generating {nn_t} corresponding snapshots")
+    X_U_rb = np.zeros((nn_t, n_d))
+    U_h = np.zeros((n_h, nn_t))
+    x = np.linspace(x_min, x_max, n_x)
+    y = np.linspace(x_min, y_max, n_y)
+    X, Y = np.meshgrid(x, y)
+    for i in tqdm(range(n_t)):
+        mu_i = mu_lhs[i, :]
+
+        # Calling the Ackley function
+        f_i_of_xy = u_h(X, Y, mu_i)
+        for j, x_j in enumerate(x):
+            for k, y_k in enumerate(y):
+                U_h[j*n_x + k, i] = f_i_of_xy[j, k]
+        
+    # The input are directly the parameters (the space is going to be reduced by POD)
+    X_U_rb = mu_lhs
+
+    return X, Y, U_h, X_U_rb, lb, ub
+
 
 def plot_results(U_h, U_h_pred=None,
                  X_U_rb_test=None, U_rb_test=None,

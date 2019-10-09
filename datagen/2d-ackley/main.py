@@ -2,20 +2,26 @@ import sys
 import os
 import numpy as np
 
-eqnPath = "1d-shekel"
+eqnPath = "2d-ackley"
+sys.path.append(eqnPath)
+sys.path.append("utils")
+import sys
+import os
+import numpy as np
+
+eqnPath = "2d-ackley"
 sys.path.append(eqnPath)
 from shekelutils import plot_results, prep_data
 
 from names import X_FILE, U_MEAN_FILE, U_STD_FILE
 
-n_x = 300
+n_x = 400
+n_y = 400
 n_t = 1e6
 
-U_h, _, _, _ = prep_data(n_x, int(n_t),
-                         bet_count=10,
-                         gam_count=10)
+U_h, _, _, _ = prep_data(n_x, n_y, int(n_t))
 
-x = np.linspace(0, 10, n_x)
+x = np.linspace(0, 10, n_e)
 u_mean = np.mean(U_h, axis=1)
 u_std = np.std(U_h, axis=1)
 

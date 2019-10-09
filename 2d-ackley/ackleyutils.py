@@ -1,18 +1,17 @@
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-from datetime import datetime
 import sys
 import os
 from tqdm import tqdm
 from pyDOE import lhs
-from deap.benchmarks import shekel
 import json
 
 eqnPath = "2d-ackley"
 sys.path.append("utils")
 from plotting import figsize, saveresultdir
-# sys.path.append(os.path.join("datagen", eqnPath))
-# from names import X_FILE, U_MEAN_FILE, U_STD_FILE
+sys.path.append(os.path.join("datagen", eqnPath))
+from names import X_FILE, Y_FILE, U_MEAN_FILE, U_STD_FILE
 
 
 def restruct(U_h, n_x, n_y, n_t):
@@ -77,27 +76,28 @@ def plot_results(U_h_train, U_h_pred=None,
                  X_U_rb_test=None, U_rb_test=None,
                  U_rb_pred=None, hp=None, save_path=None):
 
-    # dirname = os.path.join(eqnPath, "data")
-    # x = np.load(os.path.join(dirname, X_FILE))
-    # u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
-    # u_std = np.load(os.path.join(dirname, U_STD_FILE))
+    dirname = os.path.join(eqnPath, "data")
+    X = np.load(os.path.join(dirname, X_FILE))
+    Y = np.load(os.path.join(dirname, Y_FILE))
+    u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
+    u_std = np.load(os.path.join(dirname, U_STD_FILE))
 
     fig = plt.figure(figsize=figsize(2, 1))
 
     # plotting the means
-    ax1 = fig.add_subplot(1, 2, 1)
+    ax1 = fig.add_subplot(121, projection="3d")
     if U_h_pred is not None:
-        ax1.plot(x, np.mean(U_h_pred, axis=1), "b-", label=r"$\hat{U_h}(x, \mu)$")
-    ax1.plot(x, np.mean(U_h_train, axis=1), "r--", label=r"$U_h(x, \mu)$")
-    # ax1.plot(x, u_mean, "r,", label=r"$U_{h-lhs}(x, \mu)$")
+        ax1.plot_surface(X, Y, np.mean(U_h_pred, axis=1), "b-", label=r"$\hat{U_h}(x, \mu)$")
+    ax1.plot_surface(X, Y, np.mean(U_h_train, axis=1), "r--", label=r"$U_h(x, \mu)$")
+    ax1.plot_surface(X, Y, u_mean, "r,", label=r"$U_{h-lhs}(x, \mu)$")
     ax1.legend()
     ax1.set_title("Means")
 
-    ax2 = fig.add_subplot(1, 2, 2)
+    ax2 = fig.add_subplot(122, projection="3d")
     if U_h_pred is not None:
-        ax2.plot(x, np.std(U_h_pred, axis=1), "b-", label=r"$\hat{U_h}(x, \mu)$")
-    ax2.plot(x, np.std(U_h_train, axis=1), "r--", label=r"$U_h(x, \mu)$")
-    # ax2.plot(x, u_std, "r,", label=r"$U_{h-lhs}(x, \mu)$")
+        ax2.plot_surface(X, Y, np.std(U_h_pred, axis=1), "b-", label=r"$\hat{U_h}(x, \mu)$")
+    ax2.plot_surface(X, Y, np.std(U_h_train, axis=1), "r--", label=r"$U_h(x, \mu)$")
+    ax2.plot_surface(X, Y, u_std, "r,", label=r"$U_{h-lhs}(x, \mu)$")
     ax2.legend()
     ax2.set_title("Standard deviations")
     

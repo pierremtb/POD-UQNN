@@ -41,12 +41,12 @@ class Logger(object):
         print("\nTraining started")
         print("================")
         self.model = model
-        self.pbar = tqdm(total=self.tf_epochs)
+        # self.pbar = tqdm(total=self.tf_epochs)
         if model_description:
             print(model.summary())
 
     def log_train_epoch(self, epoch, loss, custom="", is_iter=False):
-        self.pbar.update(1)
+        # self.pbar.update(1)
         if epoch % self.frequency == 0:
             name = 'nt_epoch' if is_iter else 'tf_epoch'
             message = f"{name} = {epoch:6d}  " + \
@@ -54,8 +54,8 @@ class Logger(object):
                   f"(+{self.get_epoch_duration()})  " + \
                   f"loss = {loss:.4e}  " + \
                   f"error = {self.get_error_u():.4e}  " + custom
-            self.pbar.set_description(f"l:{loss:.2e} e:{self.get_error_u():.2e}")
-            # print(message)
+            # self.pbar.set_description(f"l:{loss:.2e} e:{self.get_error_u():.2e}")
+            print(message)
 
     def log_train_opt(self, name):
         print(f"-- Starting {name} optimization --")

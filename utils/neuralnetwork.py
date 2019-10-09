@@ -35,6 +35,7 @@ class NeuralNetwork(object):
         self.ub = ub
         self.lb = lb
         self.reg_l = hp["lambda"]
+        self.batch_size = hp["batch_size"]
 
     def normalize(self, X):
         return X
@@ -57,8 +58,9 @@ class NeuralNetwork(object):
         return var
 
     def tf_optimization(self, X_u, u):
-        self.logger.log_train_opt("Adam")
+        # self.logger.log_train_opt("Adam")
         for epoch in range(self.tf_epochs):
+            X_u_batch, u_batch = self.fetch_minibatch(X_u, u)
             loss_value = self.tf_optimization_step(X_u, u)
             self.logger.log_train_epoch(epoch, loss_value)
 
@@ -74,13 +76,22 @@ class NeuralNetwork(object):
 
         # Creating the tensors
         X_u = self.normalize(X_u)
-        X_u = self.tensor(X_u)
-        u = self.tensor(u)
+        # X_u = self.tensor(X_u)
+        # u = self.tensor(u)
 
         # Optimizing
         self.tf_optimization(X_u, u)
 
         self.logger.log_train_end(self.tf_epochs)
+
+    def fetch_minibatch(self, X_u, u):
+        if self.batch_size < 1:
+            return X_u, u
+        N_u = X_u.shape[0]
+        idx_u = np.random.choice(N_u, self.batch_size, replace=False)
+        X_u_batch = self.tensor(X_u[idx_u, :])
+        u_batch = self.tensor(u[idx_u, :])
+        return X_u_batch, u_batch
 
     def predict(self, X):
         X = self.normalize(X)
