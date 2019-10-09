@@ -68,14 +68,7 @@ def prep_data(n_x, n_y, n_s, x_min, x_max, y_min, y_max):
     y = np.linspace(x_min, y_max, n_y)
     X, Y = np.meshgrid(x, y)
     for i in tqdm(range(n_s)):
-        mu_i = mu_lhs[i, :]
-
-        # Calling the Ackley function
-        f_i_of_xy = u_h(X, Y, mu_i)
-        U_h[:, i] = np.reshape(f_i_of_xy, (n_x * n_y,))
-        # for j, x_j in enumerate(x):
-        #     for k, y_k in enumerate(y):
-        #         U_h[j*n_x + k, i] = f_i_of_xy[j, k]
+        U_h[:, i] = np.reshape(u_h(X, Y, mu_lhs[i, :]), (n_x * n_y,))
         
     # The input are directly the parameters (the space is going to be reduced by POD)
     X_U_rb = mu_lhs

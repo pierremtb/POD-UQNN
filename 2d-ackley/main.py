@@ -1,4 +1,5 @@
 import sys
+import json
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -35,17 +36,16 @@ else:
     # POD stopping param
     hp["eps"] = 1e-10
     # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
-    hp["tf_epochs"] = 80000
-    hp["tf_lr"] = 0.005
+    hp["tf_epochs"] = 100000
+    hp["tf_lr"] = 0.002
     hp["tf_decay"] = 0.
     hp["tf_b1"] = 0.9
     hp["tf_eps"] = None
-    hp["lambda"] = 0
-    # hp["lambda"] = 1e-6
+    hp["lambda"] = 1e-6
     # Batch size for mini-batch training (0 means full-batch)
     hp["batch_size"] = 0
     # Frequency of the logger
-    hp["log_frequency"] = 1000
+    hp["log_frequency"] = 100
 
 if __name__ == "__main__":
     n_x = hp["n_x"]
@@ -77,18 +77,29 @@ if __name__ == "__main__":
     # Creating the neural net model, and logger
     # In: (gam_0, gam_1, gam_2)
     # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
-    hp["layers"] = [n_d, 6, 8, 10, n_L]
+    hp["layers"] = [n_d, 64, 64, n_L]
     logger = Logger(hp)
     model = NeuralNetwork(hp, logger, ub, lb)
 
     # Setting the error function
     def error():
         U_rb_pred = model.predict(X_U_rb_val)
-        return 1/U_rb_pred.shape[0] * tf.reduce_sum(tf.square(U_rb_pred - U_rb_val))
+        return tf.reduce_mean(tf.square(U_rb_pred - U_rb_val))
     logger.set_error_fn(error)
 
     # Training
     model.fit(X_U_rb_train, U_rb_train)
+    # model = tf.keras.Sequential([
+    #     layers.Dense(6, activation="tanh", input_shape=[n_d]),
+    #     layers.Dense(8, activation="tanh"),
+    #     layers.Dense(10, activation="tanh"),
+    #     layers.Dense(n_L)
+    # ])
+    optimizer = tf.keras.optimizers.RMSprop(0.001)
+    model.compile(loss="mse",
+                  optimizer=optimizer,
+                  metrics=["mse"],
+
 
     # Predicting the coefficients
     U_rb_pred = model.predict(X_U_rb_val)

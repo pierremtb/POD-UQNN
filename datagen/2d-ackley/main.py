@@ -11,7 +11,7 @@ from names import X_FILE, Y_FILE, U_MEAN_FILE, U_STD_FILE
 
 n_x = 400
 n_y = 400
-n_s = int(1e2)
+n_s = int(1e3)
 x_min = -5.
 x_max = 5.
 y_min = -5.
