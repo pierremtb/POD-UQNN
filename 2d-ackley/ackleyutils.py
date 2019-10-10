@@ -90,27 +90,33 @@ def plot_results(U_h, U_h_pred=None,
     dirname = os.path.join(eqnPath, "data")
     X = np.load(os.path.join(dirname, X_FILE))
     Y = np.load(os.path.join(dirname, Y_FILE))
-    u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
-    u_std = np.load(os.path.join(dirname, U_STD_FILE))
+    U_test_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
+    U_test_std = np.load(os.path.join(dirname, U_STD_FILE))
 
     mean_levels = list(range(2, 15))
     std_levels = list(range(2))
-    fig = plt.figure(figsize=figsize(2.0, 1.5))
+    fig = plt.figure(figsize=figsize(3.0, 1.5))
 
     n_plot_x = 2
-    n_plot_y = 2
+    n_plot_y = 3
     plot_contour(fig, n_plot_x, n_plot_y, 1,
                  X, Y, np.mean(U_h, axis=2),
                  mean_levels, "Mean of $u_V$ (val)")
+    plot_contour(fig, n_plot_x, n_plot_y, 2,
+                 X, Y, U_test_mean,
+                 mean_levels, "Mean of $u_V$ (val)")
     if U_h_pred is not None:
-        plot_contour(fig, n_plot_x, n_plot_y, 2,
+        plot_contour(fig, n_plot_x, n_plot_y, 3,
                      X, Y, np.mean(U_h_pred, axis=2),
                      mean_levels, "Mean of $\hat{u_V}$ (pred)")
-    plot_contour(fig, n_plot_x, n_plot_y, 3,
+    plot_contour(fig, n_plot_x, n_plot_y, 4,
                  X, Y, np.std(U_h, axis=2),
                  std_levels, "Standard deviation of $u_V$ (val)")
+    plot_contour(fig, n_plot_x, n_plot_y, 5,
+                 X, Y, U_test_std,
+                 std_levels, "Standard deviation of $u_V$ (val)")
     if U_h_pred is not None:
-        plot_contour(fig, n_plot_x, n_plot_y, 4,
+        plot_contour(fig, n_plot_x, n_plot_y, 6,
                      X, Y, np.std(U_h_pred, axis=2),
                      std_levels, "Standard deviation of $\hat{u_V}$ (pred)")
 

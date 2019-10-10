@@ -1,0 +1,1 @@
+{"n_e": 300, "n_t": 500, "train_test_ratio": 0.5, "eps": 1e-10, "tf_epochs": 5000, "tf_lr": 0.001, "tf_decay": 0.0, "tf_b1": 0.9, "tf_eps": null, "lambda": 1e-06, "log_frequency": 1000, "bet_count": 10, "gam_count": 10, "layers": [20, 10, 20, 72]}

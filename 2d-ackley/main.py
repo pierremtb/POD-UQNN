@@ -30,7 +30,7 @@ else:
     hp["y_min"] = -5.
     hp["y_max"] = 5.
     # Snapshots count
-    hp["n_s"] = 1000
+    hp["n_s"] = 200
     # Train/Val repartition
     hp["train_val_ratio"] = 0.5
     # POD stopping param
