@@ -53,7 +53,7 @@ class Logger(object):
                   f"elapsed = {self.get_elapsed()} " + \
                   f"(+{self.get_epoch_duration()})  " + \
                   f"loss = {loss:.4e}  " + \
-                  f"error = {self.get_error_u():.4e}  " + custom
+                  f"err_val = {100 * self.get_error_u():.4f}%  " + custom
             # self.pbar.set_description(f"l:{loss:.2e} e:{self.get_error_u():.2e}")
             print(message)
 
@@ -64,4 +64,4 @@ class Logger(object):
         print("==================")
         print(f"Training finished (epoch {epoch}): " +
               f"duration = {self.get_elapsed()}  " +
-              f"error = {self.get_error_u():.4e}  " + custom)
+              f"err_val = {100 * self.get_error_u():.4f}  " + custom)

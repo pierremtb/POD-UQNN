@@ -2,7 +2,6 @@ import sys
 import json
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
 
 np.random.seed(1111)
 tf.random.set_seed(1111)
@@ -13,7 +12,7 @@ sys.path.append("utils")
 from pod import get_pod_bases
 from neuralnetwork import NeuralNetwork
 from logger import Logger
-from ackleyutils import prep_data, plot_results, restruct, scarcify
+from ackleyutils import prep_data, plot_results, restruct, scarcify, error_podnn
 
 # HYPER PARAMETERS
 
@@ -58,7 +57,9 @@ if __name__ == "__main__":
 
     # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
     # u_rb are the reduced coefficients we're looking for
-    X, Y, U_h_star, X_U_rb_star, lb, ub = prep_data(n_x, n_y, n_s, x_min, x_max, y_min, y_max)
+    X, Y, U_h_star, X_U_rb_star, lb, ub = prep_data(n_x, n_y, n_s,
+                                                    x_min, x_max,
+                                                    y_min, y_max)
     V = get_pod_bases(U_h_star, hp["eps"])
 
     # Sizes
@@ -73,9 +74,10 @@ if __name__ == "__main__":
     n_s_val = n_s - n_s_train
     X_U_rb_train, U_rb_train, X_U_rb_val, U_rb_val = \
             scarcify(X_U_rb_star, U_rb_star, n_s_train)
+    U_h_val = V.dot(U_rb_val.T)
 
     # Creating the neural net model, and logger
-    # In: (mu_0, mu_1, mu_2)
+    # In: (mu_0, mu_1, mu_2)
     # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
     hp["layers"] = [n_d, 64, 64, n_L]
     logger = Logger(hp)
@@ -84,7 +86,7 @@ if __name__ == "__main__":
     # Setting the error function on validation data (E_va)
     def error_val():
         U_rb_pred = model.predict(X_U_rb_val)
-        return 1/n_s_val * tf.reduce_sum(tf.square(U_rb_pred - U_rb_val))
+        return error_podnn(U_h_val, V.dot(U_rb_pred.T))
     logger.set_error_fn(error_val)
 
     # Training
@@ -92,12 +94,11 @@ if __name__ == "__main__":
 
     # Predicting the coefficients
     U_rb_pred = model.predict(X_U_rb_val)
-    print(f"Error calculated on n_s_train = {n_s_train} samples" +
+    print(f"Error calculated on n_s_val = {n_s_val} samples" +
           f" ({int(100 * hp['train_val_ratio'])}%)")
 
     # Retrieving the function with the predicted coefficients
     U_h_pred = V.dot(U_rb_pred.T)
-    U_h_val = V.dot(U_rb_val.T)
 
     # Restructuring
     U_h_val_struct = np.reshape(U_h_val, (n_x, n_y, n_s_val))

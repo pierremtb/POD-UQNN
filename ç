@@ -104,7 +104,6 @@ def plot_results(U_h, U_h_pred=None,
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
     print(f"Error on the mean test HiFi LHS solution: {error_test_mean:4f}%")
-    print(f"Error on the stdd test HiFi LHS solution: {error_test_std:4f}%")
 
     mean_levels = list(range(2, 15))
     std_levels = np.arange(5, 20) * 0.1
