@@ -86,7 +86,7 @@ def plot_results(U_h, U_h_pred=None,
     u_std = np.load(os.path.join(dirname, U_STD_FILE))
 
     levels = list(range(2, 15))
-    fig = plt.figure(figsize=figsize(2, 2))
+    fig = plt.figure(figsize=figsize(2.0, 1.5))
 
     # plotting the means
     ax1 = fig.add_subplot(221)
