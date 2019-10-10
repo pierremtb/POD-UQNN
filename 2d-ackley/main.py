@@ -61,6 +61,10 @@ if __name__ == "__main__":
     X, Y, U_h_star, X_U_rb_star, lb, ub = prep_data(n_x, n_y, n_s, x_min, x_max, y_min, y_max)
     V = get_pod_bases(U_h_star, hp["eps"])
 
+    print(np.std(U_h_star, 1))
+    print(np.min(np.std(U_h_star, 1)))
+    print(np.mean(np.std(U_h_star, 1)))
+    print(np.max(np.std(U_h_star, 1)))
     # Sizes
     n_L = V.shape[1]
     n_d = X_U_rb_star.shape[1]
