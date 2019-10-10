@@ -75,6 +75,14 @@ def prep_data(n_x, n_y, n_s, x_min, x_max, y_min, y_max):
 
     return X, Y, U_h, X_U_rb, lb, ub
 
+def plot_contour(fig, n_plot_x, n_plot_y, pos, X, Y, U, levels, title):
+    ax = fig.add_subplot(n_plot_x, n_plot_y, pos)
+    ct = ax.contourf(X, Y, U, levels=levels, origin="lower")
+    plt.colorbar(ct)
+    ax.set_title(title)
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$y$")
+
 
 def plot_results(U_h, U_h_pred=None,
                  hp=None, save_path=None):
@@ -85,33 +93,51 @@ def plot_results(U_h, U_h_pred=None,
     u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
     u_std = np.load(os.path.join(dirname, U_STD_FILE))
 
-    levels = list(range(2, 15))
+    mean_levels = list(range(2, 15))
+    std_levels = list(range(2))
     fig = plt.figure(figsize=figsize(2.0, 1.5))
 
-    # plotting the means
-    ax1 = fig.add_subplot(221)
-    ct1 = ax1.contourf(X, Y, np.mean(U_h, axis=2), levels=levels, origin="lower")
-    plt.colorbar(ct1)
-    ax1.set_title("Mean of $U_h$")
-    ax1.set_xlabel("$x$")
-    ax1.set_ylabel("$y$")
+    n_plot_x = 2
+    n_plot_y = 2
+    plot_contour(fig, n_plot_x, n_plot_y, 1,
+                 X, Y, np.mean(U_h, axis=2),
+                 mean_levels, "Mean of $u_V$ (val)")
     if U_h_pred is not None:
-        ax2 = fig.add_subplot(222)
-        ct2 = ax2.contourf(X, Y, np.mean(U_h_pred, axis=2), levels=levels)
-        plt.colorbar(ct2)
-        ax2.set_title("Mean of $\hat{U_h}$")
-        ax2.set_xlabel("$x$")
-        ax2.set_ylabel("$y$")
+        plot_contour(fig, n_plot_x, n_plot_y, 2,
+                     X, Y, np.mean(U_h_pred, axis=2),
+                     mean_levels, "Mean of $\hat{u_V}$ (pred)")
+    plot_contour(fig, n_plot_x, n_plot_y, 3,
+                 X, Y, np.std(U_h, axis=2),
+                 std_levels, "Standard deviation of $u_V$ (val)")
+    if U_h_pred is not None:
+        plot_contour(fig, n_plot_x, n_plot_y, 4,
+                     X, Y, np.std(U_h_pred, axis=2),
+                     std_levels, "Standard deviation of $\hat{u_V}$ (pred)")
 
-    ax3 = fig.add_subplot(223)
-    ax3.contourf(X, Y, np.std(U_h, axis=2))
-    ax3.set_title("Standard deviation of $U_h$")
-    if U_h_pred is not None:
-        ax4 = fig.add_subplot(224)
-        ax4.contourf(X, Y, np.std(U_h_pred, axis=2))
-        ax4.set_title("Standard deviation of $\hat{U_h}$")
+    # plotting the means
+    # ax1 = fig.add_subplot(221)
+    # ct1 = ax1.contourf(X, Y, np.mean(U_h, axis=2), levels=levels, origin="lower")
+    # plt.colorbar(ct1)
+    # ax1.set_title("Mean of $U_h$")
+    # ax1.set_xlabel("$x$")
+    # ax1.set_ylabel("$y$")
+    # if U_h_pred is not None:
+    #     ax2 = fig.add_subplot(222)
+    #     ct2 = ax2.contourf(X, Y, np.mean(U_h_pred, axis=2), levels=levels)
+    #     plt.colorbar(ct2)
+    #     ax2.set_title("Mean of $\hat{u_{T}}$ (test, via HiFi LHS)")
+    #     ax2.set_xlabel("$x$")
+    #     ax2.set_ylabel("$y$")
+
+    # ax3 = fig.add_subplot(223)
+    # ax3.contourf(X, Y, np.std(U_h, axis=2))
+    # ax3.set_title("Standard deviation of $U_V$ (val)")
+    # if U_h_pred is not None:
+    #     ax4 = fig.add_subplot(224)
+    #     ax4.contourf(X, Y, np.std(U_h_pred, axis=2))
+    #     ax4.set_title("Standard deviation of $\hat{U_V}$ (pred)")
     
-    if save_path != None:
+    if save_path is not None:
         saveresultdir(save_path, save_hp=hp)
     else:
         plt.show()

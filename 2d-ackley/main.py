@@ -75,31 +75,20 @@ if __name__ == "__main__":
             scarcify(X_U_rb_star, U_rb_star, n_s_train)
 
     # Creating the neural net model, and logger
-    # In: (gam_0, gam_1, gam_2)
+    # In: (mu_0, mu_1, mu_2)
     # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
     hp["layers"] = [n_d, 64, 64, n_L]
     logger = Logger(hp)
     model = NeuralNetwork(hp, logger, ub, lb)
 
-    # Setting the error function
-    def error():
+    # Setting the error function on validation data (E_va)
+    def error_val():
         U_rb_pred = model.predict(X_U_rb_val)
-        return tf.reduce_mean(tf.square(U_rb_pred - U_rb_val))
-    logger.set_error_fn(error)
+        return 1/n_s_val * tf.reduce_sum(tf.square(U_rb_pred - U_rb_val))
+    logger.set_error_fn(error_val)
 
     # Training
     model.fit(X_U_rb_train, U_rb_train)
-    # model = tf.keras.Sequential([
-    #     layers.Dense(6, activation="tanh", input_shape=[n_d]),
-    #     layers.Dense(8, activation="tanh"),
-    #     layers.Dense(10, activation="tanh"),
-    #     layers.Dense(n_L)
-    # ])
-    optimizer = tf.keras.optimizers.RMSprop(0.001)
-    # model.compile(loss="mse",
-    #               optimizer=optimizer,
-    #               metrics=["mse"],
-
 
     # Predicting the coefficients
     U_rb_pred = model.predict(X_U_rb_val)
@@ -108,11 +97,12 @@ if __name__ == "__main__":
 
     # Retrieving the function with the predicted coefficients
     U_h_pred = V.dot(U_rb_pred.T)
+    U_h_val = V.dot(U_rb_val.T)
 
     # Restructuring
-    U_h_star_struct = np.reshape(U_h_star, (n_x, n_y, n_s))
+    U_h_val_struct = np.reshape(U_h_val, (n_x, n_y, n_s_val))
     U_h_pred_struct = np.reshape(U_h_pred, (n_x, n_y, n_s_val))
 
     # Plotting and saving the results
-    plot_results(U_h_star_struct, U_h_pred_struct, hp, eqnPath)
-    plot_results(U_h_star_struct, U_h_pred_struct, hp)
+    plot_results(U_h_val_struct, U_h_pred_struct, hp, eqnPath)
+    plot_results(U_h_val_struct, U_h_pred_struct, hp)
