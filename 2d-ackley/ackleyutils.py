@@ -95,7 +95,7 @@ def plot_results(U_h, U_h_pred=None,
 
     mean_levels = list(range(2, 15))
     std_levels = np.arange(5, 20) * 0.1
-    fig = plt.figure(figsize=figsize(3.0, 1.5))
+    fig = plt.figure(figsize=figsize(1., 3))
 
     n_plot_x = 2
     n_plot_y = 3
