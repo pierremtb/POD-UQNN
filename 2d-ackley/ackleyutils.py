@@ -1,6 +1,7 @@
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
 import sys
 from tqdm import tqdm
 import tensorflow as tf
@@ -12,23 +13,10 @@ from scipy.interpolate import griddata
 eqnPath = "2d-ackley"
 sys.path.append("utils")
 from plotting import figsize, saveresultdir
+from pod import get_pod_bases
+from metrics import error_podnn
 sys.path.append(os.path.join("datagen", eqnPath))
 from names import X_FILE, Y_FILE, U_MEAN_FILE, U_STD_FILE
-
-
-def scarcify(X, u, N):
-    idx = np.random.choice(X.shape[0], N, replace=False)
-    mask = np.ones(X.shape[0], bool)
-    mask[idx] = False
-    return X[idx, :], u[idx, :], X[mask, :], u[mask, :]
-
-
-def restruct(U_h, n_x, n_y, n_s):
-    U_h_struct = np.zeros((n_x, n_y, n_s))
-    idx = np.arange(n_s) * n_x * n_y
-    for i in range(n_x):
-        U_h_struct[i, :] = U_h[:, idx + i]
-    return U_h_struct
 
 
 # The custom stochastic Ackley 2D function
@@ -38,7 +26,7 @@ def u_h(x, y, mu):
            + 20 + np.exp(1)
 
 
-def prep_data(n_x, n_y, n_s, x_min, x_max, y_min, y_max):
+def prep_data(n_x, n_y, n_s, x_min, x_max, y_min, y_max, disable_progress=False):
     # Number of degrees of freedom: the whole domain
     n_h = n_x * n_y
     # Since the grid is in the DOF
@@ -48,8 +36,9 @@ def prep_data(n_x, n_y, n_s, x_min, x_max, y_min, y_max):
     mu = np.array([0., 0., 0.])
 
     # LHS sampling (first uniform, then perturbated)
-    print("Doing the LHS sampling...")
-    pbar = tqdm(total=100)
+    if not disable_progress:
+        print("Doing the LHS sampling...")
+    pbar = tqdm(total=100, disable=disable_progress)
     X = lhs(n_s, mu.shape[0]).T
     pbar.update(50)
     lb = -1. * np.ones_like(mu)
@@ -62,13 +51,14 @@ def prep_data(n_x, n_y, n_s, x_min, x_max, y_min, y_max):
     n_d = 2 + mu.shape[0]
 
     # Creating the snapshots
-    print(f"Generating {nn_s} corresponding snapshots...")
+    if not disable_progress:
+        print(f"Generating {nn_s} corresponding snapshots...")
     X_U_rb = np.zeros((nn_s, n_d))
     U_h = np.zeros((n_h, nn_s))
     x = np.linspace(x_min, x_max, n_x)
     y = np.linspace(x_min, y_max, n_y)
     X, Y = np.meshgrid(x, y)
-    for i in tqdm(range(n_s)):
+    for i in tqdm(range(n_s), disable=disable_progress):
         U_h[:, i] = np.reshape(u_h(X, Y, mu_lhs[i, :]), (n_x * n_y,))
         
     # The input are directly the parameters (the space is going to be reduced by POD)
@@ -76,18 +66,14 @@ def prep_data(n_x, n_y, n_s, x_min, x_max, y_min, y_max):
 
     return X, Y, U_h, X_U_rb, lb, ub
 
-def plot_contour(fig, n_plot_x, n_plot_y, pos, X, Y, U, levels, title):
-    ax = fig.add_subplot(n_plot_x, n_plot_y, pos)
+
+def plot_contour(fig, pos, X, Y, U, levels, title):
+    ax = fig.add_subplot(pos)
     ct = ax.contourf(X, Y, U, levels=levels, origin="lower")
     plt.colorbar(ct)
     ax.set_title(title)
     ax.set_xlabel("$x$")
     ax.set_ylabel("$y$")
-
-
-def error_podnn(U_h, U_h_pred):
-    return tf.norm(U_h - U_h_pred, ord=1) / \
-           tf.norm(U_h, ord=1)
 
 
 def plot_results(U_h, U_h_pred=None,
@@ -102,39 +88,59 @@ def plot_results(U_h, U_h_pred=None,
     U_pred_mean = np.mean(U_h_pred, axis=2)
     U_pred_std = np.std(U_h_pred, axis=2)
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
+    error_val = 100 * error_podnn(U_h, U_h_pred)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
-    print(f"Error on the mean test HiFi LHS solution: {error_test_mean:4f}%")
-    print(f"Error on the stdd test HiFi LHS solution: {error_test_std:4f}%")
+    if save_path is not None:
+        print("--")
+        print(f"Error on the mean test HiFi LHS solution: {error_test_mean:.4f}%")
+        print(f"Error on the stdd test HiFi LHS solution: {error_test_std:.4f}%")
+        print("--")
 
     mean_levels = list(range(2, 15))
     std_levels = np.arange(5, 20) * 0.1
-    fig = plt.figure(figsize=figsize(2, 0.95))
 
-    n_plot_x = 2
-    n_plot_y = 3
-    plot_contour(fig, n_plot_x, n_plot_y, 1,
+    n_plot_x = 4
+    n_plot_y = 6
+    scale = 2.
+    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.))
+    gs = fig.add_gridspec(n_plot_x, n_plot_y)
+
+    plot_contour(fig, gs[0:2, 0:2],
+                 X, Y, U_test_mean,
+                 mean_levels, "Mean of $u_V$ (test)")
+    plot_contour(fig, gs[0:2, 2:4],
                  X, Y, np.mean(U_h, axis=2),
                  mean_levels, "Mean of $u_V$ (val)")
-    plot_contour(fig, n_plot_x, n_plot_y, 2,
-                 X, Y, U_test_mean,
-                 mean_levels, "Mean of $u_V$ (val)")
     if U_h_pred is not None:
-        plot_contour(fig, n_plot_x, n_plot_y, 3,
+        plot_contour(fig, gs[0:2, 4:6],
                      X, Y, np.mean(U_h_pred, axis=2),
                      mean_levels, "Mean of $\hat{u_V}$ (pred)")
-    plot_contour(fig, n_plot_x, n_plot_y, 4,
+    plot_contour(fig, gs[2:4, 0:2],
+                 X, Y, U_test_std,
+                 std_levels, "Standard deviation of $u_V$ (test)")
+    plot_contour(fig, gs[2:4, 2:4],
                  X, Y, np.std(U_h, axis=2),
                  std_levels, "Standard deviation of $u_V$ (val)")
-    plot_contour(fig, n_plot_x, n_plot_y, 5,
-                 X, Y, U_test_std,
-                 std_levels, "Standard deviation of $u_V$ (val)")
     if U_h_pred is not None:
-        plot_contour(fig, n_plot_x, n_plot_y, 6,
+        plot_contour(fig, gs[2:4, 4:6],
                      X, Y, np.std(U_h_pred, axis=2),
                      std_levels, "Standard deviation of $\hat{u_V}$ (pred)")
 
+    plt.tight_layout()
     if save_path is not None:
         saveresultdir(save_path, save_hp=hp)
     else:
-        plt.tight_layout()
-        plt.show()
+        plt.show()     
+
+    # Table display of the errors
+    # ax = fig.add_subplot(gs[4, :])
+    # ax.axis('off')
+    # table = r"\textbf{Numerical results}  \\ \\ " + \
+    #         r"\begin{tabular}{|l|c|} " + \
+    #         r"\hline " + \
+    #         r"Validation error (%.1f\%% of the dataset) & $%.4f \%%$ \\ " % (100 * hp["train_val_ratio"], error_val) + \
+    #         r"\hline " + \
+    #         r"Test error (HiFi LHS sampling) & $%.4f \%%$ \\ " % (error_test_mean) + \
+    #         r"\hline " + \
+    #         r"\end{tabular}"
+    # ax.text(0.1, 0.1, table)

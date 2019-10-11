@@ -10,9 +10,12 @@ eqnPath = "2d-ackley"
 sys.path.append(eqnPath)
 sys.path.append("utils")
 from pod import get_pod_bases
+from metrics import error_podnn
 from neuralnetwork import NeuralNetwork
 from logger import Logger
-from ackleyutils import prep_data, plot_results, restruct, scarcify, error_podnn
+from ackleyutils import prep_data, plot_results
+from handling import restruct, scarcify
+
 
 # HYPER PARAMETERS
 
@@ -35,6 +38,7 @@ else:
     # POD stopping param
     hp["eps"] = 1e-10
     # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
+    # hp["tf_epochs"] = 0
     hp["tf_epochs"] = 100000
     hp["tf_lr"] = 0.002
     hp["tf_decay"] = 0.
@@ -105,5 +109,5 @@ if __name__ == "__main__":
     U_h_pred_struct = np.reshape(U_h_pred, (n_x, n_y, n_s_val))
 
     # Plotting and saving the results
-    plot_results(U_h_val_struct, U_h_pred_struct, hp, eqnPath)
+    # plot_results(U_h_val_struct, U_h_pred_struct, hp, eqnPath)
     plot_results(U_h_val_struct, U_h_pred_struct, hp)

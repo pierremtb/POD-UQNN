@@ -64,4 +64,4 @@ class Logger(object):
         print("==================")
         print(f"Training finished (epoch {epoch}): " +
               f"duration = {self.get_elapsed()}  " +
-              f"err_val = {100 * self.get_error_u():.4f}  " + custom)
+              f"err_val = {100 * self.get_error_u():.4f}%  " + custom)

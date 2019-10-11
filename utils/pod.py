@@ -37,7 +37,3 @@ def get_pod_bases(U_h, eps=1e-10):
         V[:, i] = U_h.dot(Z[:, i]) / np.sqrt(lambdas_trunc[i])
     
     return V
-
-
-def error_pod(U_h, V):
-    return np.linalg.norm(U_h - V.dot(V.T).dot(U_h)) / np.linalg.norm(U_h)
