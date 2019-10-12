@@ -76,7 +76,6 @@ model = NeuralNetwork(hp, logger, ub, lb)
 def error_val():
     U_rb_pred = model.predict(X_U_rb_val)
     return error_podnn(U_h_val, V.dot(U_rb_pred.T))
-    return 1/U_rb_pred.shape[0] * tf.reduce_sum(tf.square(U_rb_pred - U_rb_val))
 logger.set_error_fn(error_val)
 
 # Training

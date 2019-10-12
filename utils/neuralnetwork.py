@@ -56,9 +56,9 @@ class NeuralNetwork(object):
         var = self.model.trainable_variables
         return var
 
-    def tf_optimization(self, X_u, u):
+    def tf_optimization(self, X_u, u, tf_epochs):
         # self.logger.log_train_opt("Adam")
-        for epoch in range(self.tf_epochs):
+        for epoch in range(tf_epochs):
             # X_u_batch, u_batch = self.fetch_minibatch(X_u, u)
             loss_value = self.tf_optimization_step(X_u, u)
             self.logger.log_train_epoch(epoch, loss_value)
@@ -70,7 +70,10 @@ class NeuralNetwork(object):
                 zip(grads, self.wrap_training_variables()))
         return loss_value
 
-    def fit(self, X_u, u):
+    def fit(self, X_u, u, custom_tf_epochs=None):
+        tf_epochs = self.tf_epochs
+        if custom_tf_epochs is not None:
+            tf_epochs = custom_tf_epochs
         self.logger.log_train_start(self)
 
         # Normalizing
@@ -79,9 +82,9 @@ class NeuralNetwork(object):
         u = self.tensor(u)
 
         # Optimizing
-        self.tf_optimization(X_u, u)
+        self.tf_optimization(X_u, u, tf_epochs)
 
-        self.logger.log_train_end(self.tf_epochs)
+        self.logger.log_train_end(tf_epochs)
 
     def fetch_minibatch(self, X_u, u):
         if self.batch_size < 1:

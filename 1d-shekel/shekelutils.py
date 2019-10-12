@@ -55,18 +55,22 @@ def prep_data(n_x, n_s, bet_count=0, gam_count=3):
     return U_h, X_U_rb, lb, ub
 
 
-def plot_results(U_h, U_h_pred=None,
-                 hp=None, save_path=None):
-
+def get_test_data():
     dirname = os.path.join(eqnPath, "data")
     x = np.load(os.path.join(dirname, X_FILE))
     U_test_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
     U_test_std = np.load(os.path.join(dirname, U_STD_FILE))
+    return x, U_test_mean, U_test_std
+
+
+def plot_results(U_h, U_h_pred=None,
+                 hp=None, save_path=None):
+
+    x, U_test_mean, U_test_std = get_test_data()
 
     U_pred_mean = np.mean(U_h_pred, axis=1)
     U_pred_std = np.std(U_h_pred, axis=1)
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
-    error_val = 100 * error_podnn(U_h, U_h_pred)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
     if save_path is not None:
         print("--")
@@ -96,7 +100,7 @@ def plot_results(U_h, U_h_pred=None,
     ax2.set_title("Standard deviations")
     ax2.set_xlabel("$x$")
     
-    if save_path != None:
+    if save_path is not None:
         saveresultdir(save_path, save_hp=hp)
     else:
         plt.show()

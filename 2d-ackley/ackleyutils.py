@@ -76,19 +76,22 @@ def plot_contour(fig, pos, X, Y, U, levels, title):
     ax.set_ylabel("$y$")
 
 
-def plot_results(U_h, U_h_pred=None,
-                 hp=None, save_path=None):
-
+def get_test_data():
     dirname = os.path.join(eqnPath, "data")
     X = np.load(os.path.join(dirname, X_FILE))
     Y = np.load(os.path.join(dirname, Y_FILE))
     U_test_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
     U_test_std = np.load(os.path.join(dirname, U_STD_FILE))
+    return X, Y, U_test_mean, U_test_std
+
+
+def plot_results(U_h, U_h_pred=None,
+                 hp=None, save_path=None):
+    X, Y, U_test_mean, U_test_std = get_test_data()
 
     U_pred_mean = np.mean(U_h_pred, axis=2)
     U_pred_std = np.std(U_h_pred, axis=2)
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
-    error_val = 100 * error_podnn(U_h, U_h_pred)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
     if save_path is not None:
         print("--")
@@ -101,7 +104,6 @@ def plot_results(U_h, U_h_pred=None,
 
     n_plot_x = 4
     n_plot_y = 6
-    scale = 2.
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
@@ -135,6 +137,7 @@ def plot_results(U_h, U_h_pred=None,
     # Table display of the errors
     # ax = fig.add_subplot(gs[4, :])
     # ax.axis('off')
+    # error_val = 100 * error_podnn(U_h, U_h_pred)
     # table = r"\textbf{Numerical results}  \\ \\ " + \
     #         r"\begin{tabular}{|l|c|} " + \
     #         r"\hline " + \
