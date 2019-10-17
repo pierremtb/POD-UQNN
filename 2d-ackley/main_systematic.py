@@ -41,7 +41,7 @@ else:
     # POD stopping param
     hp["eps"] = 1e-10
     # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
-    hp["tf_epochs"] = [1000, 5000, 20000, 100000, 200000]
+    hp["tf_epochs"] = [20000, 50000, 80000, 130000, 200000]
     # hp["tf_epochs"] = [1000, 5000]
     hp["tf_lr"] = 0.002
     hp["tf_decay"] = 0.
