@@ -50,9 +50,9 @@ def saveresultdir(save_path, save_hp):
 
 
 def savefig(filename):
-    plt.savefig("{}.pdf".format(filename))
-    plt.savefig("{}.png".format(filename))
-    # plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0)
-    # plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0)
+    # plt.savefig("{}.pdf".format(filename))
+    # plt.savefig("{}.png".format(filename))
+    plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0)
+    plt.savefig('{}.pdf'.format(filename), bbox_inches='tight', pad_inches=0)
     plt.close()
 

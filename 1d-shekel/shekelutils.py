@@ -78,14 +78,14 @@ def plot_results(U_h, U_h_pred=None,
         print(f"Error on the stdd test HiFi LHS solution: {error_test_std:4f}%")
         print("--")
 
-    fig = plt.figure(figsize=figsize(2, 1))
+    fig = plt.figure(figsize=figsize(1, 2, 2))
 
     # Plotting the means
     ax1 = fig.add_subplot(1, 2, 1)
     if U_h_pred is not None:
-        ax1.plot(x, np.mean(U_h_pred, axis=1), "b-", label=r"$\hat{U_h}(x, \mu)$")
-    ax1.plot(x, np.mean(U_h, axis=1), "r--", label=r"$U_h(x, \mu)$")
-    ax1.plot(x, U_test_mean, "r,", label=r"$U_{h-lhs}(x, \mu)$")
+        ax1.plot(x, np.mean(U_h_pred, axis=1), "b-", label=r"$\hat{u_V}(x)$")
+    ax1.plot(x, np.mean(U_h, axis=1), "r--", label=r"$u_V(x)$")
+    ax1.plot(x, U_test_mean, "r,", label=r"$u_T(x)$")
     ax1.legend()
     ax1.set_title("Means")
     ax1.set_xlabel("$x$")
@@ -93,9 +93,9 @@ def plot_results(U_h, U_h_pred=None,
     # Plotting the std
     ax2 = fig.add_subplot(1, 2, 2)
     if U_h_pred is not None:
-        ax2.plot(x, np.std(U_h_pred, axis=1), "b-", label=r"$\hat{U_h}(x, \mu)$")
-    ax2.plot(x, np.std(U_h, axis=1), "r--", label=r"$U_h(x, \mu)$")
-    ax2.plot(x, U_test_std, "r,", label=r"$U_{h-lhs}(x, \mu)$")
+        ax2.plot(x, np.std(U_h_pred, axis=1), "b-", label=r"$\hat{u_V}(x)$")
+    ax2.plot(x, np.std(U_h, axis=1), "r--", label=r"$u_V(x)$")
+    ax2.plot(x, U_test_std, "r,", label=r"$u_T(x)$")
     ax2.legend()
     ax2.set_title("Standard deviations")
     ax2.set_xlabel("$x$")
