@@ -109,7 +109,7 @@ def plot_results(U_h, U_h_pred=None,
 
     plot_contour(fig, gs[0:2, 0:2],
                  X, Y, U_test_mean,
-                 mean_levels, "Mean of $u_V$ (test)")
+                 mean_levels, "Mean of $u_T$ (test)")
     plot_contour(fig, gs[0:2, 2:4],
                  X, Y, np.mean(U_h, axis=2),
                  mean_levels, "Mean of $u_V$ (val)")
@@ -119,7 +119,7 @@ def plot_results(U_h, U_h_pred=None,
                      mean_levels, "Mean of $\hat{u_V}$ (pred)")
     plot_contour(fig, gs[2:4, 0:2],
                  X, Y, U_test_std,
-                 std_levels, "Standard deviation of $u_V$ (test)")
+                 std_levels, "Standard deviation of $u_T$ (test)")
     plot_contour(fig, gs[2:4, 2:4],
                  X, Y, np.std(U_h, axis=2),
                  std_levels, "Standard deviation of $u_V$ (val)")
