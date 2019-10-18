@@ -11,13 +11,13 @@ from names import X_FILE, U_MEAN_FILE, U_STD_FILE
 n_x = 300
 n_s = 1e6
 
-U_h, _, _, _ = prep_data(n_x, int(n_s),
+U, _, _, _ = prep_data(n_x, int(n_s),
                          bet_count=10,
                          gam_count=10)
 
 x = np.linspace(0, 10, n_x)
-u_mean = np.mean(U_h, axis=1)
-u_std = np.std(U_h, axis=1)
+u_mean = np.mean(U, axis=1)
+u_std = np.std(U, axis=1)
 
 dirname = os.path.join(eqnPath, "data")
 print(f"Saving data to {dirname}")

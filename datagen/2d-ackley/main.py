@@ -31,27 +31,27 @@ lb = -1. * np.ones_like(mu)
 ub = +1. * np.ones_like(mu)
 
 # The sum and sum of squares recipient vectors
-U_h_tot = np.zeros((n_x*n_y, 1))
-U_h_tot_sq = np.zeros((n_x*n_y, 1))
+U_tot = np.zeros((n_x*n_y, 1))
+U_tot_sq = np.zeros((n_x*n_y, 1))
 
 # Going through the snapshots one by one without saving them
 for i in tqdm(range(n_s)):
     # Computing one snapshot
     X_mu = lhs(1, mu.shape[0]).T
     mu_lhs = lb + (ub - lb)*X_mu
-    U_h = np.reshape(u_h(X, Y, mu_lhs[0, :]), (n_x * n_y, 1))
+    U = np.reshape(u_h(X, Y, mu_lhs[0, :]), (n_x * n_y, 1))
 
     # Building the sum and the sum of squaes
-    U_h_tot += U_h
-    U_h_tot_sq += U_h**2
+    U_tot += U
+    U_tot_sq += U**2
 
 # Recreating the mean and the std
-U_h_mean = U_h_tot / n_s
-U_h_std = np.sqrt((n_s*U_h_tot_sq - U_h_tot**2) / (n_s*(n_s - 1)))
+U_mean = U_tot / n_s
+U_std = np.sqrt((n_s*U_tot_sq - U_tot**2) / (n_s*(n_s - 1)))
 
 # Reshaping into a 2D-valued solution
-U_test_mean = np.reshape(U_h_mean, (n_x, n_y))
-U_test_std = np.reshape(U_h_std, (n_x, n_y))
+U_test_mean = np.reshape(U_mean, (n_x, n_y))
+U_test_std = np.reshape(U_std, (n_x, n_y))
 
 dirname = os.path.join(eqnPath, "data")
 print(f"Saving data to {dirname}")

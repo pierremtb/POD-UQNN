@@ -13,12 +13,12 @@ from plotting import figsize, saveresultdir
 sys.path.append(os.path.join("datagen", eqnPath))
 from names import X_FILE, Y_FILE, U_MEAN_FILE, U_STD_FILE
 
-def restruct(U_h, n_x, n_y, n_s):
-    U_h_struct = np.zeros((n_x, n_y, n_s))
+def restruct(U, n_x, n_y, n_s):
+    U_struct = np.zeros((n_x, n_y, n_s))
     idx = np.arange(n_x) * n_y
     for i in range(n_y):
-        U_h_struct[:, :, :] = U_h[:, idx + i]
-    return U_h_struct
+        U_struct[:, :, :] = U[:, idx + i]
+    return U_struct
 
 # The custom stochastic Ackley 2D function
 def u_h(x, y, mu):
@@ -50,8 +50,8 @@ def prep_data(n_h, n_x, n_y, n_s, x_min, x_max, y_min, y_max):
 
     # Creating the snapshots
     print(f"Generating {nn_s} corresponding snapshots")
-    X_U_rb = np.zeros((nn_s, n_d))
-    U_h = np.zeros((n_h, nn_s))
+    X_v = np.zeros((nn_s, n_d))
+    U = np.zeros((n_h, nn_s))
     x = np.linspace(x_min, x_max, n_x)
     y = np.linspace(x_min, y_max, n_y)
     X, Y = np.meshgrid(x, y)
@@ -62,16 +62,16 @@ def prep_data(n_h, n_x, n_y, n_s, x_min, x_max, y_min, y_max):
         f_i_of_xy = u_h(X, Y, mu_i)
         for j, x_j in enumerate(x):
             for k, y_k in enumerate(y):
-                U_h[:, i*n_x*n_y + j*n_x + k] = f_i_of_xy[j, k]
-                X_U_rb[i*n_x*n_y + j*n_x + k, :] = np.hstack(([x_j, y_k], mu_lhs[i, :]))
+                U[:, i*n_x*n_y + j*n_x + k] = f_i_of_xy[j, k]
+                X_v[i*n_x*n_y + j*n_x + k, :] = np.hstack(([x_j, y_k], mu_lhs[i, :]))
         
     lb = np.hstack(([x_min, y_min], lb))
     ub = np.hstack(([x_max, y_max], ub))
 
-    return X, Y, U_h, X_U_rb, lb, ub
+    return X, Y, U, X_v, lb, ub
 
 
-def plot_results(U_h_train, U_h_pred=None,
+def plot_results(U_train, U_pred=None,
                  hp=None, save_path=None):
 
     dirname = os.path.join(eqnPath, "data")
@@ -84,17 +84,17 @@ def plot_results(U_h_train, U_h_pred=None,
 
     # plotting the means
     ax1 = fig.add_subplot(121, projection="3d")
-    if U_h_pred is not None:
-        ax1.plot_surface(X, Y, np.mean(U_h_pred, axis=1), "b-", label=r"$\hat{U_h}(x, \mu)$")
-    ax1.plot_surface(X, Y, np.mean(U_h_train, axis=1), "r--", label=r"$U_h(x, \mu)$")
+    if U_pred is not None:
+        ax1.plot_surface(X, Y, np.mean(U_pred, axis=1), "b-", label=r"$\hat{U}(x, \mu)$")
+    ax1.plot_surface(X, Y, np.mean(U_train, axis=1), "r--", label=r"$U(x, \mu)$")
     ax1.plot_surface(X, Y, u_mean, "r,", label=r"$U_{h-lhs}(x, \mu)$")
     ax1.legend()
     ax1.set_title("Means")
 
     ax2 = fig.add_subplot(122, projection="3d")
-    if U_h_pred is not None:
-        ax2.plot_surface(X, Y, np.std(U_h_pred, axis=1), "b-", label=r"$\hat{U_h}(x, \mu)$")
-    ax2.plot_surface(X, Y, np.std(U_h_train, axis=1), "r--", label=r"$U_h(x, \mu)$")
+    if U_pred is not None:
+        ax2.plot_surface(X, Y, np.std(U_pred, axis=1), "b-", label=r"$\hat{U}(x, \mu)$")
+    ax2.plot_surface(X, Y, np.std(U_train, axis=1), "r--", label=r"$U(x, \mu)$")
     ax2.plot_surface(X, Y, u_std, "r,", label=r"$U_{h-lhs}(x, \mu)$")
     ax2.legend()
     ax2.set_title("Standard deviations")

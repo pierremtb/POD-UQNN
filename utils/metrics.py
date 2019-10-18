@@ -2,11 +2,11 @@ import numpy as np
 import tensorflow as tf
 
 
-def error_pod(U_h, V):
-    return np.linalg.norm(U_h - V.dot(V.T).dot(U_h)) / np.linalg.norm(U_h)
+def error_pod(U, V):
+    return np.linalg.norm(U - V.dot(V.T).dot(U)) / np.linalg.norm(U)
 
 
-def error_podnn(U_h, U_h_pred):
-    err = tf.norm(U_h - U_h_pred, ord=1) / \
-           tf.norm(U_h, ord=1)
+def error_podnn(U, U_pred):
+    err = tf.norm(U - U_pred, ord=1) / \
+           tf.norm(U, ord=1)
     return err.numpy()

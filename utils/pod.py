@@ -3,14 +3,14 @@ import tensorflow as tf
 from tqdm import tqdm
 
 
-def get_pod_bases(U_h, eps=1e-10):
+def get_pod_bases(U, eps=1e-10):
     # Number of DOFs
-    n_h = U_h.shape[0]
+    n_h = U.shape[0]
     # Number of snapshots n_s x Number of space nodes (n_x * n_y * ...)
-    nn_s = U_h.shape[1]
+    nn_s = U.shape[1]
     
     print("Performing SVD...")
-    W, D, ZT = np.linalg.svd(U_h, full_matrices=False)
+    W, D, ZT = np.linalg.svd(U, full_matrices=False)
     
     # Getting MATLAB-like orientation
     Z = ZT.T
@@ -34,6 +34,6 @@ def get_pod_bases(U_h, eps=1e-10):
     print("Contructing the reduced bases V...")
     V = np.zeros((n_h, n_L))
     for i in tqdm(range(n_L)):
-        V[:, i] = U_h.dot(Z[:, i]) / np.sqrt(lambdas_trunc[i])
+        V[:, i] = U.dot(Z[:, i]) / np.sqrt(lambdas_trunc[i])
     
     return V

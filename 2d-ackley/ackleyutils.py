@@ -20,7 +20,7 @@ from names import X_FILE, Y_FILE, U_MEAN_FILE, U_STD_FILE
 
 
 # The custom stochastic Ackley 2D function
-def u_h(x, y, mu):
+def u(x, y, mu):
     return - 20*(1+.1*mu[2])*np.exp(-.2*(1+.1*mu[1])*np.sqrt(.5*(x**2+y**2))) \
            - np.exp(.5*(np.cos(2*np.pi*(1+.1*mu[0])*x) + np.cos(2*np.pi*(1+.1*mu[0])*y))) \
            + 20 + np.exp(1)
@@ -53,18 +53,18 @@ def prep_data(n_x, n_y, n_s, x_min, x_max, y_min, y_max, disable_progress=False)
     # Creating the snapshots
     if not disable_progress:
         print(f"Generating {nn_s} corresponding snapshots...")
-    X_U_rb = np.zeros((nn_s, n_d))
-    U_h = np.zeros((n_h, nn_s))
+    X_v = np.zeros((nn_s, n_d))
+    U = np.zeros((n_h, nn_s))
     x = np.linspace(x_min, x_max, n_x)
     y = np.linspace(x_min, y_max, n_y)
     X, Y = np.meshgrid(x, y)
     for i in tqdm(range(n_s), disable=disable_progress):
-        U_h[:, i] = np.reshape(u_h(X, Y, mu_lhs[i, :]), (n_x * n_y,))
+        U[:, i] = np.reshape(u(X, Y, mu_lhs[i, :]), (n_x * n_y,))
         
     # The input are directly the parameters (the space is going to be reduced by POD)
-    X_U_rb = mu_lhs
+    X_v = mu_lhs
 
-    return X, Y, U_h, X_U_rb, lb, ub
+    return X, Y, U, X_v, lb, ub
 
 
 def plot_contour(fig, pos, X, Y, U, levels, title):
@@ -85,12 +85,12 @@ def get_test_data():
     return X, Y, U_test_mean, U_test_std
 
 
-def plot_results(U_h, U_h_pred=None,
+def plot_results(U, U_pred=None,
                  hp=None, save_path=None):
     X, Y, U_test_mean, U_test_std = get_test_data()
 
-    U_pred_mean = np.mean(U_h_pred, axis=2)
-    U_pred_std = np.std(U_h_pred, axis=2)
+    U_pred_mean = np.mean(U_pred, axis=2)
+    U_pred_std = np.std(U_pred, axis=2)
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
     if save_path is not None:
@@ -111,21 +111,21 @@ def plot_results(U_h, U_h_pred=None,
                  X, Y, U_test_mean,
                  mean_levels, "Mean of $u_T$ (test)")
     plot_contour(fig, gs[0:2, 2:4],
-                 X, Y, np.mean(U_h, axis=2),
+                 X, Y, np.mean(U, axis=2),
                  mean_levels, "Mean of $u_V$ (val)")
-    if U_h_pred is not None:
+    if U_pred is not None:
         plot_contour(fig, gs[0:2, 4:6],
-                     X, Y, np.mean(U_h_pred, axis=2),
+                     X, Y, np.mean(U_pred, axis=2),
                      mean_levels, "Mean of $\hat{u_V}$ (pred)")
     plot_contour(fig, gs[2:4, 0:2],
                  X, Y, U_test_std,
                  std_levels, "Standard deviation of $u_T$ (test)")
     plot_contour(fig, gs[2:4, 2:4],
-                 X, Y, np.std(U_h, axis=2),
+                 X, Y, np.std(U, axis=2),
                  std_levels, "Standard deviation of $u_V$ (val)")
-    if U_h_pred is not None:
+    if U_pred is not None:
         plot_contour(fig, gs[2:4, 4:6],
-                     X, Y, np.std(U_h_pred, axis=2),
+                     X, Y, np.std(U_pred, axis=2),
                      std_levels, "Standard deviation of $\hat{u_V}$ (pred)")
 
     plt.tight_layout()
@@ -137,7 +137,7 @@ def plot_results(U_h, U_h_pred=None,
     # Table display of the errors
     # ax = fig.add_subplot(gs[4, :])
     # ax.axis('off')
-    # error_val = 100 * error_podnn(U_h, U_h_pred)
+    # error_val = 100 * error_podnn(U, U_pred)
     # table = r"\textbf{Numerical results}  \\ \\ " + \
     #         r"\begin{tabular}{|l|c|} " + \
     #         r"\hline " + \

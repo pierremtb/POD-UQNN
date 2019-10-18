@@ -33,26 +33,26 @@ def prep_data(n_x, n_s, bet_count=0, gam_count=3):
     pbar.update(50)
     lb = p_var[:, 0] - np.sqrt(3)*p_var[:, 1]
     ub = p_var[:, 0] + np.sqrt(3)*p_var[:, 1]
-    X_U_rb = lb + (ub - lb)*X
+    X_v = lb + (ub - lb)*X
     pbar.update(50)
     pbar.close()
     
     # Creating the snapshots
     print(f"Generating {n_s} corresponding snapshots")
-    U_h = np.zeros((n_x, n_s))
+    U = np.zeros((n_x, n_s))
     x = np.linspace(0, 10, n_x)
     for i in tqdm(range(n_s)):
         # Altering the beta params with lhs perturbations
-        bet_kxsi = X_U_rb[i, :bet_count]
+        bet_kxsi = X_v[i, :bet_count]
         bet[0:bet_kxsi.shape[0], 0] = bet_kxsi
         # Altering the gamma params with lhs perturbations
-        gam_kxsi = X_U_rb[i, bet_count:]
+        gam_kxsi = X_v[i, bet_count:]
         gam[0:gam_kxsi.shape[0], 0] = gam_kxsi
 
         # Calling the Shekel function
-        U_h[:, i] = -shekel(x[None, :], gam, bet)[0]
+        U[:, i] = -shekel(x[None, :], gam, bet)[0]
 
-    return U_h, X_U_rb, lb, ub
+    return U, X_v, lb, ub
 
 
 def get_test_data():
@@ -63,13 +63,13 @@ def get_test_data():
     return x, U_test_mean, U_test_std
 
 
-def plot_results(U_h, U_h_pred=None,
+def plot_results(U, U_pred=None,
                  hp=None, save_path=None):
 
     x, U_test_mean, U_test_std = get_test_data()
 
-    U_pred_mean = np.mean(U_h_pred, axis=1)
-    U_pred_std = np.std(U_h_pred, axis=1)
+    U_pred_mean = np.mean(U_pred, axis=1)
+    U_pred_std = np.std(U_pred, axis=1)
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
     if save_path is not None:
@@ -82,9 +82,9 @@ def plot_results(U_h, U_h_pred=None,
 
     # Plotting the means
     ax1 = fig.add_subplot(1, 2, 1)
-    if U_h_pred is not None:
-        ax1.plot(x, np.mean(U_h_pred, axis=1), "b-", label=r"$\hat{u_V}(x)$")
-    ax1.plot(x, np.mean(U_h, axis=1), "r--", label=r"$u_V(x)$")
+    if U_pred is not None:
+        ax1.plot(x, np.mean(U_pred, axis=1), "b-", label=r"$\hat{u_V}(x)$")
+    ax1.plot(x, np.mean(U, axis=1), "r--", label=r"$u_V(x)$")
     ax1.plot(x, U_test_mean, "r,", label=r"$u_T(x)$")
     ax1.legend()
     ax1.set_title("Means")
@@ -92,9 +92,9 @@ def plot_results(U_h, U_h_pred=None,
 
     # Plotting the std
     ax2 = fig.add_subplot(1, 2, 2)
-    if U_h_pred is not None:
-        ax2.plot(x, np.std(U_h_pred, axis=1), "b-", label=r"$\hat{u_V}(x)$")
-    ax2.plot(x, np.std(U_h, axis=1), "r--", label=r"$u_V(x)$")
+    if U_pred is not None:
+        ax2.plot(x, np.std(U_pred, axis=1), "b-", label=r"$\hat{u_V}(x)$")
+    ax2.plot(x, np.std(U, axis=1), "r--", label=r"$u_V(x)$")
     ax2.plot(x, U_test_std, "r,", label=r"$u_T(x)$")
     ax2.legend()
     ax2.set_title("Standard deviations")
