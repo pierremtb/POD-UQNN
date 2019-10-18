@@ -10,7 +10,7 @@ eqnPath = "2d-ackley"
 sys.path.append(eqnPath)
 sys.path.append("utils")
 from pod import get_pod_bases
-from metrics import error_podnn
+from metrics import error_podnn, error_pod
 from neuralnetwork import NeuralNetwork
 from logger import Logger
 from ackleyutils import prep_data, plot_results

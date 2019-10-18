@@ -10,7 +10,7 @@ eqnPath = "1d-shekel"
 sys.path.append(eqnPath)
 sys.path.append("utils")
 from pod import get_pod_bases
-from metrics import error_podnn
+from metrics import error_podnn, error_pod
 from neuralnetwork import NeuralNetwork
 from logger import Logger
 from shekelutils import plot_results, prep_data
@@ -55,6 +55,8 @@ if __name__ == "__main__":
     U_star, X_v_star, lb, ub = prep_data(hp["n_x"], hp["n_s"], hp["bet_count"], hp["gam_count"])
     V = get_pod_bases(U_star, hp["eps"])
 
+    print(f"POD relative error: {100 * error_pod(U_star, V):.4f}%")
+    
     # Sizes
     n_L = V.shape[1]
     n_d = X_v_star.shape[1]
