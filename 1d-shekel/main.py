@@ -33,7 +33,7 @@ else:
     # POD stopping param
     hp["eps"] = 1e-10
     # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
-    hp["tf_epochs"] = 35000
+    hp["tf_epochs"] = 70000
     hp["tf_lr"] = 0.003
     hp["tf_decay"] = 0.
     hp["tf_b1"] = 0.9
@@ -68,7 +68,7 @@ U_h_val = V.dot(U_rb_val.T)
 # Creating the neural net model, and logger
 # In: (gam_0, bet_1, ..., bet_m, gam_0, bet_1, ..., bet_n)
 # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
-hp["layers"] = [n_d, 40, 60, n_L]
+hp["layers"] = [n_d, 64, 64, n_L]
 logger = Logger(hp)
 model = NeuralNetwork(hp, logger, ub, lb)
 
