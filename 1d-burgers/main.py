@@ -14,7 +14,7 @@ from pod import get_pod_bases
 from metrics import error_podnn, error_pod
 from neuralnetwork import NeuralNetwork
 from logger import Logger
-from burgersutils import plot_results, prep_data
+from burgersutils import plot_results, prep_data, restruct
 from handling import scarcify, pack_layers
 
 
@@ -34,7 +34,7 @@ else:
     hp["t_min"] = 0.
     hp["t_max"] = 1.
     # Snapshots count
-    hp["n_s"] = 10
+    hp["n_s"] = 2
     # POD stopping param
     hp["eps"] = 1e-10
     # Train/val split
@@ -44,7 +44,7 @@ else:
     # Batch size for mini-batch training (0 means full-batch)
     hp["batch_size"] = 0
     # Setting up the TF SGD-based optimizer
-    hp["tf_epochs"] = 70000
+    hp["tf_epochs"] = 2000
     hp["tf_lr"] = 0.003
     hp["tf_decay"] = 0.
     hp["tf_b1"] = 0.9
@@ -104,12 +104,9 @@ if __name__ == "__main__":
     U_pred = V.dot(v_pred.T)
 
     # Restruct
-    n_s_val = int(hp["train_val_ratio"] * hp["n_s"])
-    U_pred_struct = restruct(U_val, n_x, n_s_val)
-    U_star_struct = restruct(U_pred, n_x, n_s_val)
-
-    print(U_pred_struct.shape)
-    print(U_val_struct.shape)
+    n_s_val = int((1. - hp["train_val_ratio"]) * hp["n_s"])
+    U_pred_struct = restruct(U_val, hp["n_x"], hp["n_t"], n_s_val)
+    U_val_struct = restruct(U_pred, hp["n_x"], hp["n_t"], n_s_val)
 
     # Plotting and saving the results
     plot_results(U_val, U_pred, hp, eqnPath)
