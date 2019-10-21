@@ -14,7 +14,7 @@ from pod import get_pod_bases
 from metrics import error_podnn, error_pod
 from neuralnetwork import NeuralNetwork
 from logger import Logger
-from shekelutils import plot_results, prep_data
+from burgersutils import plot_results, prep_data
 from handling import scarcify, pack_layers
 
 
@@ -34,7 +34,7 @@ else:
     hp["t_min"] = 0.
     hp["t_max"] = 1.
     # Snapshots count
-    hp["n_s"] = 100
+    hp["n_s"] = 10
     # POD stopping param
     hp["eps"] = 1e-10
     # Train/val split
@@ -43,7 +43,7 @@ else:
     hp["h_layers"] = [64, 64]
     # Batch size for mini-batch training (0 means full-batch)
     hp["batch_size"] = 0
-    # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
+    # Setting up the TF SGD-based optimizer
     hp["tf_epochs"] = 70000
     hp["tf_lr"] = 0.003
     hp["tf_decay"] = 0.
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     v_star = (V.T.dot(U_star)).T
 
     # Splitting data
-    n_s_train = int(hp["train_val_ratio"] * hp["n_s"])
+    n_s_train = int(hp["train_val_ratio"] * hp["n_s"] * hp["n_t"])
     X_v_train, v_train, X_v_val, v_val = \
             scarcify(X_v_star, v_star, n_s_train)
     U_val = V.dot(v_val.T)
@@ -102,6 +102,14 @@ if __name__ == "__main__":
 
     # Retrieving the function with the predicted coefficients
     U_pred = V.dot(v_pred.T)
+
+    # Restruct
+    n_s_val = int(hp["train_val_ratio"] * hp["n_s"])
+    U_pred_struct = restruct(U_val, n_x, n_s_val)
+    U_star_struct = restruct(U_pred, n_x, n_s_val)
+
+    print(U_pred_struct.shape)
+    print(U_val_struct.shape)
 
     # Plotting and saving the results
     plot_results(U_val, U_pred, hp, eqnPath)
