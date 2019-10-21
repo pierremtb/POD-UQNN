@@ -25,14 +25,20 @@ if len(sys.argv) > 1:
         hp = json.load(hpFile)
 else:
     hp = {}
-    # Space (dx = 1/30, n_x = 10/dx)
-    hp["n_x"] = 300
+    # Space
+    hp["n_x"] = 256
+    hp["x_min"] = -1.
+    hp["x_max"] = 1.
+    # Time
+    hp["n_t"] = 100
+    hp["t_min"] = 0.
+    hp["t_max"] = 1.
     # Snapshots count
-    hp["n_s"] = 1000
+    hp["n_s"] = 100
     # POD stopping param
     hp["eps"] = 1e-10
     # Train/val split
-    hp["train_val_ratio"] = 0.7
+    hp["train_val_ratio"] = 0.5
     # Deep NN hidden layers topology
     hp["h_layers"] = [64, 64]
     # Batch size for mini-batch training (0 means full-batch)
@@ -46,14 +52,16 @@ else:
     hp["lambda"] = 1e-6
     # Frequency of the logger
     hp["log_frequency"] = 1000
-    # Shekel params
-    hp["bet_count"] = 10
-    hp["gam_count"] = 10
+    # Burgers params
+    hp["mu_mean"] = 0.01/np.pi
 
 if __name__ == "__main__":
     # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
     # u_rb are the reduced coefficients we're looking for
-    U_star, X_v_star, lb, ub = prep_data(hp["n_x"], hp["n_s"], hp["bet_count"], hp["gam_count"])
+    U_star, X_v_star, lb, ub = prep_data(
+            hp["n_x"], hp["x_min"], hp["x_max"],
+            hp["n_t"], hp["t_min"], hp["t_max"],
+            hp["n_s"], hp["mu_mean"])
     V = get_pod_bases(U_star, hp["eps"])
 
     print(f"POD relative error: {100 * error_pod(U_star, V):.4f}%")

@@ -15,42 +15,32 @@ sys.path.append(os.path.join("datagen", eqnPath))
 from names import X_FILE, U_MEAN_FILE, U_STD_FILE
 
 
-def prep_data(n_x, n_s, bet_count=0, gam_count=3):
-    # Shekel parameters (t=10-sized)
-    bet = 1/10 * np.array([[1, 2, 2, 4, 4, 6, 3, 7, 5, 5]]).T
-    gam = 1. * np.array([[4, 1, 8, 6, 3, 2, 5, 8, 6, 7]]).T
-    mu = (bet, gam)
-    
-    # Perturbations
-    bet_var = np.hstack((bet, 0.1 * bet))[:bet_count, :]
-    gam_var = np.hstack((gam, 0.1 * gam))[:gam_count, :]
-    p_var = np.vstack((bet_var, gam_var))
-    
+def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s, mu_mean):
+    # Total number of snapshots
+    nn_s = n_t*n_s
+
     # LHS sampling (first uniform, then perturbated)
-    print("Doing the LHS sampling")
+    print("Doing the LHS sampling...")
     pbar = tqdm(total=100)
-    X = lhs(n_s, p_var.shape[0]).T
+    X = lhs(n_s, 1).T
     pbar.update(50)
-    lb = p_var[:, 0] - np.sqrt(3)*p_var[:, 1]
-    ub = p_var[:, 0] + np.sqrt(3)*p_var[:, 1]
-    X_v = lb + (ub - lb)*X
+    lb = mu_mean * (1 - np.sqrt(3))
+    ub = mu_mean * (1 + np.sqrt(3))
+    mu_lhs = lb + (ub - lb)*X
     pbar.update(50)
     pbar.close()
+
+    # Number of inputs in time plus number of parameters
+    n_d = 1 + p_var.shape[0]
     
     # Creating the snapshots
-    print(f"Generating {n_s} corresponding snapshots")
+    print(f"Generating {nn_s} corresponding snapshots")
     U = np.zeros((n_x, n_s))
-    x = np.linspace(0, 10, n_x)
+    x = np.linspace(x_min, x_max, n_x)
+    t = np.linspace(t_min, t_max, n_t)
     for i in tqdm(range(n_s)):
-        # Altering the beta params with lhs perturbations
-        bet_kxsi = X_v[i, :bet_count]
-        bet[0:bet_kxsi.shape[0], 0] = bet_kxsi
-        # Altering the gamma params with lhs perturbations
-        gam_kxsi = X_v[i, bet_count:]
-        gam[0:gam_kxsi.shape[0], 0] = gam_kxsi
-
         # Calling the Shekel function
-        U[:, i] = -shekel(x[None, :], gam, bet)[0]
+        U[:, i] = -shekel(x, t, mu_lhs[i, :])
 
     return U, X_v, lb, ub
 
