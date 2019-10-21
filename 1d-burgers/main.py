@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 np.random.seed(1111)
 tf.random.set_seed(1111)
 
-eqnPath = "1d-shekel"
+eqnPath = "1d-burgers"
 sys.path.append(eqnPath)
 sys.path.append("utils")
 from pod import get_pod_bases
