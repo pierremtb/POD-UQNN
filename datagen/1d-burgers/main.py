@@ -26,8 +26,11 @@ mu_mean = 0.01/np.pi
 
 # Static data
 x = np.linspace(x_min, x_max, n_x)
-t = np.linspace(x_min, t_max, n_t)
-X, T = np.meshgrid(x, t)
+t = np.linspace(t_min, t_max, n_t)
+XT, TT = np.meshgrid(x, t)
+X = XT.T
+T = TT.T
+
 n_h = n_x
 n_d = 1 + 1
 lb = mu_mean * (1 - np.sqrt(3)/10)
@@ -51,8 +54,6 @@ for i in tqdm(range(n_s)):
 # Recreating the mean and the std
 U_test_mean = U_tot / n_s
 U_test_std = np.sqrt((n_s*U_tot_sq - U_tot**2) / (n_s*(n_s - 1)))
-
-print(U_test_mean.shape)
 
 # Reshaping into a 2D-valued solution
 # U_test_mean = np.reshape(U_mean, (n_x, n_y))

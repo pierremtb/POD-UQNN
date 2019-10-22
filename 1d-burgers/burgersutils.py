@@ -2,6 +2,8 @@ from metrics import error_podnn
 from plotting import figsize, saveresultdir, savefig
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from scipy.interpolate import griddata
 import sys
 import os
 from tqdm import tqdm
@@ -53,15 +55,6 @@ def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s, mu_mean):
     return U, X_v, lb, ub
 
 
-def plot_contour(fig, pos, X, T, U, levels, title):
-    ax = fig.add_subplot(pos)
-    ct = ax.contourf(X, T, U, levels=levels, origin="lower")
-    plt.colorbar(ct)
-    ax.set_title(title)
-    ax.set_xlabel("$x$")
-    ax.set_ylabel("$t$")
-
-
 def get_test_data():
     dirname = os.path.join(eqnPath, "data")
     X = np.load(os.path.join(dirname, X_FILE))
@@ -71,13 +64,36 @@ def get_test_data():
     return X, T, U_test_mean, U_test_std
 
 
+def plot_contour(fig, pos, X, T, U, levels, title):
+    ax = fig.add_subplot(pos)
+    ct = ax.contourf(X, T, U, origin="lower")
+    # ct = ax.contourf(X, T, U, levels=levels, origin="lower")
+    plt.colorbar(ct)
+    ax.set_title(title)
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$t$")
+
+
+def plot_map(fig, pos, x, t, X, T, U, title):
+    XT = np.hstack((X.flatten()[:, None], T.flatten()[:, None]))
+    U_test_grid = griddata(XT, U.flatten(), (X, T), method='cubic')
+    ax = fig.add_subplot(pos)
+    h = ax.imshow(U_test_grid, interpolation='nearest', cmap='rainbow', 
+            extent=[t.min(), t.max(), x.min(), x.max()], 
+            origin='lower', aspect='auto')
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(h, cax=cax)
+    ax.set_title(title)
+    ax.set_xlabel("$t$")
+    ax.set_ylabel("$x$")
+
+
 def plot_results(U, U_pred=None,
                  hp=None, save_path=None):
     X, T, U_test_mean, U_test_std = get_test_data()
-
-    print(U.shape)
-    print(U_pred.shape)
-    print(np.mean(U, axis=2).shape)
+    t = T[0, :]
+    x = X[:, 0]
 
     U_pred_mean = np.mean(U_pred, axis=2)
     U_pred_std = np.std(U_pred, axis=2)
@@ -92,31 +108,12 @@ def plot_results(U, U_pred=None,
     mean_levels = list(range(2, 15))
     std_levels = np.arange(5, 20) * 0.1
 
-    n_plot_x = 4
-    n_plot_y = 6
+    n_plot_x = 3
+    n_plot_y = 3
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
-    plot_contour(fig, gs[0:2, 0:2],
-                 X, T, U_test_mean,
-                 mean_levels, "Mean of $u_T$ (test)")
-    plot_contour(fig, gs[0:2, 2:4],
-                 X, T, np.mean(U, axis=2),
-                 mean_levels, "Mean of $u_V$ (val)")
-    if U_pred is not None:
-        plot_contour(fig, gs[0:2, 4:6],
-                     X, T, np.mean(U_pred, axis=2),
-                     mean_levels, "Mean of $\hat{u_V}$ (pred)")
-    plot_contour(fig, gs[2:4, 0:2],
-                 X, T, U_test_std,
-                 std_levels, "Standard deviation of $u_T$ (test)")
-    plot_contour(fig, gs[2:4, 2:4],
-                 X, T, np.std(U, axis=2),
-                 std_levels, "Standard deviation of $u_V$ (val)")
-    if U_pred is not None:
-        plot_contour(fig, gs[2:4, 4:6],
-                     X, T, np.std(U_pred, axis=2),
-                     std_levels, "Standard deviation of $\hat{u_V}$ (pred)")
+    plot_map(fig, gs[0, :n_plot_y], x, t, X, T, U_test_mean, "Mean $u(x,t)$ >test]")
 
     plt.tight_layout()
     if save_path is not None:
