@@ -34,7 +34,7 @@ else:
     hp["t_min"] = 0.
     hp["t_max"] = 1.
     # Snapshots count
-    hp["n_s"] = 2
+    hp["n_s"] = 20
     # POD stopping param
     hp["eps"] = 1e-10
     # Train/val split
@@ -49,7 +49,7 @@ else:
     hp["tf_decay"] = 0.
     hp["tf_b1"] = 0.9
     hp["tf_eps"] = None
-    hp["lambda"] = 1e-6
+    hp["lambda"] = 1e-4
     # Frequency of the logger
     hp["log_frequency"] = 1000
     # Burgers params
@@ -64,7 +64,9 @@ if __name__ == "__main__":
             hp["n_s"], hp["mu_mean"])
     V = get_pod_bases(U_star, hp["eps"])
 
-    print(f"POD relative error: {100 * error_pod(U_star, V):.4f}%")
+    nn_t = hp["n_s"] * hp["n_t"]
+
+    # print(f"POD relative error: {100 * error_pod(U_star, V):.4f}%")
     
     # Sizes
     n_L = V.shape[1]
@@ -74,10 +76,16 @@ if __name__ == "__main__":
     v_star = (V.T.dot(U_star)).T
 
     # Splitting data
-    n_s_train = int(hp["train_val_ratio"] * hp["n_s"] * hp["n_t"])
+    n_s_train = int(hp["train_val_ratio"] * nn_t)
     X_v_train, v_train, X_v_val, v_val = \
             scarcify(X_v_star, v_star, n_s_train)
     U_val = V.dot(v_val.T)
+
+    print(n_s_train)
+    print(X_v_train.shape)
+    print(v_train.shape)
+    print(X_v_val.shape)
+    print(v_val.shape)
 
     # Creating the neural net model, and logger
     # In: (gam_0, bet_1, ..., bet_m, gam_0, bet_1, ..., bet_n)
@@ -104,9 +112,12 @@ if __name__ == "__main__":
     U_pred = V.dot(v_pred.T)
 
     # Restruct
-    n_s_val = int((1. - hp["train_val_ratio"]) * hp["n_s"])
+    n_s_val = int((1. - hp["train_val_ratio"]) * nn_t)
     U_pred_struct = restruct(U_val, hp["n_x"], hp["n_t"], n_s_val)
     U_val_struct = restruct(U_pred, hp["n_x"], hp["n_t"], n_s_val)
+    print(n_s_val)
+    print(U_pred_struct.shape)
+    print(U_val_struct.shape)
 
     # Plotting and saving the results
     plot_results(U_val_struct, U_pred_struct, hp, eqnPath)

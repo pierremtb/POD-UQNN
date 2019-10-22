@@ -89,7 +89,17 @@ def plot_map(fig, pos, x, t, X, T, U, title):
     ax.set_ylabel("$x$")
 
 
-def plot_results(U, U_pred=None,
+def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test, title):
+    ax = fig.add_subplot(pos)
+    ax.plot(x, U_pred[:, t_i], "b-")
+    ax.plot(x, U_val[:, t_i], "r--")
+    ax.plot(x, U_test[:, t_i], "k,")
+    ax.set_title(title)
+    ax.set_xlabel("$x$")
+    ax.set_title(title)
+
+
+def plot_results(U_val, U_pred,
                  hp=None, save_path=None):
     X, T, U_test_mean, U_test_std = get_test_data()
     t = T[0, :]
@@ -97,6 +107,8 @@ def plot_results(U, U_pred=None,
 
     U_pred_mean = np.mean(U_pred, axis=2)
     U_pred_std = np.std(U_pred, axis=2)
+    U_val_mean = np.mean(U_val, axis=2)
+    U_val_std = np.std(U_val, axis=2)
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
     if save_path is not None:
@@ -108,12 +120,26 @@ def plot_results(U, U_pred=None,
     mean_levels = list(range(2, 15))
     std_levels = np.arange(5, 20) * 0.1
 
-    n_plot_x = 3
+    n_plot_x = 5
     n_plot_y = 3
-    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.))
+    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
-    plot_map(fig, gs[0, :n_plot_y], x, t, X, T, U_test_mean, "Mean $u(x,t)$ >test]")
+    plot_map(fig, gs[0, :n_plot_y], x, t, X, T, U_pred_mean, "Mean $u(x,t)$ [pred]")
+    plot_map(fig, gs[1, :n_plot_y], x, t, X, T, U_val_mean, "Mean $u(x,t)$ [val]")
+    plot_map(fig, gs[2, :n_plot_y], x, t, X, T, U_test_mean, "Mean $u(x,t)$ [test]")
+    plot_spec_time(fig, gs[3, 0], x, 25, 
+            U_pred_mean, U_val_mean, U_test_mean, "Means $u(x, t=0.25)$")
+    plot_spec_time(fig, gs[3, 1], x, 50,
+            U_pred_mean, U_val_mean, U_test_mean, "Means $u(x, t=0.50)$")
+    plot_spec_time(fig, gs[3, 2], x, 75,
+            U_pred_mean, U_val_mean, U_test_mean, "Means $u(x, t=0.75)$")
+    plot_spec_time(fig, gs[4, 0], x, 25,
+            U_pred_std, U_val_std, U_test_std, "Std dev $u(x, t=0.25)$")
+    plot_spec_time(fig, gs[4, 1], x, 50,
+            U_pred_std, U_val_std, U_test_std, "Std dev $u(x, t=0.50)$")
+    plot_spec_time(fig, gs[4, 2], x, 75,
+            U_pred_std, U_val_std, U_test_std, "Std dev $u(x, t=0.75)$")
 
     plt.tight_layout()
     if save_path is not None:
