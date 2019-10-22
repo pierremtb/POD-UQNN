@@ -109,5 +109,5 @@ if __name__ == "__main__":
     U_val_struct = restruct(U_pred, hp["n_x"], hp["n_t"], n_s_val)
 
     # Plotting and saving the results
-    plot_results(U_val, U_pred, hp, eqnPath)
-    plot_results(U_val, U_pred, hp)
+    plot_results(U_val_struct, U_pred_struct, hp, eqnPath)
+    plot_results(U_val_struct, U_pred_struct, hp)

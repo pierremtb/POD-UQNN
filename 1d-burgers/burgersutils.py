@@ -65,15 +65,19 @@ def plot_contour(fig, pos, X, T, U, levels, title):
 def get_test_data():
     dirname = os.path.join(eqnPath, "data")
     X = np.load(os.path.join(dirname, X_FILE))
-    Y = np.load(os.path.join(dirname, T_FILE))
+    T = np.load(os.path.join(dirname, T_FILE))
     U_test_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
     U_test_std = np.load(os.path.join(dirname, U_STD_FILE))
-    return X, Y, U_test_mean, U_test_std
+    return X, T, U_test_mean, U_test_std
 
 
 def plot_results(U, U_pred=None,
                  hp=None, save_path=None):
-    X, Y, U_test_mean, U_test_std = get_test_data()
+    X, T, U_test_mean, U_test_std = get_test_data()
+
+    print(U.shape)
+    print(U_pred.shape)
+    print(np.mean(U, axis=2).shape)
 
     U_pred_mean = np.mean(U_pred, axis=2)
     U_pred_std = np.std(U_pred, axis=2)
@@ -94,24 +98,24 @@ def plot_results(U, U_pred=None,
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
     plot_contour(fig, gs[0:2, 0:2],
-                 X, Y, U_test_mean,
+                 X, T, U_test_mean,
                  mean_levels, "Mean of $u_T$ (test)")
     plot_contour(fig, gs[0:2, 2:4],
-                 X, Y, np.mean(U, axis=2),
+                 X, T, np.mean(U, axis=2),
                  mean_levels, "Mean of $u_V$ (val)")
     if U_pred is not None:
         plot_contour(fig, gs[0:2, 4:6],
-                     X, Y, np.mean(U_pred, axis=2),
+                     X, T, np.mean(U_pred, axis=2),
                      mean_levels, "Mean of $\hat{u_V}$ (pred)")
     plot_contour(fig, gs[2:4, 0:2],
-                 X, Y, U_test_std,
+                 X, T, U_test_std,
                  std_levels, "Standard deviation of $u_T$ (test)")
     plot_contour(fig, gs[2:4, 2:4],
-                 X, Y, np.std(U, axis=2),
+                 X, T, np.std(U, axis=2),
                  std_levels, "Standard deviation of $u_V$ (val)")
     if U_pred is not None:
         plot_contour(fig, gs[2:4, 4:6],
-                     X, Y, np.std(U_pred, axis=2),
+                     X, T, np.std(U_pred, axis=2),
                      std_levels, "Standard deviation of $\hat{u_V}$ (pred)")
 
     plt.tight_layout()
