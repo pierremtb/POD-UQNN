@@ -17,13 +17,16 @@ sys.path.append(os.path.join("datagen", eqnPath))
 sys.path.append(os.path.join(eqnPath, "burgersutils"))
 from burgers import burgers_viscous_time_exact1 as burgers_u
 from names import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
+from handling import scarcify
+from pod import get_pod_bases
 
 
 def restruct(U, n_x, n_t, n_s):
     return np.reshape(U, (n_x, n_t, n_s))
 
 
-def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s, mu_mean):
+def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
+        mu_mean, t_v_ratio, eps):
     # Total number of snapshots
     nn_s = n_t*n_s
 
@@ -45,14 +48,46 @@ def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s, mu_mean):
     print(f"Generating {nn_s} corresponding snapshots")
     U = np.zeros((n_x, nn_s))
     X_v = np.zeros((nn_s, n_d))
+    # X_v = np.zeros((n_s, n_t, n_d))
+    # U_struct = np.zeros((n_x, n_t, n_s))
     x = np.linspace(x_min, x_max, n_x)
     t = np.linspace(t_min, t_max, n_t)
     tT = t.reshape((n_t, 1))
     for i in tqdm(range(n_s)):
         # Calling the analytical solution function
-        U[:, i:i+n_t] = burgers_u(mu_lhs[i, :], n_x, x, n_t, t)
-        X_v[i:i+n_t, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
-    return U, X_v, lb, ub
+        s = n_t * i
+        e = n_t * (i + 1)
+        U[:, s:e] = burgers_u(mu_lhs[i, :], n_x, x, n_t, t)
+        X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
+        # X_v_struct[i, :, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
+        # U_struct[:, :, i] = burgers_u(mu_lhs[i, :], n_x, x, n_t, t)
+
+    # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
+    # u_rb are the reduced coefficients we're looking for
+    V = get_pod_bases(U, eps)
+
+    # Projecting
+    v = (V.T.dot(U)).T
+   
+    # Splitting the dataset (X_v, v)
+    nn_s_train = int(t_v_ratio * nn_s)
+    print(X_v.shape)
+    print(v.shape)
+    print(nn_s_train)
+    X_v_train, v_train = X_v[:nn_s_train, :], v[:nn_s_train, :]
+    X_v_val, v_val = X_v[nn_s_train:, :], v[nn_s_train:, :]
+    print(X_v_train.shape)
+    print(v_train.shape)
+    print(X_v_val.shape)
+    print(v_val.shape)
+    exit(0)
+    # X_v_train, v_train, X_v_val, v_val = \
+    #         scarcify(X_v, v, n_s_train)
+    
+    U_val = V.dot(v_val.T)
+
+    return X_v_train, v_train, X_v_val, v_val, \
+        lb, ub, V, U_val
 
 
 def get_test_data():
