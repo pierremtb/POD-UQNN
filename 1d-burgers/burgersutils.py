@@ -21,8 +21,14 @@ from handling import scarcify
 from pod import get_pod_bases
 
 
-def restruct(U, n_x, n_t, n_s):
-    return np.reshape(U, (n_x, n_t, n_s))
+def restruct(U, n_x, n_t, n_s): 
+    U_struct = np.zeros((n_x, n_t, n_s))
+    for i in range(n_s):
+        s = n_t * i
+        e = n_t * (i + 1)
+        U_struct[:, :, i] = U[:, s:e]
+    return U_struct
+    # return np.reshape(U, (n_x, n_t, n_s))
 
 
 def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
@@ -46,10 +52,8 @@ def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
 
     # Creating the snapshots
     print(f"Generating {nn_s} corresponding snapshots")
-    U = np.zeros((n_x, nn_s))
     X_v = np.zeros((nn_s, n_d))
-    # X_v = np.zeros((n_s, n_t, n_d))
-    # U_struct = np.zeros((n_x, n_t, n_s))
+    U = np.zeros((n_x, nn_s))
     x = np.linspace(x_min, x_max, n_x)
     t = np.linspace(t_min, t_max, n_t)
     tT = t.reshape((n_t, 1))
@@ -57,10 +61,8 @@ def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
         # Calling the analytical solution function
         s = n_t * i
         e = n_t * (i + 1)
-        U[:, s:e] = burgers_u(mu_lhs[i, :], n_x, x, n_t, t)
         X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
-        # X_v_struct[i, :, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
-        # U_struct[:, :, i] = burgers_u(mu_lhs[i, :], n_x, x, n_t, t)
+        U[:, s:e] = burgers_u(mu_lhs[i, :], n_x, x, n_t, t)
 
     # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
     # u_rb are the reduced coefficients we're looking for
@@ -76,11 +78,10 @@ def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
     print(nn_s_train)
     X_v_train, v_train = X_v[:nn_s_train, :], v[:nn_s_train, :]
     X_v_val, v_val = X_v[nn_s_train:, :], v[nn_s_train:, :]
-    print(X_v_train.shape)
+    print(X_v_train)
     print(v_train.shape)
-    print(X_v_val.shape)
+    print(X_v_val)
     print(v_val.shape)
-    exit(0)
     # X_v_train, v_train, X_v_val, v_val = \
     #         scarcify(X_v, v, n_s_train)
     
@@ -152,32 +153,28 @@ def plot_results(U_val, U_pred,
         print(f"Error on the stdd test HiFi LHS solution: {error_test_std:.4f}%")
         print("--")
 
-    mean_levels = list(range(2, 15))
-    std_levels = np.arange(5, 20) * 0.1
-
     n_plot_x = 5
     n_plot_y = 3
-    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
+    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.5))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
     plot_map(fig, gs[0, :n_plot_y], x, t, X, T, U_pred_mean, "Mean $u(x,t)$ [pred]")
-    plot_map(fig, gs[1, :n_plot_y], x, t, X, T, U_val_mean, "Mean $u(x,t)$ [val]")
-    plot_map(fig, gs[2, :n_plot_y], x, t, X, T, U_test_mean, "Mean $u(x,t)$ [test]")
-    plot_spec_time(fig, gs[3, 0], x, 25, 
+    plot_map(fig, gs[1, :n_plot_y], x, t, X, T, U_test_mean, "Mean $u(x,t)$ [test]")
+    plot_spec_time(fig, gs[2, 0], x, 25, 
             U_pred_mean, U_val_mean, U_test_mean, "Means $u(x, t=0.25)$")
-    plot_spec_time(fig, gs[3, 1], x, 50,
+    plot_spec_time(fig, gs[2, 1], x, 50,
             U_pred_mean, U_val_mean, U_test_mean, "Means $u(x, t=0.50)$")
-    plot_spec_time(fig, gs[3, 2], x, 75,
+    plot_spec_time(fig, gs[2, 2], x, 75,
             U_pred_mean, U_val_mean, U_test_mean, "Means $u(x, t=0.75)$")
-    plot_spec_time(fig, gs[4, 0], x, 25,
+    plot_spec_time(fig, gs[3, 0], x, 25,
             U_pred_std, U_val_std, U_test_std, "Std dev $u(x, t=0.25)$")
-    plot_spec_time(fig, gs[4, 1], x, 50,
+    plot_spec_time(fig, gs[3, 1], x, 50,
             U_pred_std, U_val_std, U_test_std, "Std dev $u(x, t=0.50)$")
-    plot_spec_time(fig, gs[4, 2], x, 75,
+    plot_spec_time(fig, gs[3, 2], x, 75,
             U_pred_std, U_val_std, U_test_std, "Std dev $u(x, t=0.75)$")
 
     plt.tight_layout()
     if save_path is not None:
         saveresultdir(save_path, save_hp=hp)
     else:
-        plt.show()     
+        plt.show() 

@@ -34,7 +34,7 @@ else:
     hp["t_min"] = 0.
     hp["t_max"] = 1.
     # Snapshots count
-    hp["n_s"] = 2 * 2
+    hp["n_s"] = 2 * 10
     # POD stopping param
     hp["eps"] = 1e-10
     # Train/val split
@@ -44,7 +44,7 @@ else:
     # Batch size for mini-batch training (0 means full-batch)
     hp["batch_size"] = 0
     # Setting up the TF SGD-based optimizer
-    hp["tf_epochs"] = 2000
+    hp["tf_epochs"] = 20000
     hp["tf_lr"] = 0.003
     hp["tf_decay"] = 0.
     hp["tf_b1"] = 0.9
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     n_d = X_v_train.shape[1]
 
     # Creating the neural net model, and logger
-    # In: (gam_0, bet_1, ..., bet_m, gam_0, bet_1, ..., bet_n)
+    # In: (t, mu)
     # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
     hp["layers"] = pack_layers(n_d, hp["h_layers"], n_L)
     logger = Logger(hp)
@@ -84,8 +84,8 @@ if __name__ == "__main__":
 
     # Predicting the coefficients
     v_pred = model.predict(X_v_val)
-    # print(f"Error calculated on n_s_train = {X_} samples" +
-    #       f" ({int(100 * hp['train_val_ratio'])}%)")
+    print(f"Error calculated on nn_s_train = {X_v_val.shape[0]} samples" +
+          f" ({int(100 * hp['train_val_ratio'])}%)")
 
     # Retrieving the function with the predicted coefficients
     U_pred = V.dot(v_pred.T)
