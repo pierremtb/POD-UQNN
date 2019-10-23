@@ -16,8 +16,7 @@ from names import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 # Hyperparameters
 n_x = 256
 n_t = 100
-n_s = 2
-# n_s = int(1e5)
+n_s = int(1e3)
 x_min = -1.
 x_max = 1.
 t_min = 0.
@@ -54,10 +53,6 @@ for i in tqdm(range(n_s)):
 # Recreating the mean and the std
 U_test_mean = U_tot / n_s
 U_test_std = np.sqrt((n_s*U_tot_sq - U_tot**2) / (n_s*(n_s - 1)))
-
-# Reshaping into a 2D-valued solution
-# U_test_mean = np.reshape(U_mean, (n_x, n_y))
-# U_test_std = np.reshape(U_std, (n_x, n_y))
 
 dirname = os.path.join(eqnPath, "data")
 print(f"Saving data to {dirname}")
