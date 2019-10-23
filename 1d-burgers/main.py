@@ -60,18 +60,25 @@ if __name__ == "__main__":
         lb, ub, V, U_val = prep_data(
             hp["n_x"], hp["x_min"], hp["x_max"],
             hp["n_t"], hp["t_min"], hp["t_max"],
-            hp["n_s"], hp["mu_mean"], hp["train_val_ratio"], hp["eps"])
-
+            hp["n_s"], hp["mu_mean"],
+            hp["train_val_ratio"], hp["eps"],
+            save_cache=True, use_cache=True)
+        
     # Sizes
     n_L = V.shape[1]
     n_d = X_v_train.shape[1]
+
+    class PiNeuralNetwork(NeuralNetwork):
+        def predict_u(self, t, mu, V):
+            v_pred = self.predict(np.reshape([t, mu], (1, 2)))
+            return V.dot(v_pred)
 
     # Creating the neural net model, and logger
     # In: (t, mu)
     # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
     hp["layers"] = pack_layers(n_d, hp["h_layers"], n_L)
     logger = Logger(hp)
-    model = NeuralNetwork(hp, logger, ub, lb)
+    model = PiNeuralNetwork(hp, logger, ub, lb)
 
     # Setting the error function
     def error_val():
@@ -94,6 +101,11 @@ if __name__ == "__main__":
     n_s_val = int((1. - hp["train_val_ratio"]) * hp["n_s"])
     U_pred_struct = restruct(U_val, hp["n_x"], hp["n_t"], n_s_val)
     U_val_struct = restruct(U_pred, hp["n_x"], hp["n_t"], n_s_val)
+
+    # Timing the new ROM
+    x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+    plt.plot(x, model.predict_u(t=0.5, mu=0.01/np.pi, V=V))
+    plt.show()
 
     # Plotting and saving the results
     plot_results(U_val_struct, U_pred_struct, hp, eqnPath)

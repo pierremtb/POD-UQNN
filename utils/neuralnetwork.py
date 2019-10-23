@@ -42,13 +42,13 @@ class NeuralNetwork(object):
 
     # Defining custom loss
     @tf.function
-    def loss(self, u, u_pred):
-        return tf.reduce_mean(tf.square(u - u_pred))
+    def loss(self, v, v_pred):
+        return tf.reduce_mean(tf.square(v - v_pred))
 
     @tf.function
-    def grad(self, X, u):
+    def grad(self, X, v):
         with tf.GradientTape() as tape:
-            loss_value = self.loss(u, self.model(X))
+            loss_value = self.loss(v, self.model(X))
         grads = tape.gradient(loss_value, self.wrap_training_variables())
         return loss_value, grads
 
@@ -56,49 +56,48 @@ class NeuralNetwork(object):
         var = self.model.trainable_variables
         return var
 
-    def tf_optimization(self, X_u, u, tf_epochs):
+    def tf_optimization(self, X_v, v, tf_epochs):
         # self.logger.log_train_opt("Adam")
         for epoch in range(tf_epochs):
-            # X_u_batch, u_batch = self.fetch_minibatch(X_u, u)
-            loss_value = self.tf_optimization_step(X_u, u)
+            # X_v_batch, u_batch = self.fetch_minibatch(X_v, v)
+            loss_value = self.tf_optimization_step(X_v, v)
             self.logger.log_train_epoch(epoch, loss_value)
 
     @tf.function
-    def tf_optimization_step(self, X_u, u):
-        loss_value, grads = self.grad(X_u, u)
+    def tf_optimization_step(self, X_v, v):
+        loss_value, grads = self.grad(X_v, v)
         self.tf_optimizer.apply_gradients(
                 zip(grads, self.wrap_training_variables()))
         return loss_value
 
-    def fit(self, X_u, u, custom_tf_epochs=None):
+    def fit(self, X_v, v, custom_tf_epochs=None):
         tf_epochs = self.tf_epochs
         if custom_tf_epochs is not None:
             tf_epochs = custom_tf_epochs
         self.logger.log_train_start(self)
 
         # Normalizing
-        X_u = self.normalize(X_u)
-        X_u = self.tensor(X_u)
-        u = self.tensor(u)
+        X_v = self.normalize(X_v)
+        X_v = self.tensor(X_v)
+        v = self.tensor(v)
 
         # Optimizing
-        self.tf_optimization(X_u, u, tf_epochs)
+        self.tf_optimization(X_v, v, tf_epochs)
 
         self.logger.log_train_end(tf_epochs)
 
-    def fetch_minibatch(self, X_u, u):
+    def fetch_minibatch(self, X_v, v):
         if self.batch_size < 1:
-            return self.tensor(X_u), self.tensor(u)
-        N_u = X_u.shape[0]
-        idx_u = np.random.choice(N_u, self.batch_size, replace=False)
-        X_u_batch = self.tensor(X_u[idx_u, :])
-        u_batch = self.tensor(u[idx_u, :])
-        return X_u_batch, u_batch
+            return self.tensor(X_v), self.tensor(v)
+        N_v = X_v.shape[0]
+        idx_v = np.random.choice(N_v, self.batch_size, replace=False)
+        X_v_batch = self.tensor(X_v[idx_v, :])
+        v_batch = self.tensor(v[idx_v, :])
+        return X_v_batch, v_batch
 
     def predict(self, X):
         X = self.normalize(X)
-        u_pred = self.model(X)
-        return u_pred.numpy()
+        return self.model(X).numpy()
 
     def summary(self):
         return self.model.summary()

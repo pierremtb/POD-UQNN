@@ -10,6 +10,7 @@ from tqdm import tqdm
 from pyDOE import lhs
 from deap.benchmarks import shekel
 import json
+import pickle
 
 eqnPath = "1d-burgers"
 sys.path.append("utils")
@@ -32,7 +33,13 @@ def restruct(U, n_x, n_t, n_s):
 
 
 def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
-        mu_mean, t_v_ratio, eps):
+        mu_mean, t_v_ratio, eps,
+        save_cache=False, use_cache=False):
+    cache_path = os.path.join(eqnPath, "cache", "prep_data.pkl")
+    if use_cache and os.path.exists(cache_path):
+        with open(cache_path) as f:
+            return pickle.load(f)
+
     # Total number of snapshots
     nn_s = n_t*n_s
 
@@ -78,6 +85,11 @@ def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
    
     # Creating the validation snapshots matrix
     U_val = V.dot(v_val.T)
+
+    if save_cache:
+        with open(cache_path, "wb") as f:
+            pickle.dump((X_v_train, v_train, X_v_val, v_val, \
+                lb, ub, V, U_val), f)
 
     return X_v_train, v_train, X_v_val, v_val, \
         lb, ub, V, U_val
