@@ -14,6 +14,6 @@ def error_pod(U, V):
 
 
 def error_podnn(U, U_pred):
-    err = tf.norm(U - U_pred, ord=1) / \
-           tf.norm(U, ord=1)
+    err = tf.norm(U - U_pred) / \
+           tf.norm(U)
     return err.numpy()

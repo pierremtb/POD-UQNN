@@ -73,18 +73,10 @@ def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
    
     # Splitting the dataset (X_v, v)
     nn_s_train = int(t_v_ratio * nn_s)
-    print(X_v.shape)
-    print(v.shape)
-    print(nn_s_train)
     X_v_train, v_train = X_v[:nn_s_train, :], v[:nn_s_train, :]
     X_v_val, v_val = X_v[nn_s_train:, :], v[nn_s_train:, :]
-    print(X_v_train)
-    print(v_train.shape)
-    print(X_v_val)
-    print(v_val.shape)
-    # X_v_train, v_train, X_v_val, v_val = \
-    #         scarcify(X_v, v, n_s_train)
-    
+   
+    # Creating the validation snapshots matrix
     U_val = V.dot(v_val.T)
 
     return X_v_train, v_train, X_v_val, v_val, \
@@ -125,14 +117,17 @@ def plot_map(fig, pos, x, t, X, T, U, title):
     ax.set_ylabel("$x$")
 
 
-def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test, title):
+def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
+        title, show_legend=False):
     ax = fig.add_subplot(pos)
-    ax.plot(x, U_pred[:, t_i], "b-")
-    ax.plot(x, U_val[:, t_i], "r--")
-    ax.plot(x, U_test[:, t_i], "k,")
+    ax.plot(x, U_pred[:, t_i], "b-", label="$\hat{u_V}$")
+    ax.plot(x, U_val[:, t_i], "r--", label="$u_V$")
+    ax.plot(x, U_test[:, t_i], "k,", label="$u_T$")
     ax.set_title(title)
     ax.set_xlabel("$x$")
     ax.set_title(title)
+    if show_legend:
+        ax.legend()
 
 
 def plot_results(U_val, U_pred,
@@ -161,7 +156,8 @@ def plot_results(U_val, U_pred,
     plot_map(fig, gs[0, :n_plot_y], x, t, X, T, U_pred_mean, "Mean $u(x,t)$ [pred]")
     plot_map(fig, gs[1, :n_plot_y], x, t, X, T, U_test_mean, "Mean $u(x,t)$ [test]")
     plot_spec_time(fig, gs[2, 0], x, 25, 
-            U_pred_mean, U_val_mean, U_test_mean, "Means $u(x, t=0.25)$")
+            U_pred_mean, U_val_mean, U_test_mean,
+            "Means $u(x, t=0.25)$", show_legend=True)
     plot_spec_time(fig, gs[2, 1], x, 50,
             U_pred_mean, U_val_mean, U_test_mean, "Means $u(x, t=0.50)$")
     plot_spec_time(fig, gs[2, 2], x, 75,
@@ -177,4 +173,4 @@ def plot_results(U_val, U_pred,
     if save_path is not None:
         saveresultdir(save_path, save_hp=hp)
     else:
-        plt.show() 
+        plt.show()

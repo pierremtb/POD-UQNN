@@ -16,7 +16,7 @@ from names import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 # Hyperparameters
 n_x = 256
 n_t = 100
-n_s = int(1e3)
+n_s = int(1e2)
 x_min = -1.
 x_max = 1.
 t_min = 0.
@@ -58,5 +58,5 @@ dirname = os.path.join(eqnPath, "data")
 print(f"Saving data to {dirname}")
 np.save(os.path.join(dirname, X_FILE), X)
 np.save(os.path.join(dirname, T_FILE), T)
-np.save(os.path.join(dirname, U_STD_FILE), U_test_std)
 np.save(os.path.join(dirname, U_MEAN_FILE), U_test_mean)
+np.save(os.path.join(dirname, U_STD_FILE), U_test_std)
