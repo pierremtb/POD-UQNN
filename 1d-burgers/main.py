@@ -14,7 +14,8 @@ from pod import get_pod_bases
 from metrics import error_podnn, error_pod
 from neuralnetwork import NeuralNetwork
 from logger import Logger
-from burgersutils import plot_results, prep_data, restruct
+from burgersutils import plot_results, prep_data, \
+        restruct, perform_time_comp
 from handling import scarcify, pack_layers
 
 
@@ -71,7 +72,7 @@ if __name__ == "__main__":
     class PiNeuralNetwork(NeuralNetwork):
         def predict_u(self, t, mu, V):
             v_pred = self.predict(np.reshape([t, mu], (1, 2)))
-            return V.dot(v_pred)
+            return V.dot(v_pred.T)
 
     # Creating the neural net model, and logger
     # In: (t, mu)
@@ -103,9 +104,7 @@ if __name__ == "__main__":
     U_val_struct = restruct(U_pred, hp["n_x"], hp["n_t"], n_s_val)
 
     # Timing the new ROM
-    x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
-    plt.plot(x, model.predict_u(t=0.5, mu=0.01/np.pi, V=V))
-    plt.show()
+    perform_time_comp(model, V, hp)
 
     # Plotting and saving the results
     plot_results(U_val_struct, U_pred_struct, hp, eqnPath)

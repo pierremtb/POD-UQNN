@@ -11,6 +11,7 @@ from pyDOE import lhs
 from deap.benchmarks import shekel
 import json
 import pickle
+import time
 
 eqnPath = "1d-burgers"
 sys.path.append("utils")
@@ -21,6 +22,27 @@ from names import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 from handling import scarcify
 from pod import get_pod_bases
 
+
+def perform_time_comp(model, V, hp):
+    x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+    t = np.linspace(hp["t_min"], hp["t_max"], hp["n_t"])
+    tT = t.reshape((hp["n_t"], 1))
+    X = np.hstack((tT, np.ones_like(tT)*hp["mu_mean"]))
+
+    print("Getting analytical solution")
+    start_ana = time.time()
+    U_ana = burgers_u(hp["mu_mean"], hp["n_x"], x, hp["n_t"], t)
+    print(time.time() - start_ana)
+
+    print("Getting analytical solution")
+    start_rom = time.time()
+    U_rom = V.dot(model.predict(X).T)
+    print(time.time() - start_rom)
+
+
+    # Plotting one prediction
+    plt.plot(x, model.predict_u(t=0.5, mu=0.01/np.pi, V=V))
+    plt.show()
 
 def restruct(U, n_x, n_t, n_s): 
     U_struct = np.zeros((n_x, n_t, n_s))
@@ -37,7 +59,8 @@ def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
         save_cache=False, use_cache=False):
     cache_path = os.path.join(eqnPath, "cache", "prep_data.pkl")
     if use_cache and os.path.exists(cache_path):
-        with open(cache_path) as f:
+        with open(cache_path, "rb") as f:
+            print("Loaded cached data")
             return pickle.load(f)
 
     # Total number of snapshots
