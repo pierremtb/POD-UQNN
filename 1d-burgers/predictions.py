@@ -9,12 +9,16 @@ from pyDOE import lhs
 import time
 
 eqnPath = "1d-burgers"
-sys.path.append("utils")
-sys.path.append(os.path.join("datagen", eqnPath))
-sys.path.append(os.path.join(eqnPath, "burgersutils"))
+sys.path.append(eqnPath)
 from hyperparams import hp
 from dataprep import prep_data
+from regression import RegNN
+
+sys.path.append(os.path.join(eqnPath, "burgersutils"))
 from burgers import burgers_viscous_time_exact1 as burgers_u
+
+sys.path.append("utils")
+from handling import pack_layers
 
 
 def predict_and_assess(model, X_v_val, U_val, V, hp, comp_time=False):
@@ -53,10 +57,10 @@ def perform_time_comp(model, V, hp):
     U_rom = V.dot(model.predict(X).T)
     print(time.time() - start_rom)
 
-    # Plotting one prediction
-    plt.plot(x, U_ana[:, 50])
-    plt.plot(x, U_rom[:, 50])
-    plt.show()
+    # # Plotting one prediction
+    # plt.plot(x, U_ana[:, 50])
+    # plt.plot(x, U_rom[:, 50])
+    # plt.show()
 
 
 def restruct(U, n_x, n_t, n_s): 
@@ -72,7 +76,9 @@ if __name__ == "__main__":
     X_v_train, v_train, X_v_val, v_val, \
         lb, ub, V, U_val = prep_data(hp, use_cache=True)
         
-    model = tf.keras.models.load_model(
-                os.path.join(eqnPath, "cache", "model.h5"))
+    hp["layers"] = pack_layers(X_v_train.shape[1], hp["h_layers"],
+                               X_v_train.shape[1])
+    regnn = RegNN.load_from(os.path.join(eqnPath, "cache", "model.h5"),
+                       hp, lb, ub)
 
-    predict_and_assess(model, X_v_val, U_val, V, hp, comp_time=True)
+    predict_and_assess(regnn, X_v_val, U_val, V, hp, comp_time=True)

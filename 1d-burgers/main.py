@@ -3,12 +3,8 @@ import json
 import numpy as np
 import tensorflow as tf
 
-np.random.seed(1111)
-tf.random.set_seed(1111)
-
 eqnPath = "1d-burgers"
 sys.path.append(eqnPath)
-sys.path.append("utils")
 from dataprep import prep_data
 from regression import create_model_and_train
 from predictions import predict_and_assess
@@ -24,7 +20,8 @@ else:
 
 # DATA PREPARATION
 X_v_train, v_train, X_v_val, v_val, \
-    lb, ub, V, U_val = prep_data(hp, save_cache=True)
+    lb, ub, V, U_val = prep_data(hp,
+            use_cache=False, save_cache=True)
     
 # NN-REGRESSION TRAINING
 model = create_model_and_train(X_v_train, v_train,

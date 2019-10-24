@@ -6,12 +6,14 @@ import pickle
 from pyDOE import lhs
 
 eqnPath = "1d-burgers"
+sys.path.append(eqnPath)
+from hyperparams import hp
+
 sys.path.append("utils")
-sys.path.append(os.path.join("datagen", eqnPath))
+from pod import get_pod_bases
+
 sys.path.append(os.path.join(eqnPath, "burgersutils"))
 from burgers import burgers_viscous_time_exact1 as burgers_u
-from pod import get_pod_bases
-from hyperparams import hp
 
 
 def prep_data(hp, save_cache=False, use_cache=False):
@@ -54,13 +56,13 @@ def prep_data(hp, save_cache=False, use_cache=False):
 
     # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
     # u_rb are the reduced coefficients we're looking for
-    V = get_pod_bases(U, eps)
+    V = get_pod_bases(U, hp["eps"])
 
     # Projecting
     v = (V.T.dot(U)).T
    
     # Splitting the dataset (X_v, v)
-    nn_s_train = int(t_v_ratio * nn_s)
+    nn_s_train = int(hp["train_val_ratio"] * nn_s)
     X_v_train, v_train = X_v[:nn_s_train, :], v[:nn_s_train, :]
     X_v_val, v_val = X_v[nn_s_train:, :], v[nn_s_train:, :]
    

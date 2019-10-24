@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 
 class NeuralNetwork(object):
-    def __init__(self, hp, logger, ub, lb):
+    def __init__(self, hp, logger, ub, lb, model=None):
 
         layers = hp["layers"]
 
@@ -19,17 +19,21 @@ class NeuralNetwork(object):
         self.dtype = "float64"
         # Descriptive Keras model
         tf.keras.backend.set_floatx(self.dtype)
-        self.model = tf.keras.Sequential()
-        self.model.add(tf.keras.layers.InputLayer(input_shape=(layers[0],)))
-        for width in layers[1:-1]:
+
+        if model is None:
+            self.model = tf.keras.Sequential()
+            self.model.add(tf.keras.layers.InputLayer(input_shape=(layers[0],)))
+            for width in layers[1:-1]:
+                self.model.add(tf.keras.layers.Dense(
+                    width, activation=tf.nn.tanh,
+                    kernel_initializer="glorot_normal",
+                    kernel_regularizer=tf.keras.regularizers.l2(hp["lambda"])))
             self.model.add(tf.keras.layers.Dense(
-                width, activation=tf.nn.tanh,
-                kernel_initializer="glorot_normal",
-                kernel_regularizer=tf.keras.regularizers.l2(hp["lambda"])))
-        self.model.add(tf.keras.layers.Dense(
-                layers[-1], activation=None,
-                kernel_initializer="glorot_normal",
-                kernel_regularizer=tf.keras.regularizers.l2(hp["lambda"])))
+                    layers[-1], activation=None,
+                    kernel_initializer="glorot_normal",
+                    kernel_regularizer=tf.keras.regularizers.l2(hp["lambda"])))
+        else:
+            self.model = model
 
         self.logger = logger
         self.ub = ub
@@ -104,4 +108,12 @@ class NeuralNetwork(object):
 
     def tensor(self, X):
         return tf.convert_to_tensor(X, dtype=self.dtype)
+
+    # Save/load methods
+    def save_to(self, filename):
+        tf.keras.models.save_model(self.model, filename)
+
+    def load_from(filename, hp, lb, ub):
+        model = tf.keras.models.load_model(filename)
+        return NeuralNetwork(hp, None, ub, lb, model)
 

@@ -10,17 +10,19 @@ import json
 import time
 
 eqnPath = "1d-burgers"
+sys.path.append(eqnPath)
+from hyperparams import hp
+from dataprep import prep_data
+from regression import RegNN
+from predictions import predict_and_assess
+
 sys.path.append("utils")
 from metrics import error_podnn
 from plotting import figsize, saveresultdir, savefig
+from handling import pack_layers
 
 sys.path.append(os.path.join("datagen", eqnPath))
 from names import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
-
-sys.path.append(os.path.join(eqnPath, "burgersutils"))
-from hyperparams import hp
-from dataprep import prep_data
-from predictions import predict_and_assess
 
 
 def get_test_data():
@@ -120,10 +122,12 @@ if __name__ == "__main__":
     X_v_train, v_train, X_v_val, v_val, \
         lb, ub, V, U_val = prep_data(hp, use_cache=True)
         
-    model = tf.keras.models.load_model(
-                os.path.join(eqnPath, "cache", "model.h5"))
+    hp["layers"] = pack_layers(X_v_train.shape[1], hp["h_layers"],
+                               X_v_train.shape[1])
+    regnn = RegNN.load_from(os.path.join(eqnPath, "cache", "model.h5"),
+                       hp, lb, ub)
 
-    U_val_struct, U_pred_struct = predict_and_assess(model, X_v_val, U_val,
+    U_val_struct, U_pred_struct = predict_and_assess(regnn, X_v_val, U_val,
                                                      V, hp)
 
     plot_results(U_val_struct, U_pred_struct, hp)

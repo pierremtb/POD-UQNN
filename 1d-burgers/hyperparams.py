@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 
 
 hp = {}
@@ -32,3 +33,7 @@ hp["log_frequency"] = 1000
 # Burgers params
 hp["mu_mean"] = 0.01/np.pi
 hp["mu_bound"] = hp["mu_mean"] * np.sqrt(3)/10
+
+
+np.random.seed(1111)
+tf.random.set_seed(1111)
