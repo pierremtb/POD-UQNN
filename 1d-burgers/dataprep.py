@@ -31,8 +31,8 @@ def prep_data(hp, save_cache=False, use_cache=False):
     pbar = tqdm(total=100)
     X = lhs(hp["n_s"], 1).T
     pbar.update(50)
-    lb = hp["mu_mean"] - hp["mu_bound"]
-    ub = hp["mu_mean"] + hp["mu_bound"]
+    lb = hp["mu_min"]
+    ub = hp["mu_max"]
     mu_lhs = lb + (ub - lb)*X
     pbar.update(50)
     pbar.close()

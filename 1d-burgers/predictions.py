@@ -42,14 +42,15 @@ def predict_and_assess(model, X_v_val, U_val, V, hp, comp_time=False):
 
 
 def perform_time_comp(model, V, hp):
+    mu = (hp["mu_min"] + hp["mu_max"]) / 2
     x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
     t = np.linspace(hp["t_min"], hp["t_max"], hp["n_t"])
     tT = t.reshape((hp["n_t"], 1))
-    X = np.hstack((tT, np.ones_like(tT)*hp["mu_mean"]))
+    X = np.hstack((tT, np.ones_like(tT)*mu))
 
     print("Getting analytical solution")
     start_ana = time.time()
-    U_ana = burgers_u(hp["mu_mean"], hp["n_x"], x, hp["n_t"], t)
+    U_ana = burgers_u(mu, hp["n_x"], x, hp["n_t"], t)
     print(time.time() - start_ana)
 
     print("Getting analytical solution")
