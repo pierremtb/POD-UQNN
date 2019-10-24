@@ -18,7 +18,7 @@ from dataprep import prep_data
 
 def create_model_and_train(X_v_train, v_train,
                            X_v_val, v_val,
-                           ub, lb, V, U_val):
+                           hp, ub, lb, V, U_val):
     # Sizes
     n_L = V.shape[1]
     n_d = X_v_train.shape[1]
@@ -55,14 +55,9 @@ if __name__ == "__main__":
     tf.random.set_seed(1111)
 
     X_v_train, v_train, X_v_val, v_val, \
-        lb, ub, V, U_val = prep_data(
-            hp["n_x"], hp["x_min"], hp["x_max"],
-            hp["n_t"], hp["t_min"], hp["t_max"],
-            hp["n_s"], hp["mu_mean"],
-            hp["train_val_ratio"], hp["eps"],
-            use_cache=True, save_cache=True)
+        lb, ub, V, U_val = prep_data(hp, use_cache=True)
         
     # NN-REGRESSION TRAINING
     model = create_model_and_train(X_v_train, v_train,
                                    X_v_val, v_val,
-                                   lb, ub, V, U_val)
+                                   hp, lb, ub, V, U_val)

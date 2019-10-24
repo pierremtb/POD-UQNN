@@ -17,7 +17,7 @@ from dataprep import prep_data
 from burgers import burgers_viscous_time_exact1 as burgers_u
 
 
-def predict_and_assess(model, X_v_val, U_val, V, comp_time=False):
+def predict_and_assess(model, X_v_val, U_val, V, hp, comp_time=False):
     v_pred = model.predict(X_v_val)
     print(f"Error calculated on nn_s_train = {X_v_val.shape[0]} samples" +
           f" ({int(100 * hp['train_val_ratio'])}%)")
@@ -70,14 +70,9 @@ def restruct(U, n_x, n_t, n_s):
 
 if __name__ == "__main__":
     X_v_train, v_train, X_v_val, v_val, \
-        lb, ub, V, U_val = prep_data(
-            hp["n_x"], hp["x_min"], hp["x_max"],
-            hp["n_t"], hp["t_min"], hp["t_max"],
-            hp["n_s"], hp["mu_mean"],
-            hp["train_val_ratio"], hp["eps"],
-            use_cache=True)
+        lb, ub, V, U_val = prep_data(hp, use_cache=True)
         
     model = tf.keras.models.load_model(
                 os.path.join(eqnPath, "cache", "model.h5"))
 
-    predict_and_assess(model, X_v_val, U_val, V, comp_time=True)
+    predict_and_assess(model, X_v_val, U_val, V, hp, comp_time=True)

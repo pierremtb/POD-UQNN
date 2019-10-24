@@ -31,3 +31,4 @@ hp["lambda"] = 1e-4
 hp["log_frequency"] = 1000
 # Burgers params
 hp["mu_mean"] = 0.01/np.pi
+hp["mu_bound"] = hp["mu_mean"] * np.sqrt(3)/10

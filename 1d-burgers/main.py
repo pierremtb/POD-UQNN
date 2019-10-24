@@ -10,7 +10,7 @@ eqnPath = "1d-burgers"
 sys.path.append(eqnPath)
 sys.path.append("utils")
 from dataprep import prep_data
-from training import create_model_and_train
+from regression import create_model_and_train
 from predictions import predict_and_assess
 from plots import plot_results
 
@@ -24,22 +24,17 @@ else:
 
 # DATA PREPARATION
 X_v_train, v_train, X_v_val, v_val, \
-    lb, ub, V, U_val = prep_data(
-        hp["n_x"], hp["x_min"], hp["x_max"],
-        hp["n_t"], hp["t_min"], hp["t_max"],
-        hp["n_s"], hp["mu_mean"],
-        hp["train_val_ratio"], hp["eps"],
-        use_cache=True)
+    lb, ub, V, U_val = prep_data(hp, save_cache=True)
     
 # NN-REGRESSION TRAINING
 model = create_model_and_train(X_v_train, v_train,
                                X_v_val, v_val,
-                               lb, ub, V, U_val)
+                               hp, lb, ub, V, U_val)
 
 # PREDICTIONS AND PERFORMANCE
 U_val_struct, U_pred_struct = predict_and_assess(model,
                                                  X_v_val,
-                                                 U_val, V)
+                                                 U_val, V, hp)
 
 # PLOTTING AND SAVING RESULTS
 plot_results(U_val_struct, U_pred_struct, hp, eqnPath)

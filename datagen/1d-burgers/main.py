@@ -6,22 +6,25 @@ from pyDOE import lhs
 
 eqnPath = "1d-burgers"
 sys.path.append(eqnPath)
-sys.path.append("utils")
+from plots import plot_results
+from hyperparams import hp
+
 sys.path.append(os.path.join(eqnPath, "burgersutils"))
-from burgersutils import plot_results
 from burgers import burgers_viscous_time_exact1 as burgers_u
 
 from names import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 
 # Hyperparameters
-n_x = 256
-n_t = 100
-n_s = int(1e2)
-x_min = -1.
-x_max = 1.
-t_min = 0.
-t_max = 1.
-mu_mean = 0.01/np.pi
+n_x = hp["n_x"]
+n_t = hp["n_t"]
+x_min = hp["x_min"]
+x_max = hp["x_max"]
+t_min = hp["t_min"]
+t_max = hp["t_max"]
+mu_mean = hp["mu_mean"]
+
+# HiFi sampling size
+n_s = int(1e3)
 
 # Static data
 x = np.linspace(x_min, x_max, n_x)

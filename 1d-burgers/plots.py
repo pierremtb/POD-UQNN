@@ -1,5 +1,3 @@
-from metrics import error_podnn
-from plotting import figsize, saveresultdir, savefig
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -13,9 +11,13 @@ import time
 
 eqnPath = "1d-burgers"
 sys.path.append("utils")
+from metrics import error_podnn
+from plotting import figsize, saveresultdir, savefig
+
 sys.path.append(os.path.join("datagen", eqnPath))
-sys.path.append(os.path.join(eqnPath, "burgersutils"))
 from names import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
+
+sys.path.append(os.path.join(eqnPath, "burgersutils"))
 from hyperparams import hp
 from dataprep import prep_data
 from predictions import predict_and_assess
@@ -80,7 +82,7 @@ def plot_results(U_val, U_pred,
     U_val_std = np.std(U_val, axis=2)
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
-    if save_path is not None:
+    if save_path is None:
         print("--")
         print(f"Error on the mean test HiFi LHS solution: {error_test_mean:.4f}%")
         print(f"Error on the stdd test HiFi LHS solution: {error_test_std:.4f}%")
@@ -116,14 +118,12 @@ def plot_results(U_val, U_pred,
 
 if __name__ == "__main__":
     X_v_train, v_train, X_v_val, v_val, \
-        lb, ub, V, U_val = prep_data(
-            hp["n_x"], hp["x_min"], hp["x_max"],
-            hp["n_t"], hp["t_min"], hp["t_max"],
-            hp["n_s"], hp["mu_mean"],
-            hp["train_val_ratio"], hp["eps"],
-            use_cache=True)
+        lb, ub, V, U_val = prep_data(hp, use_cache=True)
         
     model = tf.keras.models.load_model(
                 os.path.join(eqnPath, "cache", "model.h5"))
 
-    U_val_struct, U_pred_struct = predict_and_assess(model, X_v_val, U_val, V, comp_time=True)
+    U_val_struct, U_pred_struct = predict_and_assess(model, X_v_val, U_val,
+                                                     V, hp)
+
+    plot_results(U_val_struct, U_pred_struct, hp)

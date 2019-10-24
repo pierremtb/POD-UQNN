@@ -7,6 +7,7 @@ import numpy as np
 eqnPath = "1d-burgers"
 sys.path.append("utils")
 from plotting import figsize
+
 sys.path.append(os.path.join("datagen", eqnPath))
 from names import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 

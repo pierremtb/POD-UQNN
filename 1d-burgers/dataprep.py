@@ -14,9 +14,7 @@ from pod import get_pod_bases
 from hyperparams import hp
 
 
-def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
-        mu_mean, t_v_ratio, eps,
-        save_cache=False, use_cache=False):
+def prep_data(hp, save_cache=False, use_cache=False):
     cache_path = os.path.join(eqnPath, "cache", "prep_data.pkl")
     if use_cache and os.path.exists(cache_path):
         with open(cache_path, "rb") as f:
@@ -24,15 +22,15 @@ def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
             return pickle.load(f)
 
     # Total number of snapshots
-    nn_s = n_t*n_s
+    nn_s = hp["n_t"]*hp["n_s"]
 
     # LHS sampling (first uniform, then perturbated)
     print("Doing the LHS sampling...")
     pbar = tqdm(total=100)
-    X = lhs(n_s, 1).T
+    X = lhs(hp["n_s"], 1).T
     pbar.update(50)
-    lb = mu_mean * (1 - np.sqrt(3)/10)
-    ub = mu_mean * (1 + np.sqrt(3)/10)
+    lb = hp["mu_mean"] - hp["mu_bound"]
+    ub = hp["mu_mean"] + hp["mu_bound"]
     mu_lhs = lb + (ub - lb)*X
     pbar.update(50)
     pbar.close()
@@ -43,16 +41,16 @@ def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
     # Creating the snapshots
     print(f"Generating {nn_s} corresponding snapshots")
     X_v = np.zeros((nn_s, n_d))
-    U = np.zeros((n_x, nn_s))
-    x = np.linspace(x_min, x_max, n_x)
-    t = np.linspace(t_min, t_max, n_t)
-    tT = t.reshape((n_t, 1))
-    for i in tqdm(range(n_s)):
+    U = np.zeros((hp["n_x"], nn_s))
+    x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+    t = np.linspace(hp["t_min"], hp["t_max"], hp["n_t"])
+    tT = t.reshape((hp["n_t"], 1))
+    for i in tqdm(range(hp["n_s"])):
         # Calling the analytical solution function
-        s = n_t * i
-        e = n_t * (i + 1)
+        s = hp["n_t"] * i
+        e = hp["n_t"] * (i + 1)
         X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
-        U[:, s:e] = burgers_u(mu_lhs[i, :], n_x, x, n_t, t)
+        U[:, s:e] = burgers_u(mu_lhs[i, :], hp["n_x"], x, hp["n_t"], t)
 
     # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
     # u_rb are the reduced coefficients we're looking for
@@ -78,10 +76,5 @@ def prep_data(n_x, x_min, x_max, n_t, t_min, t_max, n_s,
         lb, ub, V, U_val
 
 if __name__ == "__main__":
-    prep_data(
-            hp["n_x"], hp["x_min"], hp["x_max"],
-            hp["n_t"], hp["t_min"], hp["t_max"],
-            hp["n_s"], hp["mu_mean"],
-            hp["train_val_ratio"], hp["eps"],
-            save_cache=True, use_cache=True)
+    prep_data(hp, save_cache=True)
 
