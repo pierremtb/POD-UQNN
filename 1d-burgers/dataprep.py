@@ -4,6 +4,7 @@ import sys
 from tqdm import tqdm
 import pickle
 from pyDOE import lhs
+import time
 
 eqnPath = "1d-burgers"
 sys.path.append(eqnPath)
@@ -16,7 +17,7 @@ sys.path.append(os.path.join(eqnPath, "burgersutils"))
 from burgers import burgers_viscous_time_exact1 as burgers_u
 
 
-def prep_data(hp, save_cache=False, use_cache=False):
+def prep_data(hp, fast_pod=False, save_cache=False, use_cache=False):
     cache_path = os.path.join(eqnPath, "cache", "prep_data.pkl")
     if use_cache and os.path.exists(cache_path):
         with open(cache_path, "rb") as f:
@@ -44,6 +45,7 @@ def prep_data(hp, save_cache=False, use_cache=False):
     print(f"Generating {nn_s} corresponding snapshots")
     X_v = np.zeros((nn_s, n_d))
     U = np.zeros((hp["n_x"], nn_s))
+    U_struct = np.zeros((hp["n_x"], hp["n_t"], hp["n_s"]))
     x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
     t = np.linspace(hp["t_min"], hp["t_max"], hp["n_t"])
     tT = t.reshape((hp["n_t"], 1))
@@ -53,10 +55,14 @@ def prep_data(hp, save_cache=False, use_cache=False):
         e = hp["n_t"] * (i + 1)
         X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
         U[:, s:e] = burgers_u(mu_lhs[i, :], hp["n_x"], x, hp["n_t"], t)
+        U_struct[:, :, i] = U[:, s:e]
 
     # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
     # u_rb are the reduced coefficients we're looking for
-    V = get_pod_bases(U, hp["eps"])
+    if fast_pod:
+        V = get_pod_bases(U_struct, hp["eps"], eps_init_step=hp["eps"])
+    else:
+        V = get_pod_bases(U, hp["eps"])
 
     # Projecting
     v = (V.T.dot(U)).T
@@ -78,5 +84,5 @@ def prep_data(hp, save_cache=False, use_cache=False):
         lb, ub, V, U_val
 
 if __name__ == "__main__":
-    prep_data(hp, save_cache=True)
+    prep_data(hp, fast_pod=True, save_cache=True)
 
