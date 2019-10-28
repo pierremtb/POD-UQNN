@@ -8,7 +8,7 @@ import pickle
 from pyDOE import lhs
 import time
 
-eqnPath = "1d-burgers"
+eqnPath = "1d-burgers2"
 sys.path.append(eqnPath)
 from hyperparams import hp
 from dataprep import prep_data, burgers_u
@@ -47,10 +47,10 @@ def perform_time_comp(model, V, hp):
 
     print("Getting analytical solution")
     start_ana = time.time()
-    U_ana = burgers_u(mu, hp["n_x"], x, hp["n_t"], t)
+    U_ana = burgers_u(x, t, mu)
     print(time.time() - start_ana)
 
-    print("Getting analytical solution")
+    print("Getting reduced order solution")
     start_rom = time.time()
     U_rom = V.dot(model.predict(X).T)
     print(time.time() - start_rom)

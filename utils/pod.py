@@ -61,7 +61,7 @@ def perform_pod(U, eps, verbose=True):
     if verbose:
         print("Contructing the reduced bases V...")
     V = np.zeros((n_h, n_L))
-    for i in tqdm(range(n_L), disable=verbose):
+    for i in tqdm(range(n_L), disable=(not verbose)):
         V[:, i] = U.dot(Z[:, i]) / np.sqrt(lambdas_trunc[i])
     
     return V

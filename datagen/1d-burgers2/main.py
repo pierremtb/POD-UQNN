@@ -5,7 +5,7 @@ from tqdm import tqdm
 from pyDOE import lhs
 import json
 
-eqnPath = "1d-burgers"
+eqnPath = "1d-burgers2"
 sys.path.append(eqnPath)
 from plots import plot_results
 from hyperparams import hp
@@ -15,7 +15,8 @@ sys.path.append(os.path.join("datagen", eqnPath))
 from names import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE, HP_FILE
 
 # HiFi sampling size
-n_s = int(1e2)
+# n_s = int(10)
+n_s = int(1e3)
 
 # Static data
 x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])

@@ -6,19 +6,31 @@ import pickle
 from pyDOE import lhs
 import time
 
-eqnPath = "1d-burgers"
+eqnPath = "1d-burgers2"
 sys.path.append(eqnPath)
 from hyperparams import hp
 
 sys.path.append("utils")
 from pod import get_pod_bases
 
-sys.path.append(os.path.join(eqnPath, "burgersutils"))
-from burgers import burgers_viscous_time_exact1
 
+def u_1(x, mu):
+    return x / (1 + np.exp(1/(4*mu)*(x**2 - 1/4)))
+
+
+def u(x, t, mu):
+    t0 = np.exp(1 / (8*mu))
+    return (x/t) / (1 + np.sqrt(t/t0)*np.exp(x**2/(4*mu*t)))
+    
 
 def burgers_u(x, t, mu):
-    return burgers_viscous_time_exact1(mu, x.shape[0], x, t.shape[0], t)
+    x, t = np.array(x), np.array(t)
+    U = np.zeros((x.shape[0], t.shape[0]))
+    U[:, 0] = u_1(x, mu)
+    XT, TT = np.meshgrid(x, t[0:])
+    X, T = XT.T, TT.T
+    U[:, 0:] = u(X, T, mu)
+    return U
 
 
 def prep_data(hp, fast_pod=False, save_cache=False, use_cache=False):
