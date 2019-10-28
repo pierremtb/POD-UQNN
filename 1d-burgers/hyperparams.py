@@ -12,9 +12,10 @@ hp["n_t"] = 100
 hp["t_min"] = 0.
 hp["t_max"] = 1.
 # Snapshots count
-hp["n_s"] = 2 * 10
+hp["n_s"] = 2 * 50
 # POD stopping param
 hp["eps"] = 1e-10
+hp["eps_init"] = 1e-10
 # Train/val split
 hp["train_val_ratio"] = 0.5
 # Deep NN hidden layers topology

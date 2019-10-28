@@ -21,7 +21,8 @@ else:
 # DATA PREPARATION
 X_v_train, v_train, X_v_val, v_val, \
     lb, ub, V, U_val = prep_data(hp,
-            use_cache=False, save_cache=True)
+            use_cache=False, save_cache=True,
+            fast_pod=True)
     
 # NN-REGRESSION TRAINING
 model = create_model_and_train(X_v_train, v_train,

@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
+from numpy.linalg import norm
 from tqdm import tqdm
+import math
 
 
 def error_pod(U, V):
@@ -14,6 +16,5 @@ def error_pod(U, V):
 
 
 def error_podnn(U, U_pred):
-    err = tf.norm(U - U_pred) / \
-           tf.norm(U)
-    return err.numpy()
+    return norm(U - U_pred) / norm(U)
+

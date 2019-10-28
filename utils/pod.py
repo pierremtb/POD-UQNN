@@ -17,7 +17,7 @@ def get_pod_bases(U, eps=1e-10, eps_init_step=None):
         n_L_init = U.shape[1]
         T = np.zeros((n_h, n_L_init, n_s))
         for k in range(n_s):
-            T_k = perform_pod(U[:, :, k], eps_init_step)
+            T_k = perform_pod(U[:, :, k], eps_init_step, verbose=False)
             if T_k.shape[1] < n_L_init:
                 n_L_init = T_k.shape[1]
             T[:, :n_L_init, k] = T_k[:, :n_L_init]

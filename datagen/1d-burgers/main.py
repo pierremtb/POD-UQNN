@@ -49,6 +49,8 @@ for i in tqdm(range(n_s)):
 # Recreating the mean and the std
 U_test_mean = U_tot / n_s
 U_test_std = np.sqrt((n_s*U_tot_sq - U_tot**2) / (n_s*(n_s - 1)))
+# Making sure the std has non NaNs
+U_test_std = np.nan_to_num(U_test_std)
 
 dirname = os.path.join(eqnPath, "data")
 print(f"Saving data to {dirname}")

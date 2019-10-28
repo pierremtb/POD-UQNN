@@ -60,7 +60,7 @@ def prep_data(hp, fast_pod=False, save_cache=False, use_cache=False):
     # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
     # u_rb are the reduced coefficients we're looking for
     if fast_pod:
-        V = get_pod_bases(U_struct, hp["eps"], eps_init_step=hp["eps"])
+        V = get_pod_bases(U_struct, hp["eps"], eps_init_step=hp["eps_init"])
     else:
         V = get_pod_bases(U, hp["eps"])
 

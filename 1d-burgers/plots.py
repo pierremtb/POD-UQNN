@@ -79,9 +79,13 @@ def plot_results(U_val, U_pred,
     x = X[:, 0]
 
     U_pred_mean = np.mean(U_pred, axis=2)
-    U_pred_std = np.std(U_pred, axis=2)
     U_val_mean = np.mean(U_val, axis=2)
-    U_val_std = np.std(U_val, axis=2)
+    # Using nanstd() to prevent NotANumbers from appearing
+    # (they prevent norm to be computed after)
+    U_pred_std = np.nanstd(U_pred, axis=2)
+    U_val_std = np.nanstd(U_val, axis=2)
+    U_test_std = np.nan_to_num(U_test_std)
+
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
     if save_path is None:
