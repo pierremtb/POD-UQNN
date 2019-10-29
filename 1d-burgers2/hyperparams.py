@@ -4,9 +4,9 @@ import tensorflow as tf
 
 hp = {}
 # Space
-hp["n_x"] = 256
-hp["x_min"] = 0.
-hp["x_max"] = 1.5
+hp["n_x"] =  [256]
+hp["x_min"] = [0.]
+hp["x_max"] = [1.5]
 # Time
 hp["n_t"] = 100
 hp["t_min"] = 1.
@@ -32,8 +32,8 @@ hp["lambda"] = 1e-4
 # Frequency of the logger
 hp["log_frequency"] = 1000
 # Burgers params
-hp["mu_min"] = 0.001
-hp["mu_max"] = 0.010
+hp["mu_min"] = [0.001]
+hp["mu_max"] = [0.0100]
 # hp["mu_min"] = 0.01/np.pi * (1 - np.sqrt(3)/10) 
 # hp["mu_max"] = 0.01/np.pi * (1 + np.sqrt(3)/10) 
 
