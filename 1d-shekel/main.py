@@ -24,23 +24,10 @@ if len(sys.argv) > 1:
 else:
     from hyperparams import hp
 
-# DATA PREPARATION
+# DATA PREPARATION WITH POD
 U_star, X_v_star, lb, ub, V, U_val = prep_data(hp)
 
-
-# Sizes
-n_L = V.shape[1]
-n_d = X_v_star.shape[1]
-
-# Projecting
-v_star = (V.T.dot(U_star)).T
-
-# Splitting data
-n_s_train = int(hp["train_val_ratio"] * hp["n_s"])
-X_v_train, v_train, X_v_val, v_val = \
-        scarcify(X_v_star, v_star, n_s_train)
-U_val = V.dot(v_val.T)
-
+# NN-REGRESSION TRAINING
 # Creating the neural net model, and logger
 # In: (gam_0, bet_1, ..., bet_m, gam_0, bet_1, ..., bet_n)
 # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
