@@ -22,7 +22,6 @@ class PodnnModel(object):
         T = XT[-1]
         return X, T
 
-
     def u(x, t, mu):
         return
 
@@ -32,7 +31,7 @@ class PodnnModel(object):
         U = u(*X, T, mu)
         return U
 
-    def sample_mu(n_s, mu_min, mu_max):
+    def sample_mu(self, n_s, mu_min, mu_max):
         pbar = tqdm(total=100)
         X_lhs = lhs(n_s, len(mu_min)).T
         pbar.update(50)
@@ -41,7 +40,7 @@ class PodnnModel(object):
         pbar.close()
         return
 
-    def get_n_x_tuple(self)
+    def get_n_x_tuple(self):
         t = ()
         for n_x_i in self.n_x:
             t += (n_x_i,)
@@ -51,7 +50,7 @@ class PodnnModel(object):
         X_v = np.zeros((nn_s, n_d))
         U = np.zeros((n_h, nn_s))
         U_struct = np.zeros(self.get_n_x_tuple() + (n_t, n_s))
-        x = [np.linspace(x_min[i], x_max[i], self.n_x[i])] for i in range(len(self.n_x))]
+        x = [np.linspace(x_min[i], x_max[i], self.n_x[i]) for i in range(len(self.n_x))]
         t = np.linspace(t_min, t_max, self.n_t)
         tT = t.reshape((self.n_t, 1))
         for i in tqdm(range(n_s)):
@@ -62,7 +61,7 @@ class PodnnModel(object):
             U[:, s:e] = np.reshape(self.u_array(x, t, mu_lhs[i, :]), (n_h, self.n_t))
             U_struct[:, :, i] = np.reshape(U[:, s:e], self.get_n_x_tuple() + (self.n_t,))
 
-    def split_dataset(X_v, v, train_val_ratio, nn_s):
+    def split_dataset(self, X_v, v, train_val_ratio, nn_s):
         nn_s_train = int(train_val_ratio * nn_s)
         X_v_train, v_train = X_v[:nn_s_train, :], v[:nn_s_train, :]
         X_v_val, v_val = X_v[nn_s_train:, :], v[nn_s_train:, :]
@@ -70,7 +69,8 @@ class PodnnModel(object):
 
     def generate_dataset(self, x_min, x_max, t_min, t_max,
                          mu_min, mu_max, n_s,
-                         train_val_ratio, eps, eps_init=None):
+                         train_val_ratio, eps, eps_init=None,
+                         use_cache=False, save_cache=False):
         
         if use_cache and os.path.exists(cache_path):
             with open(cache_path, "rb") as f:
@@ -82,7 +82,8 @@ class PodnnModel(object):
         # Number of input in time (1) + number of params
         n_d = 1 + len(mu_min)
         # Number of DOFs
-        n_h = n_v * np.prod(self.n_x)
+        n_h = self.n_v * np.prod(self.n_x)
+
 
         # LHS sampling (first uniform, then perturbated)
         print("Doing the LHS sampling on the non-spatial params...")
@@ -115,8 +116,7 @@ class PodnnModel(object):
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
-
-    def train(X_v, v, error, layers, epochs, lr, lam):
+    def train(self, X_v, v, error, layers, epochs, lr, lam):
         # Sizes
         n_L = self.V.shape[1]
         n_d = X_v.shape[1]
@@ -141,3 +141,15 @@ class PodnnModel(object):
         regnn.save_to(os.path.join(eqnPath, "cache", "model.h5"))
         
         return regnn
+
+    def predict(self, X_v_val):
+        v_pred = model.predict(X_v_val)
+
+        # Retrieving the function with the predicted coefficients
+        U_pred = self.V.dot(v_pred.T)
+
+        # Restruct
+        n_s_val = int(X_v_val.shape[0] / self.n_s)
+        U_pred_struct = restruct(U_pred, hp["n_x"], hp["n_t"], n_s_val)
+
+        return U_pred_struct

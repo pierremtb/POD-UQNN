@@ -3,8 +3,10 @@ import tensorflow as tf
 
 
 hp = {}
+# Dimension of u(x, t, mu)
+hp["n_v"] = 1
 # Space
-hp["n_x"] =  [256]
+hp["n_x"] = [256]
 hp["x_min"] = [0.]
 hp["x_max"] = [1.5]
 # Time
