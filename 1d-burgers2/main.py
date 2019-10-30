@@ -13,6 +13,7 @@ from plots import plot_results
 
 sys.path.append(os.path.join(eqnPath, "utils"))
 from podnn import PodnnModel
+from metrics import error_podnn
 
 # HYPER PARAMETERS
 if len(sys.argv) > 1:
@@ -26,11 +27,13 @@ class Burgers2PodnnModel(PodnnModel):
     # def u_1(x, mu):
     #     return x / (1 + np.exp(1/(4*mu)*(x**2 - 1/4)))
 
-    def u(x, t, mu):
+    def u(self, X, t, mu):
+        x = X[0]
         t0 = np.exp(1 / (8*mu))
         return (x/t) / (1 + np.sqrt(t/t0)*np.exp(x**2/(4*mu*t)))
-    
-model = Burgers2PodnnModel(hp["n_v"], hp["n_x"], hp["n_t"]) 
+
+
+model = Burgers2PodnnModel(hp["n_v"], hp["n_x"], hp["n_t"], eqnPath)
 
 X_v_train, v_train, \
         X_v_val, v_val, U_val = model.generate_dataset(hp["x_min"], hp["x_max"],
@@ -40,7 +43,7 @@ X_v_train, v_train, \
                                                        hp["eps"])
 
 def error_val():
-    v_pred = regnn.predict(X_v_val)
+    v_pred = model.predict(X_v_val)
     return error_podnn(U_val, V.dot(v_pred.T))
 model.train(X_v_train, v_train, error_val, hp["h_layers"],
             hp["tf_epochs"], hp["learning_rate"], hp["lambda"]) 
