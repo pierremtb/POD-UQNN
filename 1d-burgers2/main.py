@@ -36,19 +36,24 @@ class Burgers2PodnnModel(PodnnModel):
 model = Burgers2PodnnModel(hp["n_v"], hp["n_x"], hp["n_t"], eqnPath)
 
 X_v_train, v_train, \
-        X_v_val, v_val, U_val = model.generate_dataset(hp["x_min"], hp["x_max"],
-                                                       hp["t_min"], hp["t_max"],
-                                                       hp["mu_min"], hp["mu_max"],
-                                                       hp["n_s"], hp["train_val_ratio"],
-                                                       hp["eps"])
+    X_v_val, v_val, \
+    U_val = model.generate_dataset(hp["x_min"], hp["x_max"],
+                                   hp["t_min"], hp["t_max"],
+                                   hp["mu_min"], hp["mu_max"],
+                                   hp["n_s"],
+                                   hp["train_val_ratio"],
+                                   hp["eps"])
 
 def error_val():
-    v_pred = model.predict(X_v_val)
-    return error_podnn(U_val, V.dot(v_pred.T))
+    return 0.0
+    U_pred = model.predict(X_v_val)
+    return error_podnn(U_val, U_pred)
 model.train(X_v_train, v_train, error_val, hp["h_layers"],
-            hp["tf_epochs"], hp["learning_rate"], hp["lambda"]) 
+            hp["epochs"], hp["lr"], hp["lambda"]) 
 
-U_pred_struct = model.predict(X_v_val)
+U_pred = model.predict(X_v_val)
+
+U_pred_struct = model.restruct(U_pred)
 U_val_struct = model.restruct(U_val)
  
 # PLOTTING AND SAVING RESULTS

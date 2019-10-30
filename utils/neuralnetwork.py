@@ -4,18 +4,10 @@ from tqdm import tqdm
 
 
 class NeuralNetwork(object):
-    def __init__(self, hp, logger, ub, lb, model=None):
-
-        layers = hp["layers"]
+    def __init__(self, layers, lr, epochs, lam, logger, model=None):
 
         # Setting up the optimizers with the hyper-parameters
-        self.tf_epochs = hp["tf_epochs"]
-        self.tf_optimizer = tf.keras.optimizers.Adam(
-            learning_rate=hp["tf_lr"],
-            decay=hp["tf_decay"],
-            beta_1=hp["tf_b1"],
-            epsilon=hp["tf_eps"])
-
+        self.tf_optimizer = tf.keras.optimizers.Adam(lr)
         self.dtype = "float64"
         # Descriptive Keras model
         tf.keras.backend.set_floatx(self.dtype)
@@ -27,21 +19,20 @@ class NeuralNetwork(object):
                 self.model.add(tf.keras.layers.Dense(
                     width, activation=tf.nn.tanh,
                     kernel_initializer="glorot_normal",
-                    kernel_regularizer=tf.keras.regularizers.l2(hp["lambda"])))
+                    kernel_regularizer=tf.keras.regularizers.l2(lam)))
             self.model.add(tf.keras.layers.Dense(
                     layers[-1], activation=None,
                     kernel_initializer="glorot_normal",
-                    kernel_regularizer=tf.keras.regularizers.l2(hp["lambda"])))
+                    kernel_regularizer=tf.keras.regularizers.l2(lam)))
         else:
             self.model = model
 
         self.logger = logger
-        self.ub = ub
-        self.lb = lb
-        self.reg_l = hp["lambda"]
-        self.batch_size = hp["batch_size"]
+        self.reg_l = lam
+        self.batch_size = 0
 
     def normalize(self, X):
+        return X
         return (X - self.lb) - 0.5*(self.ub - self.lb)
 
     # Defining custom loss
@@ -74,10 +65,8 @@ class NeuralNetwork(object):
                 zip(grads, self.wrap_training_variables()))
         return loss_value
 
-    def fit(self, X_v, v, custom_tf_epochs=None):
-        tf_epochs = self.tf_epochs
-        if custom_tf_epochs is not None:
-            tf_epochs = custom_tf_epochs
+    def fit(self, X_v, v, epochs):
+        tf_epochs = epochs
         self.logger.log_train_start(self)
 
         # Normalizing

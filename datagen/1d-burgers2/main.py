@@ -19,7 +19,7 @@ from names import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE, HP_FILE
 n_s = int(1e3)
 
 # Static data
-x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+x = np.linspace(hp["x_min"][0], hp["x_max"][0], hp["n_x"][0])
 t = np.linspace(hp["t_min"], hp["t_max"], hp["n_t"])
 XT, TT = np.meshgrid(x, t)
 X = XT.T
@@ -27,12 +27,12 @@ T = TT.T
 
 n_h = hp["n_x"]
 n_d = 1 + 1
-lb = hp["mu_min"]
-ub = hp["mu_max"]
+lb = hp["mu_min"][0]
+ub = hp["mu_max"][0]
 
 # The sum and sum of squares recipient vectors
-U_tot = np.zeros((hp["n_x"], hp["n_t"]))
-U_tot_sq = np.zeros((hp["n_x"], hp["n_t"]))
+U_tot = np.zeros((hp["n_x"][0], hp["n_t"]))
+U_tot_sq = np.zeros((hp["n_x"][0], hp["n_t"]))
 
 # Going through the snapshots one by one without saving them
 for i in tqdm(range(n_s)):

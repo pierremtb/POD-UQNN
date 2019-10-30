@@ -6,10 +6,10 @@ from tqdm import tqdm
 
 
 class Logger(object):
-    def __init__(self, hp):
-        print("Hyperparameters:")
-        print(json.dumps(hp, indent=2))
-        print()
+    def __init__(self, epochs, frequency):
+        # print("Hyperparameters:")
+        # print(json.dumps(hp, indent=2))
+        # print()
 
         print("TensorFlow version: {}".format(tf.__version__))
         print("Eager execution: {}".format(tf.executing_eagerly()))
@@ -17,8 +17,8 @@ class Logger(object):
 
         self.start_time = time.time()
         self.prev_time = self.start_time
-        self.tf_epochs = hp["tf_epochs"]
-        self.frequency = hp["log_frequency"]
+        self.tf_epochs = epochs
+        self.frequency = frequency
 
     def get_epoch_duration(self):
         now = time.time()

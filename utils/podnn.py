@@ -8,6 +8,9 @@ from pyDOE import lhs
 
 sys.path.append("utils")
 from pod import get_pod_bases
+from handling import pack_layers
+from logger import Logger
+from neuralnetwork import NeuralNetwork
 
 
 class PodnnModel(object):
@@ -71,6 +74,7 @@ class PodnnModel(object):
                                    (n_h, self.n_t))
             U_struct[:, :, i] = np.reshape(U[:, s:e],
                                            self.get_n_x_tuple() + (self.n_t,))
+        return X_v, U, U_struct
 
     def split_dataset(self, X_v, v, train_val_ratio, nn_s):
         nn_s_train = int(train_val_ratio * nn_s)
@@ -107,8 +111,7 @@ class PodnnModel(object):
         # Creating the snapshots
         print(f"Generating {nn_s} corresponding snapshots")
         X_v, U, U_struct = self.create_snapshots(n_s, nn_s, n_d, n_h,
-                                                 x_min, x_max, t_min, t_max,
-                                                 mu_lhs)
+                                                 x_min, x_max, t_min, t_max, mu_lhs)
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
@@ -133,7 +136,7 @@ class PodnnModel(object):
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
-    def train(self, X_v, v, error, layers, epochs, lr, lam):
+    def train(self, X_v, v, error_val, layers, epochs, lr, lam, frequency=1000):
         # Sizes
         n_L = self.V.shape[1]
         n_d = X_v.shape[1]
@@ -141,32 +144,32 @@ class PodnnModel(object):
         # Creating the neural net model, and logger
         # In: (t, mu)
         # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
-        layers = pack_layers(n_d, hp["h_layers"], n_L)
-        logger = Logger(hp)
-        regnn = RegNN(hp, logger, ub, lb)
+        layers = pack_layers(n_d, layers, n_L)
+        logger = Logger(epochs, 100)
+        self.regnn = NeuralNetwork(layers, lr, epochs, lam, logger)
 
         # Setting the error function
-        def error_val():
-            v_pred = regnn.predict(X_v_val)
-            return error_podnn(U_val, V.dot(v_pred.T))
         logger.set_error_fn(error_val)
 
         # Training
-        regnn.fit(X_v_train, v_train)
+        self.regnn.fit(X_v, v, epochs)
 
         # Saving
-        regnn.save_to(os.path.join(self.eqnPath, "cache", "model.h5"))
+        self.regnn.save_to(os.path.join(self.eqnPath, "cache", "model.h5"))
         
-        return regnn
+        return self.regnn
+
+    def restruct(self, U):
+        print(U.shape)
+        n_s = int(U.shape[1] / self.n_t)
+        U_struct = np.reshape(U, self.get_n_x_tuple() + (self.n_t, n_s)) 
+        return U_struct
 
     def predict(self, X_v_val):
-        v_pred = model.predict(X_v_val)
+        v_pred = self.regnn.predict(X_v_val)
 
         # Retrieving the function with the predicted coefficients
         U_pred = self.V.dot(v_pred.T)
 
-        # Restruct
-        n_s_val = int(X_v_val.shape[0] / self.n_s)
-        U_pred_struct = restruct(U_pred, hp["n_x"], hp["n_t"], n_s_val)
+        return U_pred
 
-        return U_pred_struct
