@@ -35,23 +35,18 @@ class Burgers2PodnnModel(PodnnModel):
         return (x/t) / (1 + np.sqrt(t/t0)*np.exp(x**2/(4*mu*t)))
 
 
-model = Burgers2PodnnModel(hp["n_v"], hp["n_x"], hp["n_t"], eqnPath)
+x_mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"])
+model = Burgers2PodnnModel(hp["n_v"], x_mesh, hp["n_t"], eqnPath)
 
-mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"])
-
-print(mesh)
-exit(0)
 X_v_train, v_train, \
     X_v_val, v_val, \
-    U_val = model.generate_dataset(hp["x_min"], hp["x_max"],
-                                   hp["t_min"], hp["t_max"],
+    U_val = model.generate_dataset(hp["t_min"], hp["t_max"],
                                    hp["mu_min"], hp["mu_max"],
                                    hp["n_s"],
                                    hp["train_val_ratio"],
                                    hp["eps"])
 
 def error_val():
-    return 0.0
     U_pred = model.predict(X_v_val)
     return error_podnn(U_val, U_pred)
 model.train(X_v_train, v_train, error_val, hp["h_layers"],

@@ -14,32 +14,27 @@ from neuralnetwork import NeuralNetwork
 
 
 class PodnnModel(object):
-    def __init__(self, n_v, n_x, n_t, eqnPath):
+    def __init__(self, n_v, x_mesh, n_t, eqnPath):
         # Dimension of the function output
         self.n_v = n_v
-        # List of number of nodes in each direction of x
-        self.n_x = n_x
+        # Mesh definition array in space
+        self.x_mesh = x_mesh
+        # Number of DOFs
+        self.n_h = self.n_v * x_mesh.shape[0]
         # Number of time steps
         self.n_t = n_t
 
         self.eqnPath = eqnPath
 
-    def auto_meshgrid(self, x, t):
-        X0, *XT = np.meshgrid(*x, t)
-        X = [X0]
-        if len(XT) > 1: 
-            X.append(XT[:-1])
-        T = XT[-1]
-        return X, T
-
     def u(self, X, t, mu):
-        return
+        return X[0]*t + mu
 
-    def u_array(self, x, t, mu):
-        X, T = self.auto_meshgrid(x, t)
-        U = np.zeros(self.get_n_x_tuple() + (self.n_t,))
-        U = self.u(X, T, mu)
-        return U
+    def u_array(self, X, t, mu):
+        U = np.zeros((self.n_v, X.shape[1], self.n_t))
+        for i in range(self.n_t):
+            U[:, :, i] = self.u(X, t[i], mu)
+
+        return U.reshape((self.n_h, self.n_t))
 
     def sample_mu(self, n_s, mu_min, mu_max):
         pbar = tqdm(total=100)
@@ -50,30 +45,36 @@ class PodnnModel(object):
         pbar.close()
         return mu_lhs
 
-    def get_n_x_tuple(self):
-        tup = ()
-        for n_x_i in self.n_x:
-            tup += (n_x_i,)
-        return tup
-
     def create_snapshots(self, n_s, nn_s, n_d, n_h,
-                         x_min, x_max, t_min, t_max, mu_lhs):
+                         t_min, t_max, mu_lhs):
+        n_nodes = self.x_mesh.shape[0]
+        dim = self.x_mesh.shape[1] - 1
+
+        # Declaring the output arrays
         X_v = np.zeros((nn_s, n_d))
         U = np.zeros((n_h, nn_s))
-        U_struct = np.zeros(self.get_n_x_tuple() + (self.n_t, n_s))
-        x = [np.linspace(x_min[i], x_max[i], self.n_x[i])
-             for i in range(len(self.n_x))]
+        U_struct = np.zeros((n_h, self.n_t, n_s))
+
+        # Creating the time steps
         t = np.linspace(t_min, t_max, self.n_t)
         tT = t.reshape((self.n_t, 1))
+        
+        # Getting the nodes coordinates
+        X = self.x_mesh[:, 1:].T
+
         for i in tqdm(range(n_s)):
-            # Calling the analytical solution function
+            # Getting the snapshot times indices
             s = self.n_t * i
             e = self.n_t * (i + 1)
+
+            # Setting the regression inputs (t, mu)
             X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
-            U[:, s:e] = np.reshape(self.u_array(x, t, mu_lhs[i, :]),
-                                   (n_h, self.n_t))
-            U_struct[:, :, i] = np.reshape(U[:, s:e],
-                                           self.get_n_x_tuple() + (self.n_t,))
+
+            # Calling the analytical solution function
+            U[:, s:e] = self.u_array(X, t, mu_lhs[i, :])
+            U_struct[:, :, i] = \
+                    np.reshape(U[:, s:e],
+                              (self.n_v, n_nodes, self.n_t))
         return X_v, U, U_struct
 
     def split_dataset(self, X_v, v, train_val_ratio, nn_s):
@@ -82,7 +83,7 @@ class PodnnModel(object):
         X_v_val, v_val = X_v[nn_s_train:, :], v[nn_s_train:, :]
         return X_v_train, v_train, X_v_val, v_val
 
-    def generate_dataset(self, x_min, x_max, t_min, t_max,
+    def generate_dataset(self, t_min, t_max,
                          mu_min, mu_max, n_s,
                          train_val_ratio, eps, eps_init=None,
                          use_cache=False, save_cache=False):
@@ -93,8 +94,7 @@ class PodnnModel(object):
                 print("Loaded cached data")
                 return pickle.load(f)
 
-        x_min, x_max = np.array(x_min), np.array(x_max)
-        t_min, t_max = np.array(t_min), np.array(x_max)
+        t_min, t_max = np.array(t_min), np.array(t_max)
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
 
         # Total number of snapshots
@@ -102,16 +102,17 @@ class PodnnModel(object):
         # Number of input in time (1) + number of params
         n_d = 1 + len(mu_min)
         # Number of DOFs
-        n_h = self.n_v * np.prod(self.n_x)
-
+        n_h = self.n_v * self.x_mesh.shape[0]
+        
         # LHS sampling (first uniform, then perturbated)
         print("Doing the LHS sampling on the non-spatial params...")
         mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
 
         # Creating the snapshots
         print(f"Generating {nn_s} corresponding snapshots")
-        X_v, U, U_struct = self.create_snapshots(n_s, nn_s, n_d, n_h,
-                                                 x_min, x_max, t_min, t_max, mu_lhs)
+        X_v, U, U_struct = \
+            self.create_snapshots(n_s, nn_s, n_d, n_h,
+                                  t_min, t_max, mu_lhs)
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
@@ -159,10 +160,13 @@ class PodnnModel(object):
         
         return self.regnn
 
-    def restruct(self, U):
-        print(U.shape)
+    def restruct(self, U): 
         n_s = int(U.shape[1] / self.n_t)
-        U_struct = np.reshape(U, self.get_n_x_tuple() + (self.n_t, n_s)) 
+        U_struct = np.zeros((U.shape[0], self.n_t, n_s))
+        for i in range(n_s):
+            s = self.n_t * i
+            e = self.n_t * (i + 1)
+            U_struct[:, :, i] = U[:, s:e]
         return U_struct
 
     def predict(self, X_v_val):
