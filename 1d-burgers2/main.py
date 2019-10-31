@@ -26,8 +26,9 @@ else:
 
 
 class Burgers2PodnnModel(PodnnModel):
-    # def u_1(x, mu):
-    #     return x / (1 + np.exp(1/(4*mu)*(x**2 - 1/4)))
+    def u_0(self, X, mu):
+        x = X[0]
+        return x / (1 + np.exp(1/(4*mu)*(x**2 - 1/4)))
 
     def u(self, X, t, mu):
         x = X[0]
@@ -57,28 +58,6 @@ U_pred = model.predict(X_v_val)
 U_pred_struct = model.restruct(U_pred)
 U_val_struct = model.restruct(U_val)
  
-# PLOTTING AND SAVING RESULTS
-plot_results(U_val_struct, U_pred_struct, hp, eqnPath)
-plot_results(U_val_struct, U_pred_struct, hp)
-exit(0)
-
-
-# DATA PREPARATION
-X_v_train, v_train, X_v_val, v_val, \
-    lb, ub, V, U_val = prep_data(hp,
-            use_cache=False, save_cache=True,
-            fast_pod=True)
-    
-# NN-REGRESSION TRAINING
-model = create_model_and_train(X_v_train, v_train,
-                               X_v_val, v_val,
-                               hp, lb, ub, V, U_val)
-
-# PREDICTIONS AND PERFORMANCE
-U_val_struct, U_pred_struct = predict_and_assess(model,
-                                                 X_v_val,
-                                                 U_val, V, hp)
-
 # PLOTTING AND SAVING RESULTS
 plot_results(U_val_struct, U_pred_struct, hp, eqnPath)
 plot_results(U_val_struct, U_pred_struct, hp)
