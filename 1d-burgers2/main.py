@@ -14,6 +14,8 @@ from plots import plot_results
 sys.path.append(os.path.join(eqnPath, "utils"))
 from podnn import PodnnModel
 from metrics import error_podnn
+from mesh import create_linear_mesh
+
 
 # HYPER PARAMETERS
 if len(sys.argv) > 1:
@@ -35,6 +37,10 @@ class Burgers2PodnnModel(PodnnModel):
 
 model = Burgers2PodnnModel(hp["n_v"], hp["n_x"], hp["n_t"], eqnPath)
 
+mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"])
+
+print(mesh)
+exit(0)
 X_v_train, v_train, \
     X_v_val, v_val, \
     U_val = model.generate_dataset(hp["x_min"], hp["x_max"],
