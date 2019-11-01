@@ -5,7 +5,7 @@ from tqdm import tqdm
 from pyDOE import lhs
 import json
 
-eqnPath = "1d-burgers"
+eqnPath = "1dt-burgers"
 sys.path.append(eqnPath)
 from plots import plot_results
 from hyperparams import hp

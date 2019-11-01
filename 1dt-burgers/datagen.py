@@ -7,7 +7,7 @@ import json
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
-eqnPath = "1d-burgers"
+eqnPath = "1dt-burgers"
 sys.path.append(eqnPath)
 from plots import plot_results
 from hyperparams import hp

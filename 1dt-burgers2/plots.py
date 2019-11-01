@@ -9,7 +9,7 @@ from tqdm import tqdm
 import json
 import time
 
-eqnPath = "1d-burgers2"
+eqnPath = "1dt-burgers2"
 sys.path.append(eqnPath)
 from hyperparams import hp
 

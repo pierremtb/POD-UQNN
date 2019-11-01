@@ -4,7 +4,7 @@ import sys
 import os
 import numpy as np
 
-eqnPath = "1d-burgers"
+eqnPath = "1dt-burgers"
 sys.path.append("utils")
 from plotting import figsize
 

@@ -4,7 +4,7 @@ import json
 import numpy as np
 import tensorflow as tf
 
-eqnPath = "1d-burgers2"
+eqnPath = "1dt-burgers2"
 sys.path.append(eqnPath)
 from datagen import u
 from plots import plot_results
