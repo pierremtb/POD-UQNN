@@ -142,7 +142,8 @@ class PodnnModel(object):
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
-    def train(self, X_v, v, error_val, layers, epochs, lr, lam, frequency=1000):
+    def train(self, X_v, v, error_val, layers, epochs, lr, lam,
+              frequency=1000):
         # Sizes
         n_L = self.V.shape[1]
         n_d = X_v.shape[1]
@@ -151,7 +152,7 @@ class PodnnModel(object):
         # In: (t, mu)
         # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
         layers = pack_layers(n_d, layers, n_L)
-        logger = Logger(epochs, 100)
+        logger = Logger(epochs, frequency)
         self.regnn = NeuralNetwork(layers, lr, epochs, lam, logger)
 
         # Setting the error function
