@@ -26,17 +26,13 @@ class PodnnModel(object):
 
         self.eqnPath = eqnPath
 
-    def u_0(self, X, mu):
-        return self.u(X, 0, mu)
-
     def u(self, X, t, mu):
         return X[0]*t + mu
 
     def u_array(self, X, t, mu):
         U = np.zeros((self.n_v, X.shape[1], self.n_t))
         # Initial condition
-        U[:, :, 0] = self.u_0(X, mu)
-        for i in range(1, self.n_t):
+        for i in range(0, self.n_t):
             U[:, :, i] = self.u(X, t[i], mu)
 
         return U.reshape((self.n_h, self.n_t))

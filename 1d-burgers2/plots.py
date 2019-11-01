@@ -12,7 +12,6 @@ import time
 eqnPath = "1d-burgers2"
 sys.path.append(eqnPath)
 from hyperparams import hp
-# from datagen import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 
 sys.path.append("utils")
 from metrics import error_podnn
@@ -21,6 +20,7 @@ from handling import pack_layers
 
 
 def get_test_data():
+    from datagen import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
     dirname = os.path.join(eqnPath, "data")
     X = np.load(os.path.join(dirname, X_FILE))
     T = np.load(os.path.join(dirname, T_FILE))

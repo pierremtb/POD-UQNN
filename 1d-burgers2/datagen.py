@@ -103,7 +103,6 @@ def plot():
     T = np.load(os.path.join(dirname, T_FILE))
     u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
     u_std = np.load(os.path.join(dirname, U_STD_FILE))
-
     fig = plt.figure(figsize=figsize(2, 1))
     ax_mean = fig.add_subplot(121, projection="3d")
     ax_mean.plot_surface(X, T, u_mean)
@@ -114,7 +113,6 @@ def plot():
     ax_std.set_title(r"Standard deviation of $u_h(x, \gamma, \beta)$")
     ax_std.set_xlabel("$x$")
     plt.show()
-
     plt.plot(X[:, 0], u_mean[:, 25])
     plt.plot(X[:, 0], u_mean[:, 50])
     plt.plot(X[:, 0], u_mean[:, 75])
