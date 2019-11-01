@@ -60,7 +60,9 @@ def generate(n_s):
         # Computing one snapshot
         X_mu = lhs(1, 1).T
         mu_lhs = lb + (ub - lb)*X_mu
-        U = u(x, t, mu_lhs[0, 0])
+        U = np.zeros_like(U_tot)
+        for i in range(hp["n_t"]):
+            U[:, i] = u(x, t[i], mu_lhs[0, 0])
 
         # Building the sum and the sum of squaes
         U_tot += U
