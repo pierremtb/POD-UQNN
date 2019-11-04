@@ -6,21 +6,19 @@ sys.path.append("utils")
 
 
 def create_linear_mesh(x_min, x_max, n_x,
-                       y_min=None, y_max=None, n_y=None,
-                       z_min=None, z_max=None, n_z=None):
+                       y_min=0, y_max=0, n_y=0,
+                       z_min=0, z_max=0, n_z=0):
     dim = 1
     n_nodes = n_x
 
     x = np.linspace(x_min, x_max, n_x).reshape((n_x, 1))
 
-    if y_min is not None and y_max is not None and \
-       n_y is not None:
+    if n_y > 0:
         dim += 1
         n_nodes *= n_y
         y = np.linspace(y_min, y_max, n_y).reshape((n_y, 1))
 
-        if z_min is not None and z_max is not None and \
-           n_z is not None:
+        if n_z > 0:
             dim += 1
             n_nodes *= n_z
             z = np.linspace(z_min, z_max, n_z).reshape((n_z, 1))

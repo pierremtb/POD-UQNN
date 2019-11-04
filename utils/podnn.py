@@ -23,6 +23,7 @@ class PodnnModel(object):
         self.n_h = self.n_v * x_mesh.shape[0]
         # Number of time steps
         self.n_t = n_t
+        self.has_t = self.n_t > 0
 
         self.eqnPath = eqnPath
 
@@ -42,40 +43,61 @@ class PodnnModel(object):
         X_lhs = lhs(n_s, len(mu_min)).T
         pbar.update(50)
         mu_lhs = mu_min + (mu_max - mu_min)*X_lhs
+        print(mu_lhs.shape)
         pbar.update(50)
         pbar.close()
         return mu_lhs
 
-    def create_snapshots(self, n_s, nn_s, n_d, n_h,
-                         t_min, t_max, mu_lhs):
+    # def get_x_tuple(self):
+    #     tup = (self.n_x,)
+    #     if self.has_y:
+    #         tup += (self.n_y,)
+    #         if self.has_z:
+    #             tup += (self.n_z,)
+    #     return tup
+
+    # def get_u_tuple(self):
+    #     tup = self.get_x_tuple()
+    #     return (self.n_v,) + tup
+
+    def create_snapshots(self, n_s, nn_s, n_d, n_h, mu_lhs,
+                         t_min=0, t_max=0):
         n_nodes = self.x_mesh.shape[0]
         dim = self.x_mesh.shape[1] - 1
 
         # Declaring the output arrays
         X_v = np.zeros((nn_s, n_d))
         U = np.zeros((n_h, nn_s))
-        U_struct = np.zeros((n_h, self.n_t, n_s))
-
-        # Creating the time steps
-        t = np.linspace(t_min, t_max, self.n_t)
-        tT = t.reshape((self.n_t, 1))
+        
+        if self.has_t:
+            U_struct = np.zeros((n_h, self.n_t, n_s))
+        
+            # Creating the time steps
+            t = np.linspace(t_min, t_max, self.n_t)
+            tT = t.reshape((self.n_t, 1))
         
         # Getting the nodes coordinates
         X = self.x_mesh[:, 1:].T
 
-        for i in tqdm(range(n_s)):
-            # Getting the snapshot times indices
-            s = self.n_t * i
-            e = self.n_t * (i + 1)
+        if self.has_t:
+            for i in tqdm(range(n_s)):
+                # Getting the snapshot times indices
+                s = self.n_t * i
+                e = self.n_t * (i + 1)
 
-            # Setting the regression inputs (t, mu)
-            X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
+                # Setting the regression inputs (t, mu)
+                X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
 
-            # Calling the analytical solution function
-            U[:, s:e] = self.u_array(X, t, mu_lhs[i, :])
-            U_struct[:, :, i] = \
-                    np.reshape(U[:, s:e],
-                              (self.n_v, n_nodes, self.n_t))
+                # Calling the analytical solution function
+                U[:, s:e] = self.u_array(X, t, mu_lhs[i, :])
+                U_struct[:, :, i] = \
+                        np.reshape(U[:, s:e],
+                                (self.n_v, n_nodes, self.n_t))
+        else:
+            for i in tqdm(range(n_s)):
+                X_v[i, :] = mu_lhs[i]
+                U[:, i] = self.u(X, 0, mu_lhs[i, :])
+            U_struct = U
         return X_v, U, U_struct
 
     def split_dataset(self, X_v, v, train_val_ratio, nn_s):
@@ -93,15 +115,24 @@ class PodnnModel(object):
         if use_cache and os.path.exists(cache_path):
             with open(cache_path, "rb") as f:
                 print("Loaded cached data")
-                return pickle.load(f)
+                data = pickle.load(f)
+                self.V = data[0]
+                return data[1:]
 
-        t_min, t_max = np.array(t_min), np.array(t_max)
+        if self.has_t:
+            t_min, t_max = np.array(t_min), np.array(t_max)
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
 
         # Total number of snapshots
-        nn_s = self.n_t * n_s 
+        nn_s = n_s 
+        if self.has_t:
+            nn_s *= self.n_t
+
         # Number of input in time (1) + number of params
-        n_d = 1 + len(mu_min)
+        n_d = mu_min.shape[0]
+        if self.has_t:
+            n_d += 1
+        
         # Number of DOFs
         n_h = self.n_v * self.x_mesh.shape[0]
         
@@ -112,8 +143,8 @@ class PodnnModel(object):
         # Creating the snapshots
         print(f"Generating {nn_s} corresponding snapshots")
         X_v, U, U_struct = \
-            self.create_snapshots(n_s, nn_s, n_d, n_h,
-                                  t_min, t_max, mu_lhs)
+            self.create_snapshots(n_s, nn_s, n_d, n_h, mu_lhs,
+                                  t_min, t_max)
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
@@ -131,10 +162,9 @@ class PodnnModel(object):
         # Creating the validation snapshots matrix
         U_val = self.V.dot(v_val.T)
 
-        # if save_cache:
-        #     with open(cache_path, "wb") as f:
-        #         pickle.dump((X_v_train, v_train, X_v_val, v_val,
-        #                      lb, ub, V, U_val), f)
+        if save_cache:
+            with open(cache_path, "wb") as f:
+                pickle.dump((self.V, X_v_train, v_train, X_v_val, v_val, U_val), f)
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
@@ -163,13 +193,16 @@ class PodnnModel(object):
         return self.regnn
 
     def restruct(self, U): 
-        n_s = int(U.shape[1] / self.n_t)
-        U_struct = np.zeros((U.shape[0], self.n_t, n_s))
-        for i in range(n_s):
-            s = self.n_t * i
-            e = self.n_t * (i + 1)
-            U_struct[:, :, i] = U[:, s:e]
-        return U_struct
+        if self.has_t:
+            n_s = int(U.shape[-1] / self.n_t)
+            U_struct = np.zeros((U.shape[0], self.n_t, n_s))
+            for i in range(n_s):
+                s = self.n_t * i
+                e = self.n_t * (i + 1)
+                U_struct[:, :, i] = U[:, s:e]
+            return U_struct
+        n_s = U.shape[-1]
+        return U.reshape(self.get_u_tuple() + (n_s,))        
 
     def predict(self, X_v_val):
         v_pred = self.regnn.predict(X_v_val)

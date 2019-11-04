@@ -16,6 +16,9 @@ from hyperparams import hp
 from pod import get_pod_bases
 from testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 
+# HiFi sampling size
+n_s = int(10)
+# n_s = int(1e3)
 
 def u(X, t, mu):
     x = X[0]
@@ -46,7 +49,7 @@ class ShekelTestGenerator(TestGenerator):
 
 def generate_test_dataset():
   testgen = ShekelTestGenerator(eqnPath, u, hp["n_v"], hp["n_x"])
-  testgen.generate(int(1e2), hp["mu_min"], hp["mu_max"], hp["x_min"], hp["x_max"])
+  testgen.generate(n_s, hp["mu_min"], hp["mu_max"], hp["x_min"], hp["x_max"])
   return testgen
 
 

@@ -6,9 +6,12 @@ hp = {}
 # Dimension of u(x, t, mu)
 hp["n_v"] = 1
 # Space
-hp["n_x"] = 300
-hp["x_min"] = 0.
-hp["x_max"] = 10.
+hp["n_x"] = 400
+hp["x_min"] = -5
+hp["x_max"] = +5.
+hp["n_y"] = 400
+hp["y_min"] = -5.
+hp["y_max"] = +5.
 # Time
 hp["n_t"] = 0
 # Snapshots count
@@ -23,21 +26,19 @@ hp["h_layers"] = [64, 64]
 # Batch size for mini-batch training (0 means full-batch)
 hp["batch_size"] = 0
 # Setting up TF SGD-based optimizer
-# hp["epochs"] = 70000
-hp["epochs"] = 7000
-hp["lr"] = 0.003
+hp["epochs"] = 20000
+# hp["epochs"] = 7000
+# hp["epochs"] = 7
+hp["lr"] = 0.002
 hp["decay"] = 0.
 hp["b1"] = 0.9
 hp["eps"] = 1e-10
-hp["lambda"] = 1e-6
+hp["lambda"] = 1e-4
 # Frequency of the logger
 hp["log_frequency"] = 1000
 # Non-spatial params
-bet = 1/10 * np.array([1, 2, 2, 4, 4, 6, 3, 7, 5, 5])
-gam = 1. * np.array([4, 1, 8, 6, 3, 2, 5, 8, 6, 7])
-mu_mean = np.hstack((bet, gam))
-hp["mu_min"] = (mu_mean * (1 - np.sqrt(3)/10)).tolist()
-hp["mu_max"] = (mu_mean * (1 + np.sqrt(3)/10)).tolist()
+hp["mu_min"] = [-1., -1., -1.]
+hp["mu_max"] = [+1., +1., +1.]
 
 
 np.random.seed(1111)
