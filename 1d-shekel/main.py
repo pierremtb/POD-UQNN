@@ -6,15 +6,13 @@ import matplotlib.pyplot as plt
 
 eqnPath = "1d-shekel"
 sys.path.append(eqnPath)
-from dataprep import prep_data
-from shekelutils import plot_results, prep_data
+from datagen import u
+from plots import plot_results
 
 sys.path.append("utils")
-from pod import get_pod_bases
-from metrics import error_podnn, error_pod
-from neuralnetwork import NeuralNetwork
-from logger import Logger
-from handling import scarcify, pack_layers
+from podnn import PodnnModel
+from metrics import error_podnn
+from mesh import create_linear_mesh
 
 
 # HYPER PARAMETERS
@@ -24,34 +22,35 @@ if len(sys.argv) > 1:
 else:
     from hyperparams import hp
 
-# DATA PREPARATION WITH POD
-U_star, X_v_star, lb, ub, V, U_val = prep_data(hp)
+# Create linear space mesh
+x_mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"])
 
-# NN-REGRESSION TRAINING
-# Creating the neural net model, and logger
-# In: (gam_0, bet_1, ..., bet_m, gam_0, bet_1, ..., bet_n)
-# Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
-hp["layers"] = pack_layers(n_d, hp["h_layers"], n_L)
-logger = Logger(hp)
-model = NeuralNetwork(hp, logger, ub, lb)
+# Extend the class and init the model
+class Burgers2PodnnModel(PodnnModel):
+    def u(self, X, t, mu):
+        return u(X, t, mu)
+model = Burgers2PodnnModel(hp["n_v"], x_mesh, hp["n_t"], eqnPath)
 
-# Setting the error function
+# Generate the dataset from the mesh and params
+X_v_train, v_train, \
+    X_v_val, v_val, \
+    U_val = model.generate_dataset(hp["mu_min"], hp["mu_max"],
+                                   hp["n_s"],
+                                   hp["train_val_ratio"],
+                                   hp["eps"])
+
+# Train
 def error_val():
-    v_pred = model.predict(X_v_val)
-    return error_podnn(U_val, V.dot(v_pred.T))
-logger.set_error_fn(error_val)
+    U_pred = model.predict(X_v_val)
+    return error_podnn(U_val, U_pred)
+model.train(X_v_train, v_train, error_val, hp["h_layers"],
+            hp["epochs"], hp["lr"], hp["lambda"]) 
 
-# Training
-model.fit(X_v_train, v_train)
-
-# Predicting the coefficients
-v_pred = model.predict(X_v_val)
-print(f"Error calculated on n_s_train = {n_s_train} samples" +
-        f" ({int(100 * hp['train_val_ratio'])}%)")
-
-# Retrieving the function with the predicted coefficients
-U_pred = V.dot(v_pred.T)
-
-# Plotting and saving the results
-plot_results(U_val, U_pred, hp, eqnPath)
-plot_results(U_val, U_pred, hp)
+# Predict and restruct
+U_pred = model.predict(X_v_val)
+U_pred_struct = model.restruct(U_pred)
+U_val_struct = model.restruct(U_val)
+ 
+# PLOTTING AND SAVING RESULTS
+plot_results(U_val_struct, U_pred_struct, hp, eqnPath)
+plot_results(U_val_struct, U_pred_struct, hp)

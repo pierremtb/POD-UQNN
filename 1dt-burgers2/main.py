@@ -34,11 +34,10 @@ model = Burgers2PodnnModel(hp["n_v"], x_mesh, hp["n_t"], eqnPath)
 # Generate the dataset from the mesh and params
 X_v_train, v_train, \
     X_v_val, v_val, \
-    U_val = model.generate_dataset(hp["t_min"], hp["t_max"],
-                                   hp["mu_min"], hp["mu_max"],
-                                   hp["n_s"],
-                                   hp["train_val_ratio"],
-                                   hp["eps"])
+    U_val = model.generate_dataset(hp["mu_min"], hp["mu_max"],
+                                   hp["n_s"], hp["train_val_ratio"],
+                                   hp["eps"],
+                                   t_min=hp["t_min"], t_max=hp["t_max"])
 
 # Train
 def error_val():

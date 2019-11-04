@@ -84,9 +84,9 @@ class PodnnModel(object):
         X_v_val, v_val = X_v[nn_s_train:, :], v[nn_s_train:, :]
         return X_v_train, v_train, X_v_val, v_val
 
-    def generate_dataset(self, t_min, t_max,
-                         mu_min, mu_max, n_s,
+    def generate_dataset(self, mu_min, mu_max, n_s,
                          train_val_ratio, eps, eps_init=None,
+                         t_min=0, t_max=0,
                          use_cache=False, save_cache=False):
         
         cache_path = os.path.join(self.eqnPath, "cache", "prep_data.pkl")

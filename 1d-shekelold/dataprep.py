@@ -14,6 +14,10 @@ from pod import get_pod_bases
 
 
 def shekel_u(x, gam, bet):
+    print(gam.shape)
+    print(bet.shape)
+    print(x.shape)
+    exit(0)
     return -shekel(x[None, :], gam, bet)[0]
 
 
@@ -82,5 +86,6 @@ def prep_data(hp, use_cache=False, save_cache=False):
     return U, X_v, lb, ub, V, U_val
 
 if __name__ == "__main__":
-    prep_data(hp, fast_pod=True, save_cache=True)
+    from hyperparams import hp
+    prep_data(hp, save_cache=True)
 
