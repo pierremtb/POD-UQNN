@@ -34,7 +34,7 @@ def perform_pod(U, eps, verbose=True):
     # Number of DOFs
     n_h = U.shape[0]
     # Number of snapshots n_s x Number of space nodes (n_x * n_y * ...)
-    nn_s = U.shape[1]
+    n_st = U.shape[1]
 
     W, D, ZT = np.linalg.svd(U, full_matrices=False)
 
@@ -49,7 +49,7 @@ def perform_pod(U, eps, verbose=True):
     # Finding n_L
     n_L = 0
     sum_lambdas_trunc = 0.
-    for i in range(nn_s):
+    for i in range(n_st):
         sum_lambdas_trunc += lambdas[i]
         n_L += 1
         if sum_lambdas_trunc/sum_lambdas >= (1 - eps):

@@ -26,6 +26,7 @@ class PodnnModel(object):
         self.has_t = self.n_t > 0
 
         self.eqnPath = eqnPath
+        self.cache_path = os.path.join(eqnPath, "cache", "prep_data.pkl")
 
     def u(self, X, t, mu):
         return X[0]*t + mu
@@ -47,34 +48,22 @@ class PodnnModel(object):
         pbar.close()
         return mu_lhs
 
-    # def get_x_tuple(self):
-    #     tup = (self.n_x,)
-    #     if self.has_y:
-    #         tup += (self.n_y,)
-    #         if self.has_z:
-    #             tup += (self.n_z,)
-    #     return tup
-
-    # def get_u_tuple(self):
-    #     tup = self.get_x_tuple()
-    #     return (self.n_v,) + tup
-
-    def create_snapshots(self, n_s, nn_s, n_d, n_h, mu_lhs,
+    def create_snapshots(self, n_s, n_st, n_d, n_h, mu_lhs,
                          t_min=0, t_max=0):
-        n_nodes = self.x_mesh.shape[0]
+        n_xyz = self.x_mesh.shape[0]
         dim = self.x_mesh.shape[1] - 1
 
         # Declaring the output arrays
-        X_v = np.zeros((nn_s, n_d))
-        U = np.zeros((n_h, nn_s))
-        
+        X_v = np.zeros((n_st, n_d))
+        U = np.zeros((n_h, n_st))
+
         if self.has_t:
             U_struct = np.zeros((n_h, self.n_t, n_s))
-        
+
             # Creating the time steps
             t = np.linspace(t_min, t_max, self.n_t)
             tT = t.reshape((self.n_t, 1))
-        
+
         # Getting the nodes coordinates
         X = self.x_mesh[:, 1:].T
 
@@ -90,8 +79,8 @@ class PodnnModel(object):
                 # Calling the analytical solution function
                 U[:, s:e] = self.u_array(X, t, mu_lhs[i, :])
                 U_struct[:, :, i] = \
-                        np.reshape(U[:, s:e],
-                                (self.n_v, n_nodes, self.n_t))
+                    np.reshape(U[:, s:e],
+                               (self.n_v, n_xyz, self.n_t))
         else:
             for i in tqdm(range(n_s)):
                 X_v[i, :] = mu_lhs[i]
@@ -99,55 +88,89 @@ class PodnnModel(object):
             U_struct = U
         return X_v, U, U_struct
 
-    def split_dataset(self, X_v, v, train_val_ratio, nn_s):
-        nn_s_train = int(train_val_ratio * nn_s)
-        X_v_train, v_train = X_v[:nn_s_train, :], v[:nn_s_train, :]
-        X_v_val, v_val = X_v[nn_s_train:, :], v[nn_s_train:, :]
+    def split_dataset(self, X_v, v, train_val_ratio, n_st):
+        n_st_train = int(train_val_ratio * n_st)
+        X_v_train, v_train = X_v[:n_st_train, :], v[:n_st_train, :]
+        X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
         return X_v_train, v_train, X_v_val, v_val
 
-    def convert_dataset(self, u_mesh, train_val_ratio, eps, eps_init=None,
-                        use_cache=False, save_cache=False):
-        
+    def get_cache(self):
+        with open(self.cache_path, "rb") as f:
+            print("Loaded cached data")
+            data = pickle.load(f)
+            self.V = data[0]
+            return data[1:]
 
+    def set_cache(self, X_v_train, v_train, X_v_val, v_val, U_val):
+        with open(self.cache_path, "wb") as f:
+            pickle.dump((self.V, X_v_train, v_train,
+                            X_v_val, v_val, U_val), f)
+
+    def convert_dataset(self, u_mesh, X_v, train_val_ratio, eps, eps_init=None,
+                        use_cache=False, save_cache=False):
+        if use_cache and os.path.exists(self.cache_path):
+            return self.get_cache()
+
+        n_xyz = self.x_mesh.shape[0] 
+        n_h = n_xyz * self.n_v
+        n_st = X_v.shape[0]
+        U = u_mesh.reshape(n_h, n_st)
+        print("U: ", U.shape)
+
+        # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
+        # u_rb are the reduced coefficients we're looking for
+        # if eps_init is not None:
+        #     self.V = get_pod_bases(U_struct, eps, eps_init_step=eps_init)
+        # else:
+        self.V = get_pod_bases(U, eps)
+
+        # Projecting
+        v = (self.V.T.dot(U)).T
+
+        # Splitting the dataset (X_v, v)
+        X_v_train, v_train, X_v_val, v_val = self.split_dataset(
+            X_v, v, train_val_ratio, n_st)
+
+        # Creating the validation snapshots matrix
+        U_val = self.V.dot(v_val.T)
+
+        if save_cache:
+            self.set_cache(X_v_train, v_train, X_v_val, v_val, U_val)
+        
+        return X_v_train, v_train, X_v_val, v_val, U_val
 
     def generate_dataset(self, mu_min, mu_max, n_s,
                          train_val_ratio, eps, eps_init=None,
                          t_min=0, t_max=0,
                          use_cache=False, save_cache=False):
+        if use_cache:
+            return get_cache()
         
-        cache_path = os.path.join(self.eqnPath, "cache", "prep_data.pkl")
-        if use_cache and os.path.exists(cache_path):
-            with open(cache_path, "rb") as f:
-                print("Loaded cached data")
-                data = pickle.load(f)
-                self.V = data[0]
-                return data[1:]
-
         if self.has_t:
             t_min, t_max = np.array(t_min), np.array(t_max)
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
 
         # Total number of snapshots
-        nn_s = n_s 
+        n_st = n_s
         if self.has_t:
-            nn_s *= self.n_t
+            n_st *= self.n_t
 
         # Number of input in time (1) + number of params
         n_d = mu_min.shape[0]
         if self.has_t:
             n_d += 1
-        
+
         # Number of DOFs
         n_h = self.n_v * self.x_mesh.shape[0]
-        
+
         # LHS sampling (first uniform, then perturbated)
         print("Doing the LHS sampling on the non-spatial params...")
         mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
 
         # Creating the snapshots
-        print(f"Generating {nn_s} corresponding snapshots")
+        print(f"Generating {n_st} corresponding snapshots")
         X_v, U, U_struct = \
-            self.create_snapshots(n_s, nn_s, n_d, n_h, mu_lhs,
+            self.create_snapshots(n_s, n_st, n_d, n_h, mu_lhs,
                                   t_min, t_max)
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
@@ -159,16 +182,16 @@ class PodnnModel(object):
 
         # Projecting
         v = (self.V.T.dot(U)).T
-       
+
         # Splitting the dataset (X_v, v)
-        X_v_train, v_train, X_v_val, v_val = self.split_dataset(X_v, v, train_val_ratio, nn_s)
-       
+        X_v_train, v_train, X_v_val, v_val = self.split_dataset(
+            X_v, v, train_val_ratio, n_st)
+
         # Creating the validation snapshots matrix
         U_val = self.V.dot(v_val.T)
 
         if save_cache:
-            with open(cache_path, "wb") as f:
-                pickle.dump((self.V, X_v_train, v_train, X_v_val, v_val, U_val), f)
+            self.set_cache(X_v_train, v_train, X_v_val, v_val, U_val)
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
@@ -193,10 +216,10 @@ class PodnnModel(object):
 
         # Saving
         self.regnn.save_to(os.path.join(self.eqnPath, "cache", "model.h5"))
-        
+
         return self.regnn
 
-    def restruct(self, U): 
+    def restruct(self, U):
         if self.has_t:
             n_s = int(U.shape[-1] / self.n_t)
             U_struct = np.zeros((U.shape[0], self.n_t, n_s))
@@ -206,7 +229,7 @@ class PodnnModel(object):
                 U_struct[:, :, i] = U[:, s:e]
             return U_struct
         n_s = U.shape[-1]
-        return U.reshape(self.get_u_tuple() + (n_s,))        
+        return U.reshape(self.get_u_tuple() + (n_s,))
 
     def predict(self, X_v_val):
         v_pred = self.regnn.predict(X_v_val)
@@ -215,4 +238,3 @@ class PodnnModel(object):
         U_pred = self.V.dot(v_pred.T)
 
         return U_pred
-

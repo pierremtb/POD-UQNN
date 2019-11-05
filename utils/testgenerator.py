@@ -59,14 +59,14 @@ class TestGenerator(object):
 
     # Getting the nodes coordinates
     X = x_mesh[:, 1:].T
-    n_nodes = x_mesh.shape[0]
+    n_xyz = x_mesh.shape[0]
 
     # Generating time steps
     if self.has_t:
       t = np.linspace(t_min, t_max, self.n_t)
 
     # Number of DOFs and of non-spatial params
-    n_h = self.n_v * n_nodes
+    n_h = self.n_v * n_xyz
     n_p = mu_min.shape[0]
 
     # Number of inputs (time + number of non-spatial params)
