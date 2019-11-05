@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 
-eqnPath = "1d-shekel"
+eqnPath = "2d-ackley"
 from main import main
 from hyperparams import hp
 

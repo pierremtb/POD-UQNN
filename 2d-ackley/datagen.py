@@ -18,6 +18,10 @@ from testgenerator import TestGenerator, X_FILE, \
         T_FILE, U_MEAN_FILE, U_STD_FILE
 
 
+# HiFi sampling size
+n_s = int(1e3)
+
+
 def u(X, t, mu):
     x = X[0]
     y = X[1]

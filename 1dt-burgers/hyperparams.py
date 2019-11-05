@@ -7,12 +7,12 @@ hp = {}
 hp["n_v"] = 1
 # Space
 hp["n_x"] = 256
-hp["x_min"] = 0.
-hp["x_max"] = 1.5
+hp["x_min"] = -1.
+hp["x_max"] = +1.
 # Time
 hp["n_t"] = 100
-hp["t_min"] = 1.
-hp["t_max"] = 5.
+hp["t_min"] = 0.
+hp["t_max"] = 1.
 # Snapshots count
 hp["n_s"] = 2 * 100
 # POD stopping param

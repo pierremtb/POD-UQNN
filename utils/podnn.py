@@ -43,7 +43,6 @@ class PodnnModel(object):
         X_lhs = lhs(n_s, len(mu_min)).T
         pbar.update(50)
         mu_lhs = mu_min + (mu_max - mu_min)*X_lhs
-        print(mu_lhs.shape)
         pbar.update(50)
         pbar.close()
         return mu_lhs
