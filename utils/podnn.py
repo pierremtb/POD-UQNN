@@ -105,6 +105,11 @@ class PodnnModel(object):
         X_v_val, v_val = X_v[nn_s_train:, :], v[nn_s_train:, :]
         return X_v_train, v_train, X_v_val, v_val
 
+    def convert_dataset(self, u_mesh, train_val_ratio, eps, eps_init=None,
+                        use_cache=False, save_cache=False):
+        
+
+
     def generate_dataset(self, mu_min, mu_max, n_s,
                          train_val_ratio, eps, eps_init=None,
                          t_min=0, t_max=0,
