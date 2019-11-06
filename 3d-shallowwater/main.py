@@ -32,6 +32,8 @@ if not use_cache:
     np.save(os.path.join(eqnPath, "cache", "x_mesh.npy"), x_mesh)
 else:
     x_mesh = np.load(os.path.join(eqnPath, "cache", "x_mesh.npy"))
+    u_mesh = None
+    X_v = None
     
 # Extend the class and init the model
 model = PodnnModel(hp["n_v"], x_mesh, hp["n_t"], eqnPath)
@@ -43,6 +45,7 @@ X_v_train, v_train, \
                                   hp["train_val_ratio"], hp["eps"],
                                   use_cache=use_cache, save_cache=True)
 
+U_val = model.restruct(U_val)
 plot_results(x_mesh, U_val, U_val, hp, eqnPath)
 
 # Train

@@ -61,29 +61,35 @@ def plot_results(x_mesh, U_val, U_pred,
                  hp=None, save_path=None):
     x = x_mesh[:, 1]
     y = x_mesh[:, 2]
-    print(x.shape, y.shape)
-    Xt, Yt = np.meshgrid(x, y)
-    X, Y = Xt.T, Yt.T
-    print(X.shape, Y.shape)
-    x = X[:, 0]
-    y = Y[0, :]
-    print(U_val.shape)
+    # Xt, Yt = np.meshgrid(x, y, sparse=False, copy=False)
+    # X, Y = Xt.T, Yt.T
+    # x = X[:, 0]
+    # y = Y[0, :]
+
     print(U_pred.shape)
-    exit(0)
+    print("Trying mean")
     U_pred_mean = np.mean(U_pred, axis=-1)
-    U_val_mean = np.mean(U_val, axis=-1)
+    print(U_pred_mean.shape)
+    U_pred_mean = U_pred_mean[0, :]
+    
+    from pyevtk.hl import gridToVTK
+    gridToVTK("./test", x_mesh[:, 1], x_mesh[:,2], U_pred_mean)
+    exit(0)
+    # U_val_mean = np.mean(U_val, axis=-1)
     # Using nanstd() to prevent NotANumbers from appearing
     # (they prevent norm to be computed after)
-    U_pred_std = np.nanstd(U_pred, axis=-1)
-    U_val_std = np.nanstd(U_val, axis=-1)
+    # U_pred_std = np.nanstd(U_pred, axis=-1)
+    # U_val_std = np.nanstd(U_val, axis=-1)
 
     n_plot_x = 2
     n_plot_y = 1
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.5))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
-    plot_map(fig, gs[0, :n_plot_y], x, t, X, T, U_pred_mean, "Mean $u(x,t)$ [pred]")
-    plot_map(fig, gs[1, :n_plot_y], x, t, X, T, U_test_mean, "Mean $u(x,t)$ [test]")
+    plt.pcolor(X, Y, U_pred_mean, cmap='RdBu')
+
+    # plot_map(fig, gs[0, :n_plot_y], x, y, X, Y, U_pred_mean, "Mean $u(x,t)$ [pred]")
+    # plot_map(fig, gs[1, :n_plot_y], x, y, X, Y, U_pred_mean, "Mean $u(x,t)$ [test]")
 
     plt.tight_layout()
     plt.show()

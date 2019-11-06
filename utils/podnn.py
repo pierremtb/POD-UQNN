@@ -19,6 +19,7 @@ class PodnnModel(object):
         self.n_v = n_v
         # Mesh definition array in space
         self.x_mesh = x_mesh
+        self.n_xyz = x_mesh.shape[0]
         # Number of DOFs
         self.n_h = self.n_v * x_mesh.shape[0]
         # Number of time steps
@@ -231,10 +232,16 @@ class PodnnModel(object):
         n_s = U.shape[-1]
         return U.reshape(self.get_u_tuple() + (n_s,))
 
+    def get_u_tuple(self):
+        tup = (self.n_xyz,)
+        if self.has_t:
+            tup += (self.n_t,)
+        return (self.n_v,) + tup
+
     def predict(self, X_v_val):
         v_pred = self.regnn.predict(X_v_val)
 
         # Retrieving the function with the predicted coefficients
         U_pred = self.V.dot(v_pred.T)
 
-        return U_pred
+        return self.restruct(U_pred)
