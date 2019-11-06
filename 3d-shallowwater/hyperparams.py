@@ -23,7 +23,8 @@ hp["h_layers"] = [64, 64]
 # Batch size for mini-batch training (0 means full-batch)
 hp["batch_size"] = 0
 # Setting up _structthe TF SGD-based optimizer
-hp["epochs"] = 20000
+# hp["epochs"] = 30000
+hp["epochs"] = 0
 hp["lr"] = 0.01
 hp["decay"] = 0.
 hp["b1"] = 0.9

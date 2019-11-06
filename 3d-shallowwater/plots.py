@@ -44,6 +44,17 @@ def plot_map(fig, pos, x, t, X, T, U, title):
     ax.set_ylabel("$x$")
 
 
+def plot_plot(fig, pos, x, y, z, title):
+    ax = fig.add_subplot(pos)
+    h = plt.scatter(x, y, c=z, linewidths=0)
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(h, cax=cax)
+    ax.set_title(title)
+    ax.set_xlabel("$t$")
+    ax.set_ylabel("$x$")
+
+
 def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
         title, show_legend=False):
     ax = fig.add_subplot(pos)
@@ -59,37 +70,35 @@ def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
 
 def plot_results(x_mesh, U_val, U_pred,
                  hp=None, save_path=None):
-    x = x_mesh[:, 1]
-    y = x_mesh[:, 2]
-    # Xt, Yt = np.meshgrid(x, y, sparse=False, copy=False)
-    # X, Y = Xt.T, Yt.T
-    # x = X[:, 0]
-    # y = Y[0, :]
+    lim = 1000
+    x = x_mesh[:lim, 1]
+    y = x_mesh[:lim, 2]
+    # yy, xx = np.meshgrid(x, y)
 
-    print(U_pred.shape)
-    print("Trying mean")
-    U_pred_mean = np.mean(U_pred, axis=-1)
-    print(U_pred_mean.shape)
-    U_pred_mean = U_pred_mean[0, :]
+    print("Computing means")
+    U_val_mean = np.mean(U_val[:lim, :, :], axis=-1)
+    U_pred_mean = np.mean(U_pred[:lim, :, :], axis=-1)
+    # U_pred_mean = np.mean(U_pred[:lim, :], axis=-1)
+    # U_val_mean = np.mean(U_val[:lim, :], axis=-1)
+    # U_val_mean = U_val[:lim, 0]
+
+    print("Plotting")
+    z = U_val_mean[:, 0]
+
+    # plt.scatter(x, y, c=z, linewidths=0)
+    # plt.show()
     
-    from pyevtk.hl import gridToVTK
-    gridToVTK("./test", x_mesh[:, 1], x_mesh[:,2], U_pred_mean)
-    exit(0)
-    # U_val_mean = np.mean(U_val, axis=-1)
-    # Using nanstd() to prevent NotANumbers from appearing
-    # (they prevent norm to be computed after)
-    # U_pred_std = np.nanstd(U_pred, axis=-1)
-    # U_val_std = np.nanstd(U_val, axis=-1)
-
+    # plt.scatter(y, U_val_mean[:, 1], c="g", marker=".")
+    # plt.scatter(y, U_val_mean[:, 0], c="b", marker=",")
+    # plt.scatter(y, U_pred_mean[:, 0], c="r", marker=",")
+    # plt.show()
+    
     n_plot_x = 2
-    n_plot_y = 1
+    n_plot_y = 2
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.5))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
-
-    plt.pcolor(X, Y, U_pred_mean, cmap='RdBu')
-
-    # plot_map(fig, gs[0, :n_plot_y], x, y, X, Y, U_pred_mean, "Mean $u(x,t)$ [pred]")
-    # plot_map(fig, gs[1, :n_plot_y], x, y, X, Y, U_pred_mean, "Mean $u(x,t)$ [test]")
+    plot_plot(fig, gs[0, :n_plot_y], x, y, U_pred_mean[:, 0], "Mean $u(x,t)$ [pred]")
+    plot_plot(fig, gs[1, :n_plot_y], x, y, U_val_mean[:, 0], "Mean $u(x,t)$ [val]")
 
     plt.tight_layout()
     plt.show()

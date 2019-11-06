@@ -57,8 +57,6 @@ def read_space_sol_input_mesh(n_s, x_u_mesh_path, mu_mesh_path):
     n_xyz = int(x_mesh_full.shape[0] / n_s)
     x_mesh = x_mesh_full[:n_xyz, :]
     u_mesh = x_u_mesh[:, 4:]        
-    print(x_mesh.shape)
-    print(u_mesh.shape)
     
     return x_mesh, u_mesh, X_v
 

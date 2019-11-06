@@ -22,6 +22,7 @@ else:
     from hyperparams import hp
 
 use_cache = True
+# use_cache = False
 
 if not use_cache:
     # Getting data from the files
@@ -45,8 +46,6 @@ X_v_train, v_train, \
                                   hp["train_val_ratio"], hp["eps"],
                                   use_cache=use_cache, save_cache=True)
 
-U_val = model.restruct(U_val)
-plot_results(x_mesh, U_val, U_val, hp, eqnPath)
 
 # Train
 def error_val():
@@ -57,6 +56,9 @@ model.train(X_v_train, v_train, error_val, hp["h_layers"],
 
 # Predict and restruct
 U_pred = model.predict(X_v_val)
+
+U_pred = model.restruct(U_pred)
+U_val = model.restruct(U_val)
 
 # # PLOTTING AND SAVING RESULTS
 plot_results(x_mesh, U_val, U_pred, hp, eqnPath)
