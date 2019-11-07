@@ -2,6 +2,7 @@
 import numpy as np
 import os
 import sys
+import subprocess
 import json
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -47,6 +48,7 @@ def saveresultdir(save_path, save_hp):
         json.dump(save_hp, f)
     filename = os.path.join(resdir, "graph")
     savefig(filename)
+    subprocess.run(["open", filename + ".pdf"], check=True)
 
 
 def savefig(filename):

@@ -115,20 +115,14 @@ class PodnnModel(object):
         n_xyz = self.x_mesh.shape[0] 
         n_h = n_xyz * self.n_v
         n_st = X_v.shape[0]
-        import matplotlib.pyplot as plt
-        plt.scatter(self.x_mesh[:100, 1], u_mesh[:100, 0])
-        plt.scatter(self.x_mesh[:100, 1], u_mesh[:100, 1])
-        plt.show()
+
         # U = u_mesh.reshape(n_h, n_st)
+        # Reshaping manually
         U = np.zeros((n_h, n_st))
         for s in range(n_st):
             st = self.n_xyz * s
             en = self.n_xyz * (s + 1)
             U[:, s] = u_mesh[st:en, :].reshape((n_h,))
-        u_mesh_r = U[:, 0].reshape((self.n_xyz, self.n_v))
-        plt.scatter(self.x_mesh[:100, 1], u_mesh_r[:100, 0])
-        plt.scatter(self.x_mesh[:100, 1], u_mesh_r[:100, 1])
-        plt.show()
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
@@ -148,9 +142,6 @@ class PodnnModel(object):
         U_val = self.V.dot(v_val.T)
 
         u_mesh_r = U_val[:, 0].reshape((self.n_xyz, self.n_v))
-        plt.scatter(self.x_mesh[:100, 1], u_mesh_r[:100, 0])
-        plt.scatter(self.x_mesh[:100, 1], u_mesh_r[:100, 1])
-        plt.show()
 
         if save_cache:
             self.set_cache(X_v_train, v_train, X_v_val, v_val, U_val)

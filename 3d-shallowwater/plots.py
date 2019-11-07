@@ -44,15 +44,17 @@ def plot_map(fig, pos, x, t, X, T, U, title):
     ax.set_ylabel("$x$")
 
 
-def plot_plot(fig, pos, x, y, z, title):
+def plot_plot(fig, pos, x, y, z, z_min, z_max, title):
     ax = fig.add_subplot(pos)
-    h = plt.scatter(x, y, c=z, linewidths=0)
+    # h = plt.scatter(x, y, c=z, linewidths=0)
+    h = plt.tripcolor(x, y ,z)
+    h.set_clim(z_min, z_max)
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
     fig.colorbar(h, cax=cax)
     ax.set_title(title)
-    ax.set_xlabel("$t$")
-    ax.set_ylabel("$x$")
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$y$")
 
 
 def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
@@ -66,6 +68,12 @@ def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
     ax.set_title(title)
     if show_legend:
         ax.legend()
+
+
+def get_min_max(z1, z2):
+    z_min = min([np.min(z1), np.min(z2)])
+    z_max = max([np.max(z1), np.max(z2)])
+    return z_min, z_max
 
 
 def plot_results(x_mesh, U_val, U_pred,
@@ -85,24 +93,24 @@ def plot_results(x_mesh, U_val, U_pred,
     print("Plotting")
     z = U_val_mean[:, 0]
 
-    # plt.scatter(x, y, c=z, linewidths=0)
-    # plt.show()
-    
     # plt.scatter(y, U_val_mean[:, 1], c="g", marker=".")
     # plt.scatter(y, U_val_mean[:, 0], c="b", marker=",")
     # plt.scatter(y, U_pred_mean[:, 0], c="r", marker=",")
     # plt.show()
-    
+
     n_plot_x = 2
-    n_plot_y = 2
-    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.5))
+    n_plot_y = 4
+    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.5))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
-    plot_plot(fig, gs[0, :n_plot_y], x, y, U_pred_mean[:, 0], "Mean $u(x,t)$ [pred]")
-    plot_plot(fig, gs[1, :n_plot_y], x, y, U_val_mean[:, 0], "Mean $u(x,t)$ [val]")
+    quantities = ["h", "\eta", "(hu)", "(hv)"]
+    for i, qty in enumerate(quantities):
+        z_min, z_max = get_min_max(U_pred_mean[:, i], U_val_mean[:, i])
+        plot_plot(fig, gs[0, i], x, y, U_pred_mean[:, i],
+                z_min, z_max, f"Mean ${qty}(x,y)$ [pred]")
+        plot_plot(fig, gs[1, i], x, y, U_val_mean[:, i],
+                z_min, z_max, f"Mean ${qty}(x,y)$ [val]")
 
     plt.tight_layout()
-    plt.show()
-    exit(0)
     if save_path is not None:
         saveresultdir(save_path, save_hp=hp)
     else:
