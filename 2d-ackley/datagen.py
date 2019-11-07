@@ -7,12 +7,12 @@ from pyDOE import lhs
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-eqnPath = "2d-ackley"
-sys.path.append(eqnPath)
+EQN_PATH = "2d-ackley"
+sys.path.append(EQN_PATH)
 
 sys.path.append("utils")
 from plotting import figsize
-from hyperparams import hp
+from hyperparams import HP
 from pod import get_pod_bases
 from testgenerator import TestGenerator, X_FILE, \
         T_FILE, U_MEAN_FILE, U_STD_FILE
@@ -32,7 +32,7 @@ def u(X, t, mu):
 
 class AckleyTestGenerator(TestGenerator):
   def plot(self):
-    dirname = os.path.join(eqnPath, "data")
+    dirname = os.path.join(EQN_PATH, "data")
     print(f"Reading data to {dirname}")
     X = np.load(os.path.join(dirname, X_FILE))
     x, y = X[0], X[1]
@@ -56,11 +56,11 @@ class AckleyTestGenerator(TestGenerator):
 
 
 def generate_test_dataset():
-  testgen = AckleyTestGenerator(eqnPath, u, hp["n_v"],
-                                hp["n_x"], hp["n_y"])
-  testgen.generate(int(1e2), hp["mu_min"], hp["mu_max"],
-                   hp["x_min"], hp["x_max"],
-                   hp["y_min"], hp["y_max"])
+  testgen = AckleyTestGenerator(EQN_PATH, u, HP["n_v"],
+                                HP["n_x"], HP["n_y"])
+  testgen.generate(int(1e2), HP["mu_min"], HP["mu_max"],
+                   HP["x_min"], HP["x_max"],
+                   HP["y_min"], HP["y_max"])
   return testgen
 
 

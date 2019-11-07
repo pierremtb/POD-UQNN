@@ -4,8 +4,8 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-eqnPath = "2d-ackley"
-sys.path.append(eqnPath)
+EQN_PATH = "2d-ackley"
+sys.path.append(EQN_PATH)
 from datagen import u
 from plots import plot_results
 
@@ -15,24 +15,24 @@ from metrics import error_podnn
 from mesh import create_linear_mesh
 
 
-def main(hp, no_plot=False):
+def main(HP, no_plot=False):
     # Create linear space mesh
-    x_mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"],
-                                hp["y_min"], hp["y_max"], hp["n_y"])
+    x_mesh = create_linear_mesh(HP["x_min"], HP["x_max"], HP["n_x"],
+                                HP["y_min"], HP["y_max"], HP["n_y"])
 
     # Extend the class and init the model
     class AckleyPodnnModel(PodnnModel):
         def u(self, X, t, mu):
             return u(X, t, mu)
-    model = AckleyPodnnModel(hp["n_v"], x_mesh, hp["n_t"], eqnPath)
+    model = AckleyPodnnModel(HP["n_v"], x_mesh, HP["n_t"], EQN_PATH)
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, \
         X_v_val, v_val, \
-        U_val = model.generate_dataset(hp["mu_min"], hp["mu_max"],
-                                    hp["n_s"],
-                                    hp["train_val_ratio"],
-                                    hp["eps"],
+        U_val = model.generate_dataset(HP["mu_min"], HP["mu_max"],
+                                    HP["n_s"],
+                                    HP["train_val_ratio"],
+                                    HP["eps"],
                                     use_cache=True,
                                     save_cache=True)
 
@@ -40,21 +40,21 @@ def main(hp, no_plot=False):
     def error_val():
         U_pred = model.predict(X_v_val)
         return error_podnn(U_val, U_pred)
-    model.train(X_v_train, v_train, error_val, hp["h_layers"],
-                hp["epochs"], hp["lr"], hp["lambda"]) 
+    model.train(X_v_train, v_train, error_val, HP["h_layers"],
+                HP["epochs"], HP["lr"], HP["lambda"]) 
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)
     
     # Plot against test and save
-    return plot_results(U_val, U_pred, hp, eqnPath, no_plot)
+    return plot_results(U_val, U_pred, HP, EQN_PATH, no_plot)
 
 
 if __name__ == "__main__":
     # HYPER PARAMETERS
     if len(sys.argv) > 1:
-        with open(sys.argv[1]) as hpFile:
-            hp = json.load(hpFile)
+        with open(sys.argv[1]) as HPFile:
+            HP = json.load(HPFile)
     else:
-        from hyperparams import hp
-    main(hp)
+        from hyperparams import HP
+    main(HP)

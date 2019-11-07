@@ -13,12 +13,12 @@ X_FILE = "X.npy"
 T_FILE = "t.npy"
 U_MEAN_FILE = "u_mean.npy"
 U_STD_FILE = "u_std.npy"
-HP_FILE = "hp.json"
+HP_FILE = "HP.json"
 
 
 class TestGenerator(object):
-  def __init__(self, eqnPath, u, n_v, n_x, n_y=0, n_z=0, n_t=0):
-    self.eqnPath = eqnPath
+  def __init__(self, EQN_PATH, u, n_v, n_x, n_y=0, n_z=0, n_t=0):
+    self.EQN_PATH = EQN_PATH
     self.u = u
     self.n_v = n_v
     self.n_x = n_x
@@ -118,7 +118,7 @@ class TestGenerator(object):
     U_test_mean = np.reshape(U_test_mean, self.get_u_tuple())
     U_test_std = np.reshape(U_test_std, self.get_u_tuple())
 
-    dirname = os.path.join(self.eqnPath, "data")
+    dirname = os.path.join(self.EQN_PATH, "data")
     print(f"Saving data to {dirname}")
     np.save(os.path.join(dirname, X_FILE), X_out)
     if self.has_t:
@@ -127,24 +127,24 @@ class TestGenerator(object):
     np.save(os.path.join(dirname, U_STD_FILE), U_test_std)
 
     # Store the HiFi hyperparams
-    hp_hifi = {}
-    hp_hifi["n_x"] = self.n_x
-    hp_hifi["x_min"] = x_min
-    hp_hifi["x_max"] = x_max
-    hp_hifi["n_t"] = self.n_t
+    HP_hifi = {}
+    HP_hifi["n_x"] = self.n_x
+    HP_hifi["x_min"] = x_min
+    HP_hifi["x_max"] = x_max
+    HP_hifi["n_t"] = self.n_t
     if self.has_y:
-      hp_hifi["n_y"] = self.n_y
-      hp_hifi["y_min"] = y_min
-      hp_hifi["y_max"] = y_max
+      HP_hifi["n_y"] = self.n_y
+      HP_hifi["y_min"] = y_min
+      HP_hifi["y_max"] = y_max
     if self.has_z:
-      hp_hifi["n_z"] = self.n_z
-      hp_hifi["z_min"] = z_min
-      hp_hifi["z_max"] = z_max
+      HP_hifi["n_z"] = self.n_z
+      HP_hifi["z_min"] = z_min
+      HP_hifi["z_max"] = z_max
     if self.has_t:
-      hp_hifi["t_min"] = t_min
-      hp_hifi["t_max"] = t_max
-    hp_hifi["mu_min"] = mu_min.tolist()
-    hp_hifi["mu_max"] = mu_max.tolist()
-    hp_hifi["n_s"] = n_s
+      HP_hifi["t_min"] = t_min
+      HP_hifi["t_max"] = t_max
+    HP_hifi["mu_min"] = mu_min.tolist()
+    HP_hifi["mu_max"] = mu_max.tolist()
+    HP_hifi["n_s"] = n_s
     with open(os.path.join(dirname, HP_FILE), "w") as f:
-      json.dump(hp_hifi, f)
+      json.dump(HP_hifi, f)

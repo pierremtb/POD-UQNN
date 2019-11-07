@@ -7,11 +7,11 @@ import json
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
-eqnPath = "1dt-burgers"
-sys.path.append(eqnPath)
+EQN_PATH = "1dt-burgers"
+sys.path.append(EQN_PATH)
 from plots import plot_results
-from hyperparams import hp
-sys.path.append(os.path.join(eqnPath, "burgersutils"))
+from hyperparams import HP
+sys.path.append(os.path.join(EQN_PATH, "burgersutils"))
 from burgers import burgers_viscous_time_exact1 as burgers_exact
 
 sys.path.append("utils")
@@ -32,7 +32,7 @@ def u(X, t, mu):
 
 class BurgersTestGenerator(TestGenerator):
   def plot(self):
-    dirname = os.path.join(eqnPath, "data")
+    dirname = os.path.join(EQN_PATH, "data")
     print(f"Reading data to {dirname}")
 
     # Loading space
@@ -67,9 +67,9 @@ class BurgersTestGenerator(TestGenerator):
 
 
 def generate_test_dataset():
-  testgen = BurgersTestGenerator(eqnPath, u, hp["n_v"], hp["n_x"], n_t=hp["n_t"])
-  testgen.generate(n_s, hp["mu_min"], hp["mu_max"], hp["x_min"], hp["x_max"],
-                   t_min=hp["t_min"], t_max=hp["t_max"])
+  testgen = BurgersTestGenerator(EQN_PATH, u, HP["n_v"], HP["n_x"], n_t=HP["n_t"])
+  testgen.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"],
+                   t_min=HP["t_min"], t_max=HP["t_max"])
   return testgen
 
 

@@ -1,3 +1,6 @@
 [MASTER]
-init-hook='import sys; sys.path.append("utils"); eqns=["1d-shekel", "1dt-burgers", "1dt-burgers2", "2d-shekel"]; for eq in eqns: sys.path.append(eq)'
-indent-string='  '
+indent-string='    '
+
+disable=
+ wrong-import-position,
+ invalid-name 

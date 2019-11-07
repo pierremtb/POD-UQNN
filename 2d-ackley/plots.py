@@ -7,7 +7,7 @@ from pyDOE import lhs
 from deap.benchmarks import shekel
 import json
 
-eqnPath = "2d-ackley"
+EQN_PATH = "2d-ackley"
 sys.path.append("utils")
 from plotting import figsize, saveresultdir, savefig
 from metrics import error_podnn
@@ -24,7 +24,7 @@ def plot_contour(fig, pos, X, Y, U, levels, title):
 
 
 def get_test_data():
-    dirname = os.path.join(eqnPath, "data")
+    dirname = os.path.join(EQN_PATH, "data")
     X = np.load(os.path.join(dirname, X_FILE))
     U_test_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
     U_test_std = np.load(os.path.join(dirname, U_STD_FILE))
@@ -32,7 +32,7 @@ def get_test_data():
 
 
 def plot_results(U, U_pred=None,
-                 hp=None, save_path=None, no_plot=False):
+                 HP=None, save_path=None, no_plot=False):
     X, U_test_mean, U_test_std = get_test_data()
     X, Y = X[0], X[1]
 
@@ -41,7 +41,7 @@ def plot_results(U, U_pred=None,
     U_test_std = U_test_std[0, :, :]
 
     def restruct(U):
-        return U.reshape(hp["n_x"], hp["n_y"], U.shape[-1])
+        return U.reshape(HP["n_x"], HP["n_y"], U.shape[-1])
     U_pred = restruct(U_pred)
     U = restruct(U)
 
@@ -90,7 +90,7 @@ def plot_results(U, U_pred=None,
 
     plt.tight_layout()
     if save_path is not None:
-        saveresultdir(save_path, save_hp=hp)
+        saveresultdir(save_path, save_HP=HP)
     else:
         plt.show()     
 

@@ -14,7 +14,7 @@ from neuralnetwork import NeuralNetwork
 
 
 class PodnnModel(object):
-    def __init__(self, n_v, x_mesh, n_t, eqnPath):
+    def __init__(self, n_v, x_mesh, n_t, EQN_PATH):
         # Dimension of the function output
         self.n_v = n_v
         # Mesh definition array in space
@@ -26,8 +26,10 @@ class PodnnModel(object):
         self.n_t = n_t
         self.has_t = self.n_t > 0
 
-        self.eqnPath = eqnPath
-        self.cache_path = os.path.join(eqnPath, "cache", "prep_data.pkl")
+        self.EQN_PATH = EQN_PATH
+        cache_dir = os.path.join(EQN_PATH, "cache")
+        self.data_cache_path = os.path.join(cache_dir, "prep_data.pkl")
+        self.model_cache_path = os.path.join(cache_dir, "model.h5")
 
     def u(self, X, t, mu):
         return X[0]*t + mu
@@ -95,22 +97,22 @@ class PodnnModel(object):
         X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
         return X_v_train, v_train, X_v_val, v_val
 
-    def get_cache(self):
-        with open(self.cache_path, "rb") as f:
+    def get_data_cache(self):
+        with open(self.data_cache_path, "rb") as f:
             print("Loaded cached data")
             data = pickle.load(f)
             self.V = data[0]
             return data[1:]
 
-    def set_cache(self, X_v_train, v_train, X_v_val, v_val, U_val):
-        with open(self.cache_path, "wb") as f:
+    def set_data_cache(self, X_v_train, v_train, X_v_val, v_val, U_val):
+        with open(self.data_cache_path, "wb") as f:
             pickle.dump((self.V, X_v_train, v_train,
                             X_v_val, v_val, U_val), f)
 
     def convert_dataset(self, u_mesh, X_v, train_val_ratio, eps, eps_init=None,
                         use_cache=False, save_cache=False):
-        if use_cache and os.path.exists(self.cache_path):
-            return self.get_cache()
+        if use_cache and os.path.exists(self.data_cache_path):
+            return self.get_data_cache()
 
         n_xyz = self.x_mesh.shape[0] 
         n_h = n_xyz * self.n_v
@@ -144,7 +146,7 @@ class PodnnModel(object):
         u_mesh_r = U_val[:, 0].reshape((self.n_xyz, self.n_v))
 
         if save_cache:
-            self.set_cache(X_v_train, v_train, X_v_val, v_val, U_val)
+            self.set_data_cache(X_v_train, v_train, X_v_val, v_val, U_val)
         
         return X_v_train, v_train, X_v_val, v_val, U_val
 
@@ -153,7 +155,7 @@ class PodnnModel(object):
                          t_min=0, t_max=0,
                          use_cache=False, save_cache=False):
         if use_cache:
-            return get_cache()
+            return get_data_cache()
         
         if self.has_t:
             t_min, t_max = np.array(t_min), np.array(t_max)
@@ -200,7 +202,7 @@ class PodnnModel(object):
         U_val = self.V.dot(v_val.T)
 
         if save_cache:
-            self.set_cache(X_v_train, v_train, X_v_val, v_val, U_val)
+            self.set_data_cache(X_v_train, v_train, X_v_val, v_val, U_val)
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
@@ -224,7 +226,7 @@ class PodnnModel(object):
         self.regnn.fit(X_v, v, epochs)
 
         # Saving
-        self.regnn.save_to(os.path.join(self.eqnPath, "cache", "model.h5"))
+        self.save_trained_cache()
 
         return self.regnn
 
@@ -253,3 +255,9 @@ class PodnnModel(object):
         U_pred = self.V.dot(v_pred.T)
 
         return U_pred
+
+    def load_trained_cache(self):
+        self.regnn.load_from(self.model_cache_path)
+
+    def save_trained_cache(self):
+        self.regnn.save_to(self.model_cache_path)

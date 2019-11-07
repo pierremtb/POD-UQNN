@@ -7,7 +7,7 @@ from pyDOE import lhs
 from deap.benchmarks import shekel
 import json
 
-eqnPath = "1d-shekel"
+EQN_PATH = "1d-shekel"
 sys.path.append("utils")
 from plotting import figsize, saveresultdir, savefig
 from metrics import error_podnn
@@ -15,7 +15,7 @@ from testgenerator import X_FILE, U_MEAN_FILE, U_STD_FILE
 
 
 def get_test_data():
-    dirname = os.path.join(eqnPath, "data")
+    dirname = os.path.join(EQN_PATH, "data")
     X = np.load(os.path.join(dirname, X_FILE))
     U_test_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
     U_test_std = np.load(os.path.join(dirname, U_STD_FILE))
@@ -23,7 +23,7 @@ def get_test_data():
 
 
 def plot_results(U, U_pred=None,
-                 hp=None, save_path=None, no_plot=False):
+                 HP=None, save_path=None, no_plot=False):
 
     X, U_test_mean, U_test_std = get_test_data()
     x = X[0]
@@ -64,7 +64,7 @@ def plot_results(U, U_pred=None,
     ax2.set_xlabel("$x$")
     
     if save_path is not None:
-        saveresultdir(save_path, save_hp=hp)
+        saveresultdir(save_path, save_HP=HP)
     else:
         plt.show()
 

@@ -7,12 +7,12 @@ from pyDOE import lhs
 import matplotlib.pyplot as plt
 from deap.benchmarks import shekel
 
-eqnPath = "1d-shekel"
-sys.path.append(eqnPath)
+EQN_PATH = "1d-shekel"
+sys.path.append(EQN_PATH)
 
 sys.path.append("utils")
 from plotting import figsize
-from hyperparams import hp
+from hyperparams import HP
 from pod import get_pod_bases
 from testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 
@@ -28,7 +28,7 @@ def u(X, t, mu):
 
 class ShekelTestGenerator(TestGenerator):
   def plot(self):
-      dirname = os.path.join(eqnPath, "data")
+      dirname = os.path.join(EQN_PATH, "data")
       print(f"Reading data to {dirname}")
       x = np.load(os.path.join(dirname, X_FILE)).reshape((300,))
       u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
@@ -48,8 +48,8 @@ class ShekelTestGenerator(TestGenerator):
 
 
 def generate_test_dataset():
-  testgen = ShekelTestGenerator(eqnPath, u, hp["n_v"], hp["n_x"])
-  testgen.generate(n_s, hp["mu_min"], hp["mu_max"], hp["x_min"], hp["x_max"])
+  testgen = ShekelTestGenerator(EQN_PATH, u, HP["n_v"], HP["n_x"])
+  testgen.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"])
   return testgen
 
 

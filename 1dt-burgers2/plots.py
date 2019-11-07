@@ -9,9 +9,9 @@ from tqdm import tqdm
 import json
 import time
 
-eqnPath = "1dt-burgers2"
-sys.path.append(eqnPath)
-from hyperparams import hp
+EQN_PATH = "1dt-burgers2"
+sys.path.append(EQN_PATH)
+from hyperparams import HP
 
 sys.path.append("utils")
 from metrics import error_podnn
@@ -21,7 +21,7 @@ from handling import pack_layers
 
 def get_test_data():
     from datagen import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
-    dirname = os.path.join(eqnPath, "data")
+    dirname = os.path.join(EQN_PATH, "data")
     X = np.load(os.path.join(dirname, X_FILE))
     T = np.load(os.path.join(dirname, T_FILE))
     U_test_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
@@ -68,7 +68,7 @@ def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
 
 
 def plot_results(U_val, U_pred,
-                 hp=None, save_path=None):
+                 HP=None, save_path=None):
     X, T, U_test_mean, U_test_std = get_test_data()
     t = T[0, :]
     x = X[:, 0]
@@ -112,21 +112,21 @@ def plot_results(U_val, U_pred,
 
     plt.tight_layout()
     if save_path is not None:
-        saveresultdir(save_path, save_hp=hp)
+        saveresultdir(save_path, save_HP=HP)
     else:
         plt.show()
 
 
 # if __name__ == "__main__":
 #     X_v_train, v_train, X_v_val, v_val, \
-#         lb, ub, V, U_val = prep_data(hp, use_cache=True)
+#         lb, ub, V, U_val = prep_data(HP, use_cache=True)
         
-#     hp["layers"] = pack_layers(X_v_train.shape[1], hp["h_layers"],
+#     HP["layers"] = pack_layers(X_v_train.shape[1], HP["h_layers"],
 #                                X_v_train.shape[1])
-#     regnn = RegNN.load_from(os.path.join(eqnPath, "cache", "model.h5"),
-#                        hp, lb, ub)
+#     regnn = RegNN.load_from(os.path.join(EQN_PATH, "cache", "model.h5"),
+#                        HP, lb, ub)
 
 #     U_val_struct, U_pred_struct = predict_and_assess(regnn, X_v_val, U_val,
-#                                                      V, hp)
+#                                                      V, HP)
 
-#     plot_results(U_val_struct, U_pred_struct, hp)
+#     plot_results(U_val_struct, U_pred_struct, HP)

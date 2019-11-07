@@ -1,11 +1,12 @@
+""" Run the POD-NN model on 3D steady shallow water equations."""
+
 import os
 import sys
 import json
 import numpy as np
-import tensorflow as tf
 
-eqnPath = "3d-shallowwater"
-sys.path.append(eqnPath)
+EQN_PATH = "3d-shallowwater"
+sys.path.append(EQN_PATH)
 from plots import plot_results
 
 sys.path.append("utils")
@@ -16,49 +17,51 @@ from mesh import read_space_sol_input_mesh
 
 # HYPER PARAMETERS
 if len(sys.argv) > 1:
-    with open(sys.argv[1]) as hpFile:
-        hp = json.load(hpFile)
+    with open(sys.argv[1]) as HPFile:
+        HP = json.load(HPFile)
 else:
-    from hyperparams import hp
+    from hyperparams import HP
 
-use_cache = True
-# use_cache = False
+USE_CACHED_DATASET = True
+USE_TRAINED_NETWORK = True
 
-if not use_cache:
+if not USE_CACHED_DATASET:
     # Getting data from the files
-    mu_path = os.path.join(eqnPath, "data", "INPUT_100_Scenarios.txt")
-    x_u_mesh_path = os.path.join(eqnPath, "data", "SOL_FV_100_Scenarios.txt")
+    mu_path = os.path.join(EQN_PATH, "data", "INPUT_100_Scenarios.txt")
+    x_u_mesh_path = os.path.join(EQN_PATH, "data", "SOL_FV_100_Scenarios.txt")
     x_mesh, u_mesh, X_v = \
-        read_space_sol_input_mesh(hp["n_s"], x_u_mesh_path, mu_path)
-    np.save(os.path.join(eqnPath, "cache", "x_mesh.npy"), x_mesh)
+        read_space_sol_input_mesh(HP["n_s"], x_u_mesh_path, mu_path)
+    np.save(os.path.join(EQN_PATH, "cache", "x_mesh.npy"), x_mesh)
 else:
-    x_mesh = np.load(os.path.join(eqnPath, "cache", "x_mesh.npy"))
+    x_mesh = np.load(os.path.join(EQN_PATH, "cache", "x_mesh.npy"))
     u_mesh = None
     X_v = None
-    
-# Extend the class and init the model
-model = PodnnModel(hp["n_v"], x_mesh, hp["n_t"], eqnPath)
+
+# Create the POD-NN model
+model = PodnnModel(HP["n_v"], x_mesh, HP["n_t"], EQN_PATH)
 
 # Generate the dataset from the mesh and params
 X_v_train, v_train, \
     X_v_val, v_val, \
     U_val = model.convert_dataset(u_mesh, X_v,
-                                  hp["train_val_ratio"], hp["eps"],
-                                  use_cache=use_cache, save_cache=True)
+                                  HP["train_val_ratio"], HP["eps"],
+                                  use_cache=USE_CACHED_DATASET, save_cache=True)
 
-
-# Train
-def error_val():
-    U_pred = model.predict(X_v_val)
-    return error_podnn(U_val, U_pred)
-model.train(X_v_train, v_train, error_val, hp["h_layers"],
-            hp["epochs"], hp["lr"], hp["lambda"]) 
+# Create the model and train
+if not USE_TRAINED_NETWORK:
+    def error_val():
+        """Defines the error metric for in-training validation."""
+        U_val_pred = model.predict(X_v_val)
+        return error_podnn(U_val, U_val_pred)
+    model.train(X_v_train, v_train, error_val, HP["h_layers"],
+                HP["epochs"], HP["lr"], HP["lambda"])
+else:
+    model.load_trained_cache()
 
 # Predict and restruct
 U_pred = model.predict(X_v_val)
-
 U_pred = model.restruct(U_pred)
 U_val = model.restruct(U_val)
 
-# # PLOTTING AND SAVING RESULTS
-plot_results(x_mesh, U_val, U_pred, hp, eqnPath)
+# Plot and save the results
+plot_results(x_mesh, U_val, U_pred, HP, EQN_PATH)

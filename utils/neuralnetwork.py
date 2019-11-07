@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 
 class NeuralNetwork(object):
-    def __init__(self, layers, lr, epochs, lam, logger, model=None):
+    def __init__(self, layers, lr, epochs, lam, logger, model=None, lb=None, ub=None):
 
         # Setting up the optimizers with the hyper-parameters
         self.tf_optimizer = tf.keras.optimizers.Adam(lr)
@@ -31,9 +31,13 @@ class NeuralNetwork(object):
         self.reg_l = lam
         self.batch_size = 0
 
+        self.lb = lb
+        self.ub = ub
+
     def normalize(self, X):
+        if self.lb is not None and self.ub is not None:
+            return (X - self.lb) - 0.5*(self.ub - self.lb)
         return X
-        return (X - self.lb) - 0.5*(self.ub - self.lb)
 
     # Defining custom loss
     @tf.function

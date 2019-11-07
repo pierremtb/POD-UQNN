@@ -8,7 +8,7 @@ from tqdm import tqdm
 class Logger(object):
     def __init__(self, epochs, frequency):
         # print("Hyperparameters:")
-        # print(json.dumps(hp, indent=2))
+        # print(json.dumps(HP, indent=2))
         # print()
 
         print("TensorFlow version: {}".format(tf.__version__))
