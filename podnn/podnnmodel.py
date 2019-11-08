@@ -8,11 +8,10 @@ import numpy as np
 from tqdm import tqdm
 from pyDOE import lhs
 
-sys.path.append("utils")
-from pod import get_pod_bases
-from handling import pack_layers
-from logger import Logger
-from neuralnetwork import NeuralNetwork
+from .pod import get_pod_bases
+from .handling import pack_layers
+from .logger import Logger
+from .neuralnetwork import NeuralNetwork
 
 
 class PodnnModel:

@@ -3,9 +3,9 @@
     "python.linting.pylintEnabled": true,
     "python.autoComplete.extraPaths": [
         "utils",
-        "1d-shekel",
+        "1d_shekel",
         "1dt-burgers",
-        "2d-ackley",
-        "3d-shallowwater"
+        "2d_ackley",
+        "3d_shallowwater"
     ],
 }

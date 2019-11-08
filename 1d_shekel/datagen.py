@@ -6,14 +6,12 @@ from pyDOE import lhs
 import matplotlib.pyplot as plt
 from deap.benchmarks import shekel
 
-EQN_PATH = "1d-shekel"
-sys.path.append(EQN_PATH)
-
-sys.path.append("utils")
-from plotting import figsize
+EQN_PATH = "1d_shekel"
 from hyperparams import HP
-from pod import get_pod_bases
-from testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
+
+from podnn.plotting import figsize
+from podnn.pod import get_pod_bases
+from podnn.testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 
 # HiFi sampling size
 n_s = int(10)

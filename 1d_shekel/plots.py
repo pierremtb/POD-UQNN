@@ -7,7 +7,7 @@ from pyDOE import lhs
 from deap.benchmarks import shekel
 import json
 
-EQN_PATH = "1d-shekel"
+EQN_PATH = "1d_shekel"
 sys.path.append("utils")
 from plotting import figsize, saveresultdir, savefig
 from metrics import error_podnn

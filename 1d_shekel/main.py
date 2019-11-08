@@ -4,15 +4,13 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-EQN_PATH = "1d-shekel"
-sys.path.append(EQN_PATH)
+sys.path.append("../")
+from podnn.podnnmodel import PodnnModel
+from podnn.metrics import error_podnn
+from podnn.mesh import create_linear_mesh
+
 from datagen import u
 from plots import plot_results
-
-sys.path.append("utils")
-from podnn import PodnnModel
-from metrics import error_podnn
-from mesh import create_linear_mesh
 
 
 def main(HP, no_plot=False):

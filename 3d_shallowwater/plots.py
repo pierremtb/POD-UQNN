@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-EQN_PATH = "3d-shallowwater"
+EQN_PATH = "3d_shallowwater"
 sys.path.append(EQN_PATH)
 
 sys.path.append("utils")
@@ -52,10 +52,10 @@ def get_min_max(z1, z2):
 
 def plot_results(x_mesh, U_val, U_pred,
                  HP=None, save_path=None):
-    """Handles the plots of 3d-shallowwater."""
+    """Handles the plots of 3d_shallowwater."""
    
     # Keeping only the first nodes
-    lim = 1000
+    lim = -1
     x = x_mesh[:lim, 1]
     y = x_mesh[:lim, 2]
 

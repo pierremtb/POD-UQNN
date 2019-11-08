@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-EQN_PATH = "1d-shekel"
+EQN_PATH = "1d_shekel"
 
 
 arr_n_s = np.loadtxt(os.path.join(EQN_PATH, "results", "systematic", "n_s.csv"))

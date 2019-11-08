@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-EQN_PATH = "2d-ackley"
+EQN_PATH = "2d_ackley"
 
 arr_n_s = np.loadtxt(os.path.join(EQN_PATH, "results", "systematic", "n_s.csv"))
 arr_tf_epochs = np.loadtxt(os.path.join(EQN_PATH, "results", "systematic", "tf_epochs.csv"))

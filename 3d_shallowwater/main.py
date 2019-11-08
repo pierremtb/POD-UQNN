@@ -5,7 +5,7 @@ import sys
 import json
 import numpy as np
 
-EQN_PATH = "3d-shallowwater"
+EQN_PATH = "3d_shallowwater"
 sys.path.append(EQN_PATH)
 from plots import plot_results
 
@@ -24,8 +24,8 @@ else:
 
 USE_CACHED_DATASET = True
 # USE_CACHED_DATASET = False
-# USE_TRAINED_NETWORK = True
-USE_TRAINED_NETWORK = False
+USE_TRAINED_NETWORK = True
+# USE_TRAINED_NETWORK = False
 
 if not USE_CACHED_DATASET:
     # Getting data from the files
@@ -64,6 +64,13 @@ else:
 U_pred = model.predict(X_v_val)
 U_pred = model.restruct(U_pred)
 U_val = model.restruct(U_val)
+
+# Time for one pred
+# import time
+# st = time.time()
+# model.predict(X_v_val[0:1])
+# print(f"{time.time() - st} sec taken for prediction")
+# exit(0)
 
 # Plot and save the results
 plot_results(x_mesh, U_val, U_pred, HP, EQN_PATH)

@@ -7,7 +7,7 @@ from pyDOE import lhs
 from deap.benchmarks import shekel
 import json
 
-EQN_PATH = "2d-ackley"
+EQN_PATH = "2d_ackley"
 sys.path.append("utils")
 from plotting import figsize, saveresultdir, savefig
 from metrics import error_podnn

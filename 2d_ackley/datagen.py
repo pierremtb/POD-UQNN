@@ -7,7 +7,7 @@ from pyDOE import lhs
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-EQN_PATH = "2d-ackley"
+EQN_PATH = "2d_ackley"
 sys.path.append(EQN_PATH)
 
 sys.path.append("utils")

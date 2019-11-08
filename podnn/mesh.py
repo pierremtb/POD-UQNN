@@ -1,10 +1,8 @@
-import numpy as np
 import os
 import sys
 import time
 import pandas as pd
-
-sys.path.append("utils")
+import numpy as np
 
 
 def create_linear_mesh(x_min, x_max, n_x,

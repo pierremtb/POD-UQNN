@@ -5,8 +5,8 @@ Dependencies are in the file `requirements.txt`, and are installable via `pip`.
 
 Run all scripts from the root of the repository, eg.
 ```console
-$ python3 datagen/1d-shekel/main.py
-$ python3 1d-shekel/main.py
+$ python3 datagen/1d_shekel/main.py
+$ python3 1d_shekel/main.py
 ```
 
 ## Citation

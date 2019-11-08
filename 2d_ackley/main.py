@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-EQN_PATH = "2d-ackley"
+EQN_PATH = "2d_ackley"
 sys.path.append(EQN_PATH)
 from datagen import u
 from plots import plot_results
