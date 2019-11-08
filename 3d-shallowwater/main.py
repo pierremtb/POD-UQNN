@@ -24,8 +24,8 @@ else:
 
 USE_CACHED_DATASET = True
 # USE_CACHED_DATASET = False
-USE_TRAINED_NETWORK = True
-# USE_TRAINED_NETWORK = False
+# USE_TRAINED_NETWORK = True
+USE_TRAINED_NETWORK = False
 
 if not USE_CACHED_DATASET:
     # Getting data from the files

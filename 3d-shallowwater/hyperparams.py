@@ -25,13 +25,13 @@ HP["h_layers"] = [64, 64, 64]
 # Batch size for mini-batch training (0 means full-batch)
 HP["batch_size"] = 0
 # Setting up _structthe TF SGD-based optimizer
-HP["epochs"] = 100000
+HP["epochs"] = 500000
 # HP["epochs"] = 0
-HP["lr"] = 0.003
+HP["lr"] = 0.001
 HP["decay"] = 0.
 HP["b1"] = 0.9
 HP["eps"] = 1e-10
-HP["lambda"] = 1e-4
+HP["lambda"] = 1e-6
 # Frequency of the logger
 HP["log_frequency"] = 1000
 

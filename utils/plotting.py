@@ -52,8 +52,6 @@ def saveresultdir(save_path, save_HP):
     filename = os.path.join(resdir, "graph")
     savefig(filename)
     openPdfGraph(filename)
-    subprocess.run(["open", filename + ".pdf"], check=True)
-
 
 def openPdfGraph(filename):
     """Open filename (without extension) in default PDF viewer."""
