@@ -59,7 +59,7 @@ def plot_results(x_mesh, U_val, U_pred,
     x = x_mesh[:lim, 1]
     y = x_mesh[:lim, 2]
 
-    print("Computing means")
+    # Computing means
     U_val_mean = np.mean(U_val[:lim, :, :], axis=-1)
     U_pred_mean = np.mean(U_pred[:lim, :, :], axis=-1)
 

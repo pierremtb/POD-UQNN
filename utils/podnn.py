@@ -1,9 +1,11 @@
-import numpy as np
-import tensorflow as tf
+"""Module declaring a class for a POD-NN model."""
+
 import os
 import sys
-from tqdm import tqdm
 import pickle
+import tensorflow as tf
+import numpy as np
+from tqdm import tqdm
 from pyDOE import lhs
 
 sys.path.append("utils")
@@ -13,7 +15,7 @@ from logger import Logger
 from neuralnetwork import NeuralNetwork
 
 
-class PodnnModel(object):
+class PodnnModel:
     def __init__(self, n_v, x_mesh, n_t, EQN_PATH):
         # Dimension of the function output
         self.n_v = n_v
@@ -30,6 +32,10 @@ class PodnnModel(object):
         cache_dir = os.path.join(EQN_PATH, "cache")
         self.data_cache_path = os.path.join(cache_dir, "prep_data.pkl")
         self.model_cache_path = os.path.join(cache_dir, "model.h5")
+        self.model_cache_params_path = os.path.join(cache_dir, "model_params.pkl")
+
+        self.regnn = None
+        self.V = None
 
     def u(self, X, t, mu):
         return X[0]*t + mu
@@ -54,7 +60,6 @@ class PodnnModel(object):
     def create_snapshots(self, n_s, n_st, n_d, n_h, mu_lhs,
                          t_min=0, t_max=0):
         n_xyz = self.x_mesh.shape[0]
-        dim = self.x_mesh.shape[1] - 1
 
         # Declaring the output arrays
         X_v = np.zeros((n_st, n_d))
@@ -97,18 +102,6 @@ class PodnnModel(object):
         X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
         return X_v_train, v_train, X_v_val, v_val
 
-    def get_data_cache(self):
-        with open(self.data_cache_path, "rb") as f:
-            print("Loaded cached data")
-            data = pickle.load(f)
-            self.V = data[0]
-            return data[1:]
-
-    def set_data_cache(self, X_v_train, v_train, X_v_val, v_val, U_val):
-        with open(self.data_cache_path, "wb") as f:
-            pickle.dump((self.V, X_v_train, v_train,
-                            X_v_val, v_val, U_val), f)
-
     def convert_dataset(self, u_mesh, X_v, train_val_ratio, eps, eps_init=None,
                         use_cache=False, save_cache=False):
         if use_cache and os.path.exists(self.data_cache_path):
@@ -142,8 +135,6 @@ class PodnnModel(object):
 
         # Creating the validation snapshots matrix
         U_val = self.V.dot(v_val.T)
-
-        u_mesh_r = U_val[:, 0].reshape((self.n_xyz, self.n_v))
 
         if save_cache:
             self.set_data_cache(X_v_train, v_train, X_v_val, v_val, U_val)
@@ -206,7 +197,7 @@ class PodnnModel(object):
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
-    def train(self, X_v, v, error_val, layers, epochs, lr, lam,
+    def train(self, X_v, v, error_val, layers, epochs, lr, reg_lam,
               frequency=1000):
         # Sizes
         n_L = self.V.shape[1]
@@ -217,13 +208,15 @@ class PodnnModel(object):
         # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
         layers = pack_layers(n_d, layers, n_L)
         logger = Logger(epochs, frequency)
-        self.regnn = NeuralNetwork(layers, lr, epochs, lam, logger)
+        self.regnn = NeuralNetwork(layers, reg_lam)
 
         # Setting the error function
         logger.set_error_fn(error_val)
 
         # Training
-        self.regnn.fit(X_v, v, epochs)
+        ub = np.amax(X_v, axis=0)
+        lb = np.amin(X_v, axis=0)
+        self.regnn.fit(X_v, v, lr, epochs, logger, lb, ub)
 
         # Saving
         self.save_trained_cache()
@@ -256,8 +249,24 @@ class PodnnModel(object):
 
         return U_pred
 
+    def get_data_cache(self):
+        if not os.path.exists(self.data_cache_path):
+            raise FileNotFoundError("Can't find cached data.")
+        with open(self.data_cache_path, "rb") as f:
+            print("Loading cached data")
+            data = pickle.load(f)
+            self.V = data[0]
+            return data[1:]
+
+    def set_data_cache(self, X_v_train, v_train, X_v_val, v_val, U_val):
+        with open(self.data_cache_path, "wb") as f:
+            pickle.dump((self.V, X_v_train, v_train,
+                         X_v_val, v_val, U_val), f)
+
     def load_trained_cache(self):
-        self.regnn.load_from(self.model_cache_path)
+        self.regnn = NeuralNetwork.load_from(self.model_cache_path,
+                                             self.model_cache_params_path)
 
     def save_trained_cache(self):
-        self.regnn.save_to(self.model_cache_path)
+        self.regnn.save_to(self.model_cache_path, self.model_cache_params_path)
+

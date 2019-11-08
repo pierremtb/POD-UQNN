@@ -2,7 +2,6 @@ import numpy as np
 import sys
 import os
 from tqdm import tqdm
-import pickle
 from pyDOE import lhs
 import matplotlib.pyplot as plt
 from deap.benchmarks import shekel
