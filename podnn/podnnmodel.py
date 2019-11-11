@@ -224,11 +224,11 @@ class PodnnModel:
     def restruct(self, U):
         if self.has_t:
             n_s = int(U.shape[-1] / self.n_t)
-            U_struct = np.zeros((U.shape[0], self.n_t, n_s))
+            U_struct = np.zeros((self.n_v, U.shape[0], self.n_t, n_s))
             for i in range(n_s):
                 s = self.n_t * i
                 e = self.n_t * (i + 1)
-                U_struct[:, :, i] = U[:, s:e]
+                U_struct[:, :, :, i] = U[:, s:e].reshape(self.get_u_tuple())
             return U_struct
         n_s = U.shape[-1]
         return U.reshape(self.get_u_tuple() + (n_s,))
@@ -237,7 +237,7 @@ class PodnnModel:
         tup = (self.n_xyz,)
         if self.has_t:
             tup += (self.n_t,)
-        return tup + (self.n_v,)
+        return (self.n_v,) + tup
 
     def predict(self, X_v_val):
         v_pred = self.regnn.predict(X_v_val)

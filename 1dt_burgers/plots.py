@@ -1,25 +1,17 @@
-import numpy as np
-import tensorflow as tf
+"""Module for plotting results of 3D time-dependante Burgers Equation."""
+
+import os
 import matplotlib.pyplot as plt
+import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import griddata
-import sys
-import os
-from tqdm import tqdm
-import json
-import time
 
-EQN_PATH = "1dt-burgers2"
-from hyperparams import HP
-
-sys.path.append("utils")
-from metrics import error_podnn
-from plotting import figsize, saveresultdir, savefig
-from handling import pack_layers
+from podnn.plotting import figsize, saveresultdir
+from podnn.metrics import error_podnn
+from podnn.testgenerator import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 
 
 def get_test_data():
-    from datagen import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
     dirname = os.path.join("data")
     X = np.load(os.path.join(dirname, X_FILE))
     T = np.load(os.path.join(dirname, T_FILE))
@@ -68,17 +60,19 @@ def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
 
 def plot_results(U_val, U_pred,
                  HP=None, save_path=None):
-    X, T, U_test_mean, U_test_std = get_test_data()
-    t = T[0, :]
-    x = X[:, 0]
+    X, t, U_test_mean, U_test_std = get_test_data()
+    x = X[0]
+    xx, tt = np.meshgrid(x, t)
 
-    U_pred_mean = np.mean(U_pred, axis=2)
-    U_val_mean = np.mean(U_val, axis=2)
+    U_pred_mean = np.mean(U_pred[0], axis=2)
+    U_val_mean = np.mean(U_val[0], axis=2)
+    U_test_mean = U_test_mean[0]
+
     # Using nanstd() to prevent NotANumbers from appearing
     # (they prevent norm to be computed after)
-    U_pred_std = np.nanstd(U_pred, axis=2)
-    U_val_std = np.nanstd(U_val, axis=2)
-    U_test_std = np.nan_to_num(U_test_std)
+    U_pred_std = np.nanstd(U_pred[0], axis=2)
+    U_val_std = np.nanstd(U_val[0], axis=2)
+    U_test_std = np.nan_to_num(U_test_std[0])
 
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
@@ -93,8 +87,8 @@ def plot_results(U_val, U_pred,
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.5))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
-    plot_map(fig, gs[0, :n_plot_y], x, t, X, T, U_pred_mean, "Mean $u(x,t)$ [pred]")
-    plot_map(fig, gs[1, :n_plot_y], x, t, X, T, U_test_mean, "Mean $u(x,t)$ [test]")
+    plot_map(fig, gs[0, :n_plot_y], x, t, xx, tt, U_pred_mean, "Mean $u(x,t)$ [pred]")
+    plot_map(fig, gs[1, :n_plot_y], x, t, xx, tt, U_test_mean, "Mean $u(x,t)$ [test]")
     plot_spec_time(fig, gs[2, 0], x, 25, 
             U_pred_mean, U_val_mean, U_test_mean,
             "Means $u(x, t=0.25)$", show_legend=True)
@@ -111,21 +105,6 @@ def plot_results(U_val, U_pred,
 
     plt.tight_layout()
     if save_path is not None:
-        saveresultdir(save_path, save_HP=HP)
+        saveresultdir(HP)
     else:
         plt.show()
-
-
-# if __name__ == "__main__":
-#     X_v_train, v_train, X_v_val, v_val, \
-#         lb, ub, V, U_val = prep_data(HP, use_cache=True)
-        
-#     HP["layers"] = pack_layers(X_v_train.shape[1], HP["h_layers"],
-#                                X_v_train.shape[1])
-#     regnn = RegNN.load_from(os.path.join("cache", "model.h5"),
-#                        HP, lb, ub)
-
-#     U_val_struct, U_pred_struct = predict_and_assess(regnn, X_v_val, U_val,
-#                                                      V, HP)
-
-#     plot_results(U_val_struct, U_pred_struct, HP)

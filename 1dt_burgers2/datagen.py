@@ -1,20 +1,21 @@
-"""Module generating the high-fidelity test data for Burgers2."""
+"""HiFi testing data generation for second 1D time-dep Burgers eq."""
 
 import sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-EQN_PATH = "1dt-burgers2"
+sys.path.append("../")
+from podnn.plotting import figsize
+from podnn.pod import get_pod_bases
+from podnn.testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
+
 from hyperparams import HP
-
-sys.path.append("utils")
-from plotting import figsize
-from testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 
 
 # HiFi sampling size
-n_s = int(1e4)
+n_s = int(1e2)
 
 
 # The solution function
@@ -69,7 +70,7 @@ class BurgersTestGenerator(TestGenerator):
 def generate_test_dataset():
     tg = BurgersTestGenerator(u, HP["n_v"], HP["n_x"], n_t=HP["n_t"])
     tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"],
-                   t_min=HP["t_min"], t_max=HP["t_max"])
+                t_min=HP["t_min"], t_max=HP["t_max"])
     return tg
 
 

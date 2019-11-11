@@ -5,12 +5,10 @@ import sys
 import json
 import numpy as np
 
+from podnn.podnnmodel import PodnnModel
+from podnn.metrics import error_podnn
+from podnn.mesh import read_space_sol_input_mesh
 from plots import plot_results
-
-sys.path.append("utils")
-from podnn import PodnnModel
-from metrics import error_podnn
-from mesh import read_space_sol_input_mesh
 
 
 # HYPER PARAMETERS
@@ -29,8 +27,12 @@ if not USE_CACHED_DATASET:
     # Getting data from the files
     mu_path = os.path.join("data", "INPUT_100_Scenarios.txt")
     x_u_mesh_path = os.path.join("data", "SOL_FV_100_Scenarios.txt")
+    # Each line is: [i, x_i, y_i, z_i(unused), h_i, eta_i, (hu)_i, (hv)_i]
+    idx_x = [1, 2]
+    idx_u = [4, 6, 7] 
+    HP["n_v"] = len(idx_u)
     x_mesh, u_mesh, X_v = \
-        read_space_sol_input_mesh(HP["n_s"], x_u_mesh_path, mu_path)
+        read_space_sol_input_mesh(HP["n_s"], idx_x, idx_u, x_u_mesh_path, mu_path)
     np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
 else:
     x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))

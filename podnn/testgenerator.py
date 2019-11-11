@@ -116,7 +116,7 @@ class TestGenerator(object):
         if self.has_y:
             X_out.append(X[1].reshape(self.get_x_tuple()))
             if self.has_z:
-                X_out.append(X[1].reshape(self.get_x_tuple()))
+                X_out.append(X[2].reshape(self.get_x_tuple()))
         U_test_mean = np.reshape(U_test_mean, self.get_u_tuple())
         U_test_std = np.reshape(U_test_std, self.get_u_tuple())
 

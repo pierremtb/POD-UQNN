@@ -31,7 +31,7 @@ def u(X, t, mu):
 class BurgersTestGenerator(TestGenerator):
     def plot(self):
         dirname = os.path.join("data")
-        print(f"Reading data to {dirname}")ss
+        print(f"Reading data to {dirname}")
 
         # Loading space
         X = np.load(os.path.join(dirname, X_FILE))
@@ -60,13 +60,13 @@ class BurgersTestGenerator(TestGenerator):
         plt.show()
 
 
-    def generate_test_dataset():
-        tg = BurgersTestGenerator(u, HP["n_v"], HP["n_x"], n_t=HP["n_t"])
-        tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"],
-                    t_min=HP["t_min"], t_max=HP["t_max"])
-        return tg
+def generate_test_dataset():
+    tg = BurgersTestGenerator(u, HP["n_v"], HP["n_x"], n_t=HP["n_t"])
+    tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"],
+                t_min=HP["t_min"], t_max=HP["t_max"])
+    return tg
 
 
-    if __name__ == "__main__":
-        testgen = generate_test_dataset()
-        testgen.plot()
+if __name__ == "__main__":
+    testgen = generate_test_dataset()
+    testgen.plot()
