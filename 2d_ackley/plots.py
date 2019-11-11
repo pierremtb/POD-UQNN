@@ -1,17 +1,12 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import sys
-import os
-from tqdm import tqdm
-from pyDOE import lhs
-from deap.benchmarks import shekel
-import json
+"""Module for plotting results of 2D Shekel Equation."""
 
-EQN_PATH = "2d_ackley"
-sys.path.append("utils")
-from plotting import figsize, saveresultdir, savefig
-from metrics import error_podnn
-from testgenerator import X_FILE, U_MEAN_FILE, U_STD_FILE
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+
+from podnn.plotting import figsize, saveresultdir
+from podnn.metrics import error_podnn
+from podnn.testgenerator import X_FILE, U_MEAN_FILE, U_STD_FILE
 
 
 def plot_contour(fig, pos, X, Y, U, levels, title):
@@ -24,15 +19,15 @@ def plot_contour(fig, pos, X, Y, U, levels, title):
 
 
 def get_test_data():
-    dirname = os.path.join(EQN_PATH, "data")
+    dirname = os.path.join("data")
     X = np.load(os.path.join(dirname, X_FILE))
     U_test_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
     U_test_std = np.load(os.path.join(dirname, U_STD_FILE))
     return X, U_test_mean, U_test_std
 
 
-def plot_results(U, U_pred=None,
-                 HP=None, save_path=None, no_plot=False):
+def plot_results(U, U_pred,
+                 HP=None, no_plot=False):
     X, U_test_mean, U_test_std = get_test_data()
     X, Y = X[0], X[1]
 
@@ -51,13 +46,12 @@ def plot_results(U, U_pred=None,
     U_val_std = np.std(U, axis=-1)
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
-    if save_path is not None:
-        print(f"Error on the mean test HiFi LHS solution: {error_test_mean:.4f}%")
-        print(f"Error on the stdd test HiFi LHS solution: {error_test_std:.4f}%")
-        print("--")
+    print(f"Error on the mean test HiFi LHS solution: {error_test_mean:.4f}%")
+    print(f"Error on the stdd test HiFi LHS solution: {error_test_std:.4f}%")
+    print("--")
 
-        if no_plot:
-            return error_test_mean, error_test_std
+    if no_plot:
+        return error_test_mean, error_test_std
 
     mean_levels = list(range(2, 15))
     std_levels = np.arange(5, 20) * 0.1
@@ -73,25 +67,21 @@ def plot_results(U, U_pred=None,
     plot_contour(fig, gs[0:2, 2:4],
                  X, Y, U_val_mean,
                  mean_levels, "Mean of $u_V$ (val)")
-    if U_pred is not None:
-        plot_contour(fig, gs[0:2, 4:6],
-                     X, Y, U_pred_mean,
-                     mean_levels, "Mean of $\hat{u_V}$ (pred)")
+    plot_contour(fig, gs[0:2, 4:6],
+                 X, Y, U_pred_mean,
+                 mean_levels, "Mean of $\hat{u_V}$ (pred)")
     plot_contour(fig, gs[2:4, 0:2],
                  X, Y, U_test_std,
                  std_levels, "Standard deviation of $u_T$ (test)")
     plot_contour(fig, gs[2:4, 2:4],
-                 X, Y, U_val_mean,
+                 X, Y, U_val_std,
                  std_levels, "Standard deviation of $u_V$ (val)")
-    if U_pred is not None:
-        plot_contour(fig, gs[2:4, 4:6],
-                     X, Y, U_pred_mean,
-                     std_levels, "Standard deviation of $\hat{u_V}$ (pred)")
+    plot_contour(fig, gs[2:4, 4:6],
+                    X, Y, U_pred_std,
+                    std_levels, "Standard deviation of $\hat{u_V}$ (pred)")
 
     plt.tight_layout()
-    if save_path is not None:
-        saveresultdir(save_path, save_HP=HP)
-    else:
-        plt.show()     
+
+    saveresultdir(HP)
 
     return error_test_mean, error_test_std

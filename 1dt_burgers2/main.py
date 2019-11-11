@@ -5,11 +5,10 @@ import numpy as np
 import tensorflow as tf
 
 EQN_PATH = "1dt-burgers2"
-sys.path.append(EQN_PATH)
 from datagen import u
 from plots import plot_results
 
-sys.path.append(os.path.join(EQN_PATH, "utils"))
+sys.path.append(os.path.join("utils"))
 from podnn import PodnnModel
 from metrics import error_podnn
 from mesh import create_linear_mesh
@@ -29,7 +28,7 @@ x_mesh = create_linear_mesh(HP["x_min"], HP["x_max"], HP["n_x"])
 class Burgers2PodnnModel(PodnnModel):
     def u(self, X, t, mu):
         return u(X, t, mu)
-model = Burgers2PodnnModel(HP["n_v"], x_mesh, HP["n_t"], EQN_PATH)
+model = Burgers2PodnnModel(HP["n_v"], x_mesh, HP["n_t"])
 
 # Generate the dataset from the mesh and params
 X_v_train, v_train, \
@@ -52,5 +51,5 @@ U_pred_struct = model.restruct(U_pred)
 U_val_struct = model.restruct(U_val)
  
 # PLOTTING AND SAVING RESULTS
-plot_results(U_val_struct, U_pred_struct, HP, EQN_PATH)
+plot_results(U_val_struct, U_pred_struct, HP)
 plot_results(U_val_struct, U_pred_struct, HP)

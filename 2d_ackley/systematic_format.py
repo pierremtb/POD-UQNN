@@ -1,12 +1,11 @@
 import numpy as np
 import os
 
-EQN_PATH = "2d_ackley"
 
-arr_n_s = np.loadtxt(os.path.join(EQN_PATH, "results", "systematic", "n_s.csv"))
-arr_tf_epochs = np.loadtxt(os.path.join(EQN_PATH, "results", "systematic", "tf_epochs.csv"))
-errors_test_mean = np.loadtxt(os.path.join(EQN_PATH, "results", "systematic", "err_t_mean.csv"))
-errors_test_std = np.loadtxt(os.path.join(EQN_PATH, "results", "systematic", "err_t_std.csv"))
+arr_n_s = np.loadtxt(os.path.join("results", "systematic", "n_s.csv"))
+arr_tf_epochs = np.loadtxt(os.path.join("results", "systematic", "tf_epochs.csv"))
+errors_test_mean = np.loadtxt(os.path.join("results", "systematic", "err_t_mean.csv"))
+errors_test_std = np.loadtxt(os.path.join("results", "systematic", "err_t_std.csv"))
 
 def write_table(f, errors, sub, val):
     f.write(r"\begin{tabular}{|c||ccccc|} " + "\n")
@@ -25,7 +24,7 @@ def write_table(f, errors, sub, val):
     f.write(r"\hline" + "\n") 
     f.write(r"\end{tabular}" + "\n")
 
-with open(os.path.join(EQN_PATH, "results", "systematic", "tables.tex"),
+with open(os.path.join("results", "systematic", "tables.tex"),
           "w+") as f:
     write_table(f, errors_test_mean, "m", "mean")
     write_table(f, errors_test_std, r"\sigma", "standard deviation")

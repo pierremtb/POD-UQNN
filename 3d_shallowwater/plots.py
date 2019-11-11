@@ -6,8 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-EQN_PATH = "3d_shallowwater"
-sys.path.append(EQN_PATH)
 
 sys.path.append("utils")
 from metrics import error_podnn

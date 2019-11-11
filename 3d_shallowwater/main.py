@@ -5,8 +5,6 @@ import sys
 import json
 import numpy as np
 
-EQN_PATH = "3d_shallowwater"
-sys.path.append(EQN_PATH)
 from plots import plot_results
 
 sys.path.append("utils")
@@ -29,18 +27,18 @@ USE_TRAINED_NETWORK = True
 
 if not USE_CACHED_DATASET:
     # Getting data from the files
-    mu_path = os.path.join(EQN_PATH, "data", "INPUT_100_Scenarios.txt")
-    x_u_mesh_path = os.path.join(EQN_PATH, "data", "SOL_FV_100_Scenarios.txt")
+    mu_path = os.path.join("data", "INPUT_100_Scenarios.txt")
+    x_u_mesh_path = os.path.join("data", "SOL_FV_100_Scenarios.txt")
     x_mesh, u_mesh, X_v = \
         read_space_sol_input_mesh(HP["n_s"], x_u_mesh_path, mu_path)
-    np.save(os.path.join(EQN_PATH, "cache", "x_mesh.npy"), x_mesh)
+    np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
 else:
-    x_mesh = np.load(os.path.join(EQN_PATH, "cache", "x_mesh.npy"))
+    x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
     u_mesh = None
     X_v = None
 
 # Create the POD-NN model
-model = PodnnModel(HP["n_v"], x_mesh, HP["n_t"], EQN_PATH)
+model = PodnnModel(HP["n_v"], x_mesh, HP["n_t"])
 
 # Generate the dataset from the mesh and params
 X_v_train, v_train, \
@@ -73,4 +71,4 @@ U_val = model.restruct(U_val)
 # exit(0)
 
 # Plot and save the results
-plot_results(x_mesh, U_val, U_pred, HP, EQN_PATH)
+plot_results(x_mesh, U_val, U_pred, HP)

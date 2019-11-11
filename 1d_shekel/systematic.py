@@ -5,7 +5,6 @@ import numpy as np
 import tensorflow as tf
 
 
-EQN_PATH = "1d_shekel"
 from main import main
 from hyperparams import HP
 
@@ -29,11 +28,11 @@ if __name__ == "__main__":
             error_test_mean, error_test_std = main(HP)
 
     # Saving the results
-    np.savetxt(os.path.join(EQN_PATH, "results", "systematic", "n_s.csv"),
+    np.savetxt(os.path.join("results", "systematic", "n_s.csv"),
                HP["n_s"])
-    np.savetxt(os.path.join(EQN_PATH, "results", "systematic", "tf_epochs.csv"),
+    np.savetxt(os.path.join("results", "systematic", "tf_epochs.csv"),
                HP["tf_epochs"])
-    np.savetxt(os.path.join(EQN_PATH, "results", "systematic", "err_t_mean.csv"),
+    np.savetxt(os.path.join("results", "systematic", "err_t_mean.csv"),
                errors_test_mean)
-    np.savetxt(os.path.join(EQN_PATH, "results", "systematic", "err_t_std.csv"),
+    np.savetxt(os.path.join("results", "systematic", "err_t_std.csv"),
                errors_test_std)

@@ -1,8 +1,5 @@
 import sys
 import json
-import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
 
 sys.path.append("../")
 from podnn.podnnmodel import PodnnModel
@@ -21,15 +18,15 @@ def main(HP, no_plot=False):
     class Burgers2PodnnModel(PodnnModel):
         def u(self, X, t, mu):
             return u(X, t, mu)
-    model = Burgers2PodnnModel(HP["n_v"], x_mesh, HP["n_t"], EQN_PATH)
+    model = Burgers2PodnnModel(HP["n_v"], x_mesh, HP["n_t"])
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, \
         X_v_val, v_val, \
         U_val = model.generate_dataset(HP["mu_min"], HP["mu_max"],
-                                    HP["n_s"],
-                                    HP["train_val_ratio"],
-                                    HP["eps"])
+                                       HP["n_s"],
+                                       HP["train_val_ratio"],
+                                       HP["eps"])
 
     # Train
     def error_val():
@@ -42,7 +39,7 @@ def main(HP, no_plot=False):
     U_pred = model.predict(X_v_val)
 
     # Plot against test and save
-    return plot_results(U_val, U_pred, HP, EQN_PATH, no_plot)
+    return plot_results(U_val, U_pred, HP, no_plot)
 
 
 if __name__ == "__main__":

@@ -10,7 +10,6 @@ import json
 import time
 
 EQN_PATH = "1dt-burgers2"
-sys.path.append(EQN_PATH)
 from hyperparams import HP
 
 sys.path.append("utils")
@@ -21,7 +20,7 @@ from handling import pack_layers
 
 def get_test_data():
     from datagen import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
-    dirname = os.path.join(EQN_PATH, "data")
+    dirname = os.path.join("data")
     X = np.load(os.path.join(dirname, X_FILE))
     T = np.load(os.path.join(dirname, T_FILE))
     U_test_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
@@ -123,7 +122,7 @@ def plot_results(U_val, U_pred,
         
 #     HP["layers"] = pack_layers(X_v_train.shape[1], HP["h_layers"],
 #                                X_v_train.shape[1])
-#     regnn = RegNN.load_from(os.path.join(EQN_PATH, "cache", "model.h5"),
+#     regnn = RegNN.load_from(os.path.join("cache", "model.h5"),
 #                        HP, lb, ub)
 
 #     U_val_struct, U_pred_struct = predict_and_assess(regnn, X_v_val, U_val,

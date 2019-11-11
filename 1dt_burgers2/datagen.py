@@ -6,7 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 EQN_PATH = "1dt-burgers2"
-sys.path.append(EQN_PATH)
 from hyperparams import HP
 
 sys.path.append("utils")
@@ -33,7 +32,7 @@ def u(X, t, mu):
 class BurgersTestGenerator(TestGenerator):
     def plot(self):
         """Overrides the method to plot the 1D, time-dependant Burgers solution."""
-        dirname = os.path.join(EQN_PATH, "data")
+        dirname = os.path.join("data")
         print(f"Reading data to {dirname}")
 
         # Loading space
@@ -68,7 +67,7 @@ class BurgersTestGenerator(TestGenerator):
 
 
 def generate_test_dataset():
-    tg = BurgersTestGenerator(EQN_PATH, u, HP["n_v"], HP["n_x"], n_t=HP["n_t"])
+    tg = BurgersTestGenerator(u, HP["n_v"], HP["n_x"], n_t=HP["n_t"])
     tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"],
                    t_min=HP["t_min"], t_max=HP["t_max"])
     return tg

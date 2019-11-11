@@ -17,8 +17,7 @@ HP_FILE = "HP.json"
 
 
 class TestGenerator(object):
-    def __init__(self, EQN_PATH, u, n_v, n_x, n_y=0, n_z=0, n_t=0):
-        self.EQN_PATH = EQN_PATH
+    def __init__(self, u, n_v, n_x, n_y=0, n_z=0, n_t=0):
         self.u = u
         self.n_v = n_v
         self.n_x = n_x
@@ -121,7 +120,7 @@ class TestGenerator(object):
         U_test_mean = np.reshape(U_test_mean, self.get_u_tuple())
         U_test_std = np.reshape(U_test_std, self.get_u_tuple())
 
-        dirname = os.path.join(self.EQN_PATH, "data")
+        dirname = "data" 
         print(f"Saving data to {dirname}")
         np.save(os.path.join(dirname, X_FILE), X_out)
         if self.has_t:

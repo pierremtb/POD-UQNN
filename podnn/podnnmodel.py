@@ -15,7 +15,7 @@ from .neuralnetwork import NeuralNetwork
 
 
 class PodnnModel:
-    def __init__(self, n_v, x_mesh, n_t, EQN_PATH):
+    def __init__(self, n_v, x_mesh, n_t):
         # Dimension of the function output
         self.n_v = n_v
         # Mesh definition array in space
@@ -27,8 +27,7 @@ class PodnnModel:
         self.n_t = n_t
         self.has_t = self.n_t > 0
 
-        self.EQN_PATH = EQN_PATH
-        cache_dir = os.path.join(EQN_PATH, "cache")
+        cache_dir = "cache"
         self.data_cache_path = os.path.join(cache_dir, "prep_data.pkl")
         self.model_cache_path = os.path.join(cache_dir, "model.h5")
         self.model_cache_params_path = os.path.join(cache_dir, "model_params.pkl")
@@ -145,7 +144,7 @@ class PodnnModel:
                          t_min=0, t_max=0,
                          use_cache=False, save_cache=False):
         if use_cache:
-            return get_data_cache()
+            return self.get_data_cache()
         
         if self.has_t:
             t_min, t_max = np.array(t_min), np.array(t_max)

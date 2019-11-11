@@ -1,53 +1,58 @@
-import numpy as np
+"""HiFi testing data generation for 1D Shekel Equation."""
+
 import sys
 import os
-from tqdm import tqdm
-from pyDOE import lhs
+import numpy as np
 import matplotlib.pyplot as plt
 from deap.benchmarks import shekel
 
-EQN_PATH = "1d_shekel"
-from hyperparams import HP
-
+sys.path.append("../")
 from podnn.plotting import figsize
 from podnn.pod import get_pod_bases
 from podnn.testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 
-# HiFi sampling size
-n_s = int(10)
-# n_s = int(1e3)
+from hyperparams import HP
 
-def u(X, t, mu):
+
+# HiFi sampling size
+n_s = int(1e3)
+
+
+def u(X, _, mu):
+    """The 1D-Shekel function, from deap.benchmarks."""
     x = X[0]
     bet, gam = mu[:10], mu[10:]
     return -shekel(x[None, :], gam.reshape((10, 1)), bet.reshape((10, 1)))[0]
 
 
 class ShekelTestGenerator(TestGenerator):
-  def plot(self):
-      dirname = os.path.join(EQN_PATH, "data")
-      print(f"Reading data to {dirname}")
-      x = np.load(os.path.join(dirname, X_FILE)).reshape((300,))
-      u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
-      u_std = np.load(os.path.join(dirname, U_STD_FILE))
-      
-      fig = plt.figure(figsize=figsize(2, 1))
-      ax_mean = fig.add_subplot(1, 2, 1)
-      ax_mean.plot(x, u_mean)
-      ax_mean.set_title(r"Mean of $u_h(x, \gamma, \beta)$")
-      ax_mean.set_xlabel("$x$")
-      ax_std = fig.add_subplot(1, 2, 2)
-      ax_std.plot(x, u_std)
-      ax_std.set_title(r"Standard deviation of $u_h(x, \gamma, \beta)$")
-      ax_std.set_xlabel("$x$")
-      plt.show()
+    def plot(self):
+        dirname = "data"
+        print(f"Reading data to {dirname}")
+        x = np.load(os.path.join(dirname, X_FILE)).reshape((300,))
+        u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
+        u_std = np.load(os.path.join(dirname, U_STD_FILE))
+        # Keeping just the first coordinate (1D)
+        u_mean = u_mean[0, :]
+        u_std = u_std[0, :]
+
+        fig = plt.figure(figsize=figsize(2, 1))
+        ax_mean = fig.add_subplot(1, 2, 1)
+        ax_mean.plot(x, u_mean)
+        ax_mean.set_title(r"Mean of $u_h(x, \gamma, \beta)$")
+        ax_mean.set_xlabel("$x$")
+        ax_std = fig.add_subplot(1, 2, 2)
+        ax_std.plot(x, u_std)
+        ax_std.set_title(r"Standard deviation of $u_h(x, \gamma, \beta)$")
+        ax_std.set_xlabel("$x$")
+        plt.show()
 
 
 
 def generate_test_dataset():
-  testgen = ShekelTestGenerator(EQN_PATH, u, HP["n_v"], HP["n_x"])
-  testgen.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"])
-  return testgen
+    tg = ShekelTestGenerator(u, HP["n_v"], HP["n_x"])
+    tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"])
+    return tg
 
 
 if __name__ == "__main__":

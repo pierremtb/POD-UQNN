@@ -1,18 +1,13 @@
 import sys
 import json
-import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
 
-EQN_PATH = "2d_ackley"
-sys.path.append(EQN_PATH)
+sys.path.append("../")
+from podnn.podnnmodel import PodnnModel
+from podnn.metrics import error_podnn
+from podnn.mesh import create_linear_mesh
+
 from datagen import u
 from plots import plot_results
-
-sys.path.append("utils")
-from podnn import PodnnModel
-from metrics import error_podnn
-from mesh import create_linear_mesh
 
 
 def main(HP, no_plot=False):
@@ -24,17 +19,17 @@ def main(HP, no_plot=False):
     class AckleyPodnnModel(PodnnModel):
         def u(self, X, t, mu):
             return u(X, t, mu)
-    model = AckleyPodnnModel(HP["n_v"], x_mesh, HP["n_t"], EQN_PATH)
+    model = AckleyPodnnModel(HP["n_v"], x_mesh, HP["n_t"])
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, \
         X_v_val, v_val, \
         U_val = model.generate_dataset(HP["mu_min"], HP["mu_max"],
-                                    HP["n_s"],
-                                    HP["train_val_ratio"],
-                                    HP["eps"],
-                                    use_cache=True,
-                                    save_cache=True)
+                                       HP["n_s"],
+                                       HP["train_val_ratio"],
+                                       HP["eps"],
+                                       use_cache=False,
+                                       save_cache=True)
 
     # Train
     def error_val():
@@ -45,9 +40,9 @@ def main(HP, no_plot=False):
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)
-    
+   
     # Plot against test and save
-    return plot_results(U_val, U_pred, HP, EQN_PATH, no_plot)
+    return plot_results(U_val, U_pred, HP, no_plot)
 
 
 if __name__ == "__main__":

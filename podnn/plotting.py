@@ -39,12 +39,12 @@ pgf_with_latex = {                      # setup matplotlib to use latex for outp
 mpl.rcParams.update(pgf_with_latex)
 
 
-def saveresultdir(save_path, save_HP):
+def saveresultdir(save_HP):
     """Save plots and hyperparams to a subdirectory of './results/'."""
 
     now = datetime.now()
     scriptname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
-    resdir = os.path.join(save_path, "results", f"{now.strftime('%y%m%d-%H%M%S')}-{scriptname}")
+    resdir = os.path.join("results", f"{now.strftime('%y%m%d-%H%M%S')}-{scriptname}")
     os.mkdir(resdir)
     print("saving results to directory ", resdir)
     with open(os.path.join(resdir, "HP.json"), "w") as f:
