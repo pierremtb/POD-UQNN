@@ -2,56 +2,71 @@
 
 import sys
 import json
+import os
 
-sys.path.append("../../")
+sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import error_podnn
 from podnn.mesh import create_linear_mesh
 
-from datagen import u
+from datagen import u, generate_test_dataset
 from plots import plot_results
 
 
-def main(HP):
+def main(hp, gen_test=False, use_cached_dataset=False,
+         use_trained_network=False, no_plot=False):
+    """Full example to run POD-NN on 3dt_burger2."""
+
+    if gen_test:
+        generate_test_dataset()
+
     # Create linear space mesh
-    x_mesh = create_linear_mesh(HP["x_min"], HP["x_max"], HP["n_x"])
+    x_mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"])
 
     # Extend the class and init the model
     class Burgers2PodnnModel(PodnnModel):
         def u(self, X, t, mu):
             return u(X, t, mu)
-    model = Burgers2PodnnModel(HP["n_v"], x_mesh, HP["n_t"])
+    model = Burgers2PodnnModel(hp["n_v"], x_mesh, hp["n_t"])
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, \
         X_v_val, v_val, \
-        U_val = model.generate_dataset(HP["mu_min"], HP["mu_max"],
-                                    HP["n_s"], HP["train_val_ratio"],
-                                    HP["eps"],
-                                    t_min=HP["t_min"], t_max=HP["t_max"])
+        U_val = model.generate_dataset(hp["mu_min"], hp["mu_max"],
+                                    hp["n_s"], hp["train_val_ratio"],
+                                    hp["eps"],
+                                    t_min=hp["t_min"], t_max=hp["t_max"],
+                                    use_cache=use_cached_dataset,
+                                    save_cache=True)
 
     # Train
-    def error_val():
-        U_pred = model.predict(X_v_val)
-        return error_podnn(U_val, U_pred)
-    model.train(X_v_train, v_train, error_val, HP["h_layers"],
-                HP["epochs"], HP["lr"], HP["lambda"]) 
+    if not use_trained_network:
+        def error_val():
+            U_pred = model.predict(X_v_val)
+            return error_podnn(U_val, U_pred)
+        model.train(X_v_train, v_train, error_val, hp["h_layers"],
+                    hp["epochs"], hp["lr"], hp["lambda"]) 
+    else:
+        model.load_trained_cache()
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)
     U_pred_struct = model.restruct(U_pred)
     U_val_struct = model.restruct(U_val)
-    
-    # PLOTTING AND SAVING RESULTS
-    plot_results(U_val_struct, U_pred_struct, HP)
-    plot_results(U_val_struct, U_pred_struct, HP)
+ 
+    # Plot against test and save
+    return plot_results(U_val_struct, U_pred_struct, hp, no_plot)
 
 if __name__ == "__main__":
-    # HYPER PARAMETERS
+    # Custom hyperparameters as command-line arg
     if len(sys.argv) > 1:
         with open(sys.argv[1]) as HPFile:
             HP = json.load(HPFile)
+    # Default ones
     else:
         from hyperparams import HP
-    main(HP)
-    
+
+    main(HP, gen_test=True, use_cached_dataset=False,
+         use_trained_network=False)
+    # main(HP, gen_test=False, use_cached_dataset=True,
+    #      use_trained_network=True)

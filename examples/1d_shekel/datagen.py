@@ -6,9 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from deap.benchmarks import shekel
 
-sys.path.append("../../")
+sys.path.append(os.path.join("..", ".."))
 from podnn.plotting import figsize, openPdfGraph
-from podnn.testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
+from podnn.testgenerator import TestGenerator, X_FILE, U_MEAN_FILE, U_STD_FILE
 
 from hyperparams import HP
 

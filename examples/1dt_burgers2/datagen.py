@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-sys.path.append("../../")
+sys.path.append(os.path.join("..", ".."))
 from podnn.plotting import figsize, openPdfGraph
 from podnn.testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 
@@ -14,7 +14,7 @@ from hyperparams import HP
 
 
 # HiFi sampling size
-n_s = int(1e2)
+n_s = int(1e3)
 
 
 # The solution function

@@ -2,8 +2,9 @@
 
 import sys
 import json
+import os
 
-sys.path.append("../../")
+sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import error_podnn
 from podnn.mesh import create_linear_mesh
@@ -58,7 +59,6 @@ def main(hp, gen_test=False, use_cached_dataset=False,
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg
-    # HYPER PARAMETERS
     if len(sys.argv) > 1:
         with open(sys.argv[1]) as HPFile:
             HP = json.load(HPFile)
@@ -66,4 +66,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    main(HP, gen_test=False, use_cached_dataset=True, use_trained_network=True)
+    main(HP, gen_test=False, use_cached_dataset=True,
+         use_trained_network=True)

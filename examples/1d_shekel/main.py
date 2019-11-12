@@ -2,8 +2,9 @@
 
 import sys
 import json
+import os
 
-sys.path.append("../../")
+sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import error_podnn
 from podnn.mesh import create_linear_mesh

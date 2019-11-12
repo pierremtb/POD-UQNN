@@ -62,7 +62,10 @@ def plot_results(U_val, U_pred,
                  HP=None, save_path=None):
     X, t, U_test_mean, U_test_std = get_test_data()
     x = X[0]
-    xx, tt = np.meshgrid(x, t)
+
+    xxT, ttT = np.meshgrid(x, t)
+    xx = xxT.T
+    tt = ttT.T
 
     U_pred_mean = np.mean(U_pred[0], axis=2)
     U_val_mean = np.mean(U_val[0], axis=2)

@@ -1,10 +1,11 @@
 """ POD-NN modeling for 2D inviscid Shallow Water Equations."""
 
-import os
 import sys
 import json
 import numpy as np
+import os
 
+sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import error_podnn
 from podnn.mesh import read_space_sol_input_mesh

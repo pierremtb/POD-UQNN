@@ -61,9 +61,17 @@ def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
 def plot_results(U_val, U_pred,
                  HP=None, save_path=None):
     X, t, U_test_mean, U_test_std = get_test_data()
-    print(t.shape)
     x = X[0]
-    tt, xx = np.meshgrid(x, t)
+
+    xxT, ttT = np.meshgrid(x, t)
+    xx = xxT.T
+    tt = ttT.T
+
+    # Keeping the only solution coordinate
+    U_test_mean = U_test_mean[0]
+    U_test_std = U_test_std[0]
+    U_val = U_val[0]
+    U_pred = U_pred[0]
 
     U_pred_mean = np.mean(U_pred, axis=2)
     U_val_mean = np.mean(U_val, axis=2)
