@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from deap.benchmarks import shekel
 
-sys.path.append("../")
+sys.path.append("../../")
 from podnn.plotting import figsize
 from podnn.pod import get_pod_bases
 from podnn.testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE

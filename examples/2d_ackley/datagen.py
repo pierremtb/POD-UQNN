@@ -1,4 +1,4 @@
-"""HiFi testing data generation for 1D time-dep Burgers eq."""
+"""HiFi testing data generation for second 1D time-dep Burgers eq."""
 
 import sys
 import os
@@ -6,64 +6,56 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-sys.path.append("../")
+sys.path.append("../../")
 from podnn.plotting import figsize
 from podnn.pod import get_pod_bases
 from podnn.testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 
 from hyperparams import HP
 
-sys.path.append("burgersutils")
-from burgers import burgers_viscous_time_exact1 as burgers_exact
-
 
 # HiFi sampling size
-n_s = int(10)
-# n_s = int(1e3)
+n_s = int(1e3)
 
 
-# The solution function
-def u(X, t, mu):
+def u(X, _, mu):
     x = X[0]
-    return burgers_exact(mu, x.shape[0], x, 1, [t]).T
+    y = X[1]
+    return - 20*(1+.1*mu[2])*np.exp(-.2*(1+.1*mu[1])*np.sqrt(.5*(x**2+y**2))) \
+           - np.exp(.5*(np.cos(2*np.pi*(1+.1*mu[0])*x) + np.cos(2*np.pi*(1+.1*mu[0])*y))) \
+           + 20 + np.exp(1)
 
 
-class BurgersTestGenerator(TestGenerator):
+class AckleyTestGenerator(TestGenerator):
     def plot(self):
         dirname = os.path.join("data")
         print(f"Reading data to {dirname}")
-
-        # Loading space
         X = np.load(os.path.join(dirname, X_FILE))
-        t = np.load(os.path.join(dirname, T_FILE))
-        # Keeping the first coordinate, and meshing with t
-        x = X[0]
-        Xt, Tt = np.meshgrid(x, t)
-        X, T = Xt.T, Tt.T
-
-        # Loading solution and keeping its first coordinate (n_v == 1)
+        x, y = X[0], X[1]
         u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
         u_std = np.load(os.path.join(dirname, U_STD_FILE))
+
+        # Keepinp the first coordinate
         u_mean = u_mean[0, :, :]
         u_std = u_std[0, :, :]
 
-        # Plotting
         fig = plt.figure(figsize=figsize(2, 1))
         ax_mean = fig.add_subplot(121, projection="3d")
-        ax_mean.plot_surface(X, T, u_mean)
+        ax_mean.plot_surface(x, y, u_mean)
         ax_mean.set_title(r"Mean of $u_h(x, \gamma, \beta)$")
         ax_mean.set_xlabel("$x$")
         ax_std = fig.add_subplot(122, projection="3d")
-        ax_std.plot_surface(X, T, u_std)
+        ax_std.plot_surface(x, y, u_std)
         ax_std.set_title(r"Standard deviation of $u_h(x, \gamma, \beta)$")
         ax_std.set_xlabel("$x$")
         plt.show()
 
 
 def generate_test_dataset():
-    tg = BurgersTestGenerator(u, HP["n_v"], HP["n_x"], n_t=HP["n_t"])
-    tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"],
-                t_min=HP["t_min"], t_max=HP["t_max"])
+    tg = AckleyTestGenerator(u, HP["n_v"], HP["n_x"], HP["n_y"])
+    tg.generate(int(1e2), HP["mu_min"], HP["mu_max"],
+                HP["x_min"], HP["x_max"],
+                HP["y_min"], HP["y_max"])
     return tg
 
 

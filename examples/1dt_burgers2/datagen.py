@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-sys.path.append("../")
+sys.path.append("../../")
 from podnn.plotting import figsize
 from podnn.pod import get_pod_bases
 from podnn.testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
@@ -15,47 +15,62 @@ from hyperparams import HP
 
 
 # HiFi sampling size
-n_s = int(1e3)
+n_s = int(1e2)
 
 
-def u(X, _, mu):
+# The solution function
+def u(X, t, mu):
+    """Burgers2 explicit solution."""
     x = X[0]
-    y = X[1]
-    return - 20*(1+.1*mu[2])*np.exp(-.2*(1+.1*mu[1])*np.sqrt(.5*(x**2+y**2))) \
-           - np.exp(.5*(np.cos(2*np.pi*(1+.1*mu[0])*x) + np.cos(2*np.pi*(1+.1*mu[0])*y))) \
-           + 20 + np.exp(1)
+
+    if t == 1.:
+        return x / (1 + np.exp(1/(4*mu)*(x**2 - 1/4)))
+
+    t0 = np.exp(1 / (8*mu))
+    return (x/t) / (1 + np.sqrt(t/t0)*np.exp(x**2/(4*mu*t)))
 
 
-class AckleyTestGenerator(TestGenerator):
+class BurgersTestGenerator(TestGenerator):
     def plot(self):
+        """Overrides the method to plot the 1D, time-dependant Burgers solution."""
         dirname = os.path.join("data")
         print(f"Reading data to {dirname}")
+
+        # Loading space
         X = np.load(os.path.join(dirname, X_FILE))
-        x, y = X[0], X[1]
+        t = np.load(os.path.join(dirname, T_FILE))
+        # Keeping the first coordinate, and meshing with t
+        x = X[0]
+        Xt, Tt = np.meshgrid(x, t)
+        X, T = Xt.T, Tt.T
+
+        # Loading solution and keeping its first coordinate (n_v == 1)
         u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
         u_std = np.load(os.path.join(dirname, U_STD_FILE))
-
-        # Keepinp the first coordinate
         u_mean = u_mean[0, :, :]
         u_std = u_std[0, :, :]
 
+        # Plotting
         fig = plt.figure(figsize=figsize(2, 1))
         ax_mean = fig.add_subplot(121, projection="3d")
-        ax_mean.plot_surface(x, y, u_mean)
+        ax_mean.plot_surface(X, T, u_mean)
         ax_mean.set_title(r"Mean of $u_h(x, \gamma, \beta)$")
         ax_mean.set_xlabel("$x$")
         ax_std = fig.add_subplot(122, projection="3d")
-        ax_std.plot_surface(x, y, u_std)
+        ax_std.plot_surface(X, T, u_std)
         ax_std.set_title(r"Standard deviation of $u_h(x, \gamma, \beta)$")
         ax_std.set_xlabel("$x$")
         plt.show()
+        # plt.plot(X[:, 0], u_mean[:, 25])
+        # plt.plot(X[:, 0], u_mean[:, 50])
+        # plt.plot(X[:, 0], u_mean[:, 75])
+        # plt.show()
 
 
 def generate_test_dataset():
-    tg = AckleyTestGenerator(u, HP["n_v"], HP["n_x"], HP["n_y"])
-    tg.generate(int(1e2), HP["mu_min"], HP["mu_max"],
-                HP["x_min"], HP["x_max"],
-                HP["y_min"], HP["y_max"])
+    tg = BurgersTestGenerator(u, HP["n_v"], HP["n_x"], n_t=HP["n_t"])
+    tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"],
+                t_min=HP["t_min"], t_max=HP["t_max"])
     return tg
 
 

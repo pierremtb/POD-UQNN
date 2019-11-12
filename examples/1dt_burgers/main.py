@@ -1,9 +1,9 @@
-"""POD-NN modeling for 3D time-dependente Burgers Equation."""
+"""POD-NN modeling for second 3D time-dependent Burgers Equation."""
 
 import sys
 import json
 
-sys.path.append("../")
+sys.path.append("../../")
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import error_podnn
 from podnn.mesh import create_linear_mesh
@@ -17,10 +17,10 @@ def main(HP):
     x_mesh = create_linear_mesh(HP["x_min"], HP["x_max"], HP["n_x"])
 
     # Extend the class and init the model
-    class Burgers2PodnnModel(PodnnModel):
+    class BurgersPodnnModel(PodnnModel):
         def u(self, X, t, mu):
             return u(X, t, mu)
-    model = Burgers2PodnnModel(HP["n_v"], x_mesh, HP["n_t"])
+    model = BurgersPodnnModel(HP["n_v"], x_mesh, HP["n_t"])
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, \
@@ -28,7 +28,8 @@ def main(HP):
         U_val = model.generate_dataset(HP["mu_min"], HP["mu_max"],
                                     HP["n_s"], HP["train_val_ratio"],
                                     HP["eps"],
-                                    t_min=HP["t_min"], t_max=HP["t_max"])
+                                    t_min=HP["t_min"], t_max=HP["t_max"],
+                                    use_cache=False, save_cache=True)
 
     # Train
     def error_val():
@@ -43,7 +44,6 @@ def main(HP):
     U_val_struct = model.restruct(U_val)
     
     # PLOTTING AND SAVING RESULTS
-    plot_results(U_val_struct, U_pred_struct, HP)
     plot_results(U_val_struct, U_pred_struct, HP)
 
 if __name__ == "__main__":

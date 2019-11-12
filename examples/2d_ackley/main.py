@@ -1,9 +1,9 @@
-"""POD-NN modeling for 1D Shekel Equation."""
+"""POD-NN modeling for 2D Ackley Equation."""
 
 import sys
 import json
 
-sys.path.append("../")
+sys.path.append("../../")
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import error_podnn
 from podnn.mesh import create_linear_mesh
@@ -14,13 +14,14 @@ from plots import plot_results
 
 def main(HP, no_plot=False):
     # Create linear space mesh
-    x_mesh = create_linear_mesh(HP["x_min"], HP["x_max"], HP["n_x"])
+    x_mesh = create_linear_mesh(HP["x_min"], HP["x_max"], HP["n_x"],
+                                HP["y_min"], HP["y_max"], HP["n_y"])
 
     # Extend the class and init the model
-    class Burgers2PodnnModel(PodnnModel):
+    class AckleyPodnnModel(PodnnModel):
         def u(self, X, t, mu):
             return u(X, t, mu)
-    model = Burgers2PodnnModel(HP["n_v"], x_mesh, HP["n_t"])
+    model = AckleyPodnnModel(HP["n_v"], x_mesh, HP["n_t"])
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, \
@@ -28,7 +29,9 @@ def main(HP, no_plot=False):
         U_val = model.generate_dataset(HP["mu_min"], HP["mu_max"],
                                        HP["n_s"],
                                        HP["train_val_ratio"],
-                                       HP["eps"])
+                                       HP["eps"],
+                                       use_cache=False,
+                                       save_cache=True)
 
     # Train
     def error_val():
@@ -39,7 +42,7 @@ def main(HP, no_plot=False):
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)
-
+   
     # Plot against test and save
     return plot_results(U_val, U_pred, HP, no_plot)
 
