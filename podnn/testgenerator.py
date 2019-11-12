@@ -1,11 +1,15 @@
 """Module defining the TestGenerator class."""
 
 import sys
+import time
 import os
 import json
 from tqdm import tqdm
 import numpy as np
 from pyDOE import lhs
+import numba as nb
+from numba import objmode, jit, prange
+
 
 from .mesh import create_linear_mesh
 
@@ -47,6 +51,63 @@ class TestGenerator(object):
         if self.has_t:
             tup += (self.n_t,)
         return (self.n_v,) + tup
+
+    def computeFast(self, n_s, U_tot, U_tot_sq, X, t, mu_lhs):
+        n_t = self.n_t
+        u = nb.njit(self.u)
+
+        pbar = tqdm(total=n_s)
+        def bumPBar():
+            pbar.update(1)
+
+        @jit(nopython=True, parallel=True)
+        def accelerated_loop_time(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs):
+            for i in prange(n_s):
+                # Computing one snapshot
+                U = np.zeros_like(U_tot)
+                for j in prange(n_t):
+                    U[:, j] = u(X, t[j], mu_lhs[i, :])
+                # Building the sum and the sum of squaes
+                U_tot += U
+                U_tot_sq += U**2
+                with objmode():
+                    bumPBar()
+
+            with objmode():
+                pbar.close()
+            return U_tot, U_tot_sq
+        
+        @jit(nopython=True, parallel=True)
+        def accelerated_loop(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs):
+            for i in prange(n_s):
+                # Computing one snapshot
+                U = u(X, 0, mu_lhs[i, :])
+                # Building the sum and the sum of squaes
+                U_tot += U
+                U_tot_sq += U**2
+                with objmode():
+                    pbar.update(i)
+            return U_tot, U_tot_sq
+        
+        if self.has_t:
+            return accelerated_loop_time(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs)
+        
+        return accelerated_loop(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs)
+
+    def compute(self, n_s, U_tot, U_tot_sq, X, t, mu_lhs):
+        for i in tqdm(range(n_s)):
+            # Computing one snapshot
+            U = np.zeros_like(U_tot)
+            if self.has_t:
+                for j in range(self.n_t):
+                    U[:, j] = self.u(X, t[j], mu_lhs[i, :])
+            else:
+                U = self.u(X, 0, mu_lhs[i, :])
+
+            # Building the sum and the sum of squaes
+            U_tot += U
+            U_tot_sq += U**2
+        return U_tot, U_tot_sq
 
     def generate(self, n_s, mu_min, mu_max, x_min, x_max,
                 y_min=0, y_max=0, z_min=0, z_max=0,
@@ -93,19 +154,11 @@ class TestGenerator(object):
         mu_lhs = lb + (ub - lb)*X_mu
 
         # Going through the snapshots one by one without saving them
-        for i in tqdm(range(n_s)):
-            # Computing one snapshot
-            U = np.zeros_like(U_tot)
-            if self.has_t:
-                for j in range(self.n_t):
-                    U[:, j] = self.u(X, t[j], mu_lhs[i, :])
-            else:
-                U = self.u(X, 0, mu_lhs[i, :])
-
-            # Building the sum and the sum of squaes
-            U_tot += U
-            U_tot_sq += U**2
-
+        st = time.time()
+        U_tot, U_tot_sq = self.computeFast(n_s, U_tot, U_tot_sq, X, t, mu_lhs)
+        print(time.time() - st)
+        U_tot, U_tot_sq = self.compute(n_s, U_tot, U_tot_sq, X, t, mu_lhs)
+        
         # Recreating the mean and the std
         U_test_mean = U_tot / n_s
         U_test_std = np.sqrt((n_s*U_tot_sq - U_tot**2) / (n_s*(n_s - 1)))

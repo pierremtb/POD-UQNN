@@ -7,10 +7,6 @@ import tensorflow as tf
 HP = {}
 # Dimension of u(x, t, mu)
 HP["n_v"] = 3
-# Space
-# HP["n_x"] = 256
-# HP["n_y"] = 256
-# HP["n_z"] = 256
 # Time
 HP["n_t"] = 0
 # Snapshots count
