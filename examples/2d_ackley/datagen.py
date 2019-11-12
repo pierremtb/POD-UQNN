@@ -14,7 +14,7 @@ from hyperparams import HP
 
 
 # HiFi sampling size
-n_s = int(1e3)
+n_s = int(1e6)
 
 
 def u(X, _, mu):

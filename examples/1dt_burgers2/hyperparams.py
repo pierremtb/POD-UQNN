@@ -1,3 +1,5 @@
+"""Default hyperparameters for second 1D time-dep Burgers Equation."""
+
 import numpy as np
 import tensorflow as tf
 

@@ -1,4 +1,4 @@
-"""POD-NN modeling for 3D time-dependente Burgers Equation."""
+"""POD-NN modeling for the second 1D time-dep Burgers Equation."""
 
 import sys
 import json

@@ -88,11 +88,13 @@ class TestGenerator(object):
             U_tot = np.zeros((n_h,))
             U_tot_sq = np.zeros((n_h,))
 
+        # Parameters sampling
+        X_mu = lhs(n_s, n_p).T
+        mu_lhs = lb + (ub - lb)*X_mu
+
         # Going through the snapshots one by one without saving them
         for i in tqdm(range(n_s)):
             # Computing one snapshot
-            X_mu = lhs(n_s, n_p).T
-            mu_lhs = lb + (ub - lb)*X_mu
             U = np.zeros_like(U_tot)
             if self.has_t:
                 for j in range(self.n_t):

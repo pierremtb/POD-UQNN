@@ -1,4 +1,4 @@
-"""Module for plotting results of 3D time-dependante Burgers Equation."""
+"""Module for plotting results of the second 1d time-dep Burgers Equation."""
 
 import os
 import matplotlib.pyplot as plt
@@ -18,16 +18,6 @@ def get_test_data():
     U_test_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
     U_test_std = np.load(os.path.join(dirname, U_STD_FILE))
     return X, T, U_test_mean, U_test_std
-
-
-def plot_contour(fig, pos, X, T, U, levels, title):
-    ax = fig.add_subplot(pos)
-    ct = ax.contourf(X, T, U, origin="lower")
-    # ct = ax.contourf(X, T, U, levels=levels, origin="lower")
-    plt.colorbar(ct)
-    ax.set_title(title)
-    ax.set_xlabel("$x$")
-    ax.set_ylabel("$t$")
 
 
 def plot_map(fig, pos, x, t, X, T, U, title):
