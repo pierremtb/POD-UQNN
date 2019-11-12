@@ -3,10 +3,11 @@
 ## Running
 Dependencies are in the file `requirements.txt`, and are installable via `pip`.
 
-Run all scripts from the root of the repository, eg.
+Run examples from their, eg.
 ```console
-$ python3 datagen/1d_shekel/main.py
-$ python3 1d_shekel/main.py
+$ cd examples/1d_shekel
+$ python3 datagen.py
+$ python3 main.py
 ```
 
 ## Citation
