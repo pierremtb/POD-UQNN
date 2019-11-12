@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 sys.path.append("../../")
-from podnn.plotting import figsize
-from podnn.pod import get_pod_bases
+from podnn.plotting import figsize, openPdfGraph
 from podnn.testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 
 from hyperparams import HP
@@ -51,7 +50,7 @@ class BurgersTestGenerator(TestGenerator):
         u_std = u_std[0, :, :]
 
         # Plotting
-        fig = plt.figure(figsize=figsize(2, 1))
+        fig = plt.figure(figsize=figsize(1, 2, 2.0))
         ax_mean = fig.add_subplot(121, projection="3d")
         ax_mean.plot_surface(X, T, u_mean)
         ax_mean.set_title(r"Mean of $u_h(x, \gamma, \beta)$")
@@ -60,11 +59,10 @@ class BurgersTestGenerator(TestGenerator):
         ax_std.plot_surface(X, T, u_std)
         ax_std.set_title(r"Standard deviation of $u_h(x, \gamma, \beta)$")
         ax_std.set_xlabel("$x$")
-        plt.show()
-        # plt.plot(X[:, 0], u_mean[:, 25])
-        # plt.plot(X[:, 0], u_mean[:, 50])
-        # plt.plot(X[:, 0], u_mean[:, 75])
-        # plt.show()
+
+        PLOT_FILE = os.path.join(dirname, "plot")
+        plt.savefig(PLOT_FILE + ".pdf")
+        openPdfGraph(PLOT_FILE)
 
 
 def generate_test_dataset():

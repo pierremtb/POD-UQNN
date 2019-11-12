@@ -1,3 +1,5 @@
+"""Default hyperparameters for 1D Shekel Equation."""
+
 import numpy as np
 import tensorflow as tf
 
@@ -23,8 +25,7 @@ HP["h_layers"] = [64, 64]
 # Batch size for mini-batch training (0 means full-batch)
 HP["batch_size"] = 0
 # Setting up TF SGD-based optimizer
-# HP["epochs"] = 70000
-HP["epochs"] = 7000
+HP["epochs"] = 70000
 HP["lr"] = 0.003
 HP["decay"] = 0.
 HP["b1"] = 0.9

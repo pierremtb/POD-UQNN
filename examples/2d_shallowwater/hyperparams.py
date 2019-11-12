@@ -1,4 +1,4 @@
-"""Setup hyperparameters for 3D time-independant Shallow Water Equations."""
+"""Default hyperparameters for 2D inviscid Shallow Water Equations."""
 
 import numpy as np
 import tensorflow as tf

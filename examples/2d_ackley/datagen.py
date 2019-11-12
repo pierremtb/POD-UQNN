@@ -1,4 +1,4 @@
-"""HiFi testing data generation for second 1D time-dep Burgers eq."""
+"""HiFi testing data generation for 2D Ackley Equation."""
 
 import sys
 import os
@@ -7,9 +7,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 sys.path.append("../../")
-from podnn.plotting import figsize
-from podnn.pod import get_pod_bases
-from podnn.testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
+from podnn.plotting import figsize, openPdfGraph
+from podnn.testgenerator import TestGenerator, X_FILE, U_MEAN_FILE, U_STD_FILE
 
 from hyperparams import HP
 
@@ -39,7 +38,7 @@ class AckleyTestGenerator(TestGenerator):
         u_mean = u_mean[0, :, :]
         u_std = u_std[0, :, :]
 
-        fig = plt.figure(figsize=figsize(2, 1))
+        fig = plt.figure(figsize=figsize(1, 2, 2.0))
         ax_mean = fig.add_subplot(121, projection="3d")
         ax_mean.plot_surface(x, y, u_mean)
         ax_mean.set_title(r"Mean of $u_h(x, \gamma, \beta)$")
@@ -48,12 +47,15 @@ class AckleyTestGenerator(TestGenerator):
         ax_std.plot_surface(x, y, u_std)
         ax_std.set_title(r"Standard deviation of $u_h(x, \gamma, \beta)$")
         ax_std.set_xlabel("$x$")
-        plt.show()
+
+        PLOT_FILE = os.path.join(dirname, "plot")
+        plt.savefig(PLOT_FILE + ".pdf")
+        openPdfGraph(PLOT_FILE)
 
 
 def generate_test_dataset():
     tg = AckleyTestGenerator(u, HP["n_v"], HP["n_x"], HP["n_y"])
-    tg.generate(int(1e2), HP["mu_min"], HP["mu_max"],
+    tg.generate(n_s, HP["mu_min"], HP["mu_max"],
                 HP["x_min"], HP["x_max"],
                 HP["y_min"], HP["y_max"])
     return tg

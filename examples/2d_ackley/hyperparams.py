@@ -1,3 +1,5 @@
+"""Default hyperparameters for 2D Ackley Equation."""
+
 import numpy as np
 import tensorflow as tf
 

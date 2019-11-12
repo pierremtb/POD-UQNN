@@ -1,16 +1,11 @@
-"""Handles the plots for 3D time-steady Shallow Water Equations."""
+"""Handles the plots for 2D inviscid Shallow Water Equations."""
 
-import sys
-import json
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-
-sys.path.append("utils")
-from metrics import error_podnn
-from plotting import figsize, saveresultdir, savefig
-from handling import pack_layers
+from podnn.metrics import error_podnn
+from podnn.plotting import figsize, saveresultdir
 
 
 def plot_plot(fig, pos, x, y, z, z_min, z_max, title):
@@ -49,9 +44,9 @@ def get_min_max(z1, z2):
 
 
 def plot_results(x_mesh, U_val, U_pred,
-                 HP=None, save_path=None):
+                 HP=None):
     """Handles the plots of 3d_shallowwater."""
-   
+ 
     # Keeping only the first nodes
     lim = -1
     x = x_mesh[:lim, 1]
@@ -76,7 +71,4 @@ def plot_results(x_mesh, U_val, U_pred,
                   z_min, z_max, f"Mean ${qty}(x,y)$ [val]")
 
     plt.tight_layout()
-    if save_path is not None:
-        saveresultdir(save_path, save_HP=HP)
-    else:
-        plt.show()
+    saveresultdir(HP)
