@@ -48,9 +48,9 @@ def plot_results(x_mesh, U_val, U_pred,
     """Handles the plots of 3d_shallowwater."""
  
     # Keeping only the first nodes
-    lim = -1
-    x = x_mesh[:lim, 1]
-    y = x_mesh[:lim, 2]
+    lim = 10000
+    x = x_mesh[:lim, 0]
+    y = x_mesh[:lim, 1]
 
     # Computing means
     U_val_mean = np.mean(U_val[:lim, :, :], axis=-1)
@@ -62,7 +62,7 @@ def plot_results(x_mesh, U_val, U_pred,
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.5))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
-    quantities = ["h", "\eta", "(hu)", "(hv)"]
+    quantities = ["h", "(hu)", "(hv)"]
     for i, qty in enumerate(quantities):
         z_min, z_max = get_min_max(U_pred_mean[:, i], U_val_mean[:, i])
         plot_plot(fig, gs[0, i], x, y, U_pred_mean[:, i],

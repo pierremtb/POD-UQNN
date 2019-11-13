@@ -51,7 +51,7 @@ def read_space_sol_input_mesh(n_s, idx_x, idx_u, x_u_mesh_path, mu_mesh_path):
     print(x_u_mesh.shape)
     print(f"Loaded in {time.time() - st} sec.")
 
-    x_mesh_full = x_u_mesh[:, idx_x]
+    x_mesh_full = x_u_mesh[:, idx_x.insert(0, 0)]
     n_xyz = int(x_mesh_full.shape[0] / n_s)
     x_mesh = x_mesh_full[:n_xyz, :]
     u_mesh = x_u_mesh[:, idx_u]        
