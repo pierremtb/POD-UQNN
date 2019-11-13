@@ -57,11 +57,11 @@ class TestGenerator(object):
         u = nb.njit(self.u)
 
         pbar = tqdm(total=n_s)
-        def bumPBar():
+        def bumpBar():
             pbar.update(1)
 
         @jit(nopython=True, parallel=True)
-        def accelerated_loop_time(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs):
+        def loop_t(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs):
             for i in prange(n_s):
                 # Computing one snapshot
                 U = np.zeros_like(U_tot)
@@ -71,14 +71,11 @@ class TestGenerator(object):
                 U_tot += U
                 U_tot_sq += U**2
                 with objmode():
-                    bumPBar()
-
-            with objmode():
-                pbar.close()
+                    bumpBar()
             return U_tot, U_tot_sq
         
         @jit(nopython=True, parallel=True)
-        def accelerated_loop(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs):
+        def loop(n_s, U_tot, U_tot_sq, X, mu_lhs):
             for i in prange(n_s):
                 # Computing one snapshot
                 U = u(X, 0, mu_lhs[i, :])
@@ -86,16 +83,18 @@ class TestGenerator(object):
                 U_tot += U
                 U_tot_sq += U**2
                 with objmode():
-                    bumPBar()
-
-            with objmode():
-                pbar.close()
+                    bumpBar()
             return U_tot, U_tot_sq
         
         if self.has_t:
-            return accelerated_loop_time(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs)
+            U_tot, U_tot_sq = loop_t(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs)
+        else: 
+            U_tot, U_tot_sq = loop(n_s, U_tot, U_tot_sq, X, mu_lhs)
+
+        with objmode():
+            pbar.close()
         
-        return accelerated_loop(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs)
+        return U_tot, U_tot_sq
 
     def compute(self, n_s, U_tot, U_tot_sq, X, t, mu_lhs):
         for i in tqdm(range(n_s)):
@@ -110,8 +109,7 @@ class TestGenerator(object):
             # Building the sum and the sum of squaes
             U_tot += U
             U_tot_sq += U**2
-            with objmode():
-                pbar.update(i)
+
         return U_tot, U_tot_sq
 
     def generate(self, n_s, mu_min, mu_max, x_min, x_max,
