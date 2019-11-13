@@ -57,7 +57,8 @@ def generate_test_dataset():
     tg = AckleyTestGenerator(u, HP["n_v"], HP["n_x"], HP["n_y"])
     tg.generate(n_s, HP["mu_min"], HP["mu_max"],
                 HP["x_min"], HP["x_max"],
-                HP["y_min"], HP["y_max"])
+                HP["y_min"], HP["y_max"],
+                parallel=True)
     return tg
 
 
