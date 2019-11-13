@@ -86,7 +86,10 @@ class TestGenerator(object):
                 U_tot += U
                 U_tot_sq += U**2
                 with objmode():
-                    pbar.update(i)
+                    bumPBar()
+
+            with objmode():
+                pbar.close()
             return U_tot, U_tot_sq
         
         if self.has_t:
@@ -107,6 +110,8 @@ class TestGenerator(object):
             # Building the sum and the sum of squaes
             U_tot += U
             U_tot_sq += U**2
+            with objmode():
+                pbar.update(i)
         return U_tot, U_tot_sq
 
     def generate(self, n_s, mu_min, mu_max, x_min, x_max,
@@ -125,6 +130,7 @@ class TestGenerator(object):
         n_xyz = x_mesh.shape[0]
 
         # Generating time steps
+        t = None
         if self.has_t:
             t = np.linspace(t_min, t_max, self.n_t)
 
