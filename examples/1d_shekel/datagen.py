@@ -4,7 +4,6 @@ import sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from deap.benchmarks import shekel
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.plotting import figsize, openPdfGraph
@@ -18,10 +17,18 @@ n_s = int(1e6)
 
 
 def u(X, _, mu):
-    """The 1D-Shekel function, from deap.benchmarks."""
+    """The 1D-Shekel function."""
     x = X[0]
-    bet, gam = mu[:10], mu[10:]
-    return -shekel(x[None, :], gam.reshape((10, 1)), bet.reshape((10, 1)))[0]
+    bet = mu[:10]
+    gam = mu[10:]
+
+    # Rewritten from deap.benchmarks
+    u_sum = np.zeros_like(x)
+    for i in range(len(bet)):
+        i_sum = (x - bet[i])**2
+        u_sum += gam[i] + i_sum
+
+    return u_sum
 
 
 class ShekelTestGenerator(TestGenerator):
@@ -53,7 +60,8 @@ class ShekelTestGenerator(TestGenerator):
 
 def generate_test_dataset():
     tg = ShekelTestGenerator(u, HP["n_v"], HP["n_x"])
-    tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"])
+    tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"],
+                parallel=True)
     return tg
 
 

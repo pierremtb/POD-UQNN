@@ -20,7 +20,7 @@ U_STD_FILE = "u_std.npy"
 HP_FILE = "HP.json"
 
 
-class TestGenerator(object):
+class TestGenerator:
     def __init__(self, u, n_v, n_x, n_y=0, n_z=0, n_t=0):
         self.u = u
         self.n_v = n_v
@@ -52,7 +52,7 @@ class TestGenerator(object):
             tup += (self.n_t,)
         return (self.n_v,) + tup
 
-    def computeFast(self, n_s, U_tot, U_tot_sq, X, t, mu_lhs):
+    def computeParallel(self, n_s, U_tot, U_tot_sq, X, t, mu_lhs):
         n_t = self.n_t
         u = nb.njit(self.u)
 
@@ -66,7 +66,8 @@ class TestGenerator(object):
                 # Computing one snapshot
                 U = np.zeros_like(U_tot)
                 for j in prange(n_t):
-                    U[:, j] = u(X, t[j], mu_lhs[i, :])
+                    u_j = u(X, t[j], mu_lhs[i, :])
+                    U[:, j] = u_j
                 # Building the sum and the sum of squaes
                 U_tot += U
                 U_tot_sq += U**2
@@ -114,7 +115,7 @@ class TestGenerator(object):
 
     def generate(self, n_s, mu_min, mu_max, x_min, x_max,
                 y_min=0, y_max=0, z_min=0, z_max=0,
-                t_min=0, t_max=0):
+                t_min=0, t_max=0, parallel=False):
         """Generate a hifi-test solution of the problem's equation."""
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
 
@@ -158,10 +159,10 @@ class TestGenerator(object):
         mu_lhs = lb + (ub - lb)*X_mu
 
         # Going through the snapshots one by one without saving them
-        st = time.time()
-        U_tot, U_tot_sq = self.computeFast(n_s, U_tot, U_tot_sq, X, t, mu_lhs)
-        print(time.time() - st)
-        U_tot, U_tot_sq = self.compute(n_s, U_tot, U_tot_sq, X, t, mu_lhs)
+        if parallel:
+            U_tot, U_tot_sq = self.computeParallel(n_s, U_tot, U_tot_sq, X, t, mu_lhs)
+        else:
+            U_tot, U_tot_sq = self.compute(n_s, U_tot, U_tot_sq, X, t, mu_lhs)
         
         # Recreating the mean and the std
         U_test_mean = U_tot / n_s
