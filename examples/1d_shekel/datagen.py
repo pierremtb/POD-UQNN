@@ -22,11 +22,10 @@ def u(X, _, mu):
     bet = mu[:10]
     gam = mu[10:]
 
-    # Rewritten from deap.benchmarks
     u_sum = np.zeros_like(x)
     for i in range(len(bet)):
-        i_sum = (x - bet[i])**2
-        u_sum += gam[i] + i_sum
+        i_sum = (x - gam[i])**2
+        u_sum += 1 / (bet[i] + i_sum)
 
     return u_sum
 
