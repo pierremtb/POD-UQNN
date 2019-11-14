@@ -119,10 +119,13 @@ class PodnnModel:
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
-        # if eps_init is not None:
-        #     self.V = get_pod_bases(U_struct, eps, eps_init_step=eps_init)
-        # else:
-        self.V = get_pod_bases(U, eps)
+        if eps_init is not None and self.has_t:
+            # Never tested
+            n_s = int(n_st / self.n_t)
+            self.V = get_pod_bases(U.reshape((n_h, self.n_t, n_s)),
+                                   eps, eps_init_step=eps_init)
+        else:
+            self.V = get_pod_bases(U, eps)
 
         # Projecting
         v = (self.V.T.dot(U)).T
