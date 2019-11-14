@@ -1,0 +1,6 @@
+[MASTER]
+indent-string='    '
+
+disable=
+ wrong-import-position,
+ invalid-name 
