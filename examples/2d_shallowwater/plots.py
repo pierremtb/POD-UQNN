@@ -56,6 +56,17 @@ def plot_results(x_mesh, U_val, U_pred,
     U_val_mean = np.mean(U_val[:, :lim, :], axis=-1)
     U_pred_mean = np.mean(U_pred[:, :lim, :], axis=-1)
 
+    from pyevtk.hl import pointsToVTK
+    z = np.zeros_like(x)
+    pointsToVTK("./rnd_points", np.ascontiguousarray(x),
+                np.ascontiguousarray(y), np.ascontiguousarray(z),
+                data = {
+                    "h" : U_val_mean[0],
+                    "hu" : U_val_mean[1],
+                    "hv" : U_val_mean[2],
+                    })
+    exit(0)
+
     print("Plotting")
     n_plot_x = 2
     n_plot_y = 4
