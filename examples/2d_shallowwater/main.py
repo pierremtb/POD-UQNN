@@ -9,6 +9,7 @@ sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import error_podnn
 from podnn.mesh import read_space_sol_input_mesh
+
 from plots import plot_results
 
 
@@ -59,6 +60,7 @@ def main(hp, use_cached_dataset=False,
     U_pred = model.predict(X_v_val)
     U_pred = model.restruct(U_pred)
     U_val = model.restruct(U_val)
+
 
     # Time for one pred
     # import time
