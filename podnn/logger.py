@@ -48,12 +48,11 @@ class Logger(object):
     def log_train_epoch(self, epoch, loss, custom="", is_iter=False):
         # self.pbar.update(1)
         if epoch % self.frequency == 0:
-            name = 'nt_epoch' if is_iter else 'tf_epoch'
-            message = f"{name} = {epoch:6d}  " + \
-                  f"elapsed = {self.get_elapsed()} " + \
-                  f"(+{self.get_epoch_duration()})  " + \
-                  f"loss = {loss:.4e}  " + \
-                  f"err_val = {100 * self.get_error_u():.4f}%  " + custom
+            name = 'nt_epoch' if is_iter else '#'
+            message = f"{name}: {epoch:6d}  " + \
+                  f"ET: {self.get_elapsed()} " + \
+                  f"L: {loss:.4e}  " + \
+                  f"E_v: {100 * self.get_error_u():.4f}%  " + custom
             # self.pbar.set_description(f"l:{loss:.2e} e:{self.get_error_u():.2e}")
             print(message)
 

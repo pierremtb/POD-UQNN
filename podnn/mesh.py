@@ -39,26 +39,25 @@ def create_linear_mesh(x_min, x_max, n_x,
     return np.hstack((idx, x))
 
 
-def read_space_sol_input_mesh(n_s, idx_x, idx_u, x_u_mesh_path, mu_mesh_path):
+def read_space_sol_input_mesh(n_s, idx, x_u_mesh_path, mu_mesh_path):
     st = time.time()
     print("Loading " + mu_mesh_path + "…")
     X_v = np.loadtxt(mu_mesh_path)[:, 0:1]
-    print(X_v.shape)
+
     print("Loading " + x_u_mesh_path + "…")
     x_u_mesh = pd.read_table(x_u_mesh_path,
                              header=None,
                              delim_whitespace=True).to_numpy()
-    print(x_u_mesh.shape)
     print(f"Loaded in {time.time() - st} sec.")
 
-    x_mesh_full = x_u_mesh[:, idx_x.insert(0, 0)]
+    x_mesh_full = x_u_mesh[:, idx[0] + idx[1]]
     n_xyz = int(x_mesh_full.shape[0] / n_s)
     x_mesh = x_mesh_full[:n_xyz, :]
-    u_mesh = x_u_mesh[:, idx_u]        
-    
+    u_mesh = x_u_mesh[:, idx[2]]
+
     return x_mesh, u_mesh, X_v
 
-    
+   
 if __name__ == "__main__":
     print(create_linear_mesh(0, 1, 10))
     print(create_linear_mesh(0, 1, 10, 1, 2, 5))

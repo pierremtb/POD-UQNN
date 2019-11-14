@@ -2,8 +2,8 @@
 
 import sys
 import json
-import numpy as np
 import os
+import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
@@ -13,7 +13,7 @@ from plots import plot_results
 
 
 def main(hp, use_cached_dataset=False,
-         use_trained_network=False, no_plot=False):
+         use_trained_network=False):
     """Full example to run POD-NN on 2d_shallowwater."""
 
     if not use_cached_dataset:
@@ -21,11 +21,13 @@ def main(hp, use_cached_dataset=False,
         mu_path = os.path.join("data", "INPUT_100_Scenarios.txt")
         x_u_mesh_path = os.path.join("data", "SOL_FV_100_Scenarios.txt")
         # Each line is: [i, x_i, y_i, z_i(unused), h_i, eta_i, (hu)_i, (hv)_i]
+        idx_i = [0]
         idx_x = [1, 2]
-        idx_u = [4, 6, 7] 
+        idx_u = [4, 6, 7]
+        idx = (idx_i, idx_x, idx_u)
         hp["n_v"] = len(idx_u)
         x_mesh, u_mesh, X_v = \
-            read_space_sol_input_mesh(hp["n_s"], idx_x, idx_u, x_u_mesh_path, mu_path)
+            read_space_sol_input_mesh(hp["n_s"], idx, x_u_mesh_path, mu_path)
         np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
     else:
         x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
@@ -39,8 +41,8 @@ def main(hp, use_cached_dataset=False,
     X_v_train, v_train, \
         X_v_val, v_val, \
         U_val = model.convert_dataset(u_mesh, X_v,
-                                    hp["train_val_ratio"], hp["eps"],
-                                    use_cache=use_cached_dataset, save_cache=True)
+                                     hp["train_val_ratio"], hp["eps"],
+                                     use_cache=use_cached_dataset, save_cache=True)
 
     # Create the model and train
     if not use_trained_network:
@@ -78,4 +80,5 @@ if __name__ == "__main__":
         from hyperparams import HP
 
     # main(HP, use_cached_dataset=False, use_trained_network=False)
+    # main(HP, use_cached_dataset=True, use_trained_network=False)
     main(HP, use_cached_dataset=True, use_trained_network=True)

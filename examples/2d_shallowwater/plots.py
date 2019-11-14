@@ -10,7 +10,6 @@ from podnn.plotting import figsize, saveresultdir
 
 def plot_plot(fig, pos, x, y, z, z_min, z_max, title):
     """Does a colorplot from unstructured, 1d (x, y, z) data."""
-
     ax = fig.add_subplot(pos)
     h = plt.tripcolor(x, y ,z)
     h.set_clim(z_min, z_max)
@@ -46,15 +45,16 @@ def get_min_max(z1, z2):
 def plot_results(x_mesh, U_val, U_pred,
                  HP=None):
     """Handles the plots of 3d_shallowwater."""
- 
+
     # Keeping only the first nodes
     lim = 10000
-    x = x_mesh[:lim, 0]
-    y = x_mesh[:lim, 1]
+    lim = -1
+    x = x_mesh[:lim, 1]
+    y = x_mesh[:lim, 2]
 
     # Computing means
-    U_val_mean = np.mean(U_val[:lim, :, :], axis=-1)
-    U_pred_mean = np.mean(U_pred[:lim, :, :], axis=-1)
+    U_val_mean = np.mean(U_val[:, :lim, :], axis=-1)
+    U_pred_mean = np.mean(U_pred[:, :lim, :], axis=-1)
 
     print("Plotting")
     n_plot_x = 2
@@ -64,10 +64,10 @@ def plot_results(x_mesh, U_val, U_pred,
 
     quantities = ["h", "(hu)", "(hv)"]
     for i, qty in enumerate(quantities):
-        z_min, z_max = get_min_max(U_pred_mean[:, i], U_val_mean[:, i])
-        plot_plot(fig, gs[0, i], x, y, U_pred_mean[:, i],
+        z_min, z_max = get_min_max(U_pred_mean[i], U_val_mean[i])
+        plot_plot(fig, gs[0, i], x, y, U_pred_mean[i],
                   z_min, z_max, f"Mean ${qty}(x,y)$ [pred]")
-        plot_plot(fig, gs[1, i], x, y, U_val_mean[:, i],
+        plot_plot(fig, gs[1, i], x, y, U_val_mean[i],
                   z_min, z_max, f"Mean ${qty}(x,y)$ [val]")
 
     plt.tight_layout()
