@@ -61,7 +61,6 @@ def main(hp, use_cached_dataset=False,
     U_pred = model.restruct(U_pred)
     U_val = model.restruct(U_val)
 
-
     # Time for one pred
     # import time
     # st = time.time()
@@ -70,7 +69,7 @@ def main(hp, use_cached_dataset=False,
     # exit(0)
 
     # Plot and save the results
-    return plot_results(x_mesh, U_val, U_pred, hp)
+    return plot_results(x_mesh, U_val, U_pred, hp, export_txt=True)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg

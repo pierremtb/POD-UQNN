@@ -1,8 +1,10 @@
 """Handles the plots for 2D inviscid Shallow Water Equations."""
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from pyevtk.hl import pointsToVTK
 
 from podnn.metrics import error_podnn
 from podnn.plotting import figsize, saveresultdir
@@ -43,12 +45,12 @@ def get_min_max(z1, z2):
 
 
 def plot_results(x_mesh, U_val, U_pred,
-                 HP=None):
+                 HP=None, export_vtk=False, export_txt=False):
     """Handles the plots of 3d_shallowwater."""
 
     # Keeping only the first nodes
-    lim = 10000
-    lim = -1
+    # lim = 10000
+    lim = None
     x = x_mesh[:lim, 1]
     y = x_mesh[:lim, 2]
 
@@ -56,16 +58,26 @@ def plot_results(x_mesh, U_val, U_pred,
     U_val_mean = np.mean(U_val[:, :lim, :], axis=-1)
     U_pred_mean = np.mean(U_pred[:, :lim, :], axis=-1)
 
-    from pyevtk.hl import pointsToVTK
-    z = np.zeros_like(x)
-    pointsToVTK("./rnd_points", np.ascontiguousarray(x),
-                np.ascontiguousarray(y), np.ascontiguousarray(z),
-                data = {
-                    "h" : U_val_mean[0],
-                    "hu" : U_val_mean[1],
-                    "hv" : U_val_mean[2],
-                    })
-    exit(0)
+    if export_txt:
+        print(U_val_mean.T.shape)
+        print(x_mesh.shape)
+        x_u_mean = np.concatenate((x_mesh, U_val_mean.T), axis=1)
+        non_idx_len = x_u_mean.shape[1] - 1
+        np.savetxt(os.path.join("cache", "x_u_mean.txt"), x_u_mean,
+                   fmt=' '.join(["%i"] + ["%1.4f"]*non_idx_len),
+                   delimiter="\t")
+        return
+
+    if export_vtk:
+        z = np.zeros_like(x)
+        pointsToVTK(os.path.join("cache", "rnd_points"), np.ascontiguousarray(x),
+                    np.ascontiguousarray(y), np.ascontiguousarray(z),
+                    data={
+                        "h" : U_val_mean[0],
+                        "hu" : U_val_mean[1],
+                        "hv" : U_val_mean[2],
+                        })
+        return
 
     print("Plotting")
     n_plot_x = 2
