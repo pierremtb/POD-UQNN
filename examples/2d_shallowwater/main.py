@@ -7,7 +7,7 @@ import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import error_podnn
+from podnn.metrics import error_podnn, mse
 from podnn.mesh import read_space_sol_input_mesh
 
 from plots import plot_results
