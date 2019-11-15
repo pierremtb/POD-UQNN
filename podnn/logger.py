@@ -53,7 +53,6 @@ class Logger(object):
                   f"ET: {self.get_elapsed()} " + \
                   f"L: {loss:.4e} " + \
                   f"E_V: {self.get_error_u():.4e} " + custom
-                  f"E_V: {100 * self.get_error_u():.4f}%  " + custom
                 #   f"E_V: {100 * self.get_error_u():.4f}%  " + custom
             # self.pbar.set_description(f"l:{loss:.2e} e:{self.get_error_u():.2e}")
             print(message)
