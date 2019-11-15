@@ -64,7 +64,7 @@ def plot_results(x_mesh, U_val, U_pred,
         x_u_mean = np.concatenate((x_mesh, U_val_mean.T), axis=1)
         non_idx_len = x_u_mean.shape[1] - 1
         np.savetxt(os.path.join("cache", "x_u_mean.txt"), x_u_mean,
-                   fmt=' '.join(["%i"] + ["%1.4f"]*non_idx_len),
+                   fmt=' '.join(["%i"] + ["%1.6f"]*non_idx_len),
                    delimiter="\t")
         return
 
