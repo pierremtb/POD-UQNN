@@ -5,6 +5,10 @@ from tqdm import tqdm
 import math
 
 
+def mse(v, v_pred):
+    return tf.reduce_mean(tf.square(v - v_pred))
+
+
 def error_pod(U, V):
     n_s = U.shape[1]
     err_pod = 0.0

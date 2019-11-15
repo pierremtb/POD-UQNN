@@ -48,10 +48,10 @@ def main(hp, use_cached_dataset=False,
     # Create the model and train
     if not use_trained_network:
         def error_val():
-            return 0.0
             """Defines the error metric for in-training validation."""
-            U_val_pred = model.predict(X_v_val)
-            return error_podnn(U_val, U_val_pred)
+            v_val_pred = model.predict_v(X_v_val)
+            return mse(v_val, v_val_pred)
+            # return error_podnn(v_val, v_val_pred)
         model.train(X_v_train, v_train, error_val, hp["h_layers"],
                     hp["epochs"], hp["lr"], hp["lambda"])
     else:
@@ -81,6 +81,6 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    main(HP, use_cached_dataset=False, use_trained_network=False)
-    # main(HP, use_cached_dataset=True, use_trained_network=False)
+    # main(HP, use_cached_dataset=False, use_trained_network=False)
+    main(HP, use_cached_dataset=True, use_trained_network=False)
     # main(HP, use_cached_dataset=True, use_trained_network=True)

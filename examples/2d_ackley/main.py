@@ -66,5 +66,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    main(HP, gen_test=False, use_cached_dataset=True,
-         use_trained_network=True)
+    main(HP, gen_test=False, use_cached_dataset=False,
+         use_trained_network=False)

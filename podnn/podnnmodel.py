@@ -242,8 +242,15 @@ class PodnnModel:
             tup += (self.n_t,)
         return (self.n_v,) + tup
 
-    def predict(self, X_v_val):
-        v_pred = self.regnn.predict(X_v_val)
+    def predict_v(self, X_v):
+        """Returns the predicted POD projection coefficients."""
+        v_pred = self.regnn.predict(X_v)
+        return v_pred
+
+    def predict(self, X_v):
+        """Returns the predicted solutions, via proj coefficients."""
+        # Predicting the projection coefficients
+        v_pred = self.predict_v(X_v) 
 
         # Retrieving the function with the predicted coefficients
         U_pred = self.V.dot(v_pred.T)

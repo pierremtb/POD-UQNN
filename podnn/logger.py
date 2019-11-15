@@ -49,10 +49,12 @@ class Logger(object):
         # self.pbar.update(1)
         if epoch % self.frequency == 0:
             name = 'nt_epoch' if is_iter else '#'
-            message = f"{name}: {epoch:6d}  " + \
+            message = f"{name}: {epoch:6d} " + \
                   f"ET: {self.get_elapsed()} " + \
-                  f"L: {loss:.4e}  " + \
-                  f"E_v: {100 * self.get_error_u():.4f}%  " + custom
+                  f"L: {loss:.4e} " + \
+                  f"E_V: {self.get_error_u():.4e} " + custom
+                  f"E_V: {100 * self.get_error_u():.4f}%  " + custom
+                #   f"E_V: {100 * self.get_error_u():.4f}%  " + custom
             # self.pbar.set_description(f"l:{loss:.2e} e:{self.get_error_u():.2e}")
             print(message)
 
