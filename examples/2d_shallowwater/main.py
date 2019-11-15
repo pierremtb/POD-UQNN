@@ -48,6 +48,7 @@ def main(hp, use_cached_dataset=False,
     # Create the model and train
     if not use_trained_network:
         def error_val():
+            return 0.0
             """Defines the error metric for in-training validation."""
             U_val_pred = model.predict(X_v_val)
             return error_podnn(U_val, U_val_pred)
