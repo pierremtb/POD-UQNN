@@ -68,3 +68,5 @@ if __name__ == "__main__":
 
     main(HP, gen_test=False, use_cached_dataset=False,
          use_trained_network=False)
+    # main(HP, gen_test=False, use_cached_dataset=True,
+    #      use_trained_network=True)

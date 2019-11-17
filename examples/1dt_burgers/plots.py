@@ -51,7 +51,6 @@ def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
     ax.plot(x, U_pred[:, t_i], "b-", label="$\hat{u_V}$")
     ax.plot(x, U_val[:, t_i], "r--", label="$u_V$")
     ax.plot(x, U_test[:, t_i], "k,", label="$u_T$")
-    ax.set_title(title)
     ax.set_xlabel("$x$")
     ax.set_title(title)
     if show_legend:

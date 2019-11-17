@@ -20,7 +20,6 @@ HP["n_t"] = 0
 HP["n_s"] = 1000
 # POD stopping param
 HP["eps"] = 1e-10
-HP["eps_init"] = 1e-10
 # Train/val split
 HP["train_val_ratio"] = 0.5
 # Deep NN hidden layers topology
