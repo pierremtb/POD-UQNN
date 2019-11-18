@@ -199,7 +199,7 @@ class PodnnModel:
         return X_v_train, v_train, X_v_val, v_val, U_val
 
     def train(self, X_v, v, error_val, layers, epochs, lr, reg_lam,
-              frequency=1000):
+              frequency=100):
         # Sizes
         n_L = self.V.shape[1]
         n_d = X_v.shape[1]
@@ -209,15 +209,52 @@ class PodnnModel:
         # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
         layers = pack_layers(n_d, layers, n_L)
         logger = Logger(epochs, frequency)
-        self.regnn = NeuralNetwork(layers, reg_lam)
+
+        # self.regnn = NeuralNetwork(layers, reg_lam).model
+        # self.regnn = tf.keras.Sequential([
+        #     tf.keras.layers.Dense(32, activation='relu', input_shape=[n_d]),
+        #     # tf.keras.layers.Dense(64, activation='relu'),
+        #     tf.keras.layers.Dense(n_L)
+        # ])
+
+        self.regnn = tf.keras.Sequential()
+        self.regnn.add(tf.keras.layers.InputLayer(input_shape=(layers[0],)))
+        for width in layers[1:-1]:
+            self.regnn.add(tf.keras.layers.Dense(
+                width, activation=tf.nn.tanh,
+                kernel_initializer="glorot_normal",
+                kernel_regularizer=tf.keras.regularizers.l2(reg_lam)))
+        self.regnn.add(tf.keras.layers.Dense(
+                layers[-1], activation=None,
+                kernel_initializer="glorot_normal",
+                kernel_regularizer=tf.keras.regularizers.l2(reg_lam)))
+
+        # optimizer = tf.keras.optimizers.RMSprop(0.0001)
+        optimizer = tf.keras.optimizers.Adam(lr=1e-1, decay=1e-2)
+
+        self.regnn.compile(loss='mse',
+                           optimizer=optimizer,
+                           metrics=['mse'])
+
+        self.regnn.summary()
 
         # Setting the error function
         logger.set_error_fn(error_val)
 
+        class LoggerCallback(tf.keras.callbacks.Callback):
+            def on_epoch_end(self, epoch, logs):
+                logger.log_train_epoch(epoch, logs['loss'])
+        EPOCHS = 100000
+
+        history = self.regnn.fit(
+            X_v, v,
+            epochs=EPOCHS, validation_split=0., verbose=0,
+            callbacks=[LoggerCallback()])
+
         # Training
-        ub = np.amax(X_v, axis=0)
-        lb = np.amin(X_v, axis=0)
-        self.regnn.fit(X_v, v, lr, epochs, logger, lb=None, ub=None)
+        # ub = np.amax(X_v, axis=0)
+        # lb = np.amin(X_v, axis=0)
+        # self.regnn.fit(X_v, v, lr, epochs, logger, lb=None, ub=None)
 
         # Saving
         self.save_trained_cache()
@@ -235,13 +272,12 @@ class PodnnModel:
                 U_struct[:, :, :, i] = U[:, s:e].reshape(self.get_u_tuple())
             return U_struct
 
-         # (n_h, n_s) -> (n_v, n_xyz, n_s)
+        # (n_h, n_s) -> (n_v, n_xyz, n_s)
         n_s = U.shape[-1]
         U_struct = np.zeros((self.get_u_tuple() + (n_s,)))
         for i in range(n_s):
             U_struct[:, :, i] = U[:, i].reshape(self.get_u_tuple())
         return U_struct
-        # return U.reshape(self.get_u_tuple() + (n_s,))
 
     def get_u_tuple(self):
         tup = (self.n_xyz,)
@@ -279,9 +315,23 @@ class PodnnModel:
                          X_v_val, v_val, U_val), f)
 
     def load_trained_cache(self):
-        self.regnn = NeuralNetwork.load_from(self.model_cache_path,
-                                             self.model_cache_params_path)
+        """Load a (trained) model and params."""
+
+        if not os.path.exists(self.model_cache_path):
+            raise FileNotFoundError("Can't find cached model.")
+        # if not os.path.exists(self.model_cache_params_path):
+        #     raise FileNotFoundError("Can't find cached model params.")
+
+        print(f"Loading model from {self.model_cache_path}...")
+        # print(f"Loading model params from {self.model_cache_params_path}...")
+        # with open(self.model_cache_params_path, "rb") as f:
+            # layers, reg_lam = pickle.load(f)
+        self.regnn = tf.keras.models.load_model(self.model_cache_path)
+        return cls(layers, reg_lam, model)
+        # self.regnn = NeuralNetwork.load_from(self.model_cache_path,
+        #                                      self.model_cache_params_path)
 
     def save_trained_cache(self):
-        self.regnn.save_to(self.model_cache_path, self.model_cache_params_path)
+        tf.keras.models.save_model(self.regnn, self.model_cache_path)
+        # self.regnn.save_to(self.model_cache_path, self.model_cache_params_path)
 

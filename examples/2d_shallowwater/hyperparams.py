@@ -15,7 +15,7 @@ HP["n_s"] = 100
 # POD stopping param
 HP["eps"] = 1e-10
 # Train/val split
-HP["train_val_ratio"] = 0.7
+HP["train_val_ratio"] = 0.99
 # Deep NN hidden layers topology
 HP["h_layers"] = [128, 128, 128]
 # Batch size for mini-batch training (0 means full-batch)
