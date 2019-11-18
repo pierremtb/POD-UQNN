@@ -49,14 +49,19 @@ def plot_results(x_mesh, U_val, U_pred,
     """Handles the plots of 3d_shallowwater."""
 
     # Keeping only the first nodes
-    # lim = 10000
-    lim = None
+    lim = 20000
+    # lim = None
     x = x_mesh[:lim, 1]
     y = x_mesh[:lim, 2]
+
+    # plt.scatter(x, y)
+    # plt.show()
 
     # Computing means
     U_val_mean = np.mean(U_val[:, :lim, :], axis=-1)
     U_pred_mean = np.mean(U_pred[:, :lim, :], axis=-1)
+
+    # plt.plot(x, U_val_mean[])
 
     if export_txt:
         print(U_val_mean.T.shape)
@@ -74,8 +79,8 @@ def plot_results(x_mesh, U_val, U_pred,
                     np.ascontiguousarray(y), np.ascontiguousarray(z),
                     data={
                         "h" : U_val_mean[0],
-                        "hu" : U_val_mean[1],
-                        "hv" : U_val_mean[2],
+                        # "hu" : U_val_mean[1],
+                        # "hv" : U_val_mean[2],
                         })
         return
 
@@ -85,7 +90,10 @@ def plot_results(x_mesh, U_val, U_pred,
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.5))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
-    quantities = ["h", "(hu)", "(hv)"]
+    quantities = np.array(["h", "\eta", "(hu)", "(hv)"])
+    idx_u = [i - 4 for i in HP["mesh_x_idx"][2]]
+    print(idx_u)
+    quantities = quantities[idx_u]
     for i, qty in enumerate(quantities):
         z_min, z_max = get_min_max(U_pred_mean[i], U_val_mean[i])
         plot_plot(fig, gs[0, i], x, y, U_pred_mean[i],

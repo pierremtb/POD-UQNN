@@ -105,23 +105,23 @@ class PodnnModel:
         if use_cache and os.path.exists(self.data_cache_path):
             return self.get_data_cache()
 
-        n_xyz = self.x_mesh.shape[0] 
+        n_xyz = self.x_mesh.shape[0]
         n_h = n_xyz * self.n_v
-        n_st = X_v.shape[0]
+        n_s = X_v.shape[0]
 
         # U = u_mesh.reshape(n_h, n_st)
         # Reshaping manually
-        U = np.zeros((n_h, n_st))
-        for s in range(n_st):
-            st = self.n_xyz * s
-            en = self.n_xyz * (s + 1)
-            U[:, s] = u_mesh[st:en, :].reshape((n_h,))
+        U = np.zeros((n_h, n_s))
+        for i in range(n_s):
+            st = self.n_xyz * i
+            en = self.n_xyz * (i + 1)
+            U[:, i] = u_mesh[st:en, :].T.reshape((n_h,))
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
         if eps_init is not None and self.has_t:
             # Never tested
-            n_s = int(n_st / self.n_t)
+            n_s = int(n_s / self.n_t)
             self.V = get_pod_bases(U.reshape((n_h, self.n_t, n_s)),
                                    eps, eps_init_step=eps_init)
         else:
@@ -132,14 +132,14 @@ class PodnnModel:
 
         # Splitting the dataset (X_v, v)
         X_v_train, v_train, X_v_val, v_val = self.split_dataset(
-            X_v, v, train_val_ratio, n_st)
+            X_v, v, train_val_ratio, n_s)
 
         # Creating the validation snapshots matrix
         U_val = self.V.dot(v_val.T)
 
         if save_cache:
             self.set_data_cache(X_v_train, v_train, X_v_val, v_val, U_val)
-        
+
         return X_v_train, v_train, X_v_val, v_val, U_val
 
     def generate_dataset(self, mu_min, mu_max, n_s,
@@ -148,7 +148,7 @@ class PodnnModel:
                          use_cache=False, save_cache=False):
         if use_cache:
             return self.get_data_cache()
-        
+
         if self.has_t:
             t_min, t_max = np.array(t_min), np.array(t_max)
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
@@ -217,7 +217,7 @@ class PodnnModel:
         # Training
         ub = np.amax(X_v, axis=0)
         lb = np.amin(X_v, axis=0)
-        self.regnn.fit(X_v, v, lr, epochs, logger, lb, ub)
+        self.regnn.fit(X_v, v, lr, epochs, logger, lb=None, ub=None)
 
         # Saving
         self.save_trained_cache()
@@ -226,6 +226,7 @@ class PodnnModel:
 
     def restruct(self, U):
         if self.has_t:
+            # (n_h, n_st) -> (n_v, n_xyz, n_t, n_s)
             n_s = int(U.shape[-1] / self.n_t)
             U_struct = np.zeros((self.n_v, U.shape[0], self.n_t, n_s))
             for i in range(n_s):
@@ -233,8 +234,14 @@ class PodnnModel:
                 e = self.n_t * (i + 1)
                 U_struct[:, :, :, i] = U[:, s:e].reshape(self.get_u_tuple())
             return U_struct
+
+         # (n_h, n_s) -> (n_v, n_xyz, n_s)
         n_s = U.shape[-1]
-        return U.reshape(self.get_u_tuple() + (n_s,))
+        U_struct = np.zeros((self.get_u_tuple() + (n_s,)))
+        for i in range(n_s):
+            U_struct[:, :, i] = U[:, i].reshape(self.get_u_tuple())
+        return U_struct
+        # return U.reshape(self.get_u_tuple() + (n_s,))
 
     def get_u_tuple(self):
         tup = (self.n_xyz,)

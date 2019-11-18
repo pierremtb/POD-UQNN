@@ -11,7 +11,7 @@ class NeuralNetwork:
     def __init__(self, layers, reg_lam, model=None):
         # Setting up the optimizers with the hyper-parameters
         self.dtype = "float64"
-        self.tf_optimizer = tf.optimizers.Adam(0.001)
+        self.tf_optimizer = None
         self.logger = None
 
         # Descriptive Keras model
@@ -85,7 +85,10 @@ class NeuralNetwork:
         self.logger.log_train_start(self)
 
         # Setting up optimizer
-        self.tf_optimizer = tf.keras.optimizers.Adam(lr)
+        # self.tf_optimizer = tf.keras.optimizers.Adam(lr)
+        self.tf_optimizer = tf.keras.optimizers.SGD(lr)
+        self.model.compile(self.tf_optimizer)
+        self.model.summary()
 
         # Normalizing and preparing inputs
         self.lb = lb

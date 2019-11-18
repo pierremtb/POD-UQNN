@@ -50,14 +50,16 @@ def read_space_sol_input_mesh(n_s, idx, x_u_mesh_path, mu_mesh_path):
                              delim_whitespace=True).to_numpy()
     print(f"Loaded in {time.time() - st} sec.")
 
-    x_mesh_full = x_u_mesh[:, idx[0] + idx[1]]
-    n_xyz = int(x_mesh_full.shape[0] / n_s)
-    x_mesh = x_mesh_full[:n_xyz, :]
-    u_mesh = x_u_mesh[:, idx[2]]
+    idx_i = idx[0]
+    idx_x = idx[1]
+    idx_u = idx[2]
+    n_xyz = int(x_u_mesh.shape[0] / n_s)
+    x_mesh = x_u_mesh[:n_xyz, idx_i + idx_x]
+    u_mesh = x_u_mesh[:, idx_u]
 
     return x_mesh, u_mesh, X_v
 
-   
+
 if __name__ == "__main__":
     print(create_linear_mesh(0, 1, 10))
     print(create_linear_mesh(0, 1, 10, 1, 2, 5))
