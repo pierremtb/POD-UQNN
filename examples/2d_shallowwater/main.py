@@ -13,8 +13,7 @@ from podnn.mesh import read_space_sol_input_mesh
 from plots import plot_results
 
 
-def main(hp, use_cached_dataset=False,
-         use_trained_network=False):
+def main(hp, use_cached_dataset=False):
     """Full example to run POD-NN on 2d_shallowwater."""
 
     if not use_cached_dataset:
@@ -29,18 +28,6 @@ def main(hp, use_cached_dataset=False,
         x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
         u_mesh = None
         X_v = None
-    
-    # x_mesh_unique, c = np.unique(x_mesh[:, 1], return_counts=True)
-    # print(x_mesh_unique[c > 1])
-    # print(x_mesh_unique[c > 1].shape)
-    # exit(0)
-
-    # np.savetxt(os.path.join("cache", "test.csv"), x_mesh[:, 1:])
-    # x_mesh_tup = [tuple(row[1:]) for row in x_mesh]
-    # x_mesh_tup_dupfree = list(dict.fromkeys(x_mesh_tup))
-    # print(x_mesh_tup[0], x_mesh_tup_dupfree[0])
-    # print(len(x_mesh_tup), len(x_mesh_tup_dupfree))
-    # exit(0)
 
     # Create the POD-NN model
     model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
@@ -49,20 +36,17 @@ def main(hp, use_cached_dataset=False,
     X_v_train, v_train, \
         X_v_val, v_val, \
         U_val = model.convert_dataset(u_mesh, X_v,
-                                     hp["train_val_ratio"], hp["eps"],
-                                     use_cache=use_cached_dataset, save_cache=True)
+                                      hp["train_val_ratio"], hp["eps"],
+                                      use_cache=use_cached_dataset)
 
     # Create the model and train
-    if not use_trained_network:
-        def error_val():
-            """Defines the error metric for in-training validation."""
-            v_val_pred = model.predict_v(X_v_val)
-            # return mse(v_val, v_val_pred)
-            return error_podnn(v_val, v_val_pred)
-        model.train(X_v_train, v_train, error_val, hp["h_layers"],
-                    hp["epochs"], hp["lr"], hp["lambda"])
-    else:
-        model.load_model()
+    def error_val():
+        """Define the error metric for in-training validation."""
+        v_val_pred = model.predict_v(X_v_val)
+        # return mse(v_val, v_val_pred)
+        return error_podnn(v_val, v_val_pred)
+    model.train(X_v_train, v_train, error_val, hp["h_layers"],
+                hp["epochs"], hp["lr"], hp["lambda"], hp["decay"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)
@@ -70,7 +54,7 @@ def main(hp, use_cached_dataset=False,
     U_val = model.restruct(U_val)
 
     # Time for one pred
-    # import timeata_cache_path):
+    # import time
     # st = time.time()
     # model.predict(X_v_val[0:1])
     # print(f"{time.time() - st} sec taken for prediction")
@@ -88,6 +72,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    # main(HP, use_cached_dataset=False, use_trained_network=False)
-    # main(HP, use_cached_dataset=True, use_trained_network=False)
-    main(HP, use_cached_dataset=True, use_trained_network=True)
+    main(HP, use_cached_dataset=False)
+    # main(HP, use_cached_dataset=True)

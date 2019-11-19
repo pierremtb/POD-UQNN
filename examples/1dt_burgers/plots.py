@@ -1,11 +1,14 @@
 """Module for plotting results of 3D time-dependante Burgers Equation."""
 
 import os
+import sys
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import griddata
 
+sys.path.append(os.path.join("..", ".."))
+from podnn.podnnmodel import PodnnModel
 from podnn.plotting import figsize, saveresultdir
 from podnn.metrics import error_podnn
 from podnn.testgenerator import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
@@ -106,7 +109,21 @@ def plot_results(U_val, U_pred,
             U_pred_std, U_val_std, U_test_std, "Std dev $u(x, t=0.75)$")
 
     plt.tight_layout()
-    if save_path is not None:
-        saveresultdir(HP)
-    else:
-        plt.show()
+    saveresultdir(HP)
+
+
+if __name__ == "__main__":
+    from hyperparams import HP as hp
+
+    model = PodnnModel.load("cache")
+
+    x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
+    _, _, X_v_val, _, U_val = model.load_train_data()
+
+    # Predict and restruct
+    U_pred = model.predict(X_v_val)
+    U_pred_struct = model.restruct(U_pred)
+    U_val_struct = model.restruct(U_val)
+
+    # Plot and save the results
+    plot_results(U_val_struct, U_pred_struct, hp)

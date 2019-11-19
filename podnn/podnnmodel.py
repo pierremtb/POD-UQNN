@@ -13,9 +13,11 @@ from .handling import pack_layers
 from .logger import Logger
 from .neuralnetwork import NeuralNetwork
 
+
 SETUP_DATA_NAME = "setup_data.pkl"
 TRAIN_DATA_NAME = "train_data.pkl"
 MODEL_NAME = "model.h5"
+
 
 class PodnnModel:
     def __init__(self, save_dir, n_v, x_mesh, n_t):
@@ -38,6 +40,8 @@ class PodnnModel:
 
         self.regnn = None
         self.V = None
+
+        self.save_setup_data()
 
     def u(self, X, t, mu):
         return X[0]*t + mu
@@ -106,11 +110,9 @@ class PodnnModel:
         return X_v_train, v_train, X_v_val, v_val
 
     def convert_dataset(self, u_mesh, X_v, train_val_ratio, eps, eps_init=None,
-                        use_cache=False, save_cache=False):
+                        use_cache=False):
         if use_cache and os.path.exists(self.train_data_path):
-            data = self.load_train_data()
-            self.V = data[0]
-            return data[1:]
+            return self.load_train_data()
 
         n_xyz = self.x_mesh.shape[0]
         n_h = n_xyz * self.n_v
@@ -144,17 +146,16 @@ class PodnnModel:
         # Creating the validation snapshots matrix
         U_val = self.V.dot(v_val.T)
 
-        if save_cache:
-            self.save_train_data(X_v_train, v_train, X_v_val, v_val, U_val)
+        self.save_train_data(X_v_train, v_train, X_v_val, v_val, U_val)
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
     def generate_dataset(self, mu_min, mu_max, n_s,
                          train_val_ratio, eps, eps_init=None,
                          t_min=0, t_max=0,
-                         use_cache=False, save_cache=False):
+                         use_cache=False):
         if use_cache:
-            return self.load_train_data()[1:]
+            return self.load_train_data()
 
         if self.has_t:
             t_min, t_max = np.array(t_min), np.array(t_max)
@@ -200,13 +201,12 @@ class PodnnModel:
         # Creating the validation snapshots matrix
         U_val = self.V.dot(v_val.T)
 
-        if save_cache:
-            self.save_train_data(X_v_train, v_train, X_v_val, v_val, U_val)
+        self.save_train_data(X_v_train, v_train, X_v_val, v_val, U_val)
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
-    def train(self, X_v, v, error_val, layers, epochs, lr, reg_lam,
-              frequency=100):
+    def train(self, X_v, v, error_val, layers, epochs,
+              lr, reg_lam, decay=0., frequency=100):
         # Sizes
         n_L = self.V.shape[1]
         n_d = X_v.shape[1]
@@ -229,7 +229,8 @@ class PodnnModel:
                 kernel_initializer="glorot_normal",
                 kernel_regularizer=tf.keras.regularizers.l2(reg_lam)))
 
-        optimizer = tf.keras.optimizers.Adam(lr=1e-1, decay=1e-2)
+        # optimizer = tf.keras.optimizers.Adam(lr=1e-1, decay=1e-2)
+        optimizer = tf.keras.optimizers.Adam(lr=lr, decay=decay)
 
         self.regnn.compile(loss='mse',
                            optimizer=optimizer,
@@ -298,16 +299,14 @@ class PodnnModel:
 
         return U_pred
 
-    def save_setup_data(self, X_v_train, v_train, X_v_val, v_val, U_val):
-        with open(self.setup_data_path, "wb") as f:
-            pickle.dump((self.n_v, self.x_mesh, self.n_t), f)
-
     def load_train_data(self):
         if not os.path.exists(self.train_data_path):
             raise FileNotFoundError("Can't find train data.")
         with open(self.train_data_path, "rb") as f:
             print("Loading train data")
-            return pickle.load(f)
+            data = pickle.load(f)
+            self.V = data[0]
+            return data[1:]
 
     def save_train_data(self, X_v_train, v_train, X_v_val, v_val, U_val):
         with open(self.train_data_path, "wb") as f:
@@ -332,18 +331,9 @@ class PodnnModel:
         tf.keras.models.save_model(self.regnn, self.model_path)
         # self.regnn.save_to(self.model_cache_path, self.model_cache_params_path)
 
-    def save(self):
-        self.save_setup_data()
-        self.save_train_data()
-        self.save_model()
-
-    @classmethod
-    def load(cls, save_dir):
-        n_v, x_mesh, n_t = PodnnModel.load_setup_data(save_dir)
-        podnnmodel = cls(save_dir, n_v, x_mesh, n_t)
-        V, _, _, _, _, _ = podnnmodel.load_train_data()
-        podnnmodel.V = V
-        return podnnmodel
+    def save_setup_data(self):
+        with open(self.setup_data_path, "wb") as f:
+            pickle.dump((self.n_v, self.x_mesh, self.n_t), f)
 
     @classmethod
     def load_setup_data(cls, save_dir):
@@ -353,3 +343,12 @@ class PodnnModel:
         with open(setup_data_path, "rb") as f:
             print("Loading setup data")
             return pickle.load(f)
+
+    @classmethod
+    def load(cls, save_dir):
+        n_v, x_mesh, n_t = PodnnModel.load_setup_data(save_dir)
+        podnnmodel = cls(save_dir, n_v, x_mesh, n_t)
+        # podnnmodel.V = podnnmodel.load_train_data()[0]
+        podnnmodel.load_train_data()
+        podnnmodel.load_model()
+        return podnnmodel

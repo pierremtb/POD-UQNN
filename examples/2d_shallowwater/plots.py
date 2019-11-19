@@ -1,11 +1,14 @@
 """Handles the plots for 2D inviscid Shallow Water Equations."""
 
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pyevtk.hl import pointsToVTK
 
+sys.path.append(os.path.join("..", ".."))
+from podnn.podnnmodel import PodnnModel
 from podnn.metrics import error_podnn
 from podnn.plotting import figsize, saveresultdir
 
@@ -50,8 +53,7 @@ def plot_results(x_mesh, U_val, U_pred,
 
     # Keeping only the first nodes
     i_min = 0
-    i_max = 100 
-    # lim = None
+    i_max = 100
     x = x_mesh[i_min:i_max, 1]
     y = x_mesh[i_min:i_max, 2]
 
@@ -91,11 +93,9 @@ def plot_results(x_mesh, U_val, U_pred,
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.5))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
-    quantities = np.array(["h", "\eta", "(hu)", "(hv)"])
+    quantities = np.array([r"h", r"\eta", r"(hu)", r"(hv)"])
     idx_u = [i - 4 for i in HP["mesh_x_idx"][2]]
-    print(idx_u)
-    quantities = quantities[idx_u]
-    for i, qty in enumerate(quantities):
+    for i, qty in enumerate(quantities[idx_u]):
         z_min, z_max = get_min_max(U_pred_mean[i], U_val_mean[i])
         plot_plot(fig, gs[0, i], x, y, U_pred_mean[i],
                   z_min, z_max, f"Mean ${qty}(x,y)$ [pred]")
@@ -104,3 +104,20 @@ def plot_results(x_mesh, U_val, U_pred,
 
     plt.tight_layout()
     saveresultdir(HP)
+
+
+if __name__ == "__main__":
+    from hyperparams import HP as hp
+
+    model = PodnnModel.load("cache")
+
+    x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
+    _, _, X_v_val, _, U_val = model.load_train_data()
+
+    # Predict and restruct
+    U_pred = model.predict(X_v_val)
+    U_pred = model.restruct(U_pred)
+    U_val = model.restruct(U_val)
+
+    # Plot and save the results
+    plot_results(x_mesh, U_val, U_pred, hp)

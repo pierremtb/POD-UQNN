@@ -29,8 +29,7 @@ HP["batch_size"] = 0
 # Setting up TF SGD-based optimizer
 HP["epochs"] = 100000
 HP["lr"] = 0.002
-HP["eps"] = 1e-10
-HP["lambda"] = 1e-0
+HP["lambda"] = 1e-4
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Non-spatial params

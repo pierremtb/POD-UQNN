@@ -23,7 +23,8 @@ HP["batch_size"] = 0
 # Setting up _structthe TF SGD-based optimizer
 # HP["epochs"] = 2000000
 HP["epochs"] = 20000
-HP["lr"] = 0.00001
+HP["lr"] = 1e-1
+HP["decay"] = 1e-2
 HP["lambda"] = 1e-2
 # HP["lambda"] = 0.
 # Frequency of the logger

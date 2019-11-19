@@ -1,9 +1,12 @@
 """Module for plotting results of 2D Shekel Equation."""
 
 import os
+import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
+sys.path.append(os.path.join("..", ".."))
+from podnn.podnnmodel import PodnnModel
 from podnn.plotting import figsize, saveresultdir
 from podnn.metrics import error_podnn
 from podnn.testgenerator import X_FILE, U_MEAN_FILE, U_STD_FILE
@@ -106,3 +109,17 @@ def plot_results(U, U_pred,
     saveresultdir(HP)
 
     return error_test_mean, error_test_std
+
+if __name__ == "__main__":
+    from hyperparams import HP as hp
+
+    model = PodnnModel.load("cache")
+
+    x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
+    _, _, X_v_val, _, U_val = model.load_train_data()
+
+    # Predict and restruct
+    U_pred = model.predict(X_v_val)
+
+    # Plot and save the results
+    plot_results(U_val, U_pred, hp)
