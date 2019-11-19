@@ -7,6 +7,7 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 from pyDOE import lhs
+from numba import objmode, jit, prange
 
 from .pod import get_pod_bases
 from .handling import pack_layers
@@ -43,6 +44,9 @@ class PodnnModel:
 
         self.save_setup_data()
 
+        self.dtype = "float64"
+        tf.keras.backend.set_floatx(self.dtype)
+
     def u(self, X, t, mu):
         return X[0]*t + mu
 
@@ -56,12 +60,42 @@ class PodnnModel:
 
     def sample_mu(self, n_s, mu_min, mu_max):
         pbar = tqdm(total=100)
-        X_lhs = lhs(n_s, len(mu_min)).T
+        X_lhs = lhs(n_s, mu_min.shape[0]).T
         pbar.update(50)
         mu_lhs = mu_min + (mu_max - mu_min)*X_lhs
         pbar.update(50)
         pbar.close()
         return mu_lhs
+
+    def generate_hifi_inputs(self, n_s, mu_min, mu_max, t_min=0, t_max=0):
+        if self.has_t:
+            t_min, t_max = np.array(t_min), np.array(t_max)
+        mu_min, mu_max = np.array(mu_min), np.array(mu_max)
+
+        mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
+
+        n_st = n_s
+        if self.has_t:
+            n_st *= self.n_t
+
+        X_v = np.zeros((n_st, mu_min.shape[0]))
+
+        if self.has_t:
+            # Creating the time steps
+            t = np.linspace(t_min, t_max, self.n_t)
+            tT = t.reshape((self.n_t, 1))
+
+            for i in tqdm(range(n_s)):
+                # Getting the snapshot times indices
+                s = self.n_t * i
+                e = self.n_t * (i + 1)
+
+                # Setting the regression inputs (t, mu)
+                X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
+        else:
+            for i in tqdm(range(n_s)):
+                X_v[i, :] = mu_lhs[i]
+        return X_v
 
     def create_snapshots(self, n_s, n_st, n_d, n_h, mu_lhs,
                          t_min=0, t_max=0):
@@ -205,6 +239,10 @@ class PodnnModel:
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
+    def tensor(self, X):
+        """Convert input into a TensorFlow Tensor with the class dtype."""
+        return tf.convert_to_tensor(X, dtype=self.dtype)
+
     def train(self, X_v, v, error_val, layers, epochs,
               lr, reg_lam, decay=0., frequency=100):
         # Sizes
@@ -244,6 +282,9 @@ class PodnnModel:
         class LoggerCallback(tf.keras.callbacks.Callback):
             def on_epoch_end(self, epoch, logs):
                 logger.log_train_epoch(epoch, logs['loss'])
+
+        X_v = self.tensor(X_v)
+        v = self.tensor(v)
 
         history = self.regnn.fit(
             X_v, v,
@@ -286,7 +327,7 @@ class PodnnModel:
 
     def predict_v(self, X_v):
         """Returns the predicted POD projection coefficients."""
-        v_pred = self.regnn.predict(X_v)
+        v_pred = self.regnn.predict(X_v).astype(self.dtype)
         return v_pred
 
     def predict(self, X_v):
@@ -298,6 +339,69 @@ class PodnnModel:
         U_pred = self.V.dot(v_pred.T)
 
         return U_pred
+
+    def predict_heavy(self, X_v):
+        n_s = X_v.shape[0]
+
+        v_pred_hifi = self.predict_v(X_v)
+
+        n_h = self.n_h
+
+        # The sum and sum of squares recipient vectors
+        if self.has_t:
+            U_tot = np.zeros((n_h, self.n_t))
+            U_tot_sq = np.zeros((n_h, self.n_t))
+        else:
+            U_tot = np.zeros((n_h,))
+            U_tot_sq = np.zeros((n_h,))
+
+        n_t = self.n_t
+        V = self.V
+
+        pbar = tqdm(total=n_s)
+        def bumpBar():
+            pbar.update(1)
+
+        @jit(nopython=True, parallel=True)
+        def loop_t(n_s, n_t, U_tot, U_tot_sq, V, v_pred_hifi):
+            for i in prange(n_s):
+                # Computing one snapshot
+                U = np.zeros_like(U_tot)
+                for j in prange(n_t):
+                    u_j = u(X, t[j], mu_lhs[i, :])
+                    U[:, j] = u_j
+                # Building the sum and the sum of squaes
+                U_tot += U
+                U_tot_sq += U**2
+                with objmode():
+                    bumpBar()
+            return U_tot, U_tot_sq
+        
+        @jit(nopython=True, parallel=True)
+        def loop(n_s, U_tot, U_tot_sq, V, v_pred_hifi):
+            for i in prange(n_s):
+                # Computing one snapshot
+                U = V.dot(v_pred_hifi[i])
+                # Building the sum and the sum of squaes
+                U_tot += U
+                U_tot_sq += U**2
+                with objmode():
+                    bumpBar()
+            return U_tot, U_tot_sq
+        
+        if self.has_t:
+            U_tot, U_tot_sq = loop_t(n_s, n_t, U_tot, U_tot_sq, V, v_pred_hifi)
+        else: 
+            U_tot, U_tot_sq = loop(n_s, U_tot, U_tot_sq, V, v_pred_hifi)
+
+        with objmode():
+            pbar.close()
+            
+        U_pred_hifi_mean = U_tot / n_s
+        U_pred_hifi_std = np.sqrt((n_s*U_tot_sq - U_tot**2) / (n_s*(n_s - 1)))
+        # Making sure the std has non NaNs
+        U_pred_hifi_std = np.nan_to_num(U_pred_hifi_std)
+        return U_pred_hifi_mean, U_pred_hifi_std
 
     def load_train_data(self):
         if not os.path.exists(self.train_data_path):
