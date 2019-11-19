@@ -5,9 +5,10 @@ import tensorflow as tf
 
 
 HP = {}
-HP["mesh_x_idx"] = ([0], [1, 2], [4,6,7])
+HP["mesh_idx"] = ([0], [1, 2], [4,6,7])
+# HP["mesh_idx"] = ([0], [1, 2], [4])
 # Dimension of u(x, t, mu)
-HP["n_v"] = len(HP["mesh_x_idx"][2])
+HP["n_v"] = len(HP["mesh_idx"][2])
 # Time
 HP["n_t"] = 0
 # Snapshots count
@@ -23,8 +24,11 @@ HP["batch_size"] = 0
 # Setting up _structthe TF SGD-based optimizer
 # HP["epochs"] = 2000000
 HP["epochs"] = 20000
-HP["lr"] = 1e-1
-HP["decay"] = 1e-2
+# HP["epochs"] = 5000
+# HP["lr"] = 1e-1
+# HP["decay"] = 1e-2
+HP["lr"] = 0.005
+HP["decay"] = 0.
 HP["lambda"] = 1e-2
 # HP["lambda"] = 0.
 # Frequency of the logger

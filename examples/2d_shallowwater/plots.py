@@ -94,7 +94,7 @@ def plot_results(x_mesh, U_val, U_pred,
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
     quantities = np.array([r"h", r"\eta", r"(hu)", r"(hv)"])
-    idx_u = [i - 4 for i in HP["mesh_x_idx"][2]]
+    idx_u = [i - 4 for i in HP["mesh_idx"][2]]
     for i, qty in enumerate(quantities[idx_u]):
         z_min, z_max = get_min_max(U_pred_mean[i], U_val_mean[i])
         plot_plot(fig, gs[0, i], x, y, U_pred_mean[i],
@@ -102,7 +102,7 @@ def plot_results(x_mesh, U_val, U_pred,
         plot_plot(fig, gs[1, i], x, y, U_val_mean[i],
                   z_min, z_max, f"Mean ${qty}(x,y)$ [val]")
 
-    plt.tight_layout()
+    # plt.tight_layout()
     saveresultdir(HP)
 
 

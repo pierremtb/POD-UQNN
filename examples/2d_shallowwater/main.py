@@ -22,7 +22,7 @@ def main(hp, use_cached_dataset=False):
         x_u_mesh_path = os.path.join("data", "SOL_FV_100_Scenarios.txt")
         # Each line is: [i, x_i, y_i, z_i(unused), h_i, eta_i, (hu)_i, (hv)_i]
         x_mesh, u_mesh, X_v = \
-            read_space_sol_input_mesh(hp["n_s"], hp["mesh_x_idx"], x_u_mesh_path, mu_path)
+            read_space_sol_input_mesh(hp["n_s"], hp["mesh_idx"], x_u_mesh_path, mu_path)
         np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
     else:
         x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
@@ -39,12 +39,18 @@ def main(hp, use_cached_dataset=False):
                                       hp["train_val_ratio"], hp["eps"],
                                       use_cache=use_cached_dataset)
 
+    U_val_s = model.restruct(U_val)
     # Create the model and train
     def error_val():
         """Define the error metric for in-training validation."""
-        v_val_pred = model.predict_v(X_v_val)
+        # v_val_pred = model.predict_v(X_v_val)
+        U_val_pred = model.predict(X_v_val)
+        U_val_pred_s = model.restruct(U_val_pred) 
         # return mse(v_val, v_val_pred)
-        return error_podnn(v_val, v_val_pred)
+        err = np.zeros((U_val_s.shape[0],))
+        for i in range(err.shape[0]):
+            err[i] = error_podnn(U_val[i], U_val_pred[i])
+        return err
     model.train(X_v_train, v_train, error_val, hp["h_layers"],
                 hp["epochs"], hp["lr"], hp["lambda"], hp["decay"])
 
