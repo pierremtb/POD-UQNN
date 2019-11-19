@@ -1,5 +1,6 @@
 import json
 import tensorflow as tf
+import numpy as np
 import time
 from datetime import datetime
 from tqdm import tqdm
@@ -32,7 +33,7 @@ class Logger(object):
                 .strftime("%M:%S")
 
     def get_error_u(self):
-        return self.error_fn()
+        return np.around(self.error_fn(), decimals=4)
 
     def set_error_fn(self, error_fn):
         self.error_fn = error_fn

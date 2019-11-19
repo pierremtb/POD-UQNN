@@ -43,10 +43,8 @@ def main(hp, use_cached_dataset=False):
     # Create the model and train
     def error_val():
         """Define the error metric for in-training validation."""
-        # v_val_pred = model.predict_v(X_v_val)
         U_val_pred = model.predict(X_v_val)
         U_val_pred_s = model.restruct(U_val_pred) 
-        # return mse(v_val, v_val_pred)
         err = np.zeros((U_val_s.shape[0],))
         for i in range(err.shape[0]):
             err[i] = error_podnn(U_val[i], U_val_pred[i])
@@ -78,5 +76,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    main(HP, use_cached_dataset=False)
-    # main(HP, use_cached_dataset=True)
+   # main(HP, use_cached_dataset=False)
+    main(HP, use_cached_dataset=True)

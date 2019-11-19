@@ -53,7 +53,7 @@ def plot_results(x_mesh, U_val, U_pred,
 
     # Keeping only the first nodes
     i_min = 0
-    i_max = 100
+    i_max = 10000
     x = x_mesh[i_min:i_max, 1]
     y = x_mesh[i_min:i_max, 2]
 
