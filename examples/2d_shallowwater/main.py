@@ -18,8 +18,10 @@ def main(hp, use_cached_dataset=False):
 
     if not use_cached_dataset:
         # Getting data from the files
-        mu_path = os.path.join("data", "INPUT_100_Scenarios.txt")
-        x_u_mesh_path = os.path.join("data", "SOL_FV_100_Scenarios.txt")
+        # mu_path = os.path.join("data", "INPUT_100_Scenarios.txt")
+        mu_path = os.path.join("data", "INPUT_300_Scenarios.txt")
+        x_u_mesh_path = os.path.join("data", "SOL_FV_300_Scenarios.txt")
+        # x_u_mesh_path = os.path.join("data", "SOL_FV_100_Scenarios.txt")
         # Each line is: [i, x_i, y_i, z_i(unused), h_i, eta_i, (hu)_i, (hv)_i]
         x_mesh, u_mesh, X_v = \
             read_space_sol_input_mesh(hp["n_s"], hp["mesh_idx"], x_u_mesh_path, mu_path)
@@ -76,5 +78,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-   # main(HP, use_cached_dataset=False)
+    # main(HP, use_cached_dataset=False)
     main(HP, use_cached_dataset=True)

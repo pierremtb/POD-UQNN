@@ -45,13 +45,13 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                        use_cache=use_cached_dataset)
                                      
     # Train
-    # def error_val():
-    #     v_val_pred = model.predict_v(X_v_val)
-    #     # return mse(v_val, v_val_pred)
-    #     return error_podnn(v_val, v_val_pred)
-    # model.train(X_v_train, v_train, error_val, hp["h_layers"],
-    #             hp["epochs"], hp["lr"], hp["lambda"])
-    model.load_model()
+    def error_val():
+        v_val_pred = model.predict_v(X_v_val)
+        # return mse(v_val, v_val_pred)
+        return error_podnn(v_val, v_val_pred)
+    model.train(X_v_train, v_train, error_val, hp["h_layers"],
+                hp["epochs"], hp["lr"], hp["lambda"])
+    # model.load_model()
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)
@@ -75,5 +75,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    # main(HP, gen_test=False, use_cached_dataset=False)
-    main(HP, gen_test=False, use_cached_dataset=True)
+    main(HP, gen_test=False, use_cached_dataset=False)
+    # main(HP, gen_test=False, use_cached_dataset=True)
