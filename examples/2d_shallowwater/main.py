@@ -43,7 +43,7 @@ def main(hp, use_cached_dataset=False,
     # exit(0)
 
     # Create the POD-NN model
-    model = PodnnModel(hp["n_v"], x_mesh, hp["n_t"])
+    model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, \
@@ -62,7 +62,7 @@ def main(hp, use_cached_dataset=False,
         model.train(X_v_train, v_train, error_val, hp["h_layers"],
                     hp["epochs"], hp["lr"], hp["lambda"])
     else:
-        model.load_trained_cache()
+        model.load_model()
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)
@@ -70,7 +70,7 @@ def main(hp, use_cached_dataset=False,
     U_val = model.restruct(U_val)
 
     # Time for one pred
-    # import time
+    # import timeata_cache_path):
     # st = time.time()
     # model.predict(X_v_val[0:1])
     # print(f"{time.time() - st} sec taken for prediction")
@@ -89,5 +89,5 @@ if __name__ == "__main__":
         from hyperparams import HP
 
     # main(HP, use_cached_dataset=False, use_trained_network=False)
-    main(HP, use_cached_dataset=True, use_trained_network=False)
-    # main(HP, use_cached_dataset=True, use_trained_network=True)
+    # main(HP, use_cached_dataset=True, use_trained_network=False)
+    main(HP, use_cached_dataset=True, use_trained_network=True)
