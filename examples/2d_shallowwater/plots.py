@@ -49,17 +49,18 @@ def plot_results(x_mesh, U_val, U_pred,
     """Handles the plots of 3d_shallowwater."""
 
     # Keeping only the first nodes
-    lim = 20000
+    i_min = 0
+    i_max = 100 
     # lim = None
-    x = x_mesh[:lim, 1]
-    y = x_mesh[:lim, 2]
+    x = x_mesh[i_min:i_max, 1]
+    y = x_mesh[i_min:i_max, 2]
 
     # plt.scatter(x, y)
     # plt.show()
 
     # Computing means
-    U_val_mean = np.mean(U_val[:, :lim, :], axis=-1)
-    U_pred_mean = np.mean(U_pred[:, :lim, :], axis=-1)
+    U_val_mean = np.mean(U_val[:, i_min:i_max, :], axis=-1)
+    U_pred_mean = np.mean(U_pred[:, i_min:i_max, :], axis=-1)
 
     # plt.plot(x, U_val_mean[])
 

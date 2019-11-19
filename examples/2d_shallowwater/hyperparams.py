@@ -22,8 +22,7 @@ HP["h_layers"] = [128, 128, 128]
 HP["batch_size"] = 0
 # Setting up _structthe TF SGD-based optimizer
 # HP["epochs"] = 2000000
-# HP["epochs"] = 20000
-HP["epochs"] = 300000
+HP["epochs"] = 20000
 HP["lr"] = 0.00001
 HP["lambda"] = 1e-2
 # HP["lambda"] = 0.
