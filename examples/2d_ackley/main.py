@@ -45,21 +45,25 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                        use_cache=use_cached_dataset)
                                      
     # Train
-    def error_val():
-        v_val_pred = model.predict_v(X_v_val)
-        # return mse(v_val, v_val_pred)
-        return error_podnn(v_val, v_val_pred)
-    model.train(X_v_train, v_train, error_val, hp["h_layers"],
-                hp["epochs"], hp["lr"], hp["lambda"])
+    # def error_val():
+    #     v_val_pred = model.predict_v(X_v_val)
+    #     # return mse(v_val, v_val_pred)
+    #     return error_podnn(v_val, v_val_pred)
+    # model.train(X_v_train, v_train, error_val, hp["h_layers"],
+    #             hp["epochs"], hp["lr"], hp["lambda"])
+    model.load_model()
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)
     
-    X_v_val_hifi = model.generate_hifi_inputs(1e5, hp["mu_min"], hp["mu_max"])
-    U_pred_hifi = model.predict(X_v_val_hifi)
+    X_v_val_hifi = model.generate_hifi_inputs(int(5e5), hp["mu_min"], hp["mu_max"])
+    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_val_hifi)
+    U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"], hp["n_y"]))
+    U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"], hp["n_y"]))
+
 
     # Plot against test and save
-    return plot_results(U_val, U_pred, U_pred_hifi, hp, no_plot)
+    return plot_results(U_val, U_pred, U_pred_hifi_mean, U_pred_hifi_std, hp, no_plot)
 
 
 if __name__ == "__main__":

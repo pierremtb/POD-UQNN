@@ -38,7 +38,7 @@ def get_test_data():
     return X, U_test_mean, U_test_std
 
 
-def plot_results(U, U_pred, U_pred_hifi,
+def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                  HP=None, no_plot=False):
     X, U_test_mean, U_test_std = get_test_data()
     X, Y = X[0], X[1]
@@ -60,8 +60,6 @@ def plot_results(U, U_pred, U_pred_hifi,
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
 
-    U_pred_hifi_mean = np.mean(U_pred_hifi, axis=-1)
-    U_pred_hifi_std = np.std(U_pred_hifi, axis=-1)
     hifi_error_test_mean = 100 * error_podnn(U_test_mean, U_pred_hifi_mean)
     hifi_error_test_std = 100 * error_podnn(U_test_std, U_pred_hifi_std)
 
