@@ -44,7 +44,6 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                        hp["eps"],
                                        use_cache=use_cached_dataset)
                                      
-
     # Train
     def error_val():
         v_val_pred = model.predict_v(X_v_val)
@@ -55,9 +54,12 @@ def main(hp, gen_test=False, use_cached_dataset=False,
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)
+    
+    X_v_val_hifi = model.generate_hifi_inputs(1e5, hp["mu_min"], hp["mu_max"])
+    U_pred_hifi = model.predict(X_v_val_hifi)
 
     # Plot against test and save
-    return plot_results(U_val, U_pred, hp, no_plot)
+    return plot_results(U_val, U_pred, U_pred_hifi, hp, no_plot)
 
 
 if __name__ == "__main__":

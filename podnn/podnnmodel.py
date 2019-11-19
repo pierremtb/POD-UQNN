@@ -63,6 +63,35 @@ class PodnnModel:
         pbar.close()
         return mu_lhs
 
+    def generate_hifi_inputs(self, n_s, mu_min, mu_max, t_min=0, t_max=0):
+        if self.has_t:
+            t_min, t_max = np.array(t_min), np.array(t_max)
+        mu_min, mu_max = np.array(mu_min), np.array(mu_max)
+
+        mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
+        n_st = n_s
+        if self.has_t:
+            n_st *= self.n_t
+
+        X_v = np.zeros((n_st, mu_min.shape[0]))
+
+        if self.has_t:
+            # Creating the time steps
+            t = np.linspace(t_min, t_max, self.n_t)
+            tT = t.reshape((self.n_t, 1))
+
+            for i in tqdm(range(n_s)):
+                # Getting the snapshot times indices
+                s = self.n_t * i
+                e = self.n_t * (i + 1)
+
+                # Setting the regression inputs (t, mu)
+                X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
+        else:
+            for i in tqdm(range(n_s)):
+                X_v[i, :] = mu_lhs[i]
+        return X_v
+
     def create_snapshots(self, n_s, n_st, n_d, n_h, mu_lhs,
                          t_min=0, t_max=0):
         n_xyz = self.x_mesh.shape[0]
