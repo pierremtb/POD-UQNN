@@ -32,7 +32,7 @@ HP["b1"] = 0.9
 HP["eps"] = 1e-10
 HP["lambda"] = 1e-6
 # Frequency of the logger
-HP["log_frequency"] = 1000
+HP["log_frequency"] = 2000
 # Non-spatial params
 bet = 1/10 * np.array([1, 2, 2, 4, 4, 6, 3, 7, 5, 5])
 gam = 1. * np.array([4, 1, 8, 6, 3, 2, 5, 8, 6, 7])
