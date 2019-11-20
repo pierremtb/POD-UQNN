@@ -41,17 +41,18 @@ def main(hp, use_cached_dataset=False):
                                       hp["train_val_ratio"], hp["eps"],
                                       use_cache=use_cached_dataset)
 
-    U_val_s = model.restruct(U_val)
+    U_val_mean = np.mean(U_val, axis=-1)
+    U_val_std = np.std(U_val, axis=-1)
+
     # Create the model and train
     def error_val():
         """Define the error metric for in-training validation."""
         U_val_pred = model.predict(X_v_val)
-        U_val_pred_s = model.restruct(U_val_pred)
-        err = np.zeros((U_val_s.shape[0] + 1,))
-        for i in range(U_val_s.shape[0]):
-            err[i] = error_podnn(U_val_s[i], U_val_pred_s[i])
-        err[-1] = 100 * error_podnn(U_val, U_val_pred,)
-        return err
+        U_val_pred_mean = np.mean(U_val_pred, axis=-1)
+        U_val_pred_std = np.std(U_val_pred, axis=-1)
+        err_mean = error_podnn(U_val_mean, U_val_pred_mean)
+        err_std = error_podnn(U_val_std, U_val_pred_std)
+        return np.array([err_mean, err_std])
     model.train(X_v_train, v_train, error_val, hp["h_layers"],
                 hp["epochs"], hp["lr"], hp["lambda"], hp["decay"],
                 hp["log_frequency"])
