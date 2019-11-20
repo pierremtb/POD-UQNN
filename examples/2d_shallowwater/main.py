@@ -46,10 +46,11 @@ def main(hp, use_cached_dataset=False):
     def error_val():
         """Define the error metric for in-training validation."""
         U_val_pred = model.predict(X_v_val)
-        U_val_pred_s = model.restruct(U_val_pred) 
-        err = np.zeros((U_val_s.shape[0],))
-        for i in range(err.shape[0]):
+        U_val_pred_s = model.restruct(U_val_pred)
+        err = np.zeros((U_val_s.shape[0] + 1,))
+        for i in range(U_val_s.shape[0]):
             err[i] = error_podnn(U_val_s[i], U_val_pred_s[i])
+        err[-1] = 100 * error_podnn(U_val, U_val_pred,)
         return err
     model.train(X_v_train, v_train, error_val, hp["h_layers"],
                 hp["epochs"], hp["lr"], hp["lambda"], hp["decay"],
