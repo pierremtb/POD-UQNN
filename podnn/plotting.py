@@ -51,7 +51,8 @@ def saveresultdir(save_HP, train_res=None):
     with open(os.path.join(resdir, "HP.txt"), "w") as f:
          yaml.dump(save_HP, f)
     if train_res is not None:
-        np.savetxt(os.path.join(resdir, "res.txt"), train_res)
+        np.savetxt(os.path.join(resdir, "res.txt"), train_res[1],
+                   header=train_res[0], delimiter="\t")
     filename = os.path.join(resdir, "graph")
     savefig(filename)
     openPdfGraph(filename)

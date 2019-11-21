@@ -84,7 +84,6 @@ class Logger(object):
         losses = np.array(self.losses)[:, None]
         errors = np.array(self.errors)[:, None]
         rel_errors = np.array(self.rel_errors)[:, None]
+        header = "epoch\tloss\terror\trel_error"
 
-        headers = np.array(["epoch", "loss", "error", "rel_error"])
-        values = np.hstack((epochs, losses, errors, rel_errors))
-        return np.vstack((headers, values))
+        return (header, np.hstack((epochs, losses, errors, rel_errors)))
