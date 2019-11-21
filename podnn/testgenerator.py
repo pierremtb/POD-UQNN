@@ -3,7 +3,7 @@
 import sys
 import time
 import os
-import json
+import yaml
 from tqdm import tqdm
 import numpy as np
 from pyDOE import lhs
@@ -17,7 +17,7 @@ X_FILE = "X.npy"
 T_FILE = "t.npy"
 U_MEAN_FILE = "u_mean.npy"
 U_STD_FILE = "u_std.npy"
-HP_FILE = "HP.json"
+HP_FILE = "HP.txt"
 
 
 class TestGenerator:
@@ -154,7 +154,7 @@ class TestGenerator:
             U_tot = np.zeros((n_h,))
             U_tot_sq = np.zeros((n_h,))
 
-        # Parameters sampling
+        # Parameters sampling
         X_mu = lhs(n_s, n_p).T
         mu_lhs = lb + (ub - lb)*X_mu
 
@@ -209,4 +209,4 @@ class TestGenerator:
         HP_hifi["mu_max"] = mu_max.tolist()
         HP_hifi["n_s"] = n_s
         with open(os.path.join(dirname, HP_FILE), "w") as f:
-            json.dump(HP_hifi, f)
+             yaml.dump(HP_hifi, f)

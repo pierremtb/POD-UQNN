@@ -58,13 +58,21 @@ class PodnnModel:
 
         return U.reshape((self.n_h, self.n_t))
 
-    def sample_mu(self, n_s, mu_min, mu_max):
-        pbar = tqdm(total=100)
+    def sample_mu(self, n_s, mu_min, mu_max, nobar=False):
+        if not nobar:
+            pbar = tqdm(total=100)
+
         X_lhs = lhs(n_s, mu_min.shape[0]).T
-        pbar.update(50)
+
+        if not nobar:
+            pbar.update(50)
+
         mu_lhs = mu_min + (mu_max - mu_min)*X_lhs
-        pbar.update(50)
-        pbar.close()
+        
+        if not nobar:
+            pbar.update(50)
+            pbar.close()
+
         return mu_lhs
 
     def generate_hifi_inputs(self, n_s, mu_min, mu_max, t_min=0, t_max=0):
@@ -72,7 +80,7 @@ class PodnnModel:
             t_min, t_max = np.array(t_min), np.array(t_max)
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
 
-        mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
+        mu_lhs = self.sample_mu(n_s, mu_min, mu_max, nobar=True)
 
         n_st = n_s
         if self.has_t:
@@ -99,6 +107,8 @@ class PodnnModel:
 
     def create_snapshots(self, n_s, n_st, n_d, n_h, mu_lhs,
                          t_min=0, t_max=0):
+        # TODO: Parallelize
+
         n_xyz = self.x_mesh.shape[0]
 
         # Declaring the output arrays
@@ -138,6 +148,7 @@ class PodnnModel:
         return X_v, U, U_struct
 
     def split_dataset(self, X_v, v, train_val_ratio, n_st):
+        # TODO: randomize the split
         n_st_train = int(train_val_ratio * n_st)
         X_v_train, v_train = X_v[:n_st_train, :], v[:n_st_train, :]
         X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
@@ -209,7 +220,7 @@ class PodnnModel:
         n_h = self.n_v * self.x_mesh.shape[0]
 
         # LHS sampling (first uniform, then perturbated)
-        print("Doing the LHS sampling on the non-spatial params...")
+        print("Doing the LHS sampling on the non-spatial params...")
         mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
 
         # Creating the snapshots
@@ -281,25 +292,26 @@ class PodnnModel:
 
         class LoggerCallback(tf.keras.callbacks.Callback):
             def on_epoch_end(self, epoch, logs):
-                logger.log_train_epoch(epoch, logs['loss'])
+                logger.log_train_epoch(epoch, logs["loss"], logs["mse"])
 
+        # TODO: add normalization
+        # ub = np.amax(X_v, axis=0)
+        # lb = np.amin(X_v, axis=0)
         X_v = self.tensor(X_v)
         v = self.tensor(v)
 
-        history = self.regnn.fit(
+        # Training
+        self.regnn.fit(
             X_v, v,
             epochs=epochs, validation_split=0., verbose=0,
             callbacks=[LoggerCallback()])
-
-        # Training
-        # ub = np.amax(X_v, axis=0)
-        # lb = np.amin(X_v, axis=0)
-        # self.regnn.fit(X_v, v, lr, epochs, logger, lb=None, ub=None)
+        
+        logger.log_train_end(epochs)
 
         # Saving
         self.save_model()
 
-        return self.regnn
+        return logger.get_logs()
 
     def restruct(self, U):
         if self.has_t:
@@ -326,7 +338,7 @@ class PodnnModel:
         return (self.n_v,) + tup
 
     def predict_v(self, X_v):
-        """Returns the predicted POD projection coefficients."""
+        """Returns the predicted POD projection coefficients."""
         v_pred = self.regnn.predict(X_v).astype(self.dtype)
         return v_pred
 

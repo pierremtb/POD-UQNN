@@ -1,6 +1,6 @@
 import sys
 import os
-import json
+import yaml
 import numpy as np
 import tensorflow as tf
 

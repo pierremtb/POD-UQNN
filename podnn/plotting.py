@@ -4,13 +4,14 @@ import os
 import platform
 import sys
 import subprocess
-import json
+import yaml
+import numpy as np
 from datetime import datetime
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 
-# From https://github.com/maziarraissi/PINNs (MIT License, maziarraissi)
+# From https://github.com/maziarraissi/PINNs (MIT License, maziarraissi)
 def figsize(n_plot_x, n_plot_y, scale=1.):
     plot_width_pt = 100.                          # Get this from LaTeX using \the\textwidth
     plot_height_pt = 100.                          # Get this from LaTeX using \the\textwidth
@@ -39,7 +40,7 @@ pgf_with_latex = {                      # setup matplotlib to use latex for outp
 mpl.rcParams.update(pgf_with_latex)
 
 
-def saveresultdir(save_HP):
+def saveresultdir(save_HP, train_res=None):
     """Save plots and hyperparams to a subdirectory of './results/'."""
 
     now = datetime.now()
@@ -47,8 +48,10 @@ def saveresultdir(save_HP):
     resdir = os.path.join("results", f"{now.strftime('%y%m%d-%H%M%S')}-{scriptname}")
     os.mkdir(resdir)
     print("saving results to directory ", resdir)
-    with open(os.path.join(resdir, "HP.json"), "w") as f:
-        json.dump(save_HP, f)
+    with open(os.path.join(resdir, "HP.txt"), "w") as f:
+         yaml.dump(save_HP, f)
+    if train_res is not None:
+        np.savetxt(os.path.join(resdir, "res.txt"), train_res)
     filename = os.path.join(resdir, "graph")
     savefig(filename)
     openPdfGraph(filename)

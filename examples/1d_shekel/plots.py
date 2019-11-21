@@ -22,7 +22,7 @@ def get_test_data():
 
 
 def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
-                 HP=None, no_plot=False):
+                 train_res, HP=None, no_plot=False):
 
     X, U_test_mean, U_test_std = get_test_data()
     x = X[0]
@@ -51,7 +51,7 @@ def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     ax1.plot(x, np.mean(U_pred, axis=1), "b-", label=r"$\hat{u_V}(x)$")
     ax1.plot(x, np.mean(U, axis=1), "r--", label=r"$u_V(x)$")
     ax1.plot(x, U_test_mean, "k,", label=r"$u_T(x)$")
-    ax1.plot(x, U_pred_hifi_mean, "k-", label=r"$\hat{u_T}(x)$")
+    ax1.plot(x, U_pred_hifi_mean, "b,", label=r"$\hat{u_T}(x)$")
     ax1.legend()
     ax1.set_title("Means")
     ax1.set_xlabel("$x$")
@@ -61,12 +61,12 @@ def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     ax2.plot(x, np.std(U_pred, axis=1), "b-", label=r"$\hat{u_V}(x)$")
     ax2.plot(x, np.std(U, axis=1), "r--", label=r"$u_V(x)$")
     ax2.plot(x, U_test_std, "k,", label=r"$u_T(x)$")
-    ax1.plot(x, U_pred_hifi_std, "k-", label=r"$\hat{u_T}(x)$")
+    ax2.plot(x, U_pred_hifi_std, "b,", label=r"$\hat{u_T}(x)$")
     ax2.legend()
     ax2.set_title("Standard deviations")
     ax2.set_xlabel("$x$")
 
-    saveresultdir(HP)
+    saveresultdir(HP, train_res)
 
     return error_test_mean, error_test_std
 
@@ -82,5 +82,11 @@ if __name__ == "__main__":
     # Predict and restruct
     U_pred = model.predict(X_v_val)
 
+    # Sample the new model to generate a HiFi prediction
+    X_v_val_hifi = model.generate_hifi_inputs(int(1e6), hp["mu_min"], hp["mu_max"])
+    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_val_hifi)
+    U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"],))
+    U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"],))
+
     # Plot and save the results
-    plot_results(U_val, U_pred, hp)
+    plot_results(U_val, U_pred, U_pred_hifi_mean, U_pred_hifi_std, hp)

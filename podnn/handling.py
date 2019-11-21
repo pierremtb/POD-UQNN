@@ -4,7 +4,7 @@ import numpy as np
 
 
 def pack_layers(i, hiddens, o):
-    """Create the full NN topology from input size, hidden layers, and output."""
+    """Create the full NN topology from input size, hidden layers, and output."""
 
     layers = []
     layers.append(i)

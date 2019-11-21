@@ -19,7 +19,7 @@ n_s = int(1e5)
 
 # The solution function
 def u(X, t, mu):
-    """Burgers2 explicit solution."""
+    """Burgers2 explicit solution."""
     x = X[0]
 
     if t == 1.:

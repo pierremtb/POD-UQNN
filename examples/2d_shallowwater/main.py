@@ -1,7 +1,7 @@
-""" POD-NN modeling for 2D inviscid Shallow Water Equations."""
+""" POD-NN modeling for 2D inviscid Shallow Water Equations."""
 
 import sys
-import json
+import yaml
 import os
 import numpy as np
 
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # Custom hyperparameters as command-line arg
     if len(sys.argv) > 1:
         with open(sys.argv[1]) as HPFile:
-            HP = json.load(HPFile)
+            HP =  yaml.load(HPFile)
     # Default ones
     else:
         from hyperparams import HP

@@ -43,7 +43,7 @@ def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     X, U_test_mean, U_test_std = get_test_data()
     X, Y = X[0], X[1]
 
-    # Keeping the first coordinate only (n_v == 1)
+    # Keeping the first coordinate only (n_v == 1)
     U_test_mean = U_test_mean[0, :, :]
     U_test_std = U_test_std[0, :, :]
 

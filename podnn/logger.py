@@ -1,4 +1,4 @@
-import json
+import yaml
 import tensorflow as tf
 import numpy as np
 import time
@@ -20,6 +20,11 @@ class Logger(object):
         self.prev_time = self.start_time
         self.tf_epochs = epochs
         self.frequency = frequency
+
+        self.epochs = []
+        self.losses = []
+        self.errors = []
+        self.rel_errors = []
 
     def get_epoch_duration(self):
         now = time.time()
@@ -46,9 +51,10 @@ class Logger(object):
         if model_description:
             print(model.summary())
 
-    def log_train_epoch(self, epoch, loss, custom="", is_iter=False):
+    def log_train_epoch(self, epoch, loss, error, custom="", is_iter=False):
         # self.pbar.update(1)
         if epoch % self.frequency == 0:
+            rel_error = self.get_error_u()
             name = 'nt_epoch' if is_iter else '#'
             message = f"{name}: {epoch:6d} " + \
                   f"ET: {self.get_elapsed()} " + \
@@ -59,6 +65,11 @@ class Logger(object):
             # self.pbar.set_description(f"l:{loss:.2e} e:{self.get_error_u():.2e}")
             print(message)
 
+            self.epochs.append(epoch)
+            self.losses.append(loss)
+            self.errors.append(error)
+            self.rel_errors.append(rel_error)
+
     def log_train_opt(self, name):
         print(f"-- Starting {name} optimization --")
 
@@ -67,3 +78,13 @@ class Logger(object):
         print(f"Training finished (epoch {epoch}): " +
               f"duration = {self.get_elapsed()}  " +
               f"err_val = {100 * self.get_error_u():.4f}%  " + custom)
+
+    def get_logs(self):
+        epochs = np.array(self.epochs)[:, None]
+        losses = np.array(self.losses)[:, None]
+        errors = np.array(self.errors)[:, None]
+        rel_errors = np.array(self.rel_errors)[:, None]
+
+        headers = np.array(["epoch", "loss", "error", "rel_error"])
+        values = np.hstack((epochs, losses, errors, rel_errors))
+        return np.vstack((headers, values))
