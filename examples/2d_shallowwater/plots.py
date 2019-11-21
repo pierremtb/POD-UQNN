@@ -63,6 +63,8 @@ def plot_results(x_mesh, U_val, U_pred,
     # Computing means
     U_val_mean = np.mean(U_val[:, i_min:i_max, :], axis=-1)
     U_pred_mean = np.mean(U_pred[:, i_min:i_max, :], axis=-1)
+    U_val_std = np.nanstd(U_val[:, i_min:i_max, :], axis=-1)
+    U_pred_std = np.nanstd(U_pred[:, i_min:i_max, :], axis=-1)
 
     # plt.plot(x, U_val_mean[])
 
@@ -88,7 +90,7 @@ def plot_results(x_mesh, U_val, U_pred,
         return
 
     print("Plotting")
-    n_plot_x = 2
+    n_plot_x = 4
     n_plot_y = 4
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.5))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
@@ -101,8 +103,13 @@ def plot_results(x_mesh, U_val, U_pred,
                   z_min, z_max, f"Mean ${qty}(x,y)$ [pred]")
         plot_plot(fig, gs[1, i], x, y, U_val_mean[i],
                   z_min, z_max, f"Mean ${qty}(x,y)$ [val]")
+        z_min, z_max = get_min_max(U_pred_std[i], U_val_std[i])
+        plot_plot(fig, gs[2, i], x, y, U_pred_std[i],
+                  z_min, z_max, f"Std ${qty}(x,y)$ [pred]")
+        plot_plot(fig, gs[3, i], x, y, U_val_std[i],
+                  z_min, z_max, f"Std ${qty}(x,y)$ [val]")
 
-    # plt.tight_layout()
+    plt.tight_layout()
     saveresultdir(HP)
 
 

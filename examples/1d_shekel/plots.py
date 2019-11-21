@@ -21,7 +21,7 @@ def get_test_data():
     return X, U_test_mean[0, :], U_test_std[0, :]
 
 
-def plot_results(U, U_pred=None,
+def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                  HP=None, no_plot=False):
 
     X, U_test_mean, U_test_std = get_test_data()
@@ -31,9 +31,14 @@ def plot_results(U, U_pred=None,
     U_pred_std = np.std(U_pred, axis=1)
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
+    hifi_error_test_mean = 100 * error_podnn(U_test_mean, U_pred_hifi_mean)
+    hifi_error_test_std = 100 * error_podnn(U_test_std, U_pred_hifi_std)
     print("--")
     print(f"Error on the mean test HiFi LHS solution: {error_test_mean:4f}%")
     print(f"Error on the stdd test HiFi LHS solution: {error_test_std:4f}%")
+    print("--")
+    print(f"Hifi Error on the mean test HiFi LHS solution: {hifi_error_test_mean:4f}%")
+    print(f"Hifi Error on the stdd test HiFi LHS solution: {hifi_error_test_std:4f}%")
     print("--")
 
     if no_plot:
@@ -43,20 +48,20 @@ def plot_results(U, U_pred=None,
 
     # Plotting the means
     ax1 = fig.add_subplot(1, 2, 1)
-    if U_pred is not None:
-        ax1.plot(x, np.mean(U_pred, axis=1), "b-", label=r"$\hat{u_V}(x)$")
+    ax1.plot(x, np.mean(U_pred, axis=1), "b-", label=r"$\hat{u_V}(x)$")
     ax1.plot(x, np.mean(U, axis=1), "r--", label=r"$u_V(x)$")
-    ax1.plot(x, U_test_mean, "r,", label=r"$u_T(x)$")
+    ax1.plot(x, U_test_mean, "k,", label=r"$u_T(x)$")
+    ax1.plot(x, U_pred_hifi_mean, "k-", label=r"$\hat{u_T}(x)$")
     ax1.legend()
     ax1.set_title("Means")
     ax1.set_xlabel("$x$")
 
     # Plotting the std
     ax2 = fig.add_subplot(1, 2, 2)
-    if U_pred is not None:
-        ax2.plot(x, np.std(U_pred, axis=1), "b-", label=r"$\hat{u_V}(x)$")
+    ax2.plot(x, np.std(U_pred, axis=1), "b-", label=r"$\hat{u_V}(x)$")
     ax2.plot(x, np.std(U, axis=1), "r--", label=r"$u_V(x)$")
     ax2.plot(x, U_test_std, "k,", label=r"$u_T(x)$")
+    ax1.plot(x, U_pred_hifi_std, "k-", label=r"$\hat{u_T}(x)$")
     ax2.legend()
     ax2.set_title("Standard deviations")
     ax2.set_xlabel("$x$")

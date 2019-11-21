@@ -56,6 +56,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     # Predict and restruct
     U_pred = model.predict(X_v_val)
     
+    # Sample the new model to generate a HiFi prediction
     X_v_val_hifi = model.generate_hifi_inputs(int(5e5), hp["mu_min"], hp["mu_max"])
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_val_hifi)
     U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"], hp["n_y"]))

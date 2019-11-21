@@ -18,11 +18,8 @@ def main(hp, use_cached_dataset=False):
 
     if not use_cached_dataset:
         # Getting data from the files
-        # mu_path = os.path.join("data", "INPUT_100_Scenarios.txt")
-        mu_path = os.path.join("data", "INPUT_300_Scenarios.txt")
-        x_u_mesh_path = os.path.join("data", "SOL_FV_300_Scenarios.txt")
-        # x_u_mesh_path = os.path.join("data", "SOL_FV_100_Scenarios.txt")
-        # Each line is: [i, x_i, y_i, z_i(unused), h_i, eta_i, (hu)_i, (hv)_i]
+        mu_path = os.path.join("data", f"INPUT_{hp['n_s']}_Scenarios.txt")
+        x_u_mesh_path = os.path.join("data", f"SOL_FV_{hp['n_s']}_Scenarios.txt")
         x_mesh, u_mesh, X_v = \
             read_space_sol_input_mesh(hp["n_s"], hp["mesh_idx"], x_u_mesh_path, mu_path)
         np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
@@ -42,14 +39,14 @@ def main(hp, use_cached_dataset=False):
                                       use_cache=use_cached_dataset)
 
     U_val_mean = np.mean(U_val, axis=-1)
-    U_val_std = np.std(U_val, axis=-1)
+    U_val_std = np.nanstd(U_val, axis=-1)
 
     # Create the model and train
     def error_val():
         """Define the error metric for in-training validation."""
         U_val_pred = model.predict(X_v_val)
         U_val_pred_mean = np.mean(U_val_pred, axis=-1)
-        U_val_pred_std = np.std(U_val_pred, axis=-1)
+        U_val_pred_std = np.nanstd(U_val_pred, axis=-1)
         err_mean = error_podnn(U_val_mean, U_val_pred_mean)
         err_std = error_podnn(U_val_std, U_val_pred_std)
         return np.array([err_mean, err_std])

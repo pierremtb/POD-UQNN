@@ -54,8 +54,14 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     # Predict and restruct
     U_pred = model.predict(X_v_val)
 
+    # Sample the new model to generate a HiFi prediction
+    X_v_val_hifi = model.generate_hifi_inputs(int(5e5), hp["mu_min"], hp["mu_max"])
+    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_val_hifi)
+    U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"], hp["n_y"]))
+    U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"], hp["n_y"]))
+
     # Plot against test and save
-    return plot_results(U_val, U_pred, hp, no_plot)
+    return plot_results(U_val, U_pred, U_pred_hifi_mean, U_pred_hifi_std, hp, no_plot)
 
 
 if __name__ == "__main__":
@@ -67,5 +73,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    main(HP, gen_test=False, use_cached_dataset=False)
-    # main(HP, gen_test=False, use_cached_dataset=True)
+    # main(HP, gen_test=False, use_cached_dataset=False)
+    main(HP, gen_test=False, use_cached_dataset=True)

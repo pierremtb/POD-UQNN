@@ -29,7 +29,7 @@ HP["lr"] = 1e-1
 HP["decay"] = 1e-2
 # HP["lr"] = 0.001
 # HP["decay"] = 0.
-HP["lambda"] = 1e-2
+HP["lambda"] = 1e-6
 # HP["lambda"] = 0.
 # Frequency of the logger
 HP["log_frequency"] = 1000
