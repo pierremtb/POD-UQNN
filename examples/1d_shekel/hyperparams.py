@@ -26,11 +26,9 @@ HP["h_layers"] = [64, 64]
 HP["batch_size"] = 0
 # Setting up TF SGD-based optimizer
 # HP["epochs"] = 70000
-HP["epochs"] = 2000
+HP["epochs"] = 10000
 HP["lr"] = 0.003
 HP["decay"] = 0.
-HP["b1"] = 0.9
-HP["eps"] = 1e-10
 HP["lambda"] = 1e-6
 # Frequency of the logger
 HP["log_frequency"] = 2000

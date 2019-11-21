@@ -49,7 +49,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
         v_val_pred = model.predict_v(X_v_val)
         # return mse(v_val, v_val_pred)
         return error_podnn(v_val, v_val_pred)
-    model.train(X_v_train, v_train, error_val, hp["h_layers"],
+    train_res = model.train(X_v_train, v_train, error_val, hp["h_layers"],
                 hp["epochs"], hp["lr"], hp["lambda"])
     # model.load_model()
 
@@ -64,7 +64,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
 
 
     # Plot against test and save
-    return plot_results(U_val, U_pred, U_pred_hifi_mean, U_pred_hifi_std, hp, no_plot)
+    return plot_results(U_val, U_pred, U_pred_hifi_mean, U_pred_hifi_std, train_res, hp, no_plot)
 
 
 if __name__ == "__main__":

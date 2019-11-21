@@ -39,7 +39,7 @@ def get_test_data():
 
 
 def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
-                 HP=None, no_plot=False):
+                 train_res=None, HP=None, no_plot=False):
     X, U_test_mean, U_test_std = get_test_data()
     X, Y = X[0], X[1]
 
@@ -116,7 +116,7 @@ def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
 
     plt.tight_layout()
 
-    saveresultdir(HP)
+    saveresultdir(HP, train_res)
 
     return error_test_mean, error_test_std
 
