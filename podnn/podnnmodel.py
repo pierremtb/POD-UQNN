@@ -5,7 +5,7 @@ import sys
 import pickle
 import tensorflow as tf
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from pyDOE import lhs
 
 from .pod import get_pod_bases

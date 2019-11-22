@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 
 def get_pod_bases(U, eps=1e-10, eps_init_step=None): 

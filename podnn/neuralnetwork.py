@@ -4,7 +4,7 @@ import os
 import pickle
 import tensorflow as tf
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 
 class NeuralNetwork:

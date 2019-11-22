@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import time
 from datetime import datetime
-from tqdm import tqdm
+from tqdm.auto import trange, tqdm
 
 
 class Logger(object):
@@ -47,6 +47,7 @@ class Logger(object):
     def log_train_start(self):
         print("\nTraining started")
         print("================")
+        # self.pbar = tqdm(total=self.tf_epochs)
         self.pbar = tqdm(total=self.tf_epochs)
 
     def log_train_epoch(self, epoch, loss, error, custom="", is_iter=False):

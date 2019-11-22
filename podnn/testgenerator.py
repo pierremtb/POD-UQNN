@@ -4,7 +4,7 @@ import sys
 import time
 import os
 import yaml
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import numpy as np
 from pyDOE import lhs
 import numba as nb
