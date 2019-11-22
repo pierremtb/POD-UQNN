@@ -44,13 +44,19 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                        hp["eps"],
                                        use_cache=use_cached_dataset)
                                      
-    # Train
+    U_val_mean = np.mean(U_val, axis=-1)
+    U_val_std = np.nanstd(U_val, axis=-1)
+
+    # Create the model and train
+    import time
     def error_val():
-        v_val_pred = model.predict_v(X_v_val)
-        # return mse(v_val, v_val_pred)
-        return error_podnn(v_val, v_val_pred)
+        """Define the error metric for in-training validation."""
+        U_val_pred_mean, U_val_pred_std = model.predict_heavy(X_v_val)
+        err_mean = error_podnn(U_val_mean, U_val_pred_mean)
+        err_std = error_podnn(U_val_std, U_val_pred_std)
+        return np.array([err_mean, err_std])
     train_res = model.train(X_v_train, v_train, error_val, hp["h_layers"],
-                hp["epochs"], hp["lr"], hp["lambda"])
+                hp["epochs"], hp["lr"], hp["lambda"], frequency=hp["log_frequency"])
     # model.load_model()
 
     # Predict and restruct
@@ -76,5 +82,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    main(HP, gen_test=False, use_cached_dataset=False)
-    # main(HP, gen_test=False, use_cached_dataset=True)
+    # main(HP, gen_test=False, use_cached_dataset=False)
+    main(HP, gen_test=False, use_cached_dataset=True)

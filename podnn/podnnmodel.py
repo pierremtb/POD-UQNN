@@ -7,12 +7,12 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 from pyDOE import lhs
-from numba import objmode, jit, prange
 
 from .pod import get_pod_bases
 from .handling import pack_layers
 from .logger import Logger
 from .neuralnetwork import NeuralNetwork
+from .acceleration import loop_vdot, loop_vdot_t
 
 
 SETUP_DATA_NAME = "setup_data.pkl"
@@ -300,6 +300,8 @@ class PodnnModel:
         X_v = self.tensor(X_v)
         v = self.tensor(v)
 
+        logger.log_train_start()
+
         # Training
         self.regnn.fit(
             X_v, v,
@@ -353,66 +355,25 @@ class PodnnModel:
         return U_pred
 
     def predict_heavy(self, X_v):
-        n_s = X_v.shape[0]
-
         v_pred_hifi = self.predict_v(X_v)
 
-        n_h = self.n_h
+        n_s = X_v.shape[0]
 
-        # The sum and sum of squares recipient vectors
         if self.has_t:
-            U_tot = np.zeros((n_h, self.n_t))
-            U_tot_sq = np.zeros((n_h, self.n_t))
+            U_tot = np.zeros((self.n_h, self.n_t))
+            U_tot_sq = np.zeros((self.n_h, self.n_t))
+            U_tot, U_tot_sq = loop_vdot_t(n_s, self.n_t, U_tot, U_tot_sq, self.V, v_pred_hifi)
         else:
-            U_tot = np.zeros((n_h,))
-            U_tot_sq = np.zeros((n_h,))
-
-        n_t = self.n_t
-        V = self.V
-
-        pbar = tqdm(total=n_s)
-        def bumpBar():
-            pbar.update(1)
-
-        @jit(nopython=True, parallel=True)
-        def loop_t(n_s, n_t, U_tot, U_tot_sq, V, v_pred_hifi):
-            for i in prange(n_s):
-                # Computing one snapshot
-                U = np.zeros_like(U_tot)
-                for j in prange(n_t):
-                    u_j = u(X, t[j], mu_lhs[i, :])
-                    U[:, j] = u_j
-                # Building the sum and the sum of squaes
-                U_tot += U
-                U_tot_sq += U**2
-                with objmode():
-                    bumpBar()
-            return U_tot, U_tot_sq
-        
-        @jit(nopython=True, parallel=True)
-        def loop(n_s, U_tot, U_tot_sq, V, v_pred_hifi):
-            for i in prange(n_s):
-                # Computing one snapshot
-                U = V.dot(v_pred_hifi[i])
-                # Building the sum and the sum of squaes
-                U_tot += U
-                U_tot_sq += U**2
-                with objmode():
-                    bumpBar()
-            return U_tot, U_tot_sq
-        
-        if self.has_t:
-            U_tot, U_tot_sq = loop_t(n_s, n_t, U_tot, U_tot_sq, V, v_pred_hifi)
-        else: 
-            U_tot, U_tot_sq = loop(n_s, U_tot, U_tot_sq, V, v_pred_hifi)
-
-        with objmode():
-            pbar.close()
+            U_tot = np.zeros((self.n_h,))
+            U_tot_sq = np.zeros((self.n_h,))
+            U_tot, U_tot_sq = loop_vdot(n_s,  U_tot, U_tot_sq, self.V, v_pred_hifi)
             
+        # Getting the mean and std
         U_pred_hifi_mean = U_tot / n_s
         U_pred_hifi_std = np.sqrt((n_s*U_tot_sq - U_tot**2) / (n_s*(n_s - 1)))
         # Making sure the std has non NaNs
         U_pred_hifi_std = np.nan_to_num(U_pred_hifi_std)
+
         return U_pred_hifi_mean, U_pred_hifi_std
 
     def load_train_data(self):

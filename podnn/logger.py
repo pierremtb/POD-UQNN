@@ -24,7 +24,8 @@ class Logger(object):
         self.epochs = []
         self.losses = []
         self.errors = []
-        self.rel_errors = []
+        self.rel_mean_errors = []
+        self.rel_std_errors = []
 
     def get_epoch_duration(self):
         now = time.time()
@@ -38,37 +39,33 @@ class Logger(object):
                 .strftime("%M:%S")
 
     def get_error_u(self):
-        return np.around(self.error_fn(), decimals=4)
+        return self.error_fn()
 
     def set_error_fn(self, error_fn):
         self.error_fn = error_fn
 
-    def log_train_start(self, model, model_description=False):
+    def log_train_start(self):
         print("\nTraining started")
         print("================")
-        self.model = model
-        # self.pbar = tqdm(total=self.tf_epochs)
-        if model_description:
-            print(model.summary())
+        self.pbar = tqdm(total=self.tf_epochs)
 
     def log_train_epoch(self, epoch, loss, error, custom="", is_iter=False):
-        # self.pbar.update(1)
+        self.pbar.update(1)
+        self.pbar.set_description(f"L: {loss:.4e}")
         if epoch % self.frequency == 0:
-            rel_error = self.get_error_u()
+            rel_err = self.get_error_u()
+            rel_err_str = np.array2string(rel_err, formatter={'float_kind':lambda x: "%.4f" % x})
+
             name = 'nt_epoch' if is_iter else '#'
             message = f"{name}: {epoch:6d} " + \
-                  f"ET: {self.get_elapsed()} " + \
-                  f"L: {loss:.4e} " + \
-                  f"E_V: {self.get_error_u()} " + custom
-                #   f"E_V: {self.get_error_u():.4e} " + custom
-                #   f"E_V: {100 * self.get_error_u():.4f}%  " + custom
-            # self.pbar.set_description(f"l:{loss:.2e} e:{self.get_error_u():.2e}")
-            print(message)
+                      f"E_V: {rel_err_str} " + custom
+            self.pbar.write(message)
 
             self.epochs.append(epoch)
             self.losses.append(loss)
             self.errors.append(error)
-            self.rel_errors.append(rel_error)
+            self.rel_mean_errors.append(rel_err[0])
+            self.rel_std_errors.append(rel_err[1])
 
     def log_train_opt(self, name):
         print(f"-- Starting {name} optimization --")
@@ -77,13 +74,14 @@ class Logger(object):
         print("==================")
         print(f"Training finished (epoch {epoch}): " +
               f"duration = {self.get_elapsed()}  " +
-              f"err_val = {100 * self.get_error_u():.4f}%  " + custom)
+              f"err_val = {self.get_error_u()}  " + custom)
 
     def get_logs(self):
         epochs = np.array(self.epochs)[:, None]
         losses = np.array(self.losses)[:, None]
         errors = np.array(self.errors)[:, None]
-        rel_errors = np.array(self.rel_errors)[:, None]
-        header = "epoch\tloss\terror\trel_error"
+        rel_mean_errors = np.array(self.rel_mean_errors)[:, None]
+        rel_std_errors = np.array(self.rel_std_errors)[:, None]
+        header = "epoch\tloss\terror\trel_mean_error\trel_std_error"
 
-        return (header, np.hstack((epochs, losses, errors, rel_errors)))
+        return (header, np.hstack((epochs, losses, errors, rel_mean_errors, rel_std_errors)))
