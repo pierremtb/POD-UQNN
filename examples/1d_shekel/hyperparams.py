@@ -22,8 +22,6 @@ HP["eps_init"] = 1e-10
 HP["train_val_ratio"] = 0.5
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
-# Batch size for mini-batch training (0 means full-batch)
-HP["batch_size"] = 0
 # Setting up TF SGD-based optimizer
 # HP["epochs"] = 70000
 HP["epochs"] = 10000
@@ -31,7 +29,7 @@ HP["lr"] = 0.003
 HP["decay"] = 0.
 HP["lambda"] = 1e-6
 # Frequency of the logger
-HP["log_frequency"] = 2000
+HP["log_frequency"] = 1000
 # Non-spatial params
 bet = 1/10 * np.array([1, 2, 2, 4, 4, 6, 3, 7, 5, 5])
 gam = 1. * np.array([4, 1, 8, 6, 3, 2, 5, 8, 6, 7])

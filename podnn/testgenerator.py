@@ -155,6 +155,7 @@ class TestGenerator:
             U_tot_sq = np.zeros((n_h,))
 
         # Parameters sampling
+        # TODO: parallelize our own lhs function
         X_mu = lhs(n_s, n_p).T
         mu_lhs = lb + (ub - lb)*X_mu
 

@@ -19,9 +19,7 @@ HP["eps"] = 1e-10
 HP["train_val_ratio"] = 0.7
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
-# Batch size for mini-batch training (0 means full-batch)
-HP["batch_size"] = 0
-# Setting up _structthe TF SGD-based optimizer
+# Setting up the TF SGD-based optimizer
 HP["epochs"] = 2000000
 # HP["epochs"] = 40000
 # HP["epochs"] = 5000
