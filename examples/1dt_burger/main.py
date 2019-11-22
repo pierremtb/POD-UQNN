@@ -1,4 +1,4 @@
-"""POD-NN modeling for the second 1D time-dep Burgers Equation."""
+"""POD-NN modeling for 1D time-dependent Burgers Equation."""
 
 import sys
 import yaml
@@ -16,7 +16,7 @@ from plots import plot_results
 
 def main(hp, gen_test=False, use_cached_dataset=False,
          no_plot=False):
-    """Full example to run POD-NN on 1dt_burger2."""
+    """Full example to run POD-NN on 1dt_burger."""
 
     if gen_test:
         generate_test_dataset()
@@ -29,10 +29,10 @@ def main(hp, gen_test=False, use_cached_dataset=False,
         x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
 
     # Extend the class and init the model
-    class Burgers2PodnnModel(PodnnModel):
+    class BurgersPodnnModel(PodnnModel):
         def u(self, X, t, mu):
             return u(X, t, mu)
-    model = Burgers2PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
+    model = BurgersPodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, \

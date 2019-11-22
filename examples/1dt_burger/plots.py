@@ -1,4 +1,4 @@
-"""Module for plotting results of the second 1d time-dep Burgers Equation."""
+"""Module for plotting results of 3D time-dependante Burgers Equation."""
 
 import os
 import sys
@@ -23,6 +23,16 @@ def get_test_data():
     return X, T, U_test_mean, U_test_std
 
 
+def plot_contour(fig, pos, X, T, U, levels, title):
+    ax = fig.add_subplot(pos)
+    ct = ax.contourf(X, T, U, origin="lower")
+    # ct = ax.contourf(X, T, U, levels=levels, origin="lower")
+    plt.colorbar(ct)
+    ax.set_title(title)
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$t$")
+
+
 def plot_map(fig, pos, x, t, X, T, U, title):
     XT = np.hstack((X.flatten()[:, None], T.flatten()[:, None]))
     U_test_grid = griddata(XT, U.flatten(), (X, T), method='cubic')
@@ -44,7 +54,6 @@ def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
     ax.plot(x, U_pred[:, t_i], "b-", label="$\hat{u_V}$")
     ax.plot(x, U_val[:, t_i], "r--", label="$u_V$")
     ax.plot(x, U_test[:, t_i], "k,", label="$u_T$")
-    ax.set_title(title)
     ax.set_xlabel("$x$")
     ax.set_title(title)
     if show_legend:
@@ -60,19 +69,15 @@ def plot_results(U_val, U_pred,
     xx = xxT.T
     tt = ttT.T
 
-    # Keeping the only solution coordinate
+    U_pred_mean = np.mean(U_pred[0], axis=2)
+    U_val_mean = np.mean(U_val[0], axis=2)
     U_test_mean = U_test_mean[0]
-    U_test_std = U_test_std[0]
-    U_val = U_val[0]
-    U_pred = U_pred[0]
 
-    U_pred_mean = np.mean(U_pred, axis=2)
-    U_val_mean = np.mean(U_val, axis=2)
     # Using nanstd() to prevent NotANumbers from appearing
     # (they prevent norm to be computed after)
-    U_pred_std = np.nanstd(U_pred, axis=2)
-    U_val_std = np.nanstd(U_val, axis=2)
-    U_test_std = np.nan_to_num(U_test_std)
+    U_pred_std = np.nanstd(U_pred[0], axis=2)
+    U_val_std = np.nanstd(U_val[0], axis=2)
+    U_test_std = np.nan_to_num(U_test_std[0])
 
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
