@@ -43,13 +43,19 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                        hp["eps"],
                                        use_cache=use_cached_dataset)
 
+    U_val_mean = np.mean(U_val, axis=-1)
+    U_val_std = np.nanstd(U_val, axis=-1)
+
     # Create the model and train
     def error_val():
-        v_val_pred = model.predict_v(X_v_val)
-        # return mse(v_val, v_val_pred)
-        return error_podnn(v_val, v_val_pred)
+        """Define the error metric for in-training validation."""
+        U_val_pred_mean, U_val_pred_std = model.predict_heavy(X_v_val)
+        err_mean = error_podnn(U_val_mean, U_val_pred_mean)
+        err_std = error_podnn(U_val_std, U_val_pred_std)
+        return np.array([err_mean, err_std])
     train_res = model.train(X_v_train, v_train, error_val, hp["h_layers"],
-                      hp["epochs"], hp["lr"], hp["lambda"]) 
+                      hp["epochs"], hp["lr"], hp["lambda"],
+                      frequency=hp["log_frequency"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)

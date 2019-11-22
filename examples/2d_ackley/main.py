@@ -48,7 +48,6 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     U_val_std = np.nanstd(U_val, axis=-1)
 
     # Create the model and train
-    import time
     def error_val():
         """Define the error metric for in-training validation."""
         U_val_pred_mean, U_val_pred_std = model.predict_heavy(X_v_val)
