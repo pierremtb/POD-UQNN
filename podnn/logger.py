@@ -59,7 +59,7 @@ class Logger(object):
 
             name = 'nt_epoch' if is_iter else '#'
             message = f"{name}: {epoch:6d} " + \
-                      f"L: {loss:.4f} " + \
+                      f"L: {loss:.4e} " + \
                       f"E_V: {rel_err_str} " + custom
             self.pbar.write(message)
 

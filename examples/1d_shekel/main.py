@@ -63,11 +63,12 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     # Sample the new model to generate a HiFi prediction
     n_s_hifi = int(1e6)
     print("Sampling {n_s_hifi} parameters...")
-    X_v_val_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"])
+    X_v_val_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"],
+                                              hp["t_min"], hp["t_max"])
     print("Predicting the {n_s_hifi} corresponding solutions...")
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_val_hifi)
-    U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"],))
-    U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"],))
+    U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"], hp["n_t"]))
+    U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"], hp["n_t"]))
 
     # Plot against test and save
     return plot_results(U_val, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
@@ -78,7 +79,7 @@ if __name__ == "__main__":
     # Custom hyperparameters as command-line arg
     if len(sys.argv) > 1:
         with open(sys.argv[1]) as HPFile:
-            HP =  yaml.load(HPFile)
+            HP = yaml.load(HPFile)
     # Default ones
     else:
         from hyperparams import HP

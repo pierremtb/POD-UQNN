@@ -295,9 +295,9 @@ class PodnnModel:
                 logger.log_train_epoch(epoch, logs["loss"], logs["mse"])
 
         # TODO: add normalization
-        # ub = np.amax(X_v, axis=0)
-        # lb = np.amin(X_v, axis=0)
-        X_v = self.tensor(X_v)
+        self.ub = np.amax(X_v, axis=0)
+        self.lb = np.amin(X_v, axis=0)
+        X_v = self.normalize(X_v) 
         v = self.tensor(v)
 
         logger.log_train_start()
@@ -314,6 +314,13 @@ class PodnnModel:
         self.save_model()
 
         return logger.get_logs()
+
+    # TODO: save ub/lb
+    def normalize(self, X):
+        """Apply a kind of normalization to the inputs X."""
+        if self.lb is not None and self.ub is not None:
+            return self.tensor((X - self.lb) - 0.5*(self.ub - self.lb))
+        return self.tensor(X)
 
     def restruct(self, U):
         if self.has_t:
@@ -340,6 +347,7 @@ class PodnnModel:
         return (self.n_v,) + tup
 
     def predict_v(self, X_v):
+        X_v = self.normalize(X_v)
         """Returns the predicted POD projection coefficients."""
         v_pred = self.regnn.predict(X_v).astype(self.dtype)
         return v_pred
