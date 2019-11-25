@@ -17,8 +17,7 @@ from burgers import burgers_viscous_time_exact1 as burgers_exact
 
 
 # HiFi sampling size
-# n_s = int(1e6)
-n_s = int(1e3)
+n_s = HP["n_s_hifi"]
 
 
 # The solution function
