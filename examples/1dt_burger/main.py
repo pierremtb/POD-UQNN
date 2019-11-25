@@ -43,6 +43,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                        t_min=hp["t_min"], t_max=hp["t_max"],
                                        use_cache=use_cached_dataset)
 
+    U_val = model.restruct(U_val)
     U_val_mean = np.mean(U_val, axis=-1)
     U_val_std = np.nanstd(U_val, axis=-1)
 
@@ -59,6 +60,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)
+    U_pred = model.restruct(U_pred)
 
     # Sample the new model to generate a HiFi prediction
     n_s_hifi = hp["n_s_hifi"]
