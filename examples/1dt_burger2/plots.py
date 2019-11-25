@@ -38,21 +38,22 @@ def plot_map(fig, pos, x, t, X, T, U, title):
     ax.set_ylabel("$x$")
 
 
-def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
-        title, show_legend=False):
+def plot_spec_time(fig, pos, x, t_i,
+                   U_pred, U_val, U_test, U_hifi,
+                   title, show_legend=False):
     ax = fig.add_subplot(pos)
     ax.plot(x, U_pred[:, t_i], "b-", label="$\hat{u_V}$")
     ax.plot(x, U_val[:, t_i], "r--", label="$u_V$")
     ax.plot(x, U_test[:, t_i], "k,", label="$u_T$")
-    ax.set_title(title)
+    ax.plot(x, U_hifi[:, t_i], "b,", label="$\hat{u_T}$")
     ax.set_xlabel("$x$")
     ax.set_title(title)
     if show_legend:
         ax.legend()
 
 
-def plot_results(U_val, U_pred,
-                 HP=None, save_path=None):
+def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+                 train_res, HP=None, no_plot=False):
     X, t, U_test_mean, U_test_std = get_test_data()
     x = X[0]
 
@@ -60,27 +61,27 @@ def plot_results(U_val, U_pred,
     xx = xxT.T
     tt = ttT.T
 
-    # Keeping the only solution coordinate
+    U_pred_mean = np.mean(U_pred[0], axis=2)
+    U_val_mean = np.mean(U_val[0], axis=2)
     U_test_mean = U_test_mean[0]
-    U_test_std = U_test_std[0]
-    U_val = U_val[0]
-    U_pred = U_pred[0]
 
-    U_pred_mean = np.mean(U_pred, axis=2)
-    U_val_mean = np.mean(U_val, axis=2)
     # Using nanstd() to prevent NotANumbers from appearing
     # (they prevent norm to be computed after)
-    U_pred_std = np.nanstd(U_pred, axis=2)
-    U_val_std = np.nanstd(U_val, axis=2)
-    U_test_std = np.nan_to_num(U_test_std)
+    U_pred_std = np.nanstd(U_pred[0], axis=2)
+    U_val_std = np.nanstd(U_val[0], axis=2)
+    U_test_std = np.nan_to_num(U_test_std[0])
 
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
-    if save_path is None:
-        print("--")
-        print(f"Error on the mean test HiFi LHS solution: {error_test_mean:.4f}%")
-        print(f"Error on the stdd test HiFi LHS solution: {error_test_std:.4f}%")
-        print("--")
+    hifi_error_test_mean = 100 * error_podnn(U_test_mean, U_pred_hifi_mean)
+    hifi_error_test_std = 100 * error_podnn(U_test_std, U_pred_hifi_std)
+    print("--")
+    print(f"Error on the mean test HiFi LHS solution: {error_test_mean:4f}%")
+    print(f"Error on the stdd test HiFi LHS solution: {error_test_std:4f}%")
+    print("--")
+    print(f"Hifi Error on the mean test HiFi LHS solution: {hifi_error_test_mean:4f}%")
+    print(f"Hifi Error on the stdd test HiFi LHS solution: {hifi_error_test_std:4f}%")
+    print("--")
 
     n_plot_x = 5
     n_plot_y = 3
@@ -93,18 +94,23 @@ def plot_results(U_val, U_pred,
             U_pred_mean, U_val_mean, U_test_mean,
             "Means $u(x, t=0.25)$", show_legend=True)
     plot_spec_time(fig, gs[2, 1], x, 50,
-            U_pred_mean, U_val_mean, U_test_mean, "Means $u(x, t=0.50)$")
+            U_pred_mean, U_val_mean, U_test_mean, U_pred_hifi_mean,
+            "Means $u(x, t=0.50)$")
     plot_spec_time(fig, gs[2, 2], x, 75,
-            U_pred_mean, U_val_mean, U_test_mean, "Means $u(x, t=0.75)$")
+            U_pred_mean, U_val_mean, U_test_mean, U_pred_hifi_mean,
+            "Means $u(x, t=0.75)$")
     plot_spec_time(fig, gs[3, 0], x, 25,
-            U_pred_std, U_val_std, U_test_std, "Std dev $u(x, t=0.25)$")
+            U_pred_std, U_val_std, U_test_std, U_pred_hifi_std,
+            "Std dev $u(x, t=0.25)$")
     plot_spec_time(fig, gs[3, 1], x, 50,
-            U_pred_std, U_val_std, U_test_std, "Std dev $u(x, t=0.50)$")
+            U_pred_std, U_val_std, U_test_std, U_pred_hifi_std,
+            "Std dev $u(x, t=0.50)$")
     plot_spec_time(fig, gs[3, 2], x, 75,
-            U_pred_std, U_val_std, U_test_std, "Std dev $u(x, t=0.75)$")
+            U_pred_std, U_val_std, U_test_std, U_pred_hifi_std,
+            "Std dev $u(x, t=0.75)$")
 
     plt.tight_layout()
-    saveresultdir(HP)
+    saveresultdir(HP, train_res)
 
 
 if __name__ == "__main__":
@@ -120,5 +126,15 @@ if __name__ == "__main__":
     U_pred_struct = model.restruct(U_pred)
     U_val_struct = model.restruct(U_val)
 
+    # Sample the new model to generate a HiFi prediction
+    n_s_hifi = hp["n_s_hifi"]
+    print("Sampling {n_s_hifi} parameters...")
+    X_v_val_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"],
+                                              hp["t_min"], hp["t_max"])
+    print("Predicting the {n_s_hifi} corresponding solutions...")
+    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_val_hifi)
+    U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"], hp["n_t"]))
+    U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"], hp["n_t"]))
+    
     # Plot and save the results
-    plot_results(U_val_struct, U_pred_struct, hp)
+    plot_results(U_val_struct, U_pred_struct, U_pred_hifi_mean, U_pred_hifi_std, hp)

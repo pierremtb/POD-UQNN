@@ -14,7 +14,7 @@ from hyperparams import HP
 
 
 # HiFi sampling size
-n_s = int(1e5)
+n_s = HP["n_s_hifi"]
 
 
 # The solution function

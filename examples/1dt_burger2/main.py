@@ -43,21 +43,36 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                        t_min=hp["t_min"], t_max=hp["t_max"],
                                        use_cache=use_cached_dataset)
 
-    # Train
+    U_val_mean = np.mean(U_val, axis=-1)
+    U_val_std = np.nanstd(U_val, axis=-1)
+
+    # Create the model and train
     def error_val():
-        v_val_pred = model.predict_v(X_v_val)
-        # return mse(v_val, v_val_pred)
-        return error_podnn(v_val, v_val_pred)
-    model.train(X_v_train, v_train, error_val, hp["h_layers"],
-                hp["epochs"], hp["lr"], hp["lambda"])
+        """Define the error metric for in-training validation."""
+        U_val_pred_mean, U_val_pred_std = model.predict_heavy(X_v_val)
+        err_mean = error_podnn(U_val_mean, U_val_pred_mean)
+        err_std = error_podnn(U_val_std, U_val_pred_std)
+        return np.array([err_mean, err_std])
+    train_res = model.train(X_v_train, v_train, error_val, hp["h_layers"],
+                      hp["epochs"], hp["lr"], hp["lambda"],
+                      frequency=hp["log_frequency"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)
-    U_pred_struct = model.restruct(U_pred)
-    U_val_struct = model.restruct(U_val)
- 
+
+    # Sample the new model to generate a HiFi prediction
+    n_s_hifi = hp["n_s_hifi"]
+    print("Sampling {n_s_hifi} parameters...")
+    X_v_val_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"],
+                                              hp["t_min"], hp["t_max"])
+    print("Predicting the {n_s_hifi} corresponding solutions...")
+    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_val_hifi)
+    U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"], hp["n_t"]))
+    U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"], hp["n_t"]))
+
     # Plot against test and save
-    return plot_results(U_val_struct, U_pred_struct, hp, no_plot)
+    return plot_results(U_val, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+                        train_res, hp, no_plot)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg
