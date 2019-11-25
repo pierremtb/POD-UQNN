@@ -1,9 +1,7 @@
+tensorflow==2.0.0
 matplotlib==3.0.3
 numpy==1.16.2
-pyDOE==0.3.8
-tensorflow==2.0.0
 tqdm==4.34.0
-gast==0.2.2
 numba==0.46.0
 colorama==0.4.1
 pandas==0.25.3

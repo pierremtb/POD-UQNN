@@ -6,11 +6,10 @@ import os
 import yaml
 from tqdm.auto import tqdm
 import numpy as np
-from pyDOE import lhs
 import numba as nb
 from numba import objmode, jit, prange
 
-
+from .acceleration import lhs
 from .mesh import create_linear_mesh
 
 X_FILE = "X.npy"
@@ -155,7 +154,6 @@ class TestGenerator:
             U_tot_sq = np.zeros((n_h,))
 
         # Parameters sampling
-        # TODO: parallelize our own lhs function
         X_mu = lhs(n_s, n_p).T
         mu_lhs = lb + (ub - lb)*X_mu
 
