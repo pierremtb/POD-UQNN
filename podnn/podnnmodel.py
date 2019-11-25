@@ -6,13 +6,12 @@ import pickle
 import tensorflow as tf
 import numpy as np
 from tqdm.auto import tqdm
-from pyDOE import lhs
 
 from .pod import get_pod_bases
 from .handling import pack_layers
 from .logger import Logger
 from .neuralnetwork import NeuralNetwork
-from .acceleration import loop_vdot, loop_vdot_t
+from .acceleration import loop_vdot, loop_vdot_t, lhs
 
 
 SETUP_DATA_NAME = "setup_data.pkl"
