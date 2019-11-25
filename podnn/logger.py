@@ -59,6 +59,7 @@ class Logger(object):
 
             name = 'nt_epoch' if is_iter else '#'
             message = f"{name}: {epoch:6d} " + \
+                      f"L: {loss:.4f} " + \
                       f"E_V: {rel_err_str} " + custom
             self.pbar.write(message)
 
@@ -72,10 +73,13 @@ class Logger(object):
         print(f"-- Starting {name} optimization --")
 
     def log_train_end(self, epoch, custom=""):
+        self.pbar.close()
         print("==================")
+        rel_err_str = np.array2string(self.get_error_u(),
+                                      formatter={'float_kind':lambda x: "%.4f" % x})
         print(f"Training finished (epoch {epoch}): " +
               f"duration = {self.get_elapsed()}  " +
-              f"err_val = {self.get_error_u()}  " + custom)
+              f"rel_err_val = {rel_err_str}  " + custom)
 
     def get_logs(self):
         epochs = np.array(self.epochs)[:, None]

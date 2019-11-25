@@ -48,7 +48,8 @@ def get_min_max(z1, z2):
 
 
 def plot_results(x_mesh, U_val, U_pred,
-                 HP=None, export_vtk=False, export_txt=False):
+                 HP=None, train_res=None,
+                 export_vtk=False, export_txt=False):
     """Handles the plots of 3d_shallowwater."""
 
     # Keeping only the first nodes
@@ -110,7 +111,7 @@ def plot_results(x_mesh, U_val, U_pred,
                   z_min, z_max, f"Std ${qty}(x,y)$ [val]")
 
     plt.tight_layout()
-    saveresultdir(HP)
+    saveresultdir(HP, train_res)
 
 
 if __name__ == "__main__":

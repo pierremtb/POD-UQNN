@@ -9,6 +9,7 @@ import numpy as np
 from datetime import datetime
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.font_manager
 
 
 # From https://github.com/maziarraissi/PINNs (MIT License, maziarraissi)
@@ -51,9 +52,10 @@ def saveresultdir(save_HP, train_res=None):
     with open(os.path.join(resdir, "HP.txt"), "w") as f:
          yaml.dump(save_HP, f)
     if train_res is not None:
+        qty_count = train_res[1].shape[1] - 1
         np.savetxt(os.path.join(resdir, "res.txt"), train_res[1],
                    header=train_res[0], delimiter="\t",
-                   fmt="\t".join(["%i"] + ["%1.6f"]*train_res[1].shape[1]))
+                   fmt="\t".join(["%i"] + ["%1.6f"]*qty_count))
     filename = os.path.join(resdir, "graph")
     savefig(filename)
     openPdfGraph(filename)

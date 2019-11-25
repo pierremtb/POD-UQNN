@@ -5,8 +5,7 @@ import tensorflow as tf
 
 
 HP = {}
-HP["mesh_idx"] = ([0], [1, 2], [4,6,7])
-# HP["mesh_idx"] = ([0], [1, 2], [4])
+HP["mesh_idx"] = ([0], [1, 2], [4, 6, 7])
 # Dimension of u(x, t, mu)
 HP["n_v"] = len(HP["mesh_idx"][2])
 # Time
@@ -20,9 +19,9 @@ HP["train_val_ratio"] = 0.7
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up the TF SGD-based optimizer
-HP["epochs"] = 2000000
+# HP["epochs"] = 2000000
 # HP["epochs"] = 40000
-# HP["epochs"] = 5000
+HP["epochs"] = 5000
 HP["lr"] = 1e-1
 HP["decay"] = 1e-2
 # HP["lr"] = 0.001

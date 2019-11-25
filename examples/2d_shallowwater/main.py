@@ -50,9 +50,9 @@ def main(hp, use_cached_dataset=False):
         err_mean = error_podnn(U_val_mean, U_val_pred_mean)
         err_std = error_podnn(U_val_std, U_val_pred_std)
         return np.array([err_mean, err_std])
-    model.train(X_v_train, v_train, error_val, hp["h_layers"],
-                hp["epochs"], hp["lr"], hp["lambda"], hp["decay"],
-                hp["log_frequency"])
+    train_res = model.train(X_v_train, v_train, error_val, hp["h_layers"],
+                            hp["epochs"], hp["lr"], hp["lambda"], hp["decay"],
+                            hp["log_frequency"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_val)
@@ -67,7 +67,7 @@ def main(hp, use_cached_dataset=False):
     # exit(0)
 
     # Plot and save the results
-    return plot_results(x_mesh, U_val, U_pred, hp)
+    return plot_results(x_mesh, U_val, U_pred, hp, train_res)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg
