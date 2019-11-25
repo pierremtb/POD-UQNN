@@ -6,6 +6,8 @@ import pickle
 import tensorflow as tf
 import numpy as np
 from tqdm.auto import tqdm
+from sklearn.model_selection import train_test_split
+
 
 from .pod import get_pod_bases
 from .handling import pack_layers
@@ -149,11 +151,12 @@ class PodnnModel:
         return X_v, U, U_struct
 
     def split_dataset(self, X_v, v, train_val_ratio, n_st):
-        # TODO: randomize the split
-        n_st_train = int(train_val_ratio * n_st)
-        X_v_train, v_train = X_v[:n_st_train, :], v[:n_st_train, :]
-        X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
+        X_v_train, X_v_val, v_train, v_val = \
+            train_test_split(X_v, v, test_size=train_val_ratio)
         return X_v_train, v_train, X_v_val, v_val
+        # n_st_train = int(train_val_ratio * n_st)
+        # X_v_train, v_train = X_v[:n_st_train, :], v[:n_st_train, :]
+        # X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
 
     def convert_dataset(self, u_mesh, X_v, train_val_ratio, eps, eps_init=None,
                         use_cache=False):
