@@ -368,6 +368,7 @@ class PodnnModel:
         n_s = X_v.shape[0]
 
         if self.has_t:
+            n_s = int(n_s / self.n_t)
             U_tot = np.zeros((self.n_h, self.n_t))
             U_tot_sq = np.zeros((self.n_h, self.n_t))
             U_tot, U_tot_sq = loop_vdot_t(n_s, self.n_t, U_tot, U_tot_sq, self.V, v_pred_hifi)
