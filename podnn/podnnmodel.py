@@ -40,6 +40,8 @@ class PodnnModel:
 
         self.regnn = None
         self.V = None
+        self.ub = None
+        self.lb = None
 
         self.save_setup_data()
 
@@ -293,7 +295,7 @@ class PodnnModel:
             def on_epoch_end(self, epoch, logs):
                 logger.log_train_epoch(epoch, logs["loss"], logs["mse"])
 
-        # TODO: add normalization
+        # Preparing the inputs/outputs
         self.ub = np.amax(X_v, axis=0)
         self.lb = np.amin(X_v, axis=0)
         X_v = self.normalize(X_v) 
@@ -314,7 +316,6 @@ class PodnnModel:
 
         return logger.get_logs()
 
-    # TODO: save ub/lb
     def normalize(self, X):
         """Apply a kind of normalization to the inputs X."""
         if self.lb is not None and self.ub is not None:
@@ -391,11 +392,13 @@ class PodnnModel:
             print("Loading train data")
             data = pickle.load(f)
             self.V = data[0]
-            return data[1:]
+            self.ub = data[1]
+            self.lb = data[2]
+            return data[3:]
 
     def save_train_data(self, X_v_train, v_train, X_v_val, v_val, U_val):
         with open(self.train_data_path, "wb") as f:
-            pickle.dump((self.V, X_v_train, v_train,
+            pickle.dump((self.V, self.ub, self.lb, X_v_train, v_train,
                          X_v_val, v_val, U_val), f)
 
     def load_model(self):
@@ -403,18 +406,12 @@ class PodnnModel:
 
         if not os.path.exists(self.model_path):
             raise FileNotFoundError("Can't find cached model.")
-        # if not os.path.exists(self.model_cache_params_path):
-        #     raise FileNotFoundError("Can't find cached model params.")
 
         print(f"Loading model from {self.model_path}...")
-        # print(f"Loading model params from {self.model_cache_params_path}...")
-        # with open(self.model_cache_params_path, "rb") as f:
-            # layers, reg_lam = pickle.load(f)
         self.regnn = tf.keras.models.load_model(self.model_path)
 
     def save_model(self):
         tf.keras.models.save_model(self.regnn, self.model_path)
-        # self.regnn.save_to(self.model_cache_path, self.model_cache_params_path)
 
     def save_setup_data(self):
         with open(self.setup_data_path, "wb") as f:
