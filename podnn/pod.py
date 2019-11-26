@@ -33,12 +33,13 @@ def get_pod_bases(U, eps=1e-10, eps_init_step=None):
 def perform_pod(U, eps, verbose=True):
     # Number of DOFs
     n_h = U.shape[0]
-    # Number of snapshots n_s x Number of space nodes (n_x * n_y * ...)
+
+    # Number of snapshots n_s x Number of time steps
     n_st = U.shape[1]
 
+    # SVD algoritm call
     W, D, ZT = np.linalg.svd(U, full_matrices=False)
 
-    
     # Getting MATLAB-like orientation
     Z = ZT.T
     

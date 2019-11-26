@@ -65,13 +65,14 @@ def loop_u_t(u, n_s, n_t, n_v, n_xyz, n_h,
         X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
 
         # Calling the analytical solution function
-        Ui = np.zeros((n_v, X.shape[1], n_t))
+        Ui = np.zeros((n_v, n_xyz, n_t))
         for j in range(n_t):
-            Ui[:, :, j] = u(X, t[j], mu_lhs[i])
+            Ui[:, :, j] = 0.
+            # Ui[:, :, j] = u(X, t[j], mu_lhs[i])
 
         U[:, s:e] = Ui.reshape((n_h, n_t))
-        U_struct[:, :, i] = \
-            np.reshape(U[:, s:e], (n_v, n_xyz, n_t))
+        # U_struct[:, :, i] = np.ascontiguousarray(U[:, s:e]).reshape((n_h, n_t))
+        U_struct[:, :, i] = U[:, s:e]
     return X_v, U, U_struct
 
 
