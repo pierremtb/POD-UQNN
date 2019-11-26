@@ -12,9 +12,6 @@ from podnn.testgenerator import TestGenerator, X_FILE, T_FILE, U_MEAN_FILE, U_ST
 
 from hyperparams import HP
 
-sys.path.append("burgersutils")
-from burgers import burgers_viscous_time_exact1 as burgers_exact
-
 
 # HiFi sampling size
 n_s = HP["n_s_hifi"]
@@ -22,12 +19,19 @@ n_s = HP["n_s_hifi"]
 
 # The solution function
 def u(X, t, mu):
+    """Burgers2 explicit solution."""
     x = X[0]
-    return burgers_exact(mu, x.shape[0], x, 1, [t]).T
+
+    if t == 1.:
+        return x / (1 + np.exp(1/(4*mu)*(x**2 - 1/4)))
+
+    t0 = np.exp(1 / (8*mu))
+    return (x/t) / (1 + np.sqrt(t/t0)*np.exp(x**2/(4*mu*t)))
 
 
 class BurgersTestGenerator(TestGenerator):
     def plot(self):
+        """Overrides the method to plot the 1D, time-dependant Burgers solution."""
         dirname = os.path.join("data")
         print(f"Reading data to {dirname}")
 

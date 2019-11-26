@@ -1,13 +1,13 @@
 """ POD-NN modeling for 2D inviscid Shallow Water Equations."""
 
 import sys
-import yaml
 import os
+import yaml
 import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import error_podnn, mse
+from podnn.metrics import error_podnn
 from podnn.mesh import read_space_sol_input_mesh
 
 from plots import plot_results
@@ -33,7 +33,7 @@ def main(hp, use_cached_dataset=False):
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, \
-        X_v_val, v_val, \
+        X_v_val, _, \
         U_val = model.convert_dataset(u_mesh, X_v,
                                       hp["train_val_ratio"], hp["eps"],
                                       use_cache=use_cached_dataset)
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # Custom hyperparameters as command-line arg
     if len(sys.argv) > 1:
         with open(sys.argv[1]) as HPFile:
-            HP =  yaml.load(HPFile)
+            HP = yaml.load(HPFile)
     # Default ones
     else:
         from hyperparams import HP

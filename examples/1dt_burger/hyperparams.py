@@ -9,15 +9,15 @@ HP = {}
 HP["n_v"] = 1
 # Space
 HP["n_x"] = 256
-HP["x_min"] = -1.
-HP["x_max"] = +1.
+HP["x_min"] = 0.
+HP["x_max"] = 1.5
 # Time
 HP["n_t"] = 100
-HP["t_min"] = 0.
-HP["t_max"] = 1.
+HP["t_min"] = 1.
+HP["t_max"] = 5.
 # Snapshots count
-HP["n_s"] = 2 * 4
-HP["n_s_hifi"] = int(1e2)
+HP["n_s"] = 2 * 100
+HP["n_s_hifi"] = 1e5
 # POD stopping param
 HP["eps"] = 1e-10
 HP["eps_init"] = 1e-10

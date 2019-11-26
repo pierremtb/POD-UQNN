@@ -3,4 +3,5 @@ indent-string='    '
 
 disable=
  wrong-import-position,
- invalid-name 
+ invalid-name,
+ redefined-outer-name 

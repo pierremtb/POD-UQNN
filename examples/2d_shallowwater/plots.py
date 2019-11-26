@@ -9,14 +9,13 @@ from pyevtk.hl import pointsToVTK
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import error_podnn
 from podnn.plotting import figsize, saveresultdir
 
 
 def plot_plot(fig, pos, x, y, z, z_min, z_max, title):
     """Does a colorplot from unstructured, 1d (x, y, z) data."""
     ax = fig.add_subplot(pos)
-    h = plt.tripcolor(x, y ,z)
+    h = plt.tripcolor(x, y, z)
     h.set_clim(z_min, z_max)
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
@@ -28,8 +27,9 @@ def plot_plot(fig, pos, x, y, z, z_min, z_max, title):
 
 def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
                    title, show_legend=False):
+    """1D plot at a specific time, u=f(x, t=t_i)."""
     ax = fig.add_subplot(pos)
-    ax.plot(x, U_pred[:, t_i], "b-", label="$\hat{u_V}$")
+    ax.plot(x, U_pred[:, t_i], "b-", label=r"$\hat{u_V}$")
     ax.plot(x, U_val[:, t_i], "r--", label="$u_V$")
     ax.plot(x, U_test[:, t_i], "k,", label="$u_T$")
     ax.set_title(title)
@@ -54,7 +54,8 @@ def plot_results(x_mesh, U_val, U_pred,
 
     # Keeping only the first nodes
     i_min = 0
-    i_max = 10000
+    # i_max = 10000
+    i_max = None
     x = x_mesh[i_min:i_max, 1]
     y = x_mesh[i_min:i_max, 2]
 
@@ -70,23 +71,31 @@ def plot_results(x_mesh, U_val, U_pred,
     # plt.plot(x, U_val_mean[])
 
     if export_txt:
-        print(U_val_mean.T.shape)
-        print(x_mesh.shape)
+        print("Saving to .txt")
         x_u_mean = np.concatenate((x_mesh, U_val_mean.T), axis=1)
+        x_u_std = np.concatenate((x_mesh, U_val_std.T), axis=1)
         non_idx_len = x_u_mean.shape[1] - 1
         np.savetxt(os.path.join("cache", "x_u_mean.txt"), x_u_mean,
                    fmt=' '.join(["%i"] + ["%1.6f"]*non_idx_len),
                    delimiter="\t")
-        return
+        np.savetxt(os.path.join("cache", "x_u_std.txt"), x_u_std,
+                   fmt=' '.join(["%i"] + ["%1.6f"]*non_idx_len),
+                   delimiter="\t")
+        if not export_vtk:
+            return
 
     if export_vtk:
+        print("Saving to .vtu")
         z = np.zeros_like(x)
         pointsToVTK(os.path.join("cache", "rnd_points"), np.ascontiguousarray(x),
                     np.ascontiguousarray(y), np.ascontiguousarray(z),
                     data={
-                        "h" : U_val_mean[0],
-                        # "hu" : U_val_mean[1],
-                        # "hv" : U_val_mean[2],
+                        "h_mean" : U_val_mean[0],
+                        "hu_mean" : U_val_mean[1],
+                        "hv_mean" : U_val_mean[2],
+                        "h_std" : U_val_std[0],
+                        "hu_std" : U_val_std[1],
+                        "hv_std" : U_val_std[2],
                         })
         return
 
@@ -128,4 +137,4 @@ if __name__ == "__main__":
     U_val = model.restruct(U_val)
 
     # Plot and save the results
-    plot_results(x_mesh, U_val, U_pred, hp)
+    plot_results(x_mesh, U_val, U_pred, hp, export_txt=True, export_vtk=True)
