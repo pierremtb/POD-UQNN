@@ -161,8 +161,8 @@ class PodnnModel:
         if use_cache:
             return self.load_train_data()
 
-        if self.has_t:
-            t_min, t_max = np.array(t_min), np.array(t_max)
+        # if self.has_t:
+        #     t_min, t_max = np.array(t_min), np.array(t_max)
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
 
         # Total number of snapshots
