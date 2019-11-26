@@ -23,10 +23,12 @@ def u(X, t, mu):
     x = X[0]
 
     if t == 1.:
-        return x / (1 + np.exp(1/(4*mu)*(x**2 - 1/4)))
+        res = x / (1 + np.exp(1/(4*mu)*(x**2 - 1/4)))
+    else:
+        t0 = np.exp(1 / (8*mu))
+        res = (x/t) / (1 + np.sqrt(t/t0)*np.exp(x**2/(4*mu*t)))
+    return res.reshape((1, x.shape[0]))
 
-    t0 = np.exp(1 / (8*mu))
-    return (x/t) / (1 + np.sqrt(t/t0)*np.exp(x**2/(4*mu*t)))
 
 
 class BurgersTestGenerator(TestGenerator):

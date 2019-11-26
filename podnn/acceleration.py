@@ -67,8 +67,8 @@ def loop_u_t(u, n_s, n_t, n_v, n_xyz, n_h,
         # Calling the analytical solution function
         Ui = np.zeros((n_v, n_xyz, n_t))
         for j in range(n_t):
-            Ui[:, :, j] = 0.
-            # Ui[:, :, j] = u(X, t[j], mu_lhs[i])
+            # Ui[:, :, j] = 0.
+            Ui[:, :, j] = u(X, t[j], mu_lhs[i])
 
         U[:, s:e] = Ui.reshape((n_h, n_t))
         # U_struct[:, :, i] = np.ascontiguousarray(U[:, s:e]).reshape((n_h, n_t))
