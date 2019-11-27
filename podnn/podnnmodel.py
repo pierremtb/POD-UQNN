@@ -111,7 +111,7 @@ class PodnnModel:
 
         return loop_u(u, n_s, X_v, U, X, mu_lhs)
 
-    def convert_dataset(self, u_mesh, X_v, train_val_ratio, eps, eps_init=None,
+    def convert_dataset(self, u_mesh, X_v, train_val_test, eps, eps_init=None,
                         use_cache=False):
         """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
         if use_cache and os.path.exists(self.train_data_path):
@@ -144,7 +144,7 @@ class PodnnModel:
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_val, v_train, v_val = \
-            train_test_split(X_v, v, test_size=train_val_ratio)
+            train_test_split(X_v, v, test_size=train_val_test)
 
         # Creating the validation snapshots matrix
         U_val = self.V.dot(v_val.T)
@@ -154,7 +154,7 @@ class PodnnModel:
         return X_v_train, v_train, X_v_val, v_val, U_val
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
-                         train_val_ratio, eps, eps_init=None,
+                         train_val_test, eps, eps_init=None,
                          t_min=0, t_max=0,
                          use_cache=False):
         """Generate a training dataset for benchmark problems."""
@@ -200,7 +200,7 @@ class PodnnModel:
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_val, v_train, v_val = \
-            train_test_split(X_v, v, test_size=train_val_ratio)
+            train_test_split(X_v, v, test_size=train_val_test)
 
         # Creating the validation snapshots matrix
         U_val = self.V.dot(v_val.T)
@@ -214,7 +214,7 @@ class PodnnModel:
         return tf.convert_to_tensor(X, dtype=self.dtype)
 
     def train(self, X_v, v, error_val, layers, epochs,
-              lr, reg_lam, decay=0., frequency=100):
+              lr, reg_lam, train_val_test, decay=0., frequency=100):
         """Train the POD-NN's regression model, and save it."""
         # Sizes
         n_L = self.V.shape[1]
@@ -263,8 +263,12 @@ class PodnnModel:
         logger.log_train_start()
 
         # Training
+        train_val_split = (1. - train_val_test[2])
+        val_split = train_val_split[1] / train_val_split
+        print(val_split)
         self.regnn.fit(X_v, v,
-                       epochs=epochs, validation_split=0.,
+                       epochs=epochs,
+                       validation_split=val_split,
                        verbose=0, callbacks=[LoggerCallback()])
 
         logger.log_train_end(epochs)

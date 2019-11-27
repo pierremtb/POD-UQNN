@@ -35,7 +35,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     X_v_train, v_train, \
         X_v_val, _, \
         U_val = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
-                                       hp["n_s"], hp["train_val_ratio"],
+                                       hp["n_s"], hp["train_val_test"],
                                        hp["eps"], eps_init=hp["eps_init"],
                                        t_min=hp["t_min"], t_max=hp["t_max"],
                                        use_cache=use_cached_dataset)

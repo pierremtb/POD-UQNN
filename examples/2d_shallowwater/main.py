@@ -35,7 +35,7 @@ def main(hp, use_cached_dataset=False):
     X_v_train, v_train, \
         X_v_val, _, \
         U_val = model.convert_dataset(u_mesh, X_v,
-                                      hp["train_val_ratio"], hp["eps"],
+                                      hp["train_val_test"], hp["eps"],
                                       use_cache=use_cached_dataset)
 
     U_val_mean = np.mean(U_val, axis=-1)

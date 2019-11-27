@@ -16,7 +16,7 @@ HP["n_s"] = 300
 # POD stopping param
 HP["eps"] = 1e-10
 # Train/val split
-HP["train_val_ratio"] = 0.5
+HP["train_val_test"] = (0.33, 0.33)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up the TF SGD-based optimizer

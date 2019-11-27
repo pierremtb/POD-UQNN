@@ -23,7 +23,7 @@ HP["eps"] = 1e-10
 # HP["eps_init"] = 1e-10
 HP["eps_init"] = None
 # Train/val split
-HP["train_val_ratio"] = 0.5
+HP["train_val_test"] = 0.5
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up _structthe TF SGD-based optimizer
