@@ -5,7 +5,8 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from pyevtk.hl import pointsToVTK
+from pyevtk.hl import unstructuredGridToVTK
+from pyevtk.vtk import VtkTriangle
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
@@ -86,17 +87,46 @@ def plot_results(x_mesh, U_val, U_pred,
 
     if export_vtk:
         print("Saving to .vtu")
-        z = np.zeros_like(x)
-        pointsToVTK(os.path.join("cache", "rnd_points"), np.ascontiguousarray(x),
-                    np.ascontiguousarray(y), np.ascontiguousarray(z),
-                    data={
-                        "h_mean" : U_val_mean[0],
-                        "hu_mean" : U_val_mean[1],
-                        "hv_mean" : U_val_mean[2],
-                        "h_std" : U_val_std[0],
-                        "hu_std" : U_val_std[1],
-                        "hv_std" : U_val_std[2],
-                        })
+
+        # Retrieving the mesh
+        connectivity_raw = np.loadtxt(os.path.join("data", "connectivity.txt"))
+        n_element = connectivity_raw.shape[0]
+
+        # 1D list of connections
+        connectivity = connectivity_raw[:, 1:4].astype("int64").flatten() - 1
+
+        # 1d list of "offsets", ie. the end of each element
+        # Since we use triangles, size = 3
+        offsets = np.arange(1, n_element + 1) * 3
+        cell_types = np.ones(n_element, dtype="int64") * VtkTriangle.tid
+    
+        # h_mean_el = np.zeros((n_element,))
+        # for i in range(n_element):
+        #     end = offsets[i]
+        #     nodes = connectivity[end-3:end]
+        #     values = U_pred_mean[0][nodes]
+        #     h_mean_el[i] = values.mean()
+
+        # Space points
+        x = np.ascontiguousarray(x)
+        y = np.ascontiguousarray(y)
+        z = np.ascontiguousarray(np.zeros_like(x))
+
+        # Exporting
+        unstructuredGridToVTK(os.path.join("cache", "rnd_points"),
+                              x, y, z,
+                              connectivity, offsets, cell_types,
+                              cellData={
+                                  "h_mean" : h_mean_el,
+                              },
+                              pointData={
+                                  "h_mean" : U_val_mean[0],
+                                  "hu_mean" : U_val_mean[1],
+                                  "hv_mean" : U_val_mean[2],
+                                  "h_std" : U_val_std[0],
+                                  "hu_std" : U_val_std[1],
+                                  "hv_std" : U_val_std[2],
+                                  })
         return
 
     print("Plotting")
