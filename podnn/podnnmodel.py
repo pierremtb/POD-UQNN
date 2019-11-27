@@ -252,7 +252,7 @@ class PodnnModel:
 
         class LoggerCallback(tf.keras.callbacks.Callback):
             def on_epoch_end(self, epoch, logs):
-                logger.log_train_epoch(epoch, logs["loss"], logs["mse"])
+                logger.log_train_epoch(epoch, logs)
 
         # Preparing the inputs/outputs
         self.ub = np.amax(X_v, axis=0)
@@ -265,10 +265,8 @@ class PodnnModel:
         # Training
         val_split = train_val_test[1] / (train_val_test[0] + train_val_test[1])
         self.regnn.fit(X_v, v,
-                       epochs=epochs, validation_split=val_split)
-        # self.regnn.fit(X_v, v,
-        #                epochs=epochs, validation_split=0.,
-        #                verbose=0, callbacks=[LoggerCallback()])
+                       epochs=epochs, validation_split=val_split,
+                       verbose=0, callbacks=[LoggerCallback()])
 
         logger.log_train_end(epochs)
 

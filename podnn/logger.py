@@ -50,7 +50,7 @@ class Logger(object):
         # self.pbar = tqdm(total=self.tf_epochs)
         self.pbar = tqdm(total=self.tf_epochs)
 
-    def log_train_epoch(self, epoch, loss, error, custom="", is_iter=False):
+    def log_train_epoch(self, epoch, logs, custom="", is_iter=False):
         self.pbar.update(1)
         self.pbar.set_description(f"L: {loss:.4e}")
         if epoch % self.frequency == 0:
