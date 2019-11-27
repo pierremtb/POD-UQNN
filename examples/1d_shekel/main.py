@@ -33,7 +33,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, \
-        X_v_val, _, \
+        X_v_test, _, \
         U_val = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                        hp["n_s"],
                                        hp["train_val_test"],
@@ -46,7 +46,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     # Create the model and train
     def error_val():
         """Define the error metric for in-training validation."""
-        U_val_pred_mean, U_val_pred_std = model.predict_heavy(X_v_val)
+        U_val_pred_mean, U_val_pred_std = model.predict_heavy(X_v_test)
         err_mean = error_podnn(U_val_mean, U_val_pred_mean)
         err_std = error_podnn(U_val_std, U_val_pred_std)
         return np.array([err_mean, err_std])
@@ -55,13 +55,13 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                             frequency=hp["log_frequency"])
 
     # Predict and restruct
-    U_pred = model.predict(X_v_val)
+    U_pred = model.predict(X_v_test)
 
     # Sample the new model to generate a HiFi prediction
     print("Sampling {n_s_hifi} parameters...")
-    X_v_val_hifi = model.generate_hifi_inputs(hp["n_s_hifi"], hp["mu_min"], hp["mu_max"])
+    X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"], hp["mu_min"], hp["mu_max"])
     print("Predicting the {n_s_hifi} corresponding solutions...")
-    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_val_hifi)
+    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
     U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"],))
     U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"],))
 

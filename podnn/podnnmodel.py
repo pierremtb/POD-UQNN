@@ -143,15 +143,15 @@ class PodnnModel:
         v = (self.V.T.dot(U)).T
 
         # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_val, v_train, v_val = \
-            train_test_split(X_v, v, test_size=train_val_test)
+        X_v_train, X_v_test, v_train, v_test = \
+            train_test_split(X_v, v, test_size=train_val_test[2])
 
         # Creating the validation snapshots matrix
-        U_val = self.V.dot(v_val.T)
+        U_val = self.V.dot(v_test.T)
 
-        self.save_train_data(X_v_train, v_train, X_v_val, v_val, U_val)
+        self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_val)
 
-        return X_v_train, v_train, X_v_val, v_val, U_val
+        return X_v_train, v_train, X_v_test, v_test, U_val
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
                          train_val_test, eps, eps_init=None,
@@ -199,15 +199,15 @@ class PodnnModel:
         v = (self.V.T.dot(U)).T
 
         # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_val, v_train, v_val = \
-            train_test_split(X_v, v, test_size=train_val_test)
+        X_v_train, X_v_test, v_train, v_test = \
+            train_test_split(X_v, v, test_size=train_val_test[2])
 
         # Creating the validation snapshots matrix
-        U_val = self.V.dot(v_val.T)
+        U_val = self.V.dot(v_test.T)
 
-        self.save_train_data(X_v_train, v_train, X_v_val, v_val, U_val)
+        self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_val)
 
-        return X_v_train, v_train, X_v_val, v_val, U_val
+        return X_v_train, v_train, X_v_test, v_test, U_val
 
     def tensor(self, X):
         """Convert input into a TensorFlow Tensor with the class dtype."""
@@ -243,7 +243,7 @@ class PodnnModel:
 
         self.regnn.compile(loss='mse',
                            optimizer=optimizer,
-                           metrics=['mse'])
+                           metrics=['mse', 'mean_absolute_percentage_error'])
 
         self.regnn.summary()
 
@@ -263,13 +263,12 @@ class PodnnModel:
         logger.log_train_start()
 
         # Training
-        train_val_split = (1. - train_val_test[2])
-        val_split = train_val_split[1] / train_val_split
-        print(val_split)
+        val_split = train_val_test[1] / (train_val_test[0] + train_val_test[1])
         self.regnn.fit(X_v, v,
-                       epochs=epochs,
-                       validation_split=val_split,
-                       verbose=0, callbacks=[LoggerCallback()])
+                       epochs=epochs, validation_split=val_split)
+        # self.regnn.fit(X_v, v,
+        #                epochs=epochs, validation_split=0.,
+        #                verbose=0, callbacks=[LoggerCallback()])
 
         logger.log_train_end(epochs)
 
@@ -361,11 +360,11 @@ class PodnnModel:
             self.lb = data[2]
             return data[3:]
 
-    def save_train_data(self, X_v_train, v_train, X_v_val, v_val, U_val):
+    def save_train_data(self, X_v_train, v_train, X_v_test, v_test, U_val):
         """Save training data, such as datasets."""
         with open(self.train_data_path, "wb") as f:
             pickle.dump((self.V, self.ub, self.lb, X_v_train, v_train,
-                         X_v_val, v_val, U_val), f)
+                         X_v_test, v_test, U_val), f)
 
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""

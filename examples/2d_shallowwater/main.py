@@ -33,7 +33,7 @@ def main(hp, use_cached_dataset=False):
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, \
-        X_v_val, _, \
+        X_v_test, _, \
         U_val = model.convert_dataset(u_mesh, X_v,
                                       hp["train_val_test"], hp["eps"],
                                       use_cache=use_cached_dataset)
@@ -44,25 +44,26 @@ def main(hp, use_cached_dataset=False):
     # Create the model and train
     def error_val():
         """Define the error metric for in-training validation."""
-        U_val_pred = model.predict(X_v_val)
+        U_val_pred = model.predict(X_v_test)
         U_val_pred_mean = np.mean(U_val_pred, axis=-1)
         U_val_pred_std = np.nanstd(U_val_pred, axis=-1)
         err_mean = error_podnn(U_val_mean, U_val_pred_mean)
         err_std = error_podnn(U_val_std, U_val_pred_std)
         return np.array([err_mean, err_std])
     train_res = model.train(X_v_train, v_train, error_val, hp["h_layers"],
-                            hp["epochs"], hp["lr"], hp["lambda"], hp["decay"],
-                            hp["log_frequency"])
+                            hp["epochs"], hp["lr"], hp["lambda"],
+                            hp["train_val_test"], 
+                            hp["decay"], hp["log_frequency"])
 
     # Predict and restruct
-    U_pred = model.predict(X_v_val)
+    U_pred = model.predict(X_v_test)
     U_pred = model.restruct(U_pred)
     U_val = model.restruct(U_val)
 
     # Time for one pred
     # import time
     # st = time.time()
-    # model.predict(X_v_val[0:1])
+    # model.predict(X_v_test[0:1])
     # print(f"{time.time() - st} sec taken for prediction")
     # exit(0)
 
@@ -78,5 +79,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    main(HP, use_cached_dataset=False)
-    # main(HP, use_cached_dataset=True)
+    # main(HP, use_cached_dataset=False)
+    main(HP, use_cached_dataset=True)

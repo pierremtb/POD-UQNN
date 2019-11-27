@@ -126,10 +126,10 @@ if __name__ == "__main__":
     model = PodnnModel.load("cache")
 
     x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-    _, _, X_v_val, _, U_val = model.load_train_data()
+    _, _, X_v_test, _, U_val = model.load_train_data()
 
     # Predict and restruct
-    U_pred = model.predict(X_v_val)
+    U_pred = model.predict(X_v_test)
 
     # Plot and save the results
     plot_results(U_val, U_pred, hp)

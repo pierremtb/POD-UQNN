@@ -77,14 +77,14 @@ if __name__ == "__main__":
     model = PodnnModel.load("cache")
 
     x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-    _, _, X_v_val, _, U_val = model.load_train_data()
+    _, _, X_v_test, _, U_val = model.load_train_data()
 
     # Predict and restruct
-    U_pred = model.predict(X_v_val)
+    U_pred = model.predict(X_v_test)
 
     # Sample the new model to generate a HiFi prediction
-    X_v_val_hifi = model.generate_hifi_inputs(hp["n_s_hifi"], hp["mu_min"], hp["mu_max"])
-    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_val_hifi)
+    X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"], hp["mu_min"], hp["mu_max"])
+    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
     U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"],))
     U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"],))
 
