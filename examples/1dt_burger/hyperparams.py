@@ -18,6 +18,7 @@ HP["t_max"] = 5.
 # Snapshots count
 HP["n_s"] = 2 * 100
 HP["n_s_hifi"] = int(1e6)
+HP["n_s_hifi"] = int(1e3)
 # POD stopping param
 HP["eps"] = 1e-10
 HP["eps_init"] = None
@@ -27,8 +28,9 @@ HP["train_val_test"] = (1/3, 1/3, 1/3)
 HP["h_layers"] = [64, 64]
 # Setting up _structthe TF SGD-based optimizer
 HP["epochs"] = 10000
+HP["epochs"] = 500
 HP["lr"] = 0.002
-HP["lambda"] = 1e-4
+HP["lambda"] = 1e-6
 # Frequency of the logger
 HP["log_frequency"] = 100
 # Burgers params
