@@ -44,8 +44,8 @@ def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
 
     # Plotting the means
     ax1 = fig.add_subplot(1, 2, 1)
-    ax1.plot(x, U_pred_mean[0], "b-", label=r"$\hat{u_T}(x)$")
-    ax1.plot(x, U_pred_hifi_mean[0], "b,", label=r"$\hat{u_T^{hf}}(x)$")
+    ax1.plot(x, U_pred_mean[0], "b,", label=r"$\hat{u_T}(x)$")
+    ax1.plot(x, U_pred_hifi_mean[0], "b-", label=r"$\hat{u_T^{hf}}(x)$")
     ax1.plot(x, U_test_hifi_mean[0], "r--", label=r"$u_T^{hf}(x)$")
     ax1.legend()
     ax1.set_title("Means")
@@ -53,8 +53,8 @@ def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
 
     # Plotting the std
     ax2 = fig.add_subplot(1, 2, 2)
-    ax2.plot(x, U_pred_std[0], "b-", label=r"$\hat{u_T}(x)$")
-    ax2.plot(x, U_pred_hifi_std[0], "b,", label=r"$\hat{u_T^{hf}}(x)$")
+    ax2.plot(x, U_pred_std[0], "b,", label=r"$\hat{u_T}(x)$")
+    ax2.plot(x, U_pred_hifi_std[0], "b-", label=r"$\hat{u_T^{hf}}(x)$")
     ax2.plot(x, U_test_hifi_std[0], "r--", label=r"$u_T^{hf}(x)$")
     ax2.legend()
     ax2.set_title("Standard deviations")
@@ -62,7 +62,7 @@ def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
 
     saveresultdir(HP, train_res)
 
-    return error_test_mean, error_test_std
+    return hifi_error_test_mean, hifi_error_test_std
 
 
 if __name__ == "__main__":

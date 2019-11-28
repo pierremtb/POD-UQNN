@@ -40,6 +40,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                        hp["eps"],
                                        use_cache=use_cached_dataset)
 
+    # Train
     train_res = model.train(X_v_train, v_train, hp["h_layers"],
                             hp["epochs"], hp["lr"], hp["lambda"],
                             hp["train_val_test"],
@@ -56,7 +57,8 @@ def main(hp, gen_test=False, use_cached_dataset=False,
 
     # Sample the new model to generate a HiFi prediction
     print("Sampling {n_s_hifi} parameters...")
-    X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"], hp["mu_min"], hp["mu_max"])
+    X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"],
+                                               hp["mu_min"], hp["mu_max"])
     print("Predicting the {n_s_hifi} corresponding solutions...")
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
 

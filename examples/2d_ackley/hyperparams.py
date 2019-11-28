@@ -19,6 +19,7 @@ HP["n_t"] = 0
 # Snapshots count
 HP["n_s"] = 1000
 HP["n_s_hifi"] = int(1e6)
+HP["n_s_hifi"] = int(1e4)
 # POD stopping param
 HP["eps"] = 1e-10
 # Train/val split
@@ -28,6 +29,7 @@ HP["h_layers"] = [64, 64]
 # Setting up TF SGD-based optimizer
 # HP["epochs"] = 100000
 HP["epochs"] = 15000
+HP["epochs"] = 5000
 HP["lr"] = 0.001
 # HP["lambda"] = 1e-4
 HP["lambda"] = 0.

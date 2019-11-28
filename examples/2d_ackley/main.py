@@ -7,7 +7,7 @@ import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import error_podnn
+from podnn.metrics import error_podnn_rel
 from podnn.mesh import create_linear_mesh
 
 from datagen import u, generate_test_dataset
@@ -41,31 +41,29 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                        hp["eps"],
                                        use_cache=use_cached_dataset)
 
-    U_test_mean = np.mean(U_test, axis=-1)
-    U_test_std = np.nanstd(U_test, axis=-1)
-
-    # Create the model and train
-    def error_val():
-        """Define the error metric for in-training validation."""
-        U_test_pred_mean, U_test_pred_std = model.predict_heavy(X_v_test)
-        err_mean = error_podnn(U_test_mean, U_test_pred_mean)
-        err_std = error_podnn(U_test_std, U_test_pred_std)
-        return np.array([err_mean, err_std])
-    train_res = model.train(X_v_train, v_train, error_val, hp["h_layers"],
-                            hp["epochs"], hp["lr"], hp["lambda"], frequency=hp["log_frequency"])
+    # Train
+    train_res = model.train(X_v_train, v_train, hp["h_layers"],
+                            hp["epochs"], hp["lr"], hp["lambda"],
+                            hp["train_val_test"],
+                            frequency=hp["log_frequency"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
+    U_pred = model.restruct(U_pred)
+    U_test = model.restruct(U_test)
+
+    # Compute relative error
+    error_test_mean, error_test_std = error_podnn_rel(U_test, U_pred)
+    print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
 
     # Sample the new model to generate a HiFi prediction
-    X_v_test_hifi = model.generate_hifi_inputs(int(5e5), hp["mu_min"], hp["mu_max"])
+    X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"],
+                                               hp["mu_min"], hp["mu_max"])
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
-    U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"], hp["n_y"]))
-    U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"], hp["n_y"]))
-
 
     # Plot against test and save
-    return plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, train_res, hp, no_plot)
+    return plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+                        train_res, hp, no_plot)
 
 
 if __name__ == "__main__":
