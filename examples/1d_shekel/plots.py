@@ -18,7 +18,7 @@ def get_test_data():
     X = np.load(os.path.join(dirname, X_FILE))
     U_test_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
     U_test_std = np.load(os.path.join(dirname, U_STD_FILE))
-    return X, U_test_mean[0, :], U_test_std[0, :]
+    return X, U_test_mean, U_test_std
 
 
 def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
@@ -28,10 +28,10 @@ def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     x = X[0]
 
     U_pred_mean = np.mean(U_pred, axis=-1)
-    U_test_mean = np.mean(U_test, axis=1)
+    U_test_mean = np.mean(U_test, axis=-1)
     # Using nanstd() to prevent NotANumbers from appearing
     U_pred_std = np.nanstd(U_pred, axis=-1)
-    U_test_std = np.nanstd(U_test, axis=1)
+    U_test_std = np.nanstd(U_test, axis=-1)
 
     hifi_error_test_mean = error_podnn(U_test_hifi_mean, U_pred_hifi_mean)
     hifi_error_test_std = error_podnn(U_test_hifi_std, U_pred_hifi_std)
@@ -75,10 +75,12 @@ if __name__ == "__main__":
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
+    U_pred = model.restruct(U_pred)
+    U_test = model.restruct(U_test)
 
     # Sample the new model to generate a HiFi prediction
     X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"], hp["mu_min"], hp["mu_max"])
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
 
     # Plot and save the results
-    plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, hp)
+    plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, HP=hp)
