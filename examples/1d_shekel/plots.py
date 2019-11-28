@@ -21,22 +21,18 @@ def get_test_data():
     return X, U_test_mean[0, :], U_test_std[0, :]
 
 
-def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                  train_res, HP=None, no_plot=False):
 
     X, U_test_mean, U_test_std = get_test_data()
     x = X[0]
 
-    U_pred_mean = np.mean(U_pred, axis=1)
-    U_pred_std = np.std(U_pred, axis=1)
+    U_pred_mean = np.mean(U_pred, axis=-1)
+    U_pred_std = np.std(U_pred, axis=-1)
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
     hifi_error_test_mean = 100 * error_podnn(U_test_mean, U_pred_hifi_mean)
     hifi_error_test_std = 100 * error_podnn(U_test_std, U_pred_hifi_std)
-    print("--")
-    print(f"Error on the mean test HiFi LHS solution: {error_test_mean:4f}%")
-    print(f"Error on the stdd test HiFi LHS solution: {error_test_std:4f}%")
-    print("--")
     print(f"Hifi Error on the mean test HiFi LHS solution: {hifi_error_test_mean:4f}%")
     print(f"Hifi Error on the stdd test HiFi LHS solution: {hifi_error_test_std:4f}%")
     print("--")

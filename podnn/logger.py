@@ -82,5 +82,7 @@ class Logger(object):
 
         header = "epoch\t"
         header += "\t".join(self.logs_keys)
+
+        values = np.hstack((epochs, logs))
         
         return (header, np.hstack((epochs, logs)))

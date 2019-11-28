@@ -39,7 +39,6 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                         hp["eps"], eps_init=hp["eps_init"],
                                         t_min=hp["t_min"], t_max=hp["t_max"],
                                         use_cache=use_cached_dataset)
-    U_test = model.restruct(U_test)
 
     # Train the model
     train_res = model.train(X_v_train, v_train, hp["h_layers"],
@@ -52,6 +51,9 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)
 
+    print(U_pred.shape, U_pred)
+    print(U_test.shape, U_test)
+
     # Compute relative error
     error_test_mean, error_test_std = error_podnn_rel(U_test, U_pred)
     print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
@@ -63,8 +65,6 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                                hp["t_min"], hp["t_max"])
     print("Predicting the {n_s_hifi} corresponding solutions...")
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
-    U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"], hp["n_t"]))
-    U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"], hp["n_t"]))
 
     # Plot against test and save
     return plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
@@ -79,5 +79,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    main(HP, gen_test=False, use_cached_dataset=False)
-    # main(HP, gen_test=False, use_cached_dataset=True
+    # main(HP, gen_test=False, use_cached_dataset=False)
+    main(HP, gen_test=False, use_cached_dataset=True)

@@ -23,10 +23,10 @@ def error_podnn(U, U_pred):
     return norm(U - U_pred) / norm(U)
 
 
-def error_podnn_rel(U_pred, U):
+def error_podnn_rel(U, U_pred):
     """Define the relative error metric."""
     U_pred_mean, U_mean = np.mean(U_pred, axis=-1), np.mean(U, axis=-1)
     U_pred_std, U_std = np.std(U_pred, axis=-1), np.std(U, axis=-1)
     err_mean = error_podnn(U_mean, U_pred_mean)
     err_std = error_podnn(U_std, U_pred_std)
-    return np.array([err_mean, err_std])
+    return err_mean, err_std

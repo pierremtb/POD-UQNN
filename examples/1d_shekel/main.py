@@ -7,7 +7,7 @@ import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import error_podnn
+from podnn.metrics import error_podnn_rel
 from podnn.mesh import create_linear_mesh
 
 from datagen import u, generate_test_dataset
@@ -40,22 +40,16 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                        hp["eps"],
                                        use_cache=use_cached_dataset)
 
-    U_test_mean = np.mean(U_test, axis=-1)
-    U_test_std = np.nanstd(U_test, axis=-1)
-
-    # Create the model and train
-    def error_val():
-        """Define the error metric for in-training validation."""
-        U_test_pred_mean, U_test_pred_std = model.predict_heavy(X_v_test)
-        err_mean = error_podnn(U_test_mean, U_test_pred_mean)
-        err_std = error_podnn(U_test_std, U_test_pred_std)
-        return np.array([err_mean, err_std])
-    train_res = model.train(X_v_train, v_train, error_val, hp["h_layers"],
+    train_res = model.train(X_v_train, v_train, hp["h_layers"],
                             hp["epochs"], hp["lr"], hp["lambda"],
                             frequency=hp["log_frequency"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
+
+    # Compute relative error
+    error_test_mean, error_test_std = error_podnn_rel(U_test, U_pred)
+    print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
 
     # Sample the new model to generate a HiFi prediction
     print("Sampling {n_s_hifi} parameters...")

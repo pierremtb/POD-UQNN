@@ -342,7 +342,8 @@ class PodnnModel:
         # Making sure the std has non NaNs
         U_pred_hifi_std = np.nan_to_num(U_pred_hifi_std)
 
-        return U_pred_hifi_mean, U_pred_hifi_std
+        tup = self.get_u_tuple()
+        return U_pred_hifi_mean.reshape(tup), U_pred_hifi_std.reshape(tup)
 
     def load_train_data(self):
         """Load training data, such as datasets."""
