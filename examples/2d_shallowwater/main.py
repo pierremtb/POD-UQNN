@@ -35,11 +35,8 @@ def main(hp, use_cached_dataset=False):
     X_v_train, v_train, \
         X_v_test, _, \
         U_test = model.convert_dataset(u_mesh, X_v,
-                                      hp["train_val_test"], hp["eps"],
-                                      use_cache=use_cached_dataset)
-
-    U_test_mean = np.mean(U_test, axis=-1)
-    U_test_std = np.nanstd(U_test, axis=-1)
+                                       hp["train_val_test"], hp["eps"],
+                                       use_cache=use_cached_dataset)
 
     # Create the model and train
     train_res = model.train(X_v_train, v_train, hp["h_layers"],

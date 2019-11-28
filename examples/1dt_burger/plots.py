@@ -51,7 +51,7 @@ def plot_spec_time(fig, pos, x, t_i,
         ax.legend()
 
 
-def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+def plot_results(U_pred, U_test, U_pred_hifi_mean, U_pred_hifi_std,
                  train_res, HP=None, no_plot=False):
     X, t, U_test_mean, U_test_std = get_test_data()
     x = X[0]

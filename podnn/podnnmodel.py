@@ -67,10 +67,12 @@ class PodnnModel:
         mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
 
         n_st = n_s
+        n_d = mu_min.shape[0]
         if self.has_t:
             n_st *= self.n_t
+            n_d += 1
 
-        X_v = np.zeros((n_st, mu_min.shape[0]))
+        X_v = np.zeros((n_st, n_d))
 
         if self.has_t:
             # Creating the time steps

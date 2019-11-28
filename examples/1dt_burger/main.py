@@ -7,7 +7,7 @@ import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import error_podnn
+from podnn.metrics import error_podnn_rel
 from podnn.mesh import create_linear_mesh
 
 from datagen import u, generate_test_dataset
@@ -60,7 +60,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     n_s_hifi = hp["n_s_hifi"]
     print("Sampling {n_s_hifi} parameters...")
     X_v_test_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"],
-                                              hp["t_min"], hp["t_max"])
+                                               hp["t_min"], hp["t_max"])
     print("Predicting the {n_s_hifi} corresponding solutions...")
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
     U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"], hp["n_t"]))
