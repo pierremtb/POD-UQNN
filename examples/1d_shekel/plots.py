@@ -62,7 +62,7 @@ def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
 
     saveresultdir(HP, train_res)
 
-    return error_test_mean, error_test_std
+    return hifi_error_test_mean, hifi_error_test_std
 
 
 if __name__ == "__main__":
