@@ -26,12 +26,11 @@ def plot_plot(fig, pos, x, y, z, z_min, z_max, title):
     ax.set_ylabel("$y$")
 
 
-def plot_spec_time(fig, pos, x, t_i, U_pred, U_val, U_test,
+def plot_spec_time(fig, pos, x, t_i, U_pred, U_test,
                    title, show_legend=False):
     """1D plot at a specific time, u=f(x, t=t_i)."""
     ax = fig.add_subplot(pos)
     ax.plot(x, U_pred[:, t_i], "b-", label=r"$\hat{u_V}$")
-    ax.plot(x, U_val[:, t_i], "r--", label="$u_V$")
     ax.plot(x, U_test[:, t_i], "k,", label="$u_T$")
     ax.set_title(title)
     ax.set_xlabel("$x$")
@@ -48,7 +47,7 @@ def get_min_max(z1, z2):
     return z_min, z_max
 
 
-def plot_results(x_mesh, U_val, U_pred,
+def plot_results(x_mesh, U_test, U_pred,
                  HP=None, train_res=None,
                  export_vtk=False, export_txt=False):
     """Handles the plots of 3d_shallowwater."""
@@ -64,17 +63,17 @@ def plot_results(x_mesh, U_val, U_pred,
     # plt.show()
 
     # Computing means
-    U_val_mean = np.mean(U_val[:, i_min:i_max, :], axis=-1)
+    U_test_mean = np.mean(U_test[:, i_min:i_max, :], axis=-1)
     U_pred_mean = np.mean(U_pred[:, i_min:i_max, :], axis=-1)
-    U_val_std = np.nanstd(U_val[:, i_min:i_max, :], axis=-1)
+    U_test_std = np.nanstd(U_test[:, i_min:i_max, :], axis=-1)
     U_pred_std = np.nanstd(U_pred[:, i_min:i_max, :], axis=-1)
 
-    # plt.plot(x, U_val_mean[])
+    # plt.plot(x, U_test_mean[])
 
     if export_txt:
         print("Saving to .txt")
-        x_u_mean = np.concatenate((x_mesh, U_val_mean.T), axis=1)
-        x_u_std = np.concatenate((x_mesh, U_val_std.T), axis=1)
+        x_u_mean = np.concatenate((x_mesh, U_test_mean.T), axis=1)
+        x_u_std = np.concatenate((x_mesh, U_test_std.T), axis=1)
         non_idx_len = x_u_mean.shape[1] - 1
         np.savetxt(os.path.join("cache", "x_u_mean.txt"), x_u_mean,
                    fmt=' '.join(["%i"] + ["%1.6f"]*non_idx_len),
@@ -120,12 +119,12 @@ def plot_results(x_mesh, U_val, U_pred,
                                   "h_mean" : h_mean_el,
                               },
                               pointData={
-                                  "h_mean" : U_val_mean[0],
-                                  "hu_mean" : U_val_mean[1],
-                                  "hv_mean" : U_val_mean[2],
-                                  "h_std" : U_val_std[0],
-                                  "hu_std" : U_val_std[1],
-                                  "hv_std" : U_val_std[2],
+                                  "h_mean" : U_test_mean[0],
+                                  "hu_mean" : U_test_mean[1],
+                                  "hv_mean" : U_test_mean[2],
+                                  "h_std" : U_test_std[0],
+                                  "hu_std" : U_test_std[1],
+                                  "hv_std" : U_test_std[2],
                                   })
         return
 
@@ -138,15 +137,15 @@ def plot_results(x_mesh, U_val, U_pred,
     quantities = np.array([r"h", r"\eta", r"(hu)", r"(hv)"])
     idx_u = [i - 4 for i in HP["mesh_idx"][2]]
     for i, qty in enumerate(quantities[idx_u]):
-        z_min, z_max = get_min_max(U_pred_mean[i], U_val_mean[i])
+        z_min, z_max = get_min_max(U_pred_mean[i], U_test_mean[i])
         plot_plot(fig, gs[0, i], x, y, U_pred_mean[i],
                   z_min, z_max, f"Mean ${qty}(x,y)$ [pred]")
-        plot_plot(fig, gs[1, i], x, y, U_val_mean[i],
+        plot_plot(fig, gs[1, i], x, y, U_test_mean[i],
                   z_min, z_max, f"Mean ${qty}(x,y)$ [val]")
-        z_min, z_max = get_min_max(U_pred_std[i], U_val_std[i])
+        z_min, z_max = get_min_max(U_pred_std[i], U_test_std[i])
         plot_plot(fig, gs[2, i], x, y, U_pred_std[i],
                   z_min, z_max, f"Std ${qty}(x,y)$ [pred]")
-        plot_plot(fig, gs[3, i], x, y, U_val_std[i],
+        plot_plot(fig, gs[3, i], x, y, U_test_std[i],
                   z_min, z_max, f"Std ${qty}(x,y)$ [val]")
 
     plt.tight_layout()
@@ -159,12 +158,12 @@ if __name__ == "__main__":
     model = PodnnModel.load("cache")
 
     x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-    _, _, X_v_test, _, U_val = model.load_train_data()
+    _, _, X_v_test, _, U_test = model.load_train_data()
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
     U_pred = model.restruct(U_pred)
-    U_val = model.restruct(U_val)
+    U_test = model.restruct(U_test)
 
     # Plot and save the results
-    plot_results(x_mesh, U_val, U_pred, hp, export_txt=True, export_vtk=True)
+    plot_results(x_mesh, U_test, U_pred, hp, export_txt=True, export_vtk=True)

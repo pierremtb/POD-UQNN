@@ -147,11 +147,11 @@ class PodnnModel:
             train_test_split(X_v, v, test_size=train_val_test[2])
 
         # Creating the validation snapshots matrix
-        U_val = self.V.dot(v_test.T)
+        U_test = self.V.dot(v_test.T)
 
-        self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_val)
+        self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_test)
 
-        return X_v_train, v_train, X_v_test, v_test, U_val
+        return X_v_train, v_train, X_v_test, v_test, U_test
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
                          train_val_test, eps, eps_init=None,
@@ -203,17 +203,17 @@ class PodnnModel:
             train_test_split(X_v, v, test_size=train_val_test[2])
 
         # Creating the validation snapshots matrix
-        U_val = self.V.dot(v_test.T)
+        U_test = self.V.dot(v_test.T)
 
-        self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_val)
+        self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_test)
 
-        return X_v_train, v_train, X_v_test, v_test, U_val
+        return X_v_train, v_train, X_v_test, v_test, U_test
 
     def tensor(self, X):
         """Convert input into a TensorFlow Tensor with the class dtype."""
         return tf.convert_to_tensor(X, dtype=self.dtype)
 
-    def train(self, X_v, v, error_val, layers, epochs,
+    def train(self, X_v, v, layers, epochs,
               lr, reg_lam, train_val_test, decay=0., frequency=100):
         """Train the POD-NN's regression model, and save it."""
         # Sizes
@@ -238,17 +238,13 @@ class PodnnModel:
             kernel_initializer="glorot_normal",
             kernel_regularizer=tf.keras.regularizers.l2(reg_lam)))
 
-        # optimizer = tf.keras.optimizers.Adam(lr=1e-1, decay=1e-2)
         optimizer = tf.keras.optimizers.Adam(lr=lr, decay=decay)
 
         self.regnn.compile(loss='mse',
                            optimizer=optimizer,
-                           metrics=['mse', 'mean_absolute_percentage_error'])
+                           metrics=['mse'])
 
         self.regnn.summary()
-
-        # Setting the error function
-        logger.set_error_fn(error_val)
 
         class LoggerCallback(tf.keras.callbacks.Callback):
             def on_epoch_end(self, epoch, logs):
@@ -259,6 +255,8 @@ class PodnnModel:
         self.lb = np.amin(X_v, axis=0)
         X_v = self.normalize(X_v)
         v = self.tensor(v)
+
+        print(X_v.shape)
 
         logger.log_train_start()
 
@@ -358,11 +356,11 @@ class PodnnModel:
             self.lb = data[2]
             return data[3:]
 
-    def save_train_data(self, X_v_train, v_train, X_v_test, v_test, U_val):
+    def save_train_data(self, X_v_train, v_train, X_v_test, v_test, U_test):
         """Save training data, such as datasets."""
         with open(self.train_data_path, "wb") as f:
             pickle.dump((self.V, self.ub, self.lb, X_v_train, v_train,
-                         X_v_test, v_test, U_val), f)
+                         X_v_test, v_test, U_test), f)
 
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""

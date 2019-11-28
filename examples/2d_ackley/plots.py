@@ -20,10 +20,9 @@ def plot_contour(fig, pos, X, Y, U, levels, title):
     ax.set_xlabel("$x$")
     ax.set_ylabel("$y$")
 
-def plot_slice(fig, pos, x, u_pred, u_val, u_test, u_hifi, title):
+def plot_slice(fig, pos, x, u_pred, u_test, u_hifi, title):
     ax = fig.add_subplot(pos)
     ax.plot(x, u_pred, "b-", label="$\hat{u_V}$")
-    ax.plot(x, u_val, "r--", label="$u_V$")
     ax.plot(x, u_test, "k,", label="$u_T$")
     ax.plot(x, u_hifi, "b,", label="$\hat{u_T}$")
     ax.set_xlabel("$x$")
@@ -54,8 +53,8 @@ def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
 
     U_pred_mean = np.mean(U_pred, axis=-1)
     U_pred_std = np.std(U_pred, axis=-1)
-    U_val_mean = np.mean(U, axis=-1)
-    U_val_std = np.std(U, axis=-1)
+    U_test_mean = np.mean(U, axis=-1)
+    U_test_std = np.std(U, axis=-1)
 
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
     error_test_std = 100 * error_podnn(U_test_std, U_pred_std)
@@ -83,23 +82,23 @@ def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
     x = X[199, :]
     plot_slice(fig, gs[0:4, 0:4], x,
-               U_pred_mean[:, 199], U_val_mean[:, 199],
+               U_pred_mean[:, 199], U_test_mean[:, 199],
                U_test_mean[:, 199], U_pred_hifi_mean[:, 199], "Means $u(x, y=0)$") 
     plot_slice(fig, gs[4:, 0:4], x,
-               U_pred_std[:, 199], U_val_std[:, 199],
+               U_pred_std[:, 199], U_test_std[:, 199],
                U_test_std[:, 199], U_pred_hifi_std[:, 199], "Std dev $u(x, y=0)$") 
     plot_slice(fig, gs[0:4, 4:8], x,
-               U_pred_mean[199, :], U_val_mean[199, :],
+               U_pred_mean[199, :], U_test_mean[199, :],
                U_test_mean[199, :], U_pred_hifi_mean[199, :], "Means $u(x=0, y)$") 
     plot_slice(fig, gs[4:, 4:], x,
-               U_pred_std[199, :], U_val_std[199, :],
+               U_pred_std[199, :], U_test_std[199, :],
                U_test_std[199, :], U_pred_hifi_std[199, :], "Std dev $u(x=0, y)$") 
 
     # plot_contour(fig, gs[0:2, 0:2],
     #              X, Y, U_test_mean,
     #              mean_levels, "Mean of $u_T$ (test)")
     # plot_contour(fig, gs[0:2, 2:4],
-    #              X, Y, U_val_mean,
+    #              X, Y, U_test_mean,
     #              mean_levels, "Mean of $u_V$ (val)")
     # plot_contour(fig, gs[0:2, 4:6],
     #              X, Y, U_pred_mean,
@@ -108,7 +107,7 @@ def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     #              X, Y, U_test_std,
     #              std_levels, "Standard deviation of $u_T$ (test)")
     # plot_contour(fig, gs[2:4, 2:4],
-    #              X, Y, U_val_std,
+    #              X, Y, U_test_std,
     #              std_levels, "Standard deviation of $u_V$ (val)")
     # plot_contour(fig, gs[2:4, 4:6],
     #                 X, Y, U_pred_std,
@@ -126,10 +125,10 @@ if __name__ == "__main__":
     model = PodnnModel.load("cache")
 
     x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-    _, _, X_v_test, _, U_val = model.load_train_data()
+    _, _, X_v_test, _, U_test = model.load_train_data()
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
 
     # Plot and save the results
-    plot_results(U_val, U_pred, hp)
+    plot_results(U_test, U_pred, hp)

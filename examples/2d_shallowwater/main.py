@@ -7,7 +7,7 @@ import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import error_podnn
+from podnn.metrics import error_podnn_rel
 from podnn.mesh import read_space_sol_input_mesh
 
 from plots import plot_results
@@ -34,23 +34,15 @@ def main(hp, use_cached_dataset=False):
     # Generate the dataset from the mesh and params
     X_v_train, v_train, \
         X_v_test, _, \
-        U_val = model.convert_dataset(u_mesh, X_v,
+        U_test = model.convert_dataset(u_mesh, X_v,
                                       hp["train_val_test"], hp["eps"],
                                       use_cache=use_cached_dataset)
 
-    U_val_mean = np.mean(U_val, axis=-1)
-    U_val_std = np.nanstd(U_val, axis=-1)
+    U_test_mean = np.mean(U_test, axis=-1)
+    U_test_std = np.nanstd(U_test, axis=-1)
 
     # Create the model and train
-    def error_val():
-        """Define the error metric for in-training validation."""
-        U_val_pred = model.predict(X_v_test)
-        U_val_pred_mean = np.mean(U_val_pred, axis=-1)
-        U_val_pred_std = np.nanstd(U_val_pred, axis=-1)
-        err_mean = error_podnn(U_val_mean, U_val_pred_mean)
-        err_std = error_podnn(U_val_std, U_val_pred_std)
-        return np.array([err_mean, err_std])
-    train_res = model.train(X_v_train, v_train, error_val, hp["h_layers"],
+    train_res = model.train(X_v_train, v_train, hp["h_layers"],
                             hp["epochs"], hp["lr"], hp["lambda"],
                             hp["train_val_test"], 
                             hp["decay"], hp["log_frequency"])
@@ -58,7 +50,13 @@ def main(hp, use_cached_dataset=False):
     # Predict and restruct
     U_pred = model.predict(X_v_test)
     U_pred = model.restruct(U_pred)
-    U_val = model.restruct(U_val)
+    U_test = model.restruct(U_test)
+
+    error_test_mean, error_test_std = error_podnn_rel(U_test, U_pred)
+    print("--")
+    print(f"Error on the mean test HiFi LHS solution: {error_test_mean:4f}")
+    print(f"Error on the stdd test HiFi LHS solution: {error_test_std:4f}")
+    print("--")
 
     # Time for one pred
     # import time
@@ -68,7 +66,7 @@ def main(hp, use_cached_dataset=False):
     # exit(0)
 
     # Plot and save the results
-    return plot_results(x_mesh, U_val, U_pred, hp, train_res)
+    return plot_results(x_mesh, U_test, U_pred, hp, train_res)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg

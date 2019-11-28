@@ -39,11 +39,10 @@ def plot_map(fig, pos, x, t, X, T, U, title):
 
 
 def plot_spec_time(fig, pos, x, t_i,
-                   U_pred, U_val, U_test, U_hifi,
+                   U_pred, U_test, U_hifi,
                    title, show_legend=False):
     ax = fig.add_subplot(pos)
     ax.plot(x, U_pred[:, t_i], "b-", label="$\hat{u_V}$")
-    ax.plot(x, U_val[:, t_i], "r--", label="$u_V$")
     ax.plot(x, U_test[:, t_i], "k,", label="$u_T$")
     ax.plot(x, U_hifi[:, t_i], "b,", label="$\hat{u_T}$")
     ax.set_xlabel("$x$")
@@ -62,13 +61,13 @@ def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     tt = ttT.T
 
     U_pred_mean = np.mean(U_pred[0], axis=2)
-    U_val_mean = np.mean(U_val[0], axis=2)
+    U_test_mean = np.mean(U_test[0], axis=2)
     U_test_mean = U_test_mean[0]
 
     # Using nanstd() to prevent NotANumbers from appearing
     # (they prevent norm to be computed after)
     U_pred_std = np.nanstd(U_pred[0], axis=2)
-    U_val_std = np.nanstd(U_val[0], axis=2)
+    U_test_std = np.nanstd(U_test[0], axis=2)
     U_test_std = np.nan_to_num(U_test_std[0])
 
     error_test_mean = 100 * error_podnn(U_test_mean, U_pred_mean)
@@ -91,22 +90,22 @@ def plot_results(U, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     plot_map(fig, gs[0, :n_plot_y], x, t, xx, tt, U_pred_mean, "Mean $u(x,t)$ [pred]")
     plot_map(fig, gs[1, :n_plot_y], x, t, xx, tt, U_test_mean, "Mean $u(x,t)$ [test]")
     plot_spec_time(fig, gs[2, 0], x, 25, 
-            U_pred_mean, U_val_mean, U_test_mean,
+            U_pred_mean, U_test_mean, U_test_mean,
             "Means $u(x, t=0.25)$", show_legend=True)
     plot_spec_time(fig, gs[2, 1], x, 50,
-            U_pred_mean, U_val_mean, U_test_mean, U_pred_hifi_mean,
+            U_pred_mean, U_test_mean, U_test_mean, U_pred_hifi_mean,
             "Means $u(x, t=0.50)$")
     plot_spec_time(fig, gs[2, 2], x, 75,
-            U_pred_mean, U_val_mean, U_test_mean, U_pred_hifi_mean,
+            U_pred_mean, U_test_mean, U_test_mean, U_pred_hifi_mean,
             "Means $u(x, t=0.75)$")
     plot_spec_time(fig, gs[3, 0], x, 25,
-            U_pred_std, U_val_std, U_test_std, U_pred_hifi_std,
+            U_pred_std, U_test_std, U_test_std, U_pred_hifi_std,
             "Std dev $u(x, t=0.25)$")
     plot_spec_time(fig, gs[3, 1], x, 50,
-            U_pred_std, U_val_std, U_test_std, U_pred_hifi_std,
+            U_pred_std, U_test_std, U_test_std, U_pred_hifi_std,
             "Std dev $u(x, t=0.50)$")
     plot_spec_time(fig, gs[3, 2], x, 75,
-            U_pred_std, U_val_std, U_test_std, U_pred_hifi_std,
+            U_pred_std, U_test_std, U_test_std, U_pred_hifi_std,
             "Std dev $u(x, t=0.75)$")
 
     plt.tight_layout()
@@ -119,12 +118,12 @@ if __name__ == "__main__":
     model = PodnnModel.load("cache")
 
     x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-    _, _, X_v_test, _, U_val = model.load_train_data()
+    _, _, X_v_test, _, U_test = model.load_train_data()
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
     U_pred_struct = model.restruct(U_pred)
-    U_val_struct = model.restruct(U_val)
+    U_test_struct = model.restruct(U_test)
 
     # Sample the new model to generate a HiFi prediction
     n_s_hifi = hp["n_s_hifi"]
@@ -137,4 +136,4 @@ if __name__ == "__main__":
     U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"], hp["n_t"]))
     
     # Plot and save the results
-    plot_results(U_val_struct, U_pred_struct, U_pred_hifi_mean, U_pred_hifi_std, hp)
+    plot_results(U_test_struct, U_pred_struct, U_pred_hifi_mean, U_pred_hifi_std, hp)

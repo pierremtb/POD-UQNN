@@ -20,7 +20,7 @@ HP["train_val_test"] = (1/3, 1/3, 1/3)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up the TF SGD-based optimizer
-HP["epochs"] = 200000
+HP["epochs"] = 20000
 HP["lr"] = 0.003
 HP["decay"] = 0.
 HP["lambda"] = 1e-8
