@@ -42,10 +42,13 @@ def main(hp, gen_test=False, use_cached_dataset=False,
 
     train_res = model.train(X_v_train, v_train, hp["h_layers"],
                             hp["epochs"], hp["lr"], hp["lambda"],
+                            hp["train_val_test"],
                             frequency=hp["log_frequency"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
+    U_pred = model.restruct(U_pred)
+    U_test = model.restruct(U_test)
 
     # Compute relative error
     error_test_mean, error_test_std = error_podnn_rel(U_test, U_pred)
@@ -56,8 +59,6 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"], hp["mu_min"], hp["mu_max"])
     print("Predicting the {n_s_hifi} corresponding solutions...")
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
-    U_pred_hifi_mean = U_pred_hifi_mean.reshape((hp["n_x"],))
-    U_pred_hifi_std = U_pred_hifi_std.reshape((hp["n_x"],))
 
     # Plot against test and save
     return plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
