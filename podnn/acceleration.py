@@ -76,9 +76,10 @@ def loop_u_t(u, n_s, n_t, n_v, n_xyz, n_h,
     return X_v, U, U_struct
 
 
-@jit(nopython=True, parallel=True)
+@jit(nopython=False, parallel=True)
 def lhs(n, samples):
     """Borrowed, parallelized __lhscentered() from pyDOE."""
+
     # Generate the intervals
     cut = np.linspace(0, 1, samples + 1)
 

@@ -35,28 +35,26 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     X_v_train, v_train, \
         X_v_test, _, \
         U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
-                                       hp["n_s"], hp["train_val_test"],
-                                       hp["eps"], eps_init=hp["eps_init"],
-                                       t_min=hp["t_min"], t_max=hp["t_max"],
-                                       use_cache=use_cached_dataset)
+                                        hp["n_s"], hp["train_val_test"],
+                                        hp["eps"], eps_init=hp["eps_init"],
+                                        t_min=hp["t_min"], t_max=hp["t_max"],
+                                        use_cache=use_cached_dataset)
     U_test = model.restruct(U_test)
-    U_test_mean = np.mean(U_test, axis=-1)
-    U_test_std = np.nanstd(U_test, axis=-1)
 
-    # Create the model and train
-    def error_val():
-        """Define the error metric for in-training validation."""
-        U_test_pred_mean, U_test_pred_std = model.predict_heavy(X_v_test)
-        err_mean = error_podnn(U_test_mean, U_test_pred_mean)
-        err_std = error_podnn(U_test_std, U_test_pred_std)
-        return np.array([err_mean, err_std])
-    train_res = model.train(X_v_train, v_train, error_val, hp["h_layers"],
+    # Train the model
+    train_res = model.train(X_v_train, v_train, hp["h_layers"],
                             hp["epochs"], hp["lr"], hp["lambda"],
+                            hp["train_val_test"],
                             frequency=hp["log_frequency"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
     U_pred = model.restruct(U_pred)
+    U_test = model.restruct(U_test)
+
+    # Compute relative error
+    error_test_mean, error_test_std = error_podnn_rel(U_test, U_pred)
+    print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
 
     # Sample the new model to generate a HiFi prediction
     n_s_hifi = hp["n_s_hifi"]

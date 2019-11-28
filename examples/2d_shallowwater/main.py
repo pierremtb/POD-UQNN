@@ -52,11 +52,9 @@ def main(hp, use_cached_dataset=False):
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)
 
+    # Compute relative error
     error_test_mean, error_test_std = error_podnn_rel(U_test, U_pred)
-    print("--")
-    print(f"Error on the mean test HiFi LHS solution: {error_test_mean:4f}")
-    print(f"Error on the stdd test HiFi LHS solution: {error_test_std:4f}")
-    print("--")
+    print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
 
     # Time for one pred
     # import time

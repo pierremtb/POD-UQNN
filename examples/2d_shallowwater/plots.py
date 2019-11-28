@@ -50,37 +50,28 @@ def get_min_max(z1, z2):
 def plot_results(x_mesh, U_test, U_pred,
                  HP=None, train_res=None,
                  export_vtk=False, export_txt=False):
-    """Handles the plots of 3d_shallowwater."""
+    """Handles the plots and exports of 3d_shallowwater data."""
 
-    # Keeping only the first nodes
-    i_min = 0
-    # i_max = 10000
-    i_max = None
-    x = x_mesh[i_min:i_max, 1]
-    y = x_mesh[i_min:i_max, 2]
-
-    # plt.scatter(x, y)
-    # plt.show()
+    x = x_mesh[:, 1]
+    y = x_mesh[:, 2]
 
     # Computing means
-    U_test_mean = np.mean(U_test[:, i_min:i_max, :], axis=-1)
-    U_pred_mean = np.mean(U_pred[:, i_min:i_max, :], axis=-1)
-    U_test_std = np.nanstd(U_test[:, i_min:i_max, :], axis=-1)
-    U_pred_std = np.nanstd(U_pred[:, i_min:i_max, :], axis=-1)
-
-    # plt.plot(x, U_test_mean[])
+    U_test_mean = np.mean(U_test, axis=-1)
+    U_pred_mean = np.mean(U_pred, axis=-1)
+    U_test_std = np.nanstd(U_test, axis=-1)
+    U_pred_std = np.nanstd(U_pred, axis=-1)
 
     if export_txt:
         print("Saving to .txt")
-        x_u_mean = np.concatenate((x_mesh, U_test_mean.T), axis=1)
-        x_u_std = np.concatenate((x_mesh, U_test_std.T), axis=1)
-        non_idx_len = x_u_mean.shape[1] - 1
-        np.savetxt(os.path.join("cache", "x_u_mean.txt"), x_u_mean,
+        x_u_mean_std = np.concatenate((x_mesh, U_test_mean.T, U_test_std), axis=1)
+        # x_u_std = np.concatenate((x_mesh, U_test_std.T), axis=1)
+        non_idx_len = x_u_mean_std.shape[1] - 1
+        np.savetxt(os.path.join("cache", "x_u_mean_std.txt"), x_u_mean_std,
                    fmt=' '.join(["%i"] + ["%1.6f"]*non_idx_len),
                    delimiter="\t")
-        np.savetxt(os.path.join("cache", "x_u_std.txt"), x_u_std,
-                   fmt=' '.join(["%i"] + ["%1.6f"]*non_idx_len),
-                   delimiter="\t")
+        # np.savetxt(os.path.join("cache", "x_u_std.txt"), x_u_std,
+        #            fmt=' '.join(["%i"] + ["%1.6f"]*non_idx_len),
+        #            delimiter="\t")
         if not export_vtk:
             return
 
@@ -112,12 +103,10 @@ def plot_results(x_mesh, U_test, U_pred,
         z = np.ascontiguousarray(np.zeros_like(x))
 
         # Exporting
-        unstructuredGridToVTK(os.path.join("cache", "rnd_points"),
+        unstructuredGridToVTK(os.path.join("cache", "x_u_mean_std"),
                               x, y, z,
                               connectivity, offsets, cell_types,
-                              cellData={
-                                  "h_mean" : h_mean_el,
-                              },
+                              cellData=None,
                               pointData={
                                   "h_mean" : U_test_mean[0],
                                   "hu_mean" : U_test_mean[1],
@@ -129,6 +118,17 @@ def plot_results(x_mesh, U_test, U_pred,
         return
 
     print("Plotting")
+    # Keeping only the first nodes
+    i_min = 0
+    i_max = 10000
+    x = x[i_min:i_max]
+    y = y[i_min:i_max]
+
+    # Computing means
+    U_test_mean = np.mean(U_test[:, i_min:i_max, :], axis=-1)
+    U_pred_mean = np.mean(U_pred[:, i_min:i_max, :], axis=-1)
+    U_test_std = np.nanstd(U_test[:, i_min:i_max, :], axis=-1)
+    U_pred_std = np.nanstd(U_pred[:, i_min:i_max, :], axis=-1)
     n_plot_x = 4
     n_plot_y = 4
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.5))

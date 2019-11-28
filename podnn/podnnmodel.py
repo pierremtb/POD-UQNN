@@ -256,8 +256,6 @@ class PodnnModel:
         X_v = self.normalize(X_v)
         v = self.tensor(v)
 
-        print(X_v.shape)
-
         logger.log_train_start()
 
         # Training
