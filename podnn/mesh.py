@@ -41,10 +41,10 @@ def create_linear_mesh(x_min, x_max, n_x,
 
 def read_space_sol_input_mesh(n_s, idx, x_u_mesh_path, mu_mesh_path):
     st = time.time()
-    print("Loading " + mu_mesh_path + "…")
+    print("Loading " + mu_mesh_path + "")
     X_v = np.loadtxt(mu_mesh_path)[:, 0:1]
 
-    print("Loading " + x_u_mesh_path + "…")
+    print("Loading " + x_u_mesh_path + "")
     x_u_mesh = pd.read_table(x_u_mesh_path,
                              header=None,
                              delim_whitespace=True).to_numpy()
