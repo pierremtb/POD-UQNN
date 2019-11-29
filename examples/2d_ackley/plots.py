@@ -42,9 +42,16 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     X, U_test_hifi_mean, U_test_hifi_std = get_test_data()
     X, Y = X[0], X[1]
 
-    U_pred_mean = np.mean(U_pred, axis=-1)
+    u_shape = (HP["n_v"], HP["n_x"], HP["n_y"])
+
+    U_pred_mean = np.mean(U_pred, axis=-1).reshape(u_shape)
     # Using nanstd() to prevent NotANumbers from appearing
-    U_pred_std = np.nanstd(U_pred, axis=-1)
+    U_pred_std = np.nanstd(U_pred, axis=-1).reshape(u_shape)
+
+    U_pred_hifi_mean = U_pred_hifi_mean.reshape(u_shape)
+    U_pred_hifi_std = U_pred_hifi_std.reshape(u_shape)
+    U_test_hifi_mean = U_test_hifi_mean.reshape(u_shape)
+    U_test_hifi_std = U_test_hifi_std.reshape(u_shape)
 
     hifi_error_test_mean = error_podnn(U_test_hifi_mean, U_pred_hifi_mean)
     hifi_error_test_std = error_podnn(U_test_hifi_std, U_pred_hifi_std)
@@ -61,7 +68,7 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
     x = X[199, :]
-    y = Y[199, :]
+    y = Y[:, 199]
     plot_slice(fig, gs[0:4, 0:4], x,
                U_pred_mean[0, :, 199], U_pred_hifi_mean[0, :, 199],
                U_test_hifi_mean[0, :, 199], "Means $u(x, y=0)$") 
@@ -116,8 +123,7 @@ if __name__ == "__main__":
     # Sample the new model to generate a HiFi prediction
     n_s_hifi = hp["n_s_hifi"]
     print("Sampling {n_s_hifi} parameters...")
-    X_v_test_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"],
-                                               hp["t_min"], hp["t_max"])
+    X_v_test_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"])
     print("Predicting the {n_s_hifi} corresponding solutions...")
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
 

@@ -111,7 +111,7 @@ class PodnnModel:
             return loop_u_t(u, n_s, self.n_t, self.n_v, n_xyz, n_h,
                             X_v, U, U_struct, X, mu_lhs, t_min, t_max)
 
-        return loop_u(u, n_s, X_v, U, X, mu_lhs)
+        return loop_u(u, n_s, n_h, X_v, U, X, mu_lhs)
 
     def convert_dataset(self, u_mesh, X_v, train_val_test, eps, eps_init=None,
                         use_cache=False):

@@ -6,7 +6,7 @@ from numba import jit, prange
 
 
 # Disable bad division warning when summing up squares
-# warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 @jit(nopython=True, parallel=True)
@@ -38,12 +38,12 @@ def loop_vdot_t(n_s, n_t, U_tot, U_tot_sq, V, v_pred_hifi):
 
 
 @jit(nopython=True, parallel=True)
-def loop_u(u, n_s, X_v, U, X, mu_lhs):
+def loop_u(u, n_s, n_h, X_v, U, X, mu_lhs):
     """Return the inputs/snapshots matrices from parallel computation."""
     # pylint: disable=not-an-iterable
     for i in prange(n_s):
         X_v[i, :] = mu_lhs[i]
-        U[:, i] = u(X, 0, mu_lhs[i, :])
+        U[:, i] = u(X, 0, mu_lhs[i, :]).reshape((n_h,))
     U_struct = U
     return X_v, U, U_struct
 
@@ -67,11 +67,9 @@ def loop_u_t(u, n_s, n_t, n_v, n_xyz, n_h,
         # Calling the analytical solution function
         Ui = np.zeros((n_v, n_xyz, n_t))
         for j in range(n_t):
-            # Ui[:, :, j] = 0.
-            Ui[:, :, j] = u(X, t[j], mu_lhs[i])
+            Ui[:, :, :, j] = u(X, t[j], mu_lhs[i])
 
         U[:, s:e] = Ui.reshape((n_h, n_t))
-        # U_struct[:, :, i] = np.ascontiguousarray(U[:, s:e]).reshape((n_h, n_t))
         U_struct[:, :, i] = U[:, s:e]
     return X_v, U, U_struct
 
