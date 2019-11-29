@@ -10,8 +10,8 @@ from podnn.podnnmodel import PodnnModel
 from podnn.metrics import error_podnn_rel
 from podnn.mesh import create_linear_mesh
 
-from datagen import u, generate_test_dataset
-from plots import plot_results
+from genhifi import u, generate_test_dataset
+from plot import plot_results
 
 
 def main(hp, gen_test=False, use_cached_dataset=False,

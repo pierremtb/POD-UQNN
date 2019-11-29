@@ -10,7 +10,7 @@ from podnn.podnnmodel import PodnnModel
 from podnn.metrics import error_podnn_rel
 from podnn.mesh import read_space_sol_input_mesh
 
-from plots import plot_results
+from plot import plot_results
 
 
 def main(hp, use_cached_dataset=False):
