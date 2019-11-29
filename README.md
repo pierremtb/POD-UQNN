@@ -6,7 +6,7 @@ Dependencies are in the file `requirements.txt`, and are installable via `pip`.
 Run examples from their, eg.
 ```console
 $ cd examples/1d_shekel
-$ python3 datagen.py
+$ python3 genhifi.py
 $ python3 main.py
 ```
 

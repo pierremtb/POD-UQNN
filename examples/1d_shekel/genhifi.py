@@ -1,10 +1,9 @@
-"""HiFi testing data generation for 2D Ackley Equation."""
+"""HiFi testing data generation for 1D Shekel Equation."""
 
 import sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.plotting import figsize, openPdfGraph
@@ -18,33 +17,37 @@ n_s = HP["n_s_hifi"]
 
 
 def u(X, _, mu):
+    """The 1D-Shekel function."""
     x = X[0]
-    y = X[1]
-    return - 20*(1+.1*mu[2])*np.exp(-.2*(1+.1*mu[1])*np.sqrt(.5*(x**2+y**2))) \
-           - np.exp(.5*(np.cos(2*np.pi*(1+.1*mu[0])*x) + np.cos(2*np.pi*(1+.1*mu[0])*y))) \
-           + 20 + np.exp(1)
+    bet = mu[:10]
+    gam = mu[10:]
+
+    u_sum = np.zeros_like(x)
+    for i in range(len(bet)):
+        i_sum = (x - gam[i])**2
+        u_sum += 1 / (bet[i] + i_sum)
+
+    return u_sum.reshape((1, u_sum.shape[0]))
 
 
-class AckleyTestGenerator(TestGenerator):
+class ShekelTestGenerator(TestGenerator):
     def plot(self):
-        dirname = os.path.join("data")
+        dirname = "data"
         print(f"Reading data to {dirname}")
-        X = np.load(os.path.join(dirname, X_FILE))
-        x, y = X[0], X[1]
+        x = np.load(os.path.join(dirname, X_FILE)).reshape((300,))
         u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
         u_std = np.load(os.path.join(dirname, U_STD_FILE))
-
-        # Keepinp the first coordinate
-        u_mean = u_mean[0, :, :]
-        u_std = u_std[0, :, :]
+        # Keeping just the first coordinate (1D)
+        u_mean = u_mean[0, :]
+        u_std = u_std[0, :]
 
         fig = plt.figure(figsize=figsize(1, 2, 2.0))
-        ax_mean = fig.add_subplot(121, projection="3d")
-        ax_mean.plot_surface(x, y, u_mean)
+        ax_mean = fig.add_subplot(1, 2, 1)
+        ax_mean.plot(x, u_mean)
         ax_mean.set_title(r"Mean of $u_h(x, \gamma, \beta)$")
         ax_mean.set_xlabel("$x$")
-        ax_std = fig.add_subplot(122, projection="3d")
-        ax_std.plot_surface(x, y, u_std)
+        ax_std = fig.add_subplot(1, 2, 2)
+        ax_std.plot(x, u_std)
         ax_std.set_title(r"Standard deviation of $u_h(x, \gamma, \beta)$")
         ax_std.set_xlabel("$x$")
 
@@ -53,11 +56,10 @@ class AckleyTestGenerator(TestGenerator):
         openPdfGraph(PLOT_FILE)
 
 
+
 def generate_test_dataset():
-    tg = AckleyTestGenerator(u, HP["n_v"], HP["n_x"], HP["n_y"])
-    tg.generate(n_s, HP["mu_min"], HP["mu_max"],
-                HP["x_min"], HP["x_max"],
-                HP["y_min"], HP["y_max"],
+    tg = ShekelTestGenerator(u, HP["n_v"], HP["n_x"])
+    tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"],
                 parallel=True)
     return tg
 

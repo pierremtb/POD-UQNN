@@ -21,6 +21,7 @@ n_s = HP["n_s_hifi"]
 def u(X, t, mu):
     """Burgers2 explicit solution."""
     x = X[0]
+    mu = mu[0]
 
     if t == 1.:
         res = x / (1 + np.exp(1/(4*mu)*(x**2 - 1/4)))
@@ -28,7 +29,6 @@ def u(X, t, mu):
         t0 = np.exp(1 / (8*mu))
         res = (x/t) / (1 + np.sqrt(t/t0)*np.exp(x**2/(4*mu*t)))
     return res.reshape((1, x.shape[0]))
-
 
 
 class BurgersTestGenerator(TestGenerator):
@@ -48,17 +48,15 @@ class BurgersTestGenerator(TestGenerator):
         # Loading solution and keeping its first coordinate (n_v == 1)
         u_mean = np.load(os.path.join(dirname, U_MEAN_FILE))
         u_std = np.load(os.path.join(dirname, U_STD_FILE))
-        u_mean = u_mean[0, :, :]
-        u_std = u_std[0, :, :]
 
         # Plotting
         fig = plt.figure(figsize=figsize(1, 2, 2.0))
         ax_mean = fig.add_subplot(121, projection="3d")
-        ax_mean.plot_surface(X, T, u_mean)
+        ax_mean.plot_surface(X, T, u_mean[0])
         ax_mean.set_title(r"Mean of $u_h(x, \gamma, \beta)$")
         ax_mean.set_xlabel("$x$")
         ax_std = fig.add_subplot(122, projection="3d")
-        ax_std.plot_surface(X, T, u_std)
+        ax_std.plot_surface(X, T, u_std[0])
         ax_std.set_title(r"Standard deviation of $u_h(x, \gamma, \beta)$")
         ax_std.set_xlabel("$x$")
 
@@ -70,7 +68,7 @@ class BurgersTestGenerator(TestGenerator):
 def generate_test_dataset():
     tg = BurgersTestGenerator(u, HP["n_v"], HP["n_x"], n_t=HP["n_t"])
     tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"],
-                t_min=HP["t_min"], t_max=HP["t_max"])
+                t_min=HP["t_min"], t_max=HP["t_max"], parallel=True)
     return tg
 
 

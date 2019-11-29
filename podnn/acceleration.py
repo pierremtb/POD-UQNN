@@ -38,12 +38,12 @@ def loop_vdot_t(n_s, n_t, U_tot, U_tot_sq, V, v_pred_hifi):
 
 
 @jit(nopython=True, parallel=True)
-def loop_u(u, n_s, X_v, U, X, mu_lhs):
+def loop_u(u, n_s, n_h, X_v, U, X, mu_lhs):
     """Return the inputs/snapshots matrices from parallel computation."""
     # pylint: disable=not-an-iterable
     for i in prange(n_s):
         X_v[i, :] = mu_lhs[i]
-        U[:, i] = u(X, 0, mu_lhs[i, :])
+        U[:, i] = u(X, 0, mu_lhs[i, :]).reshape((n_h,))
     U_struct = U
     return X_v, U, U_struct
 
@@ -67,11 +67,9 @@ def loop_u_t(u, n_s, n_t, n_v, n_xyz, n_h,
         # Calling the analytical solution function
         Ui = np.zeros((n_v, n_xyz, n_t))
         for j in range(n_t):
-            # Ui[:, :, j] = 0.
             Ui[:, :, j] = u(X, t[j], mu_lhs[i])
 
         U[:, s:e] = Ui.reshape((n_h, n_t))
-        # U_struct[:, :, i] = np.ascontiguousarray(U[:, s:e]).reshape((n_h, n_t))
         U_struct[:, :, i] = U[:, s:e]
     return X_v, U, U_struct
 
@@ -79,6 +77,7 @@ def loop_u_t(u, n_s, n_t, n_v, n_xyz, n_h,
 @jit(nopython=True, parallel=True)
 def lhs(n, samples):
     """Borrowed, parallelized __lhscentered() from pyDOE."""
+
     # Generate the intervals
     cut = np.linspace(0, 1, samples + 1)
 
@@ -86,11 +85,14 @@ def lhs(n, samples):
     u = np.random.rand(samples, n)
     a = cut[:samples]
     b = cut[1:samples + 1]
-    _center = (a + b)/2
+    rdpoints = np.zeros(u.shape)
+    for j in prange(n):
+        rdpoints[:, j] = u[:, j]*(b-a) + a
 
     # Make the random pairings
-    H = np.zeros(u.shape)
-    for j in range(n):
-        H[:, j] = np.random.permutation(_center)
+    H = np.zeros(rdpoints.shape)
+    for j in prange(n):
+        order = np.random.permutation(np.arange(samples))
+        H[:, j] = rdpoints[order, j]
 
     return H

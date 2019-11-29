@@ -67,10 +67,12 @@ class PodnnModel:
         mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
 
         n_st = n_s
+        n_d = mu_min.shape[0]
         if self.has_t:
             n_st *= self.n_t
+            n_d += 1
 
-        X_v = np.zeros((n_st, mu_min.shape[0]))
+        X_v = np.zeros((n_st, n_d))
 
         if self.has_t:
             # Creating the time steps
@@ -109,9 +111,9 @@ class PodnnModel:
             return loop_u_t(u, n_s, self.n_t, self.n_v, n_xyz, n_h,
                             X_v, U, U_struct, X, mu_lhs, t_min, t_max)
 
-        return loop_u(u, n_s, X_v, U, X, mu_lhs)
+        return loop_u(u, n_s, n_h, X_v, U, X, mu_lhs)
 
-    def convert_dataset(self, u_mesh, X_v, train_val_ratio, eps, eps_init=None,
+    def convert_dataset(self, u_mesh, X_v, train_val_test, eps, eps_init=None,
                         use_cache=False):
         """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
         if use_cache and os.path.exists(self.train_data_path):
@@ -143,18 +145,18 @@ class PodnnModel:
         v = (self.V.T.dot(U)).T
 
         # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_val, v_train, v_val = \
-            train_test_split(X_v, v, test_size=train_val_ratio)
+        X_v_train, X_v_test, v_train, v_test = \
+            train_test_split(X_v, v, test_size=train_val_test[2])
 
         # Creating the validation snapshots matrix
-        U_val = self.V.dot(v_val.T)
+        U_test = self.V.dot(v_test.T)
 
-        self.save_train_data(X_v_train, v_train, X_v_val, v_val, U_val)
+        self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_test)
 
-        return X_v_train, v_train, X_v_val, v_val, U_val
+        return X_v_train, v_train, X_v_test, v_test, U_test
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
-                         train_val_ratio, eps, eps_init=None,
+                         train_val_test, eps, eps_init=None,
                          t_min=0, t_max=0,
                          use_cache=False):
         """Generate a training dataset for benchmark problems."""
@@ -199,22 +201,22 @@ class PodnnModel:
         v = (self.V.T.dot(U)).T
 
         # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_val, v_train, v_val = \
-            train_test_split(X_v, v, test_size=train_val_ratio)
+        X_v_train, X_v_test, v_train, v_test = \
+            train_test_split(X_v, v, test_size=train_val_test[2])
 
         # Creating the validation snapshots matrix
-        U_val = self.V.dot(v_val.T)
+        U_test = self.V.dot(v_test.T)
 
-        self.save_train_data(X_v_train, v_train, X_v_val, v_val, U_val)
+        self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_test)
 
-        return X_v_train, v_train, X_v_val, v_val, U_val
+        return X_v_train, v_train, X_v_test, v_test, U_test
 
     def tensor(self, X):
         """Convert input into a TensorFlow Tensor with the class dtype."""
         return tf.convert_to_tensor(X, dtype=self.dtype)
 
-    def train(self, X_v, v, error_val, layers, epochs,
-              lr, reg_lam, decay=0., frequency=100):
+    def train(self, X_v, v, layers, epochs,
+              lr, reg_lam, train_val_test, decay=0., frequency=100):
         """Train the POD-NN's regression model, and save it."""
         # Sizes
         n_L = self.V.shape[1]
@@ -238,7 +240,6 @@ class PodnnModel:
             kernel_initializer="glorot_normal",
             kernel_regularizer=tf.keras.regularizers.l2(reg_lam)))
 
-        # optimizer = tf.keras.optimizers.Adam(lr=1e-1, decay=1e-2)
         optimizer = tf.keras.optimizers.Adam(lr=lr, decay=decay)
 
         self.regnn.compile(loss='mse',
@@ -247,12 +248,9 @@ class PodnnModel:
 
         self.regnn.summary()
 
-        # Setting the error function
-        logger.set_error_fn(error_val)
-
         class LoggerCallback(tf.keras.callbacks.Callback):
             def on_epoch_end(self, epoch, logs):
-                logger.log_train_epoch(epoch, logs["loss"], logs["mse"])
+                logger.log_train_epoch(epoch, logs)
 
         # Preparing the inputs/outputs
         self.ub = np.amax(X_v, axis=0)
@@ -263,8 +261,9 @@ class PodnnModel:
         logger.log_train_start()
 
         # Training
+        val_split = train_val_test[1] / (train_val_test[0] + train_val_test[1])
         self.regnn.fit(X_v, v,
-                       epochs=epochs, validation_split=0.,
+                       epochs=epochs, validation_split=val_split,
                        verbose=0, callbacks=[LoggerCallback()])
 
         logger.log_train_end(epochs)
@@ -343,7 +342,8 @@ class PodnnModel:
         # Making sure the std has non NaNs
         U_pred_hifi_std = np.nan_to_num(U_pred_hifi_std)
 
-        return U_pred_hifi_mean, U_pred_hifi_std
+        tup = self.get_u_tuple()
+        return U_pred_hifi_mean.reshape(tup), U_pred_hifi_std.reshape(tup)
 
     def load_train_data(self):
         """Load training data, such as datasets."""
@@ -357,11 +357,11 @@ class PodnnModel:
             self.lb = data[2]
             return data[3:]
 
-    def save_train_data(self, X_v_train, v_train, X_v_val, v_val, U_val):
+    def save_train_data(self, X_v_train, v_train, X_v_test, v_test, U_test):
         """Save training data, such as datasets."""
         with open(self.train_data_path, "wb") as f:
             pickle.dump((self.V, self.ub, self.lb, X_v_train, v_train,
-                         X_v_val, v_val, U_val), f)
+                         X_v_test, v_test, U_test), f)
 
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""
