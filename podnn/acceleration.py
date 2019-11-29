@@ -6,7 +6,7 @@ from numba import jit, prange
 
 
 # Disable bad division warning when summing up squares
-warnings.filterwarnings("ignore", category=RuntimeWarning)
+# warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 @jit(nopython=True, parallel=True)
@@ -76,7 +76,7 @@ def loop_u_t(u, n_s, n_t, n_v, n_xyz, n_h,
     return X_v, U, U_struct
 
 
-@jit(nopython=False, parallel=True)
+@jit(nopython=True, parallel=True)
 def lhs(n, samples):
     """Borrowed, parallelized __lhscentered() from pyDOE."""
 
@@ -87,11 +87,14 @@ def lhs(n, samples):
     u = np.random.rand(samples, n)
     a = cut[:samples]
     b = cut[1:samples + 1]
-    _center = (a + b)/2
+    rdpoints = np.zeros(u.shape)
+    for j in prange(n):
+        rdpoints[:, j] = u[:, j]*(b-a) + a
 
     # Make the random pairings
-    H = np.zeros(u.shape)
-    for j in range(n):
-        H[:, j] = np.random.permutation(_center)
+    H = np.zeros(rdpoints.shape)
+    for j in prange(n):
+        order = np.random.permutation(np.arange(samples))
+        H[:, j] = rdpoints[order, j]
 
     return H

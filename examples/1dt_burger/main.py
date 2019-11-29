@@ -64,7 +64,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
 
     # Plot against test and save
-    return plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+    return plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                         train_res, hp, no_plot)
 
 if __name__ == "__main__":
@@ -76,5 +76,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    # main(HP, gen_test=False, use_cached_dataset=False)
-    main(HP, gen_test=False, use_cached_dataset=True)
+    main(HP, gen_test=False, use_cached_dataset=False)
+    # main(HP, gen_test=False, use_cached_dataset=True)

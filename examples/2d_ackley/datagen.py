@@ -20,9 +20,10 @@ n_s = HP["n_s_hifi"]
 def u(X, _, mu):
     x = X[0]
     y = X[1]
-    return - 20*(1+.1*mu[2])*np.exp(-.2*(1+.1*mu[1])*np.sqrt(.5*(x**2+y**2))) \
-           - np.exp(.5*(np.cos(2*np.pi*(1+.1*mu[0])*x) + np.cos(2*np.pi*(1+.1*mu[0])*y))) \
-           + 20 + np.exp(1)
+    u_0 = - 20*(1+.1*mu[2])*np.exp(-.2*(1+.1*mu[1])*np.sqrt(.5*(x**2+y**2))) \
+          - np.exp(.5*(np.cos(2*np.pi*(1+.1*mu[0])*x) + np.cos(2*np.pi*(1+.1*mu[0])*y))) \
+          + 20 + np.exp(1)
+    return u_0.reshape((1, u_0.shape[0]))
 
 
 class AckleyTestGenerator(TestGenerator):
@@ -35,8 +36,8 @@ class AckleyTestGenerator(TestGenerator):
         u_std = np.load(os.path.join(dirname, U_STD_FILE))
 
         # Keepinp the first coordinate
-        u_mean = u_mean[0, :, :]
-        u_std = u_std[0, :, :]
+        u_mean = u_mean.reshape(self.get_u_tuple())[0, :, :]
+        u_std = u_std.reshape(self.get_u_tuple())[0, :, :]
 
         fig = plt.figure(figsize=figsize(1, 2, 2.0))
         ax_mean = fig.add_subplot(121, projection="3d")

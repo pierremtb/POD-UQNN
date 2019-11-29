@@ -53,20 +53,20 @@ class TestGenerator:
 
     def computeParallel(self, n_s, U_tot, U_tot_sq, X, t, mu_lhs):
         n_t = self.n_t
-        u = nb.njit(self.u)
+        # u = nb.njit(self.u)
+        u = self.u
 
         pbar = tqdm(total=n_s)
         def bumpBar():
             pbar.update(1)
 
-        @jit(nopython=True, parallel=True)
+        # @jit(nopython=True, parallel=True)
         def loop_t(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs):
             for i in prange(n_s):
                 # Computing one snapshot
                 U = np.zeros_like(U_tot)
                 for j in prange(n_t):
-                    u_j = u(X, t[j], mu_lhs[i, :])
-                    U[:, j] = u_j
+                    U[:, :, j] = u(X, t[j], mu_lhs[i, :])
                 # Building the sum and the sum of squaes
                 U_tot += U
                 U_tot_sq += U**2
@@ -74,7 +74,7 @@ class TestGenerator:
                     bumpBar()
             return U_tot, U_tot_sq
         
-        @jit(nopython=True, parallel=True)
+        # @jit(nopython=True, parallel=True)
         def loop(n_s, U_tot, U_tot_sq, X, mu_lhs):
             for i in prange(n_s):
                 # Computing one snapshot
@@ -88,7 +88,7 @@ class TestGenerator:
         
         if self.has_t:
             U_tot, U_tot_sq = loop_t(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs)
-        else: 
+        else:
             U_tot, U_tot_sq = loop(n_s, U_tot, U_tot_sq, X, mu_lhs)
 
         with objmode():
@@ -102,7 +102,7 @@ class TestGenerator:
             U = np.zeros_like(U_tot)
             if self.has_t:
                 for j in range(self.n_t):
-                    U[:, j] = self.u(X, t[j], mu_lhs[i, :])
+                    U[:, :, j] = self.u(X, t[j], mu_lhs[i, :])
             else:
                 U = self.u(X, 0, mu_lhs[i, :])
 
@@ -141,28 +141,23 @@ class TestGenerator:
         if self.has_t:
             n_d += 1
 
-        # Lower and upper bound
-        lb = mu_min
-        ub = mu_max
-
         # The sum and sum of squares recipient vectors
         if self.has_t:
-            U_tot = np.zeros((n_h, self.n_t))
-            U_tot_sq = np.zeros((n_h, self.n_t))
+            U_tot = np.zeros((self.n_v, n_xyz, self.n_t))
         else:
-            U_tot = np.zeros((n_h,))
-            U_tot_sq = np.zeros((n_h,))
+            U_tot = np.zeros((self.n_v, n_xyz))
+        U_tot_sq = np.zeros_like(U_tot)
 
         # Parameters sampling
-        X_mu = lhs(n_s, n_p).T
-        mu_lhs = lb + (ub - lb)*X_mu
+        X_lhs = lhs(n_s, n_p).T
+        mu_lhs = mu_min + (mu_max - mu_min)*X_lhs
 
         # Going through the snapshots one by one without saving them
         if parallel:
             U_tot, U_tot_sq = self.computeParallel(n_s, U_tot, U_tot_sq, X, t, mu_lhs)
         else:
             U_tot, U_tot_sq = self.compute(n_s, U_tot, U_tot_sq, X, t, mu_lhs)
-        
+
         # Recreating the mean and the std
         U_test_mean = U_tot / n_s
         U_test_std = np.sqrt((n_s*U_tot_sq - U_tot**2) / (n_s*(n_s - 1)))
@@ -176,8 +171,11 @@ class TestGenerator:
             X_out.append(X[1].reshape(self.get_x_tuple()))
             if self.has_z:
                 X_out.append(X[2].reshape(self.get_x_tuple()))
-        U_test_mean = np.reshape(U_test_mean, self.get_u_tuple())
-        U_test_std = np.reshape(U_test_std, self.get_u_tuple())
+        # U_test_mean = np.reshape(U_test_mean, self.get_u_tuple())
+        # U_test_std = np.reshape(U_test_std, self.get_u_tuple())
+
+        # print(U_test_mean)
+        # print(U_test_std)
 
         dirname = "data" 
         print(f"Saving data to {dirname}")
