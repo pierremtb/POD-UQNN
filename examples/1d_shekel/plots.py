@@ -21,17 +21,15 @@ def get_test_data():
     return X, U_test_mean, U_test_std
 
 
-def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                  train_res=None, HP=None, no_plot=False):
 
     X, U_test_hifi_mean, U_test_hifi_std = get_test_data()
     x = X[0]
 
     U_pred_mean = np.mean(U_pred, axis=-1)
-    U_test_mean = np.mean(U_test, axis=-1)
     # Using nanstd() to prevent NotANumbers from appearing
     U_pred_std = np.nanstd(U_pred, axis=-1)
-    U_test_std = np.nanstd(U_test, axis=-1)
 
     hifi_error_test_mean = error_podnn(U_test_hifi_mean, U_pred_hifi_mean)
     hifi_error_test_std = error_podnn(U_test_hifi_std, U_pred_hifi_std)
@@ -83,4 +81,4 @@ if __name__ == "__main__":
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
 
     # Plot and save the results
-    plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, HP=hp)
+    plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std, HP=hp)
