@@ -95,6 +95,16 @@ class PodnnModel:
                 X_v[i, :] = mu_lhs[i]
         return X_v
 
+    def split_dataset(self, X_v, v, test_size):
+        if not self.has_t:
+            # Randomly splitting the dataset (X_v, v)
+            return train_test_split(X_v, v, test_size=test_size)
+
+        n_st_train = int((1. - test_size) * X_v.shape[0])
+        X_v_train, v_train = X_v[:n_st_train, :], v[:n_st_train, :]
+        X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
+        return X_v_train, X_v_val, v_train, v_val
+
     def create_snapshots(self, n_s, n_st, n_d, n_h, u, mu_lhs,
                          t_min=0, t_max=0):
         """Create a generated snapshots matrix and inputs for benchmarks."""
@@ -150,7 +160,7 @@ class PodnnModel:
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_test, v_train, v_test = \
-            train_test_split(X_v, v, test_size=train_val_test[2])
+            self.split_dataset(X_v, v, train_val_test[2])
 
         # Creating the validation snapshots matrix
         U_test = self.V.dot(v_test.T)
@@ -206,7 +216,7 @@ class PodnnModel:
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_test, v_train, v_test = \
-            train_test_split(X_v, v, test_size=train_val_test[2])
+            self.split_dataset(X_v, v, train_val_test[2])
 
         # Creating the validation snapshots matrix
         U_test = self.V.dot(v_test.T)
@@ -240,7 +250,7 @@ class PodnnModel:
         logger = Logger(epochs, frequency)
         val_size = train_val_test[1] / (train_val_test[0] + train_val_test[1])
         X_v_train, X_v_val, v_train, v_val = \
-            train_test_split(X_v, v, test_size=val_size)
+            self.split_dataset(X_v, v, val_size)
         U_val_mean, U_val_std = self.do_vdot(v_val)
         def get_val_err():
             v_val_pred = self.predict_v(X_v_val)

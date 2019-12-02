@@ -51,6 +51,19 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)
 
+    # import matplotlib.pyplot as plt
+    # x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+    # plt.plot(x, U_pred[0, :, 25].mean(-1))
+    # plt.plot(x, U_test[0, :, 25].mean(-1))
+    # plt.plot(x, U_pred[0, :, 75].mean(-1))
+    # plt.plot(x, U_test[0, :, 75].mean(-1))
+    # plt.plot(x, U_pred[0, :, 25].std(-1))
+    # plt.plot(x, U_test[0, :, 25].std(-1))
+    # plt.plot(x, U_pred[0, :, 75].std(-1))
+    # plt.plot(x, U_test[0, :, 75].std(-1))
+    # plt.show()
+    # exit(0)
+
     # Compute relative error
     error_test_mean, error_test_std = error_podnn_rel(U_test, U_pred)
     print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
@@ -66,6 +79,8 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     # Plot against test and save
     return plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                         train_res, hp, no_plot)
+    # return plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+    #                     train_res, hp, no_plot)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg

@@ -60,9 +60,9 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     xx = xxT.T
     tt = ttT.T
 
-    U_pred_mean = np.mean(U_pred, axis=-1)
+    U_pred_mean = U_pred.mean(-1)
     # Using nanstd() to prevent NotANumbers from appearing
-    U_pred_std = np.nanstd(U_pred, axis=-1)
+    U_pred_std = U_pred.std(-1)
 
     hifi_error_test_mean = error_podnn(U_test_hifi_mean, U_pred_hifi_mean)
     hifi_error_test_std = error_podnn(U_test_hifi_std, U_pred_hifi_std)
