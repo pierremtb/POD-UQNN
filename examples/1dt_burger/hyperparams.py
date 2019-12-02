@@ -27,13 +27,11 @@ HP["train_val_test"] = (1/3, 1/3, 1/3)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up _structthe TF SGD-based optimizer
-HP["epochs"] = 10000
-# HP["epochs"] = 5000
-HP["epochs"] = 5000
+HP["epochs"] = 80000
 HP["lr"] = 0.002
-HP["lambda"] = 1e-6
+HP["lambda"] = 1e-4
 # Frequency of the logger
-HP["log_frequency"] = 250
+HP["log_frequency"] = 1000
 # Burgers params
 HP["mu_min"] = [0.001]
 HP["mu_max"] = [0.0100]
