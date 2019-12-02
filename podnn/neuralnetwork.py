@@ -78,15 +78,15 @@ class NeuralNetwork:
             zip(grads, self.wrap_training_variables()))
         return loss_value
 
-    def fit(self, X_v, v, lr, epochs, logger, lb=None, ub=None):
+    def fit(self, X_v, v, epochs, logger, lr,
+            decay=None, lb=None, ub=None):
         """Train the model over a given dataset, and parameters."""
         # Setting up logger
         self.logger = logger
-        self.logger.log_train_start(self)
+        self.logger.log_train_start()
 
         # Setting up optimizer
-        # self.tf_optimizer = tf.keras.optimizers.Adam(lr)
-        self.tf_optimizer = tf.keras.optimizers.SGD(lr)
+        self.tf_optimizer = tf.keras.optimizers.Adam(lr, decay=decay)
         self.model.compile(self.tf_optimizer)
         self.model.summary()
 
