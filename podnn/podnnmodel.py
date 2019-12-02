@@ -11,12 +11,15 @@ import numba as nb
 from .pod import get_pod_bases
 from .handling import pack_layers
 from .logger import Logger
+from .neuralnetwork import NeuralNetwork
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
+from .metrics import error_podnn
 
 
 SETUP_DATA_NAME = "setup_data.pkl"
 TRAIN_DATA_NAME = "train_data.pkl"
 MODEL_NAME = "model.h5"
+MODEL_PARAMS_NAME = "model_params.pkl"
 
 
 class PodnnModel:
@@ -32,11 +35,12 @@ class PodnnModel:
         self.n_t = n_t
         self.has_t = self.n_t > 0
 
+        # Cache paths
         self.save_dir = save_dir
         self.setup_data_path = os.path.join(save_dir, SETUP_DATA_NAME)
         self.train_data_path = os.path.join(save_dir, TRAIN_DATA_NAME)
         self.model_path = os.path.join(save_dir, MODEL_NAME)
-        # self.model_cache_params_path = os.path.join(save_dir, "model_params.pkl")
+        self.model_params_path = os.path.join(save_dir, MODEL_PARAMS_NAME)
 
         self.regnn = None
         self.V = None
@@ -222,51 +226,35 @@ class PodnnModel:
         n_L = self.V.shape[1]
         n_d = X_v.shape[1]
 
+        # Upper/Lower bounds for normalization
+        ub = np.amax(X_v, axis=0)
+        lb = np.amin(X_v, axis=0)
+
         # Creating the neural net model, and logger
         # In: (t, mu)
         # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
         layers = pack_layers(n_d, layers, n_L)
+        self.regnn = NeuralNetwork(layers, reg_lam)
+
+        # Validation and logging
         logger = Logger(epochs, frequency)
-
-        self.regnn = tf.keras.Sequential()
-        self.regnn.add(tf.keras.layers.InputLayer(input_shape=(layers[0],)))
-        for width in layers[1:-1]:
-            self.regnn.add(tf.keras.layers.Dense(
-                width, activation=tf.nn.tanh,
-                kernel_initializer="glorot_normal",
-                kernel_regularizer=tf.keras.regularizers.l2(reg_lam)))
-        self.regnn.add(tf.keras.layers.Dense(
-            layers[-1], activation=None,
-            kernel_initializer="glorot_normal",
-            kernel_regularizer=tf.keras.regularizers.l2(reg_lam)))
-
-        optimizer = tf.keras.optimizers.Adam(lr=lr, decay=decay)
-
-        self.regnn.compile(loss='mse',
-                           optimizer=optimizer,
-                           metrics=['mse'])
-
-        self.regnn.summary()
-
-        class LoggerCallback(tf.keras.callbacks.Callback):
-            def on_epoch_end(self, epoch, logs):
-                logger.log_train_epoch(epoch, logs)
-
-        # Preparing the inputs/outputs
-        self.ub = np.amax(X_v, axis=0)
-        self.lb = np.amin(X_v, axis=0)
-        X_v = self.normalize(X_v)
-        v = self.tensor(v)
-
-        logger.log_train_start()
+        val_size = train_val_test[1] / (train_val_test[0] + train_val_test[1])
+        X_v_train, X_v_val, v_train, v_val = \
+            train_test_split(X_v, v, test_size=val_size)
+        U_val_mean, U_val_std = self.do_vdot(v_val)
+        def get_val_err():
+            v_val_pred = self.predict_v(X_v_val)
+            U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
+            return {
+                "L_val": self.regnn.loss(v_val, v_val_pred),
+                "REM_val": error_podnn(U_val_mean, U_val_pred_mean),
+                "RES_val": error_podnn(U_val_std, U_val_pred_std),
+                }
+        logger.set_val_err_fn(get_val_err)
 
         # Training
-        val_split = train_val_test[1] / (train_val_test[0] + train_val_test[1])
-        self.regnn.fit(X_v, v,
-                       epochs=epochs, validation_split=val_split,
-                       verbose=0, callbacks=[LoggerCallback()])
-
-        logger.log_train_end(epochs)
+        self.regnn.fit(X_v_train, v_train, epochs, logger,
+                       lr, decay, lb, ub)
 
         # Saving
         self.save_model()
@@ -324,17 +312,20 @@ class PodnnModel:
         """Returns the predicted solutions, via proj coefficients (large inputs)."""
         v_pred_hifi = self.predict_v(X_v)
 
-        n_s = X_v.shape[0]
+        return self.do_vdot(v_pred_hifi)
 
+    def do_vdot(self, v):
+        n_s = v.shape[0]
         if self.has_t:
             n_s = int(n_s / self.n_t)
             U_tot = np.zeros((self.n_h, self.n_t))
             U_tot_sq = np.zeros((self.n_h, self.n_t))
-            U_tot, U_tot_sq = loop_vdot_t(n_s, self.n_t, U_tot, U_tot_sq, self.V, v_pred_hifi)
+            U_tot, U_tot_sq = \
+                loop_vdot_t(n_s, self.n_t, U_tot, U_tot_sq, self.V, v)
         else:
             U_tot = np.zeros((self.n_h,))
             U_tot_sq = np.zeros((self.n_h,))
-            U_tot, U_tot_sq = loop_vdot(n_s, U_tot, U_tot_sq, self.V, v_pred_hifi)
+            U_tot, U_tot_sq = loop_vdot(n_s, U_tot, U_tot_sq, self.V, v)
 
         # Getting the mean and std
         U_pred_hifi_mean = U_tot / n_s
@@ -368,13 +359,16 @@ class PodnnModel:
 
         if not os.path.exists(self.model_path):
             raise FileNotFoundError("Can't find cached model.")
+        if not os.path.exists(self.model_params_path):
+            raise FileNotFoundError("Can't find cached model params.")
 
         print(f"Loading model from {self.model_path}...")
-        self.regnn = tf.keras.models.load_model(self.model_path)
+        self.regnn = NeuralNetwork.load_from(self.model_path, self.model_params_path)
+        # self.regnn = tf.keras.models.load_model(self.model_path)
 
     def save_model(self):
         """Save the POD-NN's regression neural network and parameters."""
-        tf.keras.models.save_model(self.regnn, self.model_path)
+        self.regnn.save_to(self.model_path, self.model_params_path)
 
     def save_setup_data(self):
         """Save setup-related data, such as n_v, x_mesh or n_t."""

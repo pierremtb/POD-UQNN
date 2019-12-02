@@ -21,8 +21,12 @@ class Logger(object):
         self.tf_epochs = epochs
         self.frequency = frequency
 
+        self.pbar = None
         self.epochs = []
         self.logs = []
+        self.logs_keys = None
+
+        self.get_val_err = None
 
     def get_epoch_duration(self):
         now = time.time()
@@ -35,29 +39,30 @@ class Logger(object):
         return datetime.fromtimestamp(time.time() - self.start_time) \
                 .strftime("%M:%S")
 
-    def get_error_u(self):
-        return self.error_fn()
-
-    def set_error_fn(self, error_fn):
-        self.error_fn = error_fn
+    def set_val_err_fn(self, fn):
+        self.get_val_err = fn
 
     def log_train_start(self):
         print("\nTraining started")
         print("================")
-        # self.pbar = tqdm(total=self.tf_epochs)
         self.pbar = tqdm(total=self.tf_epochs)
 
-    def log_train_epoch(self, epoch, logs, custom="", is_iter=False):
+    def log_train_epoch(self, epoch, loss, custom="", is_iter=False):
         self.pbar.update(1)
-        self.pbar.set_description(f"L: {logs['loss']:.4e}")
+        self.pbar.set_description(f"L: {loss:.4e}")
 
         if epoch % self.frequency == 0:
-            self.logs_keys = list(logs.keys())
+            logs = {"L": loss, **self.get_val_err()}
+            if self.logs_keys is None:
+                self.logs_keys = list(logs.keys())
             logs_values = [logs[x] for x in self.logs_keys]
 
             logs_message = ""
             for i, key in enumerate(self.logs_keys):
-                logs_message += f" {key}: {logs_values[i]:.4e}"
+                if i >= len(logs_values) - 2:
+                    logs_message += f" {key}: {logs_values[i]:.4f}"
+                else:
+                    logs_message += f" {key}: {logs_values[i]:.3e}"
 
             name = 'nt_epoch' if is_iter else '#'
             message = f"{name}: {epoch:6d} " + \
