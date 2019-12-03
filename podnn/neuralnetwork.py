@@ -45,11 +45,16 @@ class NeuralNetwork:
             return (X - self.lb) - 0.5*(self.ub - self.lb)
         return X
 
+    def regularization(self):
+        l2_norms = [tf.nn.l2_loss(v) for v in self.wrap_training_variables()]
+        l2_norm = tf.reduce_sum(l2_norms)
+        return self.reg_lam * l2_norm
+
     # Defining custom loss
     @tf.function
     def loss(self, v, v_pred):
         """Return a MSE loss function between the pred and val."""
-        return tf.reduce_mean(tf.square(v - v_pred))
+        return tf.reduce_mean(tf.square(v - v_pred)) + self.regularization()
 
     @tf.function
     def grad(self, X, v):

@@ -26,9 +26,9 @@ HP["train_val_test"] = (1/3, 1/3, 1/3)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 111000
-HP["lr"] = 0.001
-HP["lambda"] = 1e-2
+HP["epochs"] = 50000
+HP["lr"] = 0.003
+HP["lambda"] = 1e-4
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Non-spatial params

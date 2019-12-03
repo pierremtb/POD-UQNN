@@ -14,20 +14,19 @@ HP["x_max"] = 10.
 # Time
 HP["n_t"] = 0
 # Snapshots count
-HP["n_s"] = 1000
+HP["n_s"] = 3 * 300
 HP["n_s_hifi"] = int(1e6)
 # POD stopping param
 HP["eps"] = 1e-10
-HP["eps_init"] = 1e-10
 # Train/val split
 HP["train_val_test"] = (1/3, 1/3, 1/3)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 50000
-HP["lr"] = 0.003
+HP["epochs"] = 10000
+HP["lr"] = 0.001
 HP["decay"] = 0.
-HP["lambda"] = 1e-6
+HP["lambda"] = 1e-4
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Non-spatial params
