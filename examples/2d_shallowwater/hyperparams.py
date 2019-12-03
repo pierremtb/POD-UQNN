@@ -16,16 +16,16 @@ HP["n_s"] = 300
 # POD stopping param
 HP["eps"] = 1e-10
 # Train/val split
-HP["train_val_test"] = (1/3, 1/3, 1/3)
+HP["train_val_test"] = (3/5, 1/5, 1/5)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up the TF SGD-based optimizer
-HP["epochs"] = 300000
-HP["lr"] = 0.003
+HP["epochs"] = 500000
+HP["lr"] = 0.0005
 HP["decay"] = 0.
-HP["lambda"] = 1e-8
+HP["lambda"] = 1e-5
 # Frequency of the logger
-HP["log_frequency"] = 10000
+HP["log_frequency"] = 5000
 
 np.random.seed(1111)
 tf.random.set_seed(1111)

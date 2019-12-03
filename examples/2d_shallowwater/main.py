@@ -37,6 +37,9 @@ def main(hp, use_cached_dataset=False):
         U_test = model.convert_dataset(u_mesh, X_v,
                                        hp["train_val_test"], hp["eps"],
                                        use_cache=use_cached_dataset)
+    
+    print(X_v_train.shape)
+    print(X_v_test.shape)
 
     # Create the model and train
     train_res = model.train(X_v_train, v_train, hp["h_layers"],
