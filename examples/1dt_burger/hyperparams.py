@@ -17,8 +17,8 @@ HP["t_min"] = 1.
 HP["t_max"] = 5.
 # Snapshots count
 HP["n_s"] = 3 * 500
-# HP["n_s_hifi"] = int(1e6)
-HP["n_s_hifi"] = int(1e4)
+HP["n_s_hifi"] = int(1e6)
+# HP["n_s_hifi"] = int(1e4)
 # POD stopping param
 HP["eps"] = 1e-10
 HP["eps_init"] = None

@@ -53,14 +53,13 @@ class TestGenerator:
 
     def computeParallel(self, n_s, U_tot, U_tot_sq, X, t, mu_lhs):
         n_t = self.n_t
-        # u = nb.njit(self.u)
-        u = self.u
+        u = nb.njit(self.u)
 
         pbar = tqdm(total=n_s)
         def bumpBar():
             pbar.update(1)
 
-        # @jit(nopython=True, parallel=True)
+        @jit(nopython=True, parallel=True)
         def loop_t(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs):
             for i in prange(n_s):
                 # Computing one snapshot
@@ -74,7 +73,7 @@ class TestGenerator:
                     bumpBar()
             return U_tot, U_tot_sq
         
-        # @jit(nopython=True, parallel=True)
+        @jit(nopython=True, parallel=True)
         def loop(n_s, U_tot, U_tot_sq, X, mu_lhs):
             for i in prange(n_s):
                 # Computing one snapshot
@@ -85,7 +84,7 @@ class TestGenerator:
                 with objmode():
                     bumpBar()
             return U_tot, U_tot_sq
-        
+
         if self.has_t:
             U_tot, U_tot_sq = loop_t(n_s, n_t, U_tot, U_tot_sq, X, t, mu_lhs)
         else:
@@ -114,7 +113,7 @@ class TestGenerator:
 
     def generate(self, n_s, mu_min, mu_max, x_min, x_max,
                 y_min=0, y_max=0, z_min=0, z_max=0,
-                t_min=0, t_max=0, parallel=False):
+                t_min=0, t_max=0, parallel=True):
         """Generate a hifi-test solution of the problem's equation."""
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
 

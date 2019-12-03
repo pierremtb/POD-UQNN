@@ -68,7 +68,7 @@ class BurgersTestGenerator(TestGenerator):
 def generate_test_dataset():
     tg = BurgersTestGenerator(u, HP["n_v"], HP["n_x"], n_t=HP["n_t"])
     tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"],
-                t_min=HP["t_min"], t_max=HP["t_max"], parallel=True)
+                t_min=HP["t_min"], t_max=HP["t_max"])
     return tg
 
 

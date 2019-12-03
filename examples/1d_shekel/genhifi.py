@@ -59,8 +59,8 @@ class ShekelTestGenerator(TestGenerator):
 
 def generate_test_dataset():
     tg = ShekelTestGenerator(u, HP["n_v"], HP["n_x"])
-    tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"],
-                parallel=True)
+    tg.generate(n_s, HP["mu_min"], HP["mu_max"], HP["x_min"], HP["x_max"])
+
     return tg
 
 
