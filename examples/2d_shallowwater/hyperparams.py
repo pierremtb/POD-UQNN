@@ -23,7 +23,7 @@ HP["h_layers"] = [64, 64]
 HP["epochs"] = 500000
 HP["lr"] = 0.0005
 HP["decay"] = 0.
-HP["lambda"] = 1e-5
+HP["lambda"] = 1e-4
 # Frequency of the logger
 HP["log_frequency"] = 5000
 
