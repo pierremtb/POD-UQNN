@@ -345,7 +345,7 @@ class PodnnModel:
             self.V = data[2]
             self.ub = data[3]
             self.lb = data[4]
-            return data[3:]
+            return data[5:]
 
     def save_train_data(self, X_v, X_v_train, v_train, X_v_test, v_test, U_test):
         """Save training data, such as datasets."""

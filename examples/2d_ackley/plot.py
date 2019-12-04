@@ -20,14 +20,15 @@ def plot_contour(fig, pos, X, Y, U, levels, title):
     ax.set_xlabel("$x$")
     ax.set_ylabel("$y$")
 
-def plot_slice(fig, pos, x, u_pred, u_pred_hifi, u_test_hifi, title):
+def plot_slice(fig, pos, x, u_pred, u_pred_hifi, u_test_hifi, title, legend=False):
     ax = fig.add_subplot(pos)
     ax.plot(x, u_pred, "k,", label=r"$\hat{u_T}(x)$")
     ax.plot(x, u_pred_hifi, "b-", label=r"$\hat{u_T^{hf}}(x)$")
     ax.plot(x, u_test_hifi, "r--", label=r"$u_T^{hf}(x)$")
     ax.set_xlabel("$x$")
     ax.set_title(title)
-    ax.legend()
+    if legend:
+        ax.legend()
 
 def get_test_data():
     dirname = os.path.join("data")
@@ -63,22 +64,22 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     # mean_levels = list(range(2, 15))
     # std_levels = np.arange(5, 20) * 0.1
 
-    n_plot_x = 8
-    n_plot_y = 8
-    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.))
+    n_plot_x = 2
+    n_plot_y = 2
+    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
     x = X[199, :]
     y = Y[:, 199]
-    plot_slice(fig, gs[0:4, 0:4], x,
+    plot_slice(fig, gs[0, 0], x,
                U_pred_mean[0, :, 199], U_pred_hifi_mean[0, :, 199],
-               U_test_hifi_mean[0, :, 199], "Means $u(x, y=0)$") 
-    plot_slice(fig, gs[4:, 0:4], x,
+               U_test_hifi_mean[0, :, 199], "Means $u(x, y=0)$", legend=True) 
+    plot_slice(fig, gs[0, 1], x,
                U_pred_std[0, :, 199], U_pred_hifi_std[0, :, 199],
                U_test_hifi_std[0, :, 199], "Std dev $u(x, y=0)$") 
-    plot_slice(fig, gs[0:4, 4:8], y,
+    plot_slice(fig, gs[1, 0], y,
                U_pred_mean[0, 199, :], U_pred_hifi_mean[0, 199, :],
                U_test_hifi_mean[0, 199, :], "Means $u(x=0, y)$") 
-    plot_slice(fig, gs[4:, 4:], y,
+    plot_slice(fig, gs[1, 1], y,
                U_pred_std[0, 199, :], U_pred_hifi_std[0, 199, :],
                U_test_hifi_std[0, 199, :], "Std dev $u(x=0, y)$") 
 
@@ -121,7 +122,8 @@ if __name__ == "__main__":
     U_test_struct = model.restruct(U_test)
 
     # Sample the new model to generate a HiFi prediction
-    n_s_hifi = hp["n_s_hifi"]
+    # n_s_hifi = hp["n_s_hifi"]
+    n_s_hifi = int(1e3)
     print("Sampling {n_s_hifi} parameters")
     X_v_test_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"])
     print("Predicting the {n_s_hifi} corresponding solutions")

@@ -65,5 +65,5 @@ def perform_pod(U, eps, verbose=True):
     for i in tqdm(range(n_L), disable=(not verbose)):
         V[:, i] = U.dot(Z[:, i]) / np.sqrt(lambdas_trunc[i])
     
-    return V
+    return np.ascontiguousarray(V)
 

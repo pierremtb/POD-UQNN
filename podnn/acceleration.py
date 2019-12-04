@@ -26,6 +26,7 @@ def loop_vdot(n_s, U_tot, U_tot_sq, V, v_pred_hifi):
 def loop_vdot_t(n_s, n_t, U_tot, U_tot_sq, V, v_pred_hifi):
     """Return mean, std from parallelized dot product between V an v (w/ t)."""
     # pylint: disable=not-an-iterable
+    v_pred_hifi = np.ascontiguousarray(v_pred_hifi)
     for i in prange(n_s):
         # Computing one snapshot
         s = n_t * i
