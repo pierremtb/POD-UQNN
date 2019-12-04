@@ -235,7 +235,7 @@ class PodnnModel:
     def initNN(self, h_layers, lr, lam):
         """Create the neural net model."""
         self.layers = pack_layers(self.n_d, h_layers, self.n_L)
-        self.regnn = NeuralNetwork(self.layers, lr, lam)
+        self.regnn = NeuralNetwork(self.layers, lr, lam, lb=self.lb, ub=self.ub)
 
     def train(self, X_v, v, epochs, train_val_test, freq=100):
         """Train the POD-NN's regression model, and save it."""
@@ -259,19 +259,12 @@ class PodnnModel:
         logger.set_val_err_fn(get_val_err)
 
         # Training
-        X_v_train = self.normalize(X_v_train)
         self.regnn.fit(X_v_train, v_train, epochs, logger)
 
         # Saving
         self.save_model()
 
         return logger.get_logs()
-
-    def normalize(self, X):
-        """Apply a kind of normalization to the inputs X."""
-        if self.lb is not None and self.ub is not None:
-            return self.tensor((X - self.lb) - 0.5*(self.ub - self.lb))
-        return self.tensor(X)
 
     def restruct(self, U):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
@@ -300,8 +293,7 @@ class PodnnModel:
         return (self.n_v,) + tup
 
     def predict_v(self, X_v):
-        """Returns the predicted POD projection coefficients."""
-        X_v = self.normalize(X_v)
+        """Return the predicted POD projection coefficients."""
         v_pred = self.regnn.predict(X_v).astype(self.dtype)
         return v_pred
 
@@ -311,16 +303,15 @@ class PodnnModel:
 
         # Retrieving the function with the predicted coefficients
         U_pred = self.V.dot(v_pred.T)
-
         return U_pred
 
     def predict_heavy(self, X_v):
         """Returns the predicted solutions, via proj coefficients (large inputs)."""
         v_pred_hifi = self.predict_v(X_v)
-
         return self.do_vdot(v_pred_hifi)
 
     def do_vdot(self, v):
+        """Perform an accelerated dot product, return mean and std."""
         n_s = v.shape[0]
         if self.has_t:
             n_s = int(n_s / self.n_t)
@@ -361,8 +352,8 @@ class PodnnModel:
         # Set dataset dependent params
         self.n_L = self.V.shape[1]
         self.n_d = X_v.shape[1]
-        self.ub = np.amax(X_v, axis=0)
         self.lb = np.amin(X_v, axis=0)
+        self.ub = np.amax(X_v, axis=0)
 
         with open(self.train_data_path, "wb") as f:
             pickle.dump((self.n_L, self.n_d, self.V, self.ub, self.lb,

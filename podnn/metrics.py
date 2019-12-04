@@ -20,7 +20,8 @@ def error_pod(U, V):
 
 
 def error_podnn(U, U_pred):
-    return norm(U - U_pred) / norm(U)
+    return np.mean(np.abs(U - U_pred) / np.abs(U))
+    # return norm(U - U_pred) / norm(U)
 
 
 def error_podnn_rel(U, U_pred):
