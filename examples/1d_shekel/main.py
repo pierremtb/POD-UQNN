@@ -35,16 +35,15 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     X_v_train, v_train, \
         X_v_test, _, \
         U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
-                                       hp["n_s"],
-                                       hp["train_val_test"],
-                                       hp["eps"],
-                                       use_cache=use_cached_dataset)
+                                        hp["n_s"],
+                                        hp["train_val_test"],
+                                        hp["eps"],
+                                        use_cache=use_cached_dataset)
 
     # Train
-    train_res = model.train(X_v_train, v_train, hp["h_layers"],
-                            hp["epochs"], hp["lr"], hp["lambda"],
-                            hp["train_val_test"],
-                            frequency=hp["log_frequency"])
+    model.initNN(hp["h_layers"], hp["lr"], hp["lambda"])
+    train_res = model.train(X_v_train, v_train, hp["epochs"],
+                            hp["train_val_test"], freq=hp["log_frequency"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
@@ -56,10 +55,10 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
 
     # Sample the new model to generate a HiFi prediction
-    print("Sampling {n_s_hifi} parameters...")
+    print("Sampling {n_s_hifi} parameters")
     X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"],
                                                hp["mu_min"], hp["mu_max"])
-    print("Predicting the {n_s_hifi} corresponding solutions...")
+    print("Predicting the {n_s_hifi} corresponding solutions")
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
 
     # Plot against test and save

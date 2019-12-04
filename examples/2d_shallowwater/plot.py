@@ -1,4 +1,4 @@
-"""Handles the plots for 2D inviscid Shallow Water Equations."""
+"""Handles the plots for 2D inviscid Shallow Water Equations."""
 
 import os
 import sys

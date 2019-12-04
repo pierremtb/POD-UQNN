@@ -35,34 +35,21 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     X_v_train, v_train, \
         X_v_test, _, \
         U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
-                                        hp["n_s"], hp["train_val_test"],
+                                        hp["n_s"],
+                                        hp["train_val_test"],
                                         hp["eps"], eps_init=hp["eps_init"],
                                         t_min=hp["t_min"], t_max=hp["t_max"],
                                         use_cache=use_cached_dataset)
 
-    # Train the model
-    train_res = model.train(X_v_train, v_train, hp["h_layers"],
-                            hp["epochs"], hp["lr"], hp["lambda"],
-                            hp["train_val_test"],
-                            frequency=hp["log_frequency"])
+    # Train
+    model.initNN(hp["h_layers"], hp["lr"], hp["lambda"])
+    train_res = model.train(X_v_train, v_train, hp["epochs"],
+                            hp["train_val_test"], freq=hp["log_frequency"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)
-
-    # import matplotlib.pyplot as plt
-    # x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
-    # plt.plot(x, U_pred[0, :, 25].mean(-1))
-    # plt.plot(x, U_test[0, :, 25].mean(-1))
-    # plt.plot(x, U_pred[0, :, 75].mean(-1))
-    # plt.plot(x, U_test[0, :, 75].mean(-1))
-    # plt.plot(x, U_pred[0, :, 25].std(-1))
-    # plt.plot(x, U_test[0, :, 25].std(-1))
-    # plt.plot(x, U_pred[0, :, 75].std(-1))
-    # plt.plot(x, U_test[0, :, 75].std(-1))
-    # plt.show()
-    # exit(0)
 
     # Compute relative error
     error_test_mean, error_test_std = error_podnn_rel(U_test, U_pred)
@@ -70,10 +57,10 @@ def main(hp, gen_test=False, use_cached_dataset=False,
 
     # Sample the new model to generate a HiFi prediction
     n_s_hifi = hp["n_s_hifi"]
-    print("Sampling {n_s_hifi} parameters...")
+    print("Sampling {n_s_hifi} parameters")
     X_v_test_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"],
                                                hp["t_min"], hp["t_max"])
-    print("Predicting the {n_s_hifi} corresponding solutions...")
+    print("Predicting the {n_s_hifi} corresponding solutions")
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
 
     # Plot against test and save

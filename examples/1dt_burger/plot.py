@@ -42,7 +42,7 @@ def plot_spec_time(fig, pos, x, t_i,
                    U_pred, U_pred_hifi, U_test_hifi,
                    title, show_legend=False):
     ax = fig.add_subplot(pos)
-    ax.plot(x, U_pred[0, :, t_i], "b,", label="$\hat{u_T}$")
+    ax.plot(x, U_pred[0, :, t_i], "k,", label="$\hat{u_T}$")
     ax.plot(x, U_pred_hifi[0, :, t_i], "b-", label="$\hat{u_T^{hf}}$")
     ax.plot(x, U_test_hifi[0, :, t_i], "r--", label="$u_T^{hf}$")
     ax.set_xlabel("$x$")
@@ -113,10 +113,10 @@ if __name__ == "__main__":
 
     # Sample the new model to generate a HiFi prediction
     n_s_hifi = hp["n_s_hifi"]
-    print("Sampling {n_s_hifi} parameters...")
+    print("Sampling {n_s_hifi} parameters")
     X_v_test_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"],
                                                hp["t_min"], hp["t_max"])
-    print("Predicting the {n_s_hifi} corresponding solutions...")
+    print("Predicting the {n_s_hifi} corresponding solutions")
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
 
     # Plot and save the results

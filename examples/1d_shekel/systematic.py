@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     # Running
     for i_n_s, n_s in enumerate(list_samples):
-        print(f"For n_s={n_s}...")
+        print(f"For n_s={n_s}")
         for i_tf_epochs, tf_epochs in enumerate(list_epochs):
             print(f"For tf_epochs={tf_epochs}")
             HP["n_s"] = n_s

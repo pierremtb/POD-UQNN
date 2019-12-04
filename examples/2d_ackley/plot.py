@@ -22,7 +22,7 @@ def plot_contour(fig, pos, X, Y, U, levels, title):
 
 def plot_slice(fig, pos, x, u_pred, u_pred_hifi, u_test_hifi, title):
     ax = fig.add_subplot(pos)
-    ax.plot(x, u_pred, "b,", label=r"$\hat{u_T}(x)$")
+    ax.plot(x, u_pred, "k,", label=r"$\hat{u_T}(x)$")
     ax.plot(x, u_pred_hifi, "b-", label=r"$\hat{u_T^{hf}}(x)$")
     ax.plot(x, u_test_hifi, "r--", label=r"$u_T^{hf}(x)$")
     ax.set_xlabel("$x$")
@@ -122,9 +122,9 @@ if __name__ == "__main__":
 
     # Sample the new model to generate a HiFi prediction
     n_s_hifi = hp["n_s_hifi"]
-    print("Sampling {n_s_hifi} parameters...")
+    print("Sampling {n_s_hifi} parameters")
     X_v_test_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"])
-    print("Predicting the {n_s_hifi} corresponding solutions...")
+    print("Predicting the {n_s_hifi} corresponding solutions")
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
 
     # Plot and save the results

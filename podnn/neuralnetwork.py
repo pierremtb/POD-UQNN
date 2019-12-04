@@ -1,3 +1,4 @@
+
 """Module with a class defining an Artificial Neural Network."""
 
 import os
@@ -8,36 +9,35 @@ from tqdm.auto import tqdm
 
 
 class NeuralNetwork:
-    def __init__(self, layers, reg_lam, model=None):
-        # Setting up the optimizers with the hyper-parameters
+    def __init__(self, layers, lr, lam, model=None, lb=None, ub=None):
+        # Making sure the dtype is consistent
         self.dtype = "float64"
-        self.tf_optimizer = None
-        self.logger = None
+
+        # Setting up optimizer
+        self.tf_optimizer = tf.keras.optimizers.Adam(lr)
 
         # Descriptive Keras model
         tf.keras.backend.set_floatx(self.dtype)
-
         if model is None:
             self.model = tf.keras.Sequential()
             self.model.add(tf.keras.layers.InputLayer(input_shape=(layers[0],)))
             for width in layers[1:-1]:
-                self.model.add(tf.keras.layers.Dense(
-                    width, activation=tf.nn.tanh,
-                    kernel_initializer="glorot_normal",
-                    kernel_regularizer=tf.keras.regularizers.l2(reg_lam)))
-            self.model.add(tf.keras.layers.Dense(
-                    layers[-1], activation=None,
-                    kernel_initializer="glorot_normal",
-                    kernel_regularizer=tf.keras.regularizers.l2(reg_lam)))
+                self.model.add(tf.keras.layers.Dense(width, tf.nn.tanh))
+            self.model.add(tf.keras.layers.Dense(layers[-1], None))
+            self.model.compile(optimizer=self.tf_optimizer, loss="mse")
+            self.model.summary()
         else:
             self.model = model
 
         self.batch_size = 0
 
         self.layers = layers
-        self.reg_lam = reg_lam
-        self.lb = None
-        self.ub = None
+        self.lr = lr
+        self.lam = lam
+        self.lb = lb
+        self.ub = ub
+
+        self.logger = None
 
     def normalize(self, X):
         """Apply a kind of normalization to the inputs X."""
@@ -48,9 +48,8 @@ class NeuralNetwork:
     def regularization(self):
         l2_norms = [tf.nn.l2_loss(v) for v in self.wrap_training_variables()]
         l2_norm = tf.reduce_sum(l2_norms)
-        return self.reg_lam * l2_norm
+        return self.lam * l2_norm
 
-    # Defining custom loss
     @tf.function
     def loss(self, v, v_pred):
         """Return a MSE loss function between the pred and val."""
@@ -83,21 +82,13 @@ class NeuralNetwork:
             zip(grads, self.wrap_training_variables()))
         return loss_value
 
-    def fit(self, X_v, v, epochs, logger, lr,
-            decay=None, lb=None, ub=None):
+    def fit(self, X_v, v, epochs, logger):
         """Train the model over a given dataset, and parameters."""
         # Setting up logger
         self.logger = logger
         self.logger.log_train_start()
 
-        # Setting up optimizer
-        self.tf_optimizer = tf.keras.optimizers.Adam(lr, decay=decay)
-        self.model.compile(self.tf_optimizer)
-        self.model.summary()
-
         # Normalizing and preparing inputs
-        self.lb = lb
-        self.ub = ub
         X_v = self.normalize(X_v)
         X_v = self.tensor(X_v)
         v = self.tensor(v)
@@ -133,7 +124,7 @@ class NeuralNetwork:
     def save_to(self, model_path, params_path):
         """Save the (trained) model and params for later use."""
         with open(params_path, "wb") as f:
-            pickle.dump((self.layers, self.reg_lam), f)
+            pickle.dump((self.layers, self.lr, self.lam, self.lb, self.ub), f)
         tf.keras.models.save_model(self.model, model_path)
 
     @classmethod
@@ -145,9 +136,9 @@ class NeuralNetwork:
         if not os.path.exists(params_path):
             raise FileNotFoundError("Can't find cached model params.")
 
-        print(f"Loading model from {model_path}...")
-        print(f"Loading model params from {params_path}...")
+        print(f"Loading model from {model_path}")
         with open(params_path, "rb") as f:
-            layers, reg_lam = pickle.load(f)
+            layers, lam, lr, lb, ub = pickle.load(f)
+        print(f"Loading model params from {params_path}")
         model = tf.keras.models.load_model(model_path)
-        return cls(layers, reg_lam, model)
+        return cls(layers, lam, lr, model=model, lb=lb, ub=ub)

@@ -1,4 +1,4 @@
-""" POD-NN modeling for 2D inviscid Shallow Water Equations."""
+""" POD-NN modeling for 2D inviscid Shallow Water Equations."""
 
 import sys
 import os

@@ -43,9 +43,12 @@ class PodnnModel:
         self.model_params_path = os.path.join(save_dir, MODEL_PARAMS_NAME)
 
         self.regnn = None
+        self.n_L = None
+        self.n_d = None
         self.V = None
         self.ub = None
         self.lb = None
+        self.layers = None
 
         self.save_setup_data()
 
@@ -165,7 +168,7 @@ class PodnnModel:
         # Creating the validation snapshots matrix
         U_test = self.V.dot(v_test.T)
 
-        self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_test)
+        self.save_train_data(X_v, X_v_train, v_train, X_v_test, v_test, U_test)
 
         return X_v_train, v_train, X_v_test, v_test, U_test
 
@@ -221,7 +224,7 @@ class PodnnModel:
         # Creating the validation snapshots matrix
         U_test = self.V.dot(v_test.T)
 
-        self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_test)
+        self.save_train_data(X_v, X_v_train, v_train, X_v_test, v_test, U_test)
 
         return X_v_train, v_train, X_v_test, v_test, U_test
 
@@ -229,25 +232,18 @@ class PodnnModel:
         """Convert input into a TensorFlow Tensor with the class dtype."""
         return tf.convert_to_tensor(X, dtype=self.dtype)
 
-    def train(self, X_v, v, layers, epochs,
-              lr, reg_lam, train_val_test, decay=0., frequency=100):
+    def initNN(self, h_layers, lr, lam):
+        """Create the neural net model."""
+        self.layers = pack_layers(self.n_d, h_layers, self.n_L)
+        self.regnn = NeuralNetwork(self.layers, lr, lam)
+
+    def train(self, X_v, v, epochs, train_val_test, freq=100):
         """Train the POD-NN's regression model, and save it."""
-        # Sizes
-        n_L = self.V.shape[1]
-        n_d = X_v.shape[1]
-
-        # Upper/Lower bounds for normalization
-        ub = np.amax(X_v, axis=0)
-        lb = np.amin(X_v, axis=0)
-
-        # Creating the neural net model, and logger
-        # In: (t, mu)
-        # Out: u_rb = (u_rb_1, u_rb_2, ..., u_rb_L)
-        layers = pack_layers(n_d, layers, n_L)
-        self.regnn = NeuralNetwork(layers, reg_lam)
+        if self.regnn is None:
+            raise ValueError("Regression model isn't defined.")
 
         # Validation and logging
-        logger = Logger(epochs, frequency)
+        logger = Logger(epochs, freq)
         val_size = train_val_test[1] / (train_val_test[0] + train_val_test[1])
         X_v_train, X_v_val, v_train, v_val = \
             self.split_dataset(X_v, v, val_size)
@@ -263,8 +259,8 @@ class PodnnModel:
         logger.set_val_err_fn(get_val_err)
 
         # Training
-        self.regnn.fit(X_v_train, v_train, epochs, logger,
-                       lr, decay, lb, ub)
+        X_v_train = self.normalize(X_v_train)
+        self.regnn.fit(X_v_train, v_train, epochs, logger)
 
         # Saving
         self.save_model()
@@ -353,16 +349,24 @@ class PodnnModel:
         with open(self.train_data_path, "rb") as f:
             print("Loading train data")
             data = pickle.load(f)
-            self.V = data[0]
-            self.ub = data[1]
-            self.lb = data[2]
+            self.n_L = data[0]
+            self.n_d = data[1]
+            self.V = data[2]
+            self.ub = data[3]
+            self.lb = data[4]
             return data[3:]
 
-    def save_train_data(self, X_v_train, v_train, X_v_test, v_test, U_test):
+    def save_train_data(self, X_v, X_v_train, v_train, X_v_test, v_test, U_test):
         """Save training data, such as datasets."""
+        # Set dataset dependent params
+        self.n_L = self.V.shape[1]
+        self.n_d = X_v.shape[1]
+        self.ub = np.amax(X_v, axis=0)
+        self.lb = np.amin(X_v, axis=0)
+
         with open(self.train_data_path, "wb") as f:
-            pickle.dump((self.V, self.ub, self.lb, X_v_train, v_train,
-                         X_v_test, v_test, U_test), f)
+            pickle.dump((self.n_L, self.n_d, self.V, self.ub, self.lb,
+                         X_v_train, v_train, X_v_test, v_test, U_test), f)
 
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""
@@ -372,9 +376,7 @@ class PodnnModel:
         if not os.path.exists(self.model_params_path):
             raise FileNotFoundError("Can't find cached model params.")
 
-        print(f"Loading model from {self.model_path}...")
         self.regnn = NeuralNetwork.load_from(self.model_path, self.model_params_path)
-        # self.regnn = tf.keras.models.load_model(self.model_path)
 
     def save_model(self):
         """Save the POD-NN's regression neural network and parameters."""

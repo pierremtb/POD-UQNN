@@ -14,9 +14,9 @@ HP["x_max"] = 10.
 # Time
 HP["n_t"] = 0
 # Snapshots count
-HP["n_s"] = 3 * 300
+HP["n_s"] = 300
 HP["n_s_hifi"] = int(1e5)
-# POD stopping param
+# POD stopping param
 HP["eps"] = 1e-10
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)

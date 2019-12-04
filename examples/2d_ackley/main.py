@@ -36,16 +36,15 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     X_v_train, v_train, \
         X_v_test, _, \
         U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
-                                       hp["n_s"],
-                                       hp["train_val_test"],
-                                       hp["eps"],
-                                       use_cache=use_cached_dataset)
+                                        hp["n_s"],
+                                        hp["train_val_test"],
+                                        hp["eps"],
+                                        use_cache=use_cached_dataset)
 
     # Train
-    train_res = model.train(X_v_train, v_train, hp["h_layers"],
-                            hp["epochs"], hp["lr"], hp["lambda"],
-                            hp["train_val_test"],
-                            frequency=hp["log_frequency"])
+    model.initNN(hp["h_layers"], hp["lr"], hp["lambda"])
+    train_res = model.train(X_v_train, v_train, hp["epochs"],
+                            hp["train_val_test"], freq=hp["log_frequency"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
