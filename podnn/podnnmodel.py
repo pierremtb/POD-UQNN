@@ -8,7 +8,7 @@ from tqdm.auto import tqdm
 from sklearn.model_selection import train_test_split
 import numba as nb
 
-from .pod import get_pod_bases
+from .pod import perform_pod, perform_fast_pod
 from .handling import pack_layers
 from .logger import Logger
 from .neuralnetwork import NeuralNetwork
@@ -209,10 +209,16 @@ class PodnnModel:
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
-        if eps_init is not None:
-            self.V = get_pod_bases(U_struct, eps, eps_init_step=eps_init)
-        else:
-            self.V = get_pod_bases(U, eps)
+        import time
+        st = time.time()
+        self.V = perform_fast_pod(U_struct, eps, eps_init_step=eps_init)
+        print(time.time() - st)
+        # else:
+        st = time.time()
+        print(U.shape)
+        self.V = perform_pod(U, eps)
+        print(time.time() - st)
+        exit(0)
 
         # Projecting
         v = (self.V.T.dot(U)).T
