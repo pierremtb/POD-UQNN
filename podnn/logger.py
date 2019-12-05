@@ -62,7 +62,7 @@ class Logger(object):
                 if i >= len(logs_values) - 2:
                     logs_message += f" {key}: {logs_values[i]:.4f}"
                 else:
-                    logs_message += f" {key}: {logs_values[i]:.3e}"
+                    logs_message += f" {key}: {logs_values[i]:.4e}"
 
             name = 'nt_epoch' if is_iter else '#'
             message = f"{name}: {epoch:6d} " + \
@@ -76,8 +76,8 @@ class Logger(object):
         print(f"-- Starting {name} optimization --")
 
     def log_train_end(self, epoch, loss, custom=""):
-        self.pbar.close()
         self.log_train_epoch(epoch, loss, custom)
+        self.pbar.close()
         print("==================")
         print(f"Training finished (epoch {epoch}): " +
               f"duration = {self.get_elapsed()}  " + custom)

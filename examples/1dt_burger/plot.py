@@ -43,8 +43,8 @@ def plot_spec_time(fig, pos, x, t_i,
                    title, show_legend=False):
     ax = fig.add_subplot(pos)
     ax.plot(x, U_pred[0, :, t_i], "k,", label="$\hat{u_T}$")
-    ax.plot(x, U_pred_hifi[0, :, t_i], "b-", label="$\hat{u_T^{hf}}$")
-    ax.plot(x, U_test_hifi[0, :, t_i], "r--", label="$u_T^{hf}$")
+    ax.plot(x, U_pred_hifi[0, :, t_i], "b-", label="$\hat{u_{T,hf}}$")
+    ax.plot(x, U_test_hifi[0, :, t_i], "r--", label="$u_{T,hf}$")
     ax.set_xlabel("$x$")
     ax.set_title(title)
     if show_legend:

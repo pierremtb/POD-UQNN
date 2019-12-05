@@ -23,8 +23,8 @@ def plot_contour(fig, pos, X, Y, U, levels, title):
 def plot_slice(fig, pos, x, u_pred, u_pred_hifi, u_test_hifi, title, legend=False):
     ax = fig.add_subplot(pos)
     ax.plot(x, u_pred, "k,", label=r"$\hat{u_T}(x)$")
-    ax.plot(x, u_pred_hifi, "b-", label=r"$\hat{u_T^{hf}}(x)$")
-    ax.plot(x, u_test_hifi, "r--", label=r"$u_T^{hf}(x)$")
+    ax.plot(x, u_pred_hifi, "b-", label=r"$\hat{u_{T,hf}}(x)$")
+    ax.plot(x, u_test_hifi, "r--", label=r"$u_{T,hf}(x)$")
     ax.set_xlabel("$x$")
     ax.set_title(title)
     if legend:
