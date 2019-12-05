@@ -153,10 +153,10 @@ class PodnnModel:
         if eps_init is not None and self.has_t:
             # Never tested
             n_s = int(n_s / self.n_t)
-            self.V = get_pod_bases(U.reshape((n_h, self.n_t, n_s)),
-                                   eps, eps_init_step=eps_init)
+            self.V = perform_fast_pod(U.reshape((n_h, self.n_t, n_s)),
+                                      eps, eps_init)
         else:
-            self.V = get_pod_bases(U, eps)
+            self.V = perform_pod(U, eps, True)
 
         # Projecting
         v = (self.V.T.dot(U)).T
