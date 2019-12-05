@@ -28,24 +28,21 @@ def main(hp, use_cached_dataset=False):
         u_mesh = None
         X_v = None
 
-    # Create the POD-NN model
+    # Init the model
     model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
 
     # Generate the dataset from the mesh and params
+    
     X_v_train, v_train, \
         X_v_test, _, \
         U_test = model.convert_dataset(u_mesh, X_v,
                                        hp["train_val_test"], hp["eps"],
                                        use_cache=use_cached_dataset)
-    
-    print(X_v_train.shape)
-    print(X_v_test.shape)
 
-    # Create the model and train
-    train_res = model.train(X_v_train, v_train, hp["h_layers"],
-                            hp["epochs"], hp["lr"], hp["lambda"],
-                            hp["train_val_test"], 
-                            hp["decay"], hp["log_frequency"])
+    # Train
+    model.initNN(hp["h_layers"], hp["lr"], hp["lambda"])
+    train_res = model.train(X_v_train, v_train, hp["epochs"],
+                            hp["train_val_test"], freq=hp["log_frequency"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
@@ -75,5 +72,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    # main(HP, use_cached_dataset=False)
-    main(HP, use_cached_dataset=True)
+    main(HP, use_cached_dataset=False)
+    # main(HP, use_cached_dataset=True)
