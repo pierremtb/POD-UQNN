@@ -30,7 +30,8 @@ def loop_vdot_t(n_s, n_t, U_tot, U_tot_sq, V, v_pred_hifi):
         # Computing one snapshot
         s = n_t * i
         e = n_t * (i + 1)
-        U = V.dot(v_pred_hifi[s:e].T)
+        v_pred_hifi_i = np.ascontiguousarray(v_pred_hifi[s:e].T)
+        U = V.dot(v_pred_hifi_i)
         # Building the sum and the sum of squaes
         U_tot += U
         U_tot_sq += U**2

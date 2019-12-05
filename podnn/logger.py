@@ -75,8 +75,9 @@ class Logger(object):
     def log_train_opt(self, name):
         print(f"-- Starting {name} optimization --")
 
-    def log_train_end(self, epoch, custom=""):
+    def log_train_end(self, epoch, loss, custom=""):
         self.pbar.close()
+        self.log_train_epoch(epoch, loss, custom)
         print("==================")
         print(f"Training finished (epoch {epoch}): " +
               f"duration = {self.get_elapsed()}  " + custom)
