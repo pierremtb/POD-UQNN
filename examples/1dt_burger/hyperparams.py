@@ -12,7 +12,7 @@ HP["n_x"] = 256
 HP["x_min"] = 0.
 HP["x_max"] = 1.5
 # Time
-HP["n_t"] = 1000
+HP["n_t"] = 100
 HP["t_min"] = 1.
 HP["t_max"] = 5.
 # Snapshots count
