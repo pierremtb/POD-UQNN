@@ -209,16 +209,10 @@ class PodnnModel:
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
-        import time
-        st = time.time()
-        self.V = perform_fast_pod(U_struct, eps, eps_init_step=eps_init)
-        print(time.time() - st)
-        # else:
-        st = time.time()
-        print(U.shape)
-        self.V = perform_pod(U, eps)
-        print(time.time() - st)
-        exit(0)
+        if eps_init is None:
+            self.V = perform_pod(U, eps, True)
+        else:
+            self.V = perform_fast_pod(U_struct, eps, eps_init)
 
         # Projecting
         v = (self.V.T.dot(U)).T
