@@ -19,8 +19,9 @@ n_s = HP["n_s_hifi"]
 def u(X, _, mu):
     """The 1D-Shekel function."""
     x = X[0]
-    bet = mu[:10]
-    gam = mu[10:]
+    sep = int(mu.shape[0] / 2)
+    bet = mu[:sep]
+    gam = mu[sep:]
 
     u_sum = np.zeros_like(x)
     for i in range(len(bet)):

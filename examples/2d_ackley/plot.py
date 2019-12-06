@@ -77,8 +77,6 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     if no_plot:
         return hifi_error_test_mean, hifi_error_test_std
 
-    mean_levels = list(range(2, 15))
-    # std_levels = np.arange(5, 20) * 0.1
 
     n_plot_x = 3
     n_plot_y = 2
@@ -92,12 +90,6 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     plot_map(fig, gs[0, 1],
              x, y, X, Y, U_test_hifi_mean[0],
              r"Mean of $u_{T,hf}$")
-    # plot_contour(fig, gs[0, 0],
-    #              X, Y, U_pred_hifi_mean[0],
-    #              mean_levels, r"Mean of $\hat{u}_{T,hf}$")
-    # plot_contour(fig, gs[0, 1],
-    #              X, Y, U_test_hifi_mean[0],
-    #              mean_levels, r"Mean of $u_{T,hf}$")
     plot_slice(fig, gs[1, 0], x,
                U_pred_mean[0, :, 199], U_pred_hifi_mean[0, :, 199],
                U_test_hifi_mean[0, :, 199], "Means $u(x, y=0)$", legend=True) 
@@ -111,6 +103,14 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                U_pred_std[0, 199, :], U_pred_hifi_std[0, 199, :],
                U_test_hifi_std[0, 199, :], "Std dev $u(x=0, y)$") 
 
+    # mean_levels = list(range(2, 15))
+    # std_levels = np.arange(5, 20) * 0.1
+    # plot_contour(fig, gs[0, 0],
+    #              X, Y, U_pred_hifi_mean[0],
+    #              mean_levels, r"Mean of $\hat{u}_{T,hf}$")
+    # plot_contour(fig, gs[0, 1],
+    #              X, Y, U_test_hifi_mean[0],
+    #              mean_levels, r"Mean of $u_{T,hf}$")
 
     plt.tight_layout()
 
