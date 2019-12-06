@@ -94,7 +94,6 @@ class NeuralNetwork:
 
         # Normalizing and preparing inputs
         X_v = self.normalize(X_v)
-        # X_v = self.tensor(X_v)
         v = self.tensor(v)
 
         # Optimizing

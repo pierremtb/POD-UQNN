@@ -61,10 +61,10 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     if no_plot:
         return hifi_error_test_mean, hifi_error_test_std
 
-    # mean_levels = list(range(2, 15))
+    mean_levels = list(range(2, 15))
     # std_levels = np.arange(5, 20) * 0.1
 
-    n_plot_x = 2
+    n_plot_x = 3
     n_plot_y = 2
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
@@ -83,12 +83,12 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                U_pred_std[0, 199, :], U_pred_hifi_std[0, 199, :],
                U_test_hifi_std[0, 199, :], "Std dev $u(x=0, y)$") 
 
-    # plot_contour(fig, gs[0:2, 0:2],
-    #              X, Y, U_test_mean,
-    #              mean_levels, "Mean of $u_T$ (test)")
-    # plot_contour(fig, gs[0:2, 2:4],
-    #              X, Y, U_test_mean,
-    #              mean_levels, "Mean of $u_V$ (val)")
+    plot_contour(fig, gs[2, 0],
+                 X, Y, U_pred_hifi_mean[0],
+                 mean_levels, r"Mean of $\hat{u}_{T,hf}$")
+    plot_contour(fig, gs[2, 1],
+                 X, Y, U_test_hifi_mean[0],
+                 mean_levels, r"Mean of $u_{T,hf}$")
     # plot_contour(fig, gs[0:2, 4:6],
     #              X, Y, U_pred_mean,
     #              mean_levels, "Mean of $\hat{u_V}$ (pred)")
@@ -122,8 +122,7 @@ if __name__ == "__main__":
     U_test_struct = model.restruct(U_test)
 
     # Sample the new model to generate a HiFi prediction
-    # n_s_hifi = hp["n_s_hifi"]
-    n_s_hifi = int(1e3)
+    n_s_hifi = hp["n_s_hifi"]
     print("Sampling {n_s_hifi} parameters")
     X_v_test_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"])
     print("Predicting the {n_s_hifi} corresponding solutions")

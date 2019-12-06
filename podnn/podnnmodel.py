@@ -252,9 +252,9 @@ class PodnnModel:
             v_val_pred = self.predict_v(X_v_val)
             U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
             return {
-                "L_val": self.regnn.loss(v_val, v_val_pred),
-                "REM_val": error_podnn(U_val_mean, U_val_pred_mean),
-                "RES_val": error_podnn(U_val_std, U_val_pred_std),
+                "L_v": self.regnn.loss(v_val, v_val_pred),
+                "REM_v": error_podnn(U_val_mean, U_val_pred_mean),
+                "RES_v": error_podnn(U_val_std, U_val_pred_std),
                 }
         logger.set_val_err_fn(get_val_err)
 
