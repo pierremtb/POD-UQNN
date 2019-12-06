@@ -11,6 +11,9 @@ from podnn.plotting import figsize, saveresultdir
 from podnn.metrics import error_podnn
 from podnn.testgenerator import X_FILE, U_MEAN_FILE, U_STD_FILE
 
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from scipy.interpolate import griddata
+
 
 def plot_contour(fig, pos, X, Y, U, levels, title):
     ax = fig.add_subplot(pos)
@@ -22,8 +25,8 @@ def plot_contour(fig, pos, X, Y, U, levels, title):
 
 def plot_slice(fig, pos, x, u_pred, u_pred_hifi, u_test_hifi, title, legend=False):
     ax = fig.add_subplot(pos)
-    ax.plot(x, u_pred, "k,", label=r"$\hat{u_T}(x)$")
-    ax.plot(x, u_pred_hifi, "b-", label=r"$\hat{u_{T,hf}}(x)$")
+    ax.plot(x, u_pred, "k,", label=r"$\hat{u}_T(x)$")
+    ax.plot(x, u_pred_hifi, "b-", label=r"$\hat{u}_{T,hf}(x)$")
     ax.plot(x, u_test_hifi, "r--", label=r"$u_{T,hf}(x)$")
     ax.set_xlabel("$x$")
     ax.set_title(title)
@@ -37,6 +40,19 @@ def get_test_data():
     U_test_std = np.load(os.path.join(dirname, U_STD_FILE))
     return X, U_test_mean, U_test_std
 
+def plot_map(fig, pos, x, t, X, T, U, title):
+    XT = np.hstack((X.flatten()[:, None], T.flatten()[:, None]))
+    U_test_grid = griddata(XT, U.flatten(), (X, T), method='cubic')
+    ax = fig.add_subplot(pos)
+    h = ax.imshow(U_test_grid, interpolation='nearest', cmap='rainbow', 
+            extent=[t.min(), t.max(), x.min(), x.max()], 
+            origin='lower', aspect='auto')
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(h, cax=cax)
+    ax.set_title(title)
+    ax.set_xlabel("$t$")
+    ax.set_ylabel("$x$")
 
 def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                  train_res=None, HP=None, no_plot=False):
@@ -70,37 +86,31 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
     x = X[199, :]
     y = Y[:, 199]
-    plot_slice(fig, gs[0, 0], x,
+    plot_map(fig, gs[0, 0],
+             x, y, X, Y, U_pred_hifi_mean[0],
+             r"Mean of $\hat{u}_{T,hf}$")
+    plot_map(fig, gs[0, 1],
+             x, y, X, Y, U_test_hifi_mean[0],
+             r"Mean of $u_{T,hf}$")
+    # plot_contour(fig, gs[0, 0],
+    #              X, Y, U_pred_hifi_mean[0],
+    #              mean_levels, r"Mean of $\hat{u}_{T,hf}$")
+    # plot_contour(fig, gs[0, 1],
+    #              X, Y, U_test_hifi_mean[0],
+    #              mean_levels, r"Mean of $u_{T,hf}$")
+    plot_slice(fig, gs[1, 0], x,
                U_pred_mean[0, :, 199], U_pred_hifi_mean[0, :, 199],
                U_test_hifi_mean[0, :, 199], "Means $u(x, y=0)$", legend=True) 
-    plot_slice(fig, gs[0, 1], x,
+    plot_slice(fig, gs[1, 1], x,
                U_pred_std[0, :, 199], U_pred_hifi_std[0, :, 199],
                U_test_hifi_std[0, :, 199], "Std dev $u(x, y=0)$") 
-    plot_slice(fig, gs[1, 0], y,
+    plot_slice(fig, gs[2, 0], y,
                U_pred_mean[0, 199, :], U_pred_hifi_mean[0, 199, :],
                U_test_hifi_mean[0, 199, :], "Means $u(x=0, y)$") 
-    plot_slice(fig, gs[1, 1], y,
+    plot_slice(fig, gs[2, 1], y,
                U_pred_std[0, 199, :], U_pred_hifi_std[0, 199, :],
                U_test_hifi_std[0, 199, :], "Std dev $u(x=0, y)$") 
 
-    plot_contour(fig, gs[2, 0],
-                 X, Y, U_pred_hifi_mean[0],
-                 mean_levels, r"Mean of $\hat{u}_{T,hf}$")
-    plot_contour(fig, gs[2, 1],
-                 X, Y, U_test_hifi_mean[0],
-                 mean_levels, r"Mean of $u_{T,hf}$")
-    # plot_contour(fig, gs[0:2, 4:6],
-    #              X, Y, U_pred_mean,
-    #              mean_levels, "Mean of $\hat{u_V}$ (pred)")
-    # plot_contour(fig, gs[2:4, 0:2],
-    #              X, Y, U_test_std,
-    #              std_levels, "Standard deviation of $u_T$ (test)")
-    # plot_contour(fig, gs[2:4, 2:4],
-    #              X, Y, U_test_std,
-    #              std_levels, "Standard deviation of $u_V$ (val)")
-    # plot_contour(fig, gs[2:4, 4:6],
-    #                 X, Y, U_pred_std,
-    #                 std_levels, "Standard deviation of $\hat{u_V}$ (pred)")
 
     plt.tight_layout()
 
@@ -123,6 +133,7 @@ if __name__ == "__main__":
 
     # Sample the new model to generate a HiFi prediction
     n_s_hifi = hp["n_s_hifi"]
+    n_s_hifi = int(1e3)
     print("Sampling {n_s_hifi} parameters")
     X_v_test_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"])
     print("Predicting the {n_s_hifi} corresponding solutions")

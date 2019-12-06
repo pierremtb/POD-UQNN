@@ -28,8 +28,8 @@ def plot_map(fig, pos, x, t, X, T, U, title):
     U_test_grid = griddata(XT, U.flatten(), (X, T), method='cubic')
     ax = fig.add_subplot(pos)
     h = ax.imshow(U_test_grid, interpolation='nearest', cmap='rainbow', 
-            extent=[t.min(), t.max(), x.min(), x.max()], 
-            origin='lower', aspect='auto')
+                  extent=[t.min(), t.max(), x.min(), x.max()], 
+                  origin='lower', aspect='auto')
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
     fig.colorbar(h, cax=cax)
