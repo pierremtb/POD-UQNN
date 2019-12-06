@@ -133,7 +133,6 @@ if __name__ == "__main__":
 
     # Sample the new model to generate a HiFi prediction
     n_s_hifi = hp["n_s_hifi"]
-    n_s_hifi = int(1e3)
     print("Sampling {n_s_hifi} parameters")
     X_v_test_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"])
     print("Predicting the {n_s_hifi} corresponding solutions")
