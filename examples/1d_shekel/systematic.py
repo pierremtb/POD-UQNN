@@ -11,27 +11,27 @@ from hyperparams import HP
 
 if __name__ == "__main__":
     # Study parameters
-    list_samples = [50, 200, 600, 1000, 2000]
-    list_epochs = [1000, 5000, 20000, 50000, 100000]
+    list_samples = [100, 300, 600, 1000]
+    list_epochs = [5000, 15000, 25000, 35000]
 
     # Results containers
     errors_test_mean = np.zeros((len(list_samples), len(list_epochs)))
     errors_test_std = np.zeros((len(list_samples), len(list_epochs)))
 
     # Running
-    for i_n_s, n_s in enumerate(list_samples):
+    for i_n, n_s in enumerate(list_samples):
         print(f"For n_s={n_s}")
-        for i_tf_epochs, tf_epochs in enumerate(list_epochs):
+        for i_e, tf_epochs in enumerate(list_epochs):
             print(f"For tf_epochs={tf_epochs}")
             HP["n_s"] = n_s
             HP["epochs"] = tf_epochs
-            error_test_mean, error_test_std = main(HP)
+            errors_test_mean[i_n, i_e], errors_test_std[i_n, i_e] = main(HP, no_plot=True)
 
     # Saving the results
     np.savetxt(os.path.join("results", "systematic", "n_s.csv"),
-               HP["n_s"])
+               list_samples)
     np.savetxt(os.path.join("results", "systematic", "tf_epochs.csv"),
-               HP["tf_epochs"])
+               list_epochs)
     np.savetxt(os.path.join("results", "systematic", "err_t_mean.csv"),
                errors_test_mean)
     np.savetxt(os.path.join("results", "systematic", "err_t_std.csv"),
