@@ -62,12 +62,12 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                                hp["t_min"], hp["t_max"])
     print("Predicting the {n_s_hifi} corresponding solutions")
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
+    U_pred_hifi_mean = model.restruct(U_pred_hifi_mean)
+    U_pred_hifi_std = model.restruct(U_pred_hifi_std)
 
     # Plot against test and save
     return plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                         train_res, hp, no_plot)
-    # return plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
-    #                     train_res, hp, no_plot)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg

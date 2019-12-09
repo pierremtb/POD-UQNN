@@ -248,9 +248,16 @@ class PodnnModel:
         X_v_train, X_v_val, v_train, v_val = \
             self.split_dataset(X_v, v, val_size)
         U_val_mean, U_val_std = self.do_vdot(v_val)
+        if self.has_t:
+            U_val_mean = U_val_mean.mean(-1)
+            U_val_std = U_val_std.std(-1)
+        print("SHAPES: ", U_val_mean.shape, U_val_std.shape)
         def get_val_err():
             v_val_pred = self.predict_v(X_v_val)
             U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
+            if self.has_t:
+                U_val_pred_mean = U_val_pred_mean.mean(-1)
+                U_val_pred_std = U_val_pred_std.std(-1)
             return {
                 "L_v": self.regnn.loss(v_val, v_val_pred),
                 "REM_v": error_podnn(U_val_mean, U_val_pred_mean),
@@ -330,8 +337,9 @@ class PodnnModel:
         # Making sure the std has non NaNs
         U_pred_hifi_std = np.nan_to_num(U_pred_hifi_std)
 
-        tup = self.get_u_tuple()
-        return U_pred_hifi_mean.reshape(tup), U_pred_hifi_std.reshape(tup)
+        return U_pred_hifi_mean, U_pred_hifi_std
+        # tup = self.get_u_tuple()
+        # return U_pred_hifi_mean.reshape(tup), U_pred_hifi_std.reshape(tup)
 
     def load_train_data(self):
         """Load training data, such as datasets."""

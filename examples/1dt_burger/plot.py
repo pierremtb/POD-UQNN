@@ -64,8 +64,8 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     # Using nanstd() to prevent NotANumbers from appearing
     U_pred_std = U_pred.std(-1)
 
-    hifi_error_test_mean = error_podnn(U_test_hifi_mean, U_pred_hifi_mean)
-    hifi_error_test_std = error_podnn(U_test_hifi_std, U_pred_hifi_std)
+    hifi_error_test_mean = error_podnn_rel(U_test_hifi_mean, U_pred_hifi_mean)
+    hifi_error_test_std = error_podnn_rel(U_test_hifi_std, U_pred_hifi_std)
     print(f"HiFi test relative error: mean {hifi_error_test_mean:4f}, std {hifi_error_test_std:4f}")
 
     n_plot_x = 5
