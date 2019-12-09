@@ -273,8 +273,10 @@ class PodnnModel:
 
         return logger.get_logs()
 
-    def restruct(self, U):
+    def restruct(self, U, no_s=False):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
+        if no_s:
+            return U.reshape(self.get_u_tuple())
         if self.has_t:
             # (n_h, n_st) -> (n_v, n_xyz, n_t, n_s)
             n_s = int(U.shape[-1] / self.n_t)

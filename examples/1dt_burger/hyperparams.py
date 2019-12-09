@@ -27,6 +27,7 @@ HP["train_val_test"] = (3/5, 1/5, 1/5)
 HP["h_layers"] = [64, 64]
 # Setting up _structthe TF SGD-based optimizer
 HP["epochs"] = 180000
+HP["epochs"] = 1000
 HP["lr"] = 0.002
 HP["lambda"] = 1e-4
 # Frequency of the logger
