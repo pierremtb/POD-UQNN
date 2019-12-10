@@ -22,7 +22,7 @@ def write_table(f, errors):
     for i_tf_e, tf_e in enumerate(arr_tf_epochs):
         f.write(f"{int(tf_e)} " + r"& $" + 
                 "$ & $".join(
-                    [f"({e[0]:.2f}, {e[1]:.2f})" for e in errors[:, i_tf_e]]
+                    [f"({100*e[0]:.2f}, {100*e[1]:.2f})" for e in errors[:, i_tf_e]]
                 ) +
                 r"$ \\ " + "\n")
     f.write(r"\hline" + "\n") 
@@ -31,4 +31,4 @@ def write_table(f, errors):
 
 with open(os.path.join("results", "systematic", "tables.tex"),
           "w+") as f:
-    write_table(f, errors, "M", "mean")
+    write_table(f, errors)

@@ -8,7 +8,7 @@ from hyperparams import HP
 if __name__ == "__main__":
     # Study parameters
     list_samples = [100, 300, 600, 1000]
-    list_epochs = [10000, 20000, 50000, 100000]
+    list_epochs = [30000, 50000, 75000, 150000]
 
     # Results containers
     errors_test_mean = np.zeros((len(list_samples), len(list_epochs)))
