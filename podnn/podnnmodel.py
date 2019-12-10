@@ -4,7 +4,7 @@ import os
 import pickle
 import tensorflow as tf
 import numpy as np
-from tqdm.auto import tqdm
+from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 import numba as nb
 
@@ -13,7 +13,7 @@ from .handling import pack_layers
 from .logger import Logger
 from .neuralnetwork import NeuralNetwork
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
-from .metrics import error_podnn
+from .metrics import re
 
 
 SETUP_DATA_NAME = "setup_data.pkl"
@@ -248,13 +248,20 @@ class PodnnModel:
         X_v_train, X_v_val, v_train, v_val = \
             self.split_dataset(X_v, v, val_size)
         U_val_mean, U_val_std = self.do_vdot(v_val)
+        if self.has_t:
+            U_val_mean = U_val_mean.mean(-1)
+            U_val_std = U_val_std.std(-1)
+        print("SHAPES: ", U_val_mean.shape, U_val_std.shape)
         def get_val_err():
             v_val_pred = self.predict_v(X_v_val)
             U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
+            if self.has_t:
+                U_val_pred_mean = U_val_pred_mean.mean(-1)
+                U_val_pred_std = U_val_pred_std.std(-1)
             return {
                 "L_v": self.regnn.loss(v_val, v_val_pred),
-                "REM_v": error_podnn(U_val_mean, U_val_pred_mean),
-                "RES_v": error_podnn(U_val_std, U_val_pred_std),
+                "REM_v": re(U_val_mean, U_val_pred_mean),
+                "RES_v": re(U_val_std, U_val_pred_std),
                 }
         logger.set_val_err_fn(get_val_err)
 
@@ -266,8 +273,10 @@ class PodnnModel:
 
         return logger.get_logs()
 
-    def restruct(self, U):
+    def restruct(self, U, no_s=False):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
+        if no_s:
+            return U.reshape(self.get_u_tuple())
         if self.has_t:
             # (n_h, n_st) -> (n_v, n_xyz, n_t, n_s)
             n_s = int(U.shape[-1] / self.n_t)
@@ -330,8 +339,9 @@ class PodnnModel:
         # Making sure the std has non NaNs
         U_pred_hifi_std = np.nan_to_num(U_pred_hifi_std)
 
-        tup = self.get_u_tuple()
-        return U_pred_hifi_mean.reshape(tup), U_pred_hifi_std.reshape(tup)
+        return U_pred_hifi_mean, U_pred_hifi_std
+        # tup = self.get_u_tuple()
+        # return U_pred_hifi_mean.reshape(tup), U_pred_hifi_std.reshape(tup)
 
     def load_train_data(self):
         """Load training data, such as datasets."""

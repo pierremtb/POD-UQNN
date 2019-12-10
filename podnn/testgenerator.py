@@ -4,7 +4,7 @@ import sys
 import time
 import os
 import yaml
-from tqdm.auto import tqdm
+from tqdm import tqdm
 import numpy as np
 import numba as nb
 from numba import objmode, jit, prange

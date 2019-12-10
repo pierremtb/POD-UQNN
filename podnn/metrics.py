@@ -1,12 +1,26 @@
 import numpy as np
 import tensorflow as tf
 from numpy.linalg import norm
-from tqdm.auto import tqdm
+from tqdm import tqdm
 import math
 
 
 def mse(v, v_pred):
     return tf.reduce_mean(tf.square(v - v_pred))
+
+
+def re(U, U_pred):
+    """Return relative error, inputs should be (n_h,)."""
+    return norm(U - U_pred) / norm(U)
+
+
+def re_mean_std(U_s, U_pred_s):
+    """Define the relative error metric."""
+    U_pred_mean, U_mean = np.mean(U_pred_s, axis=-1), np.mean(U_s, axis=-1)
+    U_pred_std, U_std = np.std(U_pred_s, axis=-1), np.std(U_s, axis=-1)
+    err_mean = re(U_mean, U_pred_mean)
+    err_std = re(U_std, U_pred_std)
+    return err_mean, err_std
 
 
 def error_pod(U, V):
@@ -19,17 +33,6 @@ def error_pod(U, V):
     return err_pod.numpy() / n_s
 
 
-def error_podnn(U, U_pred):
+def rel_error_mean(U, U_pred):
     per_element_error = np.abs(U - U_pred) / np.maximum(np.abs(U), np.abs(U_pred))
-    # per_element_error = np.abs(U - U_pred) / np.abs(U)
     return np.nanmean(per_element_error)
-    # return norm(U - U_pred) / norm(U)
-
-
-def error_podnn_rel(U, U_pred):
-    """Define the relative error metric."""
-    U_pred_mean, U_mean = np.mean(U_pred, axis=-1), np.mean(U, axis=-1)
-    U_pred_std, U_std = np.std(U_pred, axis=-1), np.std(U, axis=-1)
-    err_mean = error_podnn(U_mean, U_pred_mean)
-    err_std = error_podnn(U_std, U_pred_std)
-    return err_mean, err_std

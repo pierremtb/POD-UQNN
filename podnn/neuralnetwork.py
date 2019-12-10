@@ -6,7 +6,7 @@ import pickle
 import tensorflow as tf
 from sklearn.preprocessing import normalize as sknormalize
 import numpy as np
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
 
 class NeuralNetwork:

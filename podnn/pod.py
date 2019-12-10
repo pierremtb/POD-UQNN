@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
 from numba import njit, prange
 
