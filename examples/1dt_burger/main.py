@@ -7,7 +7,7 @@ import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import error_podnn_rel
+from podnn.metrics import re_mean_std
 from podnn.mesh import create_linear_mesh
 
 from genhifi import u, generate_test_dataset
@@ -52,7 +52,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     U_test = model.restruct(U_test)
 
     # Compute relative error
-    error_test_mean, error_test_std = error_podnn_rel(U_test, U_pred)
+    error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
     print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
 
     # Sample the new model to generate a HiFi prediction
