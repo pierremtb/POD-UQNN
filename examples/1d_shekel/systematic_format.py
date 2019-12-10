@@ -9,7 +9,7 @@ errors_test_std = np.loadtxt(os.path.join("results", "systematic", "err_t_std.cs
 errors = np.stack((errors_test_mean, errors_test_std), axis=2)
 
 
-def write_table(f, errors, sub, val):
+def write_table(f, errors):
     n_err_col = errors.shape[0]
     f.write(r"\begin{tabular}{|c||" + n_err_col*"c" + r"|} " + "\n")
     f.write(r"\multicolumn{" + str(n_err_col + 1) + \

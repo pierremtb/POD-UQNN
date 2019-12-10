@@ -1,9 +1,5 @@
-import sys
 import os
-import yaml
 import numpy as np
-import tensorflow as tf
-
 
 from main import main
 from hyperparams import HP
