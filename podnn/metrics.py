@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from numpy.linalg import norm
-from tqdm.auto import tqdm
+from tqdm import tqdm
 import math
 
 

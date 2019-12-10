@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import time
 from datetime import datetime
-from tqdm.auto import trange, tqdm
+from tqdm import trange, tqdm
 
 
 class Logger(object):
