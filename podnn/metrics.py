@@ -25,6 +25,11 @@ def error_podnn(U, U_pred):
     return np.nanmean(per_element_error)
     # return norm(U - U_pred) / norm(U)
 
+def error_podnn_tf(U, U_pred):
+    return tf.reduce_mean(tf.abs(U - U_pred)/tf.abs(U))
+
+def error_norm(U, U_pred):
+    return norm(U - U_pred) / norm(U)
 
 def error_podnn_rel(U, U_pred):
     """Define the relative error metric."""
