@@ -3,42 +3,35 @@ import tensorflow as tf
 
 
 class AdvNeuralNetwork(object):
-    def __init__(self, hp, logger, ub, lb):
+    def __init__(self, layers, gan_dims, lr, lam, bet, k1, k2,
+                 model=None, ub=None, lb=None):
 
         self.ub = ub
         self.lb = lb
 
         # Setting up the optimizers with the previously defined hp
-        self.epochs = hp["tf_epochs"]
-        self.optimizer_KL = tf.keras.optimizers.Adam(
-            learning_rate=hp["tf_lr"],
-            beta_1=hp["tf_b1"],
-            epsilon=hp["tf_eps"])
-        self.optimizer_T = tf.keras.optimizers.Adam(
-            learning_rate=hp["tf_lr"],
-            beta_1=hp["tf_b1"],
-            epsilon=hp["tf_eps"])
+        self.optimizer_KL = tf.keras.optimizers.Adam(lr)
+        self.optimizer_T = tf.keras.optimizers.Adam(lr)
 
-        self.dtype = "float64"
         # Descriptive Keras models
+        self.dtype = "float64"
         tf.keras.backend.set_floatx(self.dtype)
-        self.model_p = self.declare_model(hp["layers_P"])
-        self.model_q = self.declare_model(hp["layers_Q"])
-        self.model_t = self.declare_model(hp["layers_T"])
+        self.model_p = self.declare_model(layers[0])
+        self.model_q = self.declare_model(layers[1])
+        self.model_t = self.declare_model(layers[2])
 
         # Hp
-        self.X_dim = hp["X_dim"]
-        self.T_dim = hp["T_dim"]
-        self.Y_dim = hp["Y_dim"]
-        self.Z_dim = hp["Z_dim"]
-        self.kl_lambda = hp["lambda"]
-        self.kl_beta = hp["beta"]
-        self.k1 = hp["k1"]
-        self.k2 = hp["k2"]
-        self.batch_size_u = hp["batch_size_u"]
-        self.batch_size_f = hp["batch_size_f"]
+        self.X_dim = gan_dims[0]
+        self.Y_dim = gan_dims[1]
+        self.Z_dim = gan_dims[2]
+        self.kl_lambda = lam
+        self.kl_beta = bet
+        self.k1 = k1
+        self.k2 = k2
+        # self.batch_size_u = hp["batch_size_u"]
+        # self.batch_size_f = hp["batch_size_f"]
 
-        self.logger = logger
+        self.logger = None
 
     def declare_model(self, layers):
         model = tf.keras.Sequential()
@@ -161,7 +154,9 @@ class AdvNeuralNetwork(object):
         return z_u, z_f
 
     def summary(self):
-        return self.model_p.summary()
+        self.model_p.summary()
+        self.model_q.summary()
+        self.model_t.summary()
 
     def normalize(self, X):
         return X
@@ -196,15 +191,19 @@ class AdvNeuralNetwork(object):
             self.optimizer_KL.apply_gradients(zip(grads, var))
         return loss_G, loss_KL, loss_recon, loss_PDE, loss_T
 
-    def fit(self, X_u, u):
+    def fit(self, X_u, u, epochs, logger):
+        self.logger = logger
         self.logger.log_train_start()
 
         # Creating the tensors
         X_u = self.normalize(X_u)
         X_f = X_u
 
+        self.batch_size_u = X_u.shape[0]
+        self.batch_size_f = X_f.shape[0]
+
         self.logger.log_train_opt("Adam")
-        for epoch in range(self.epochs):
+        for epoch in range(epochs):
             X_u_batch, u_batch, X_f_batch = self.fetch_minibatch(X_u, u, X_f)
             z_u, z_f = self.generate_latent_variables()
             loss_G, loss_KL, loss_recon, loss_PDE, loss_T = \
@@ -215,7 +214,7 @@ class AdvNeuralNetwork(object):
                        f"T_loss: {loss_T:.2e}"
             self.logger.log_train_epoch(epoch, loss_G, custom=loss_str)
 
-        self.logger.log_train_end(self.epochs, 0.)
+        self.logger.log_train_end(epochs, 0.)
 
     def predict_sample(self, X_star):
         X_star = self.tensor(self.normalize(X_star))

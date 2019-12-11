@@ -233,16 +233,25 @@ class PodnnModel:
         """Convert input into a TensorFlow Tensor with the class dtype."""
         return tf.convert_to_tensor(X, dtype=self.dtype)
 
-    def initNN(self, h_layers, lr, lam):
+    def initNN(self, h_layers, h_layers_t,
+               lr, lam, bet, k1, k2):
         """Create the neural net model."""
         self.lr = lr
-        self.layers = pack_layers(self.n_d, h_layers, self.n_L)
-        # self.regnn = NeuralNetwork(self.layers, lr, lam, lb=self.lb, ub=self.ub)
+        gan_dims = (self.n_d, self.n_L, self.n_d)
+        X_dim, Y_dim, Z_dim = gan_dims
+        layers_p = [X_dim+Z_dim, *h_layers, Y_dim]
+        layers_q = [X_dim+Y_dim, *h_layers, Z_dim]
+        layers_t = [X_dim+Y_dim, *h_layers_t, 1]
+        self.layers = (layers_p, layers_q, layers_t)
+
+        self.regnn = AdvNeuralNetwork(self.layers, gan_dims,
+                                      lr, lam, bet, k1, k2)
+        self.regnn.summary()
 
     def train(self, X_v, v, epochs, train_val_test, freq=100):
         """Train the POD-NN's regression model, and save it."""
-        # if self.regnn is None:
-        #     raise ValueError("Regression model isn't defined.")
+        if self.regnn is None:
+            raise ValueError("Regression model isn't defined.")
 
         # Validation and logging
         logger = Logger(epochs, freq)
@@ -253,50 +262,6 @@ class PodnnModel:
         if self.has_t:
             U_val_mean = U_val_mean.mean(-1)
             U_val_std = U_val_std.std(-1)
-
-
-        hp = {}
-        # Dimension of input, output and latent variable
-        hp["X_dim"] = self.layers[0]
-        hp["Y_dim"] = self.layers[-1]
-        hp["T_dim"] = 0
-        # hp["Z_dim"] = self.layers[0]
-        hp["Z_dim"] = self.layers[0]
-        # DeepNNs topologies
-        print(self.layers)
-        hp["layers_P"] = [hp["X_dim"]+hp["T_dim"] + hp["Z_dim"],
-                        50, 50, 50, 50,
-                        hp["Y_dim"]]
-        hp["layers_Q"] = [hp["X_dim"]+hp["T_dim"] + hp["Y_dim"],
-                        50, 50, 50, 50,
-                        hp["Z_dim"]]
-        hp["layers_T"] = [hp["X_dim"]+hp["T_dim"]+hp["Y_dim"],
-                        50, 50, 50,
-                        2]
-        # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
-        hp["tf_epochs"] = epochs
-        # hp["tf_epochs"] = 0
-        hp["tf_lr"] = 0.0001
-        hp["tf_b1"] = 0.9
-        hp["tf_eps"] = None
-        # Setting up the quasi-newton LBGFS optimizer (set nt_epochs=0 to cancel)
-        # hp["nt_epochs"] = 500
-        # hp["nt_lr"] = 1.0
-        # hp["nt_ncorr"] = 50
-        # Loss coefficients
-        hp["lambda"] = 1.5
-        hp["beta"] = 1e-2
-        # MinMax switching
-        hp["k1"] = 1
-        hp["k2"] = 10
-        # Batch size
-        # hp["batch_size_u"] = hp["N_i"] + hp["N_b"]
-        hp["batch_size_u"] = X_v_train.shape[0]
-        hp["batch_size_f"] = X_v_train.shape[0]
-        # Logging
-        hp["log_frequency"] = freq
-
-        self.regnn = AdvNeuralNetwork(hp, logger, None, None)
         print("SHAPES: ", U_val_mean.shape, U_val_std.shape)
         def get_val_err():
             v_val_pred, _ = self.predict_v(X_v_val)
@@ -312,8 +277,7 @@ class PodnnModel:
         logger.set_val_err_fn(get_val_err)
 
         # Training
-        self.regnn.fit(X_v_train, v_train)
-        # self.regnn.fit(X_v_train, v_train, epochs, logger)
+        self.regnn.fit(X_v_train, v_train, epochs, logger)
 
         # Saving
         # self.save_model()
