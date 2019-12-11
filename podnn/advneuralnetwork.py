@@ -159,7 +159,9 @@ class AdvNeuralNetwork(object):
         self.model_t.summary()
 
     def normalize(self, X):
-        return X
+        if self.ub is None or self.lb is None:
+            return X
+        return (X - self.lb) / self.ub
 
     def tensor(self, X):
         return tf.convert_to_tensor(X, dtype=self.dtype)
@@ -195,6 +197,8 @@ class AdvNeuralNetwork(object):
         self.logger = logger
         self.logger.log_train_start()
 
+        self.lb = X_u.mean(0)
+        self.ub = X_u.std(0)
         # Creating the tensors
         X_u = self.normalize(X_u)
         X_f = X_u
