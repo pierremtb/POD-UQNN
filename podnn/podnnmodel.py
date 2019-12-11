@@ -240,8 +240,8 @@ class PodnnModel:
 
     def train(self, X_v, v, epochs, train_val_test, freq=100):
         """Train the POD-NN's regression model, and save it."""
-        if self.regnn is None:
-            raise ValueError("Regression model isn't defined.")
+        # if self.regnn is None:
+        #     raise ValueError("Regression model isn't defined.")
 
         # Validation and logging
         logger = Logger(epochs, freq)
@@ -255,12 +255,6 @@ class PodnnModel:
 
 
         hp = {}
-        # Data size on the initial condition solution
-        hp["N_i"] = 50
-        # Collocation points on the boundaries
-        hp["N_b"] = 100
-        # Collocation points on the domain
-        hp["N_f"] = 10000
         # Dimension of input, output and latent variable
         hp["X_dim"] = self.layers[0]
         hp["Y_dim"] = self.layers[-1]
@@ -277,7 +271,7 @@ class PodnnModel:
                         50, 50, 50,
                         1]
         # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
-        hp["tf_epochs"] = 1000
+        hp["tf_epochs"] = epochs
         hp["tf_lr"] = 0.0001
         hp["tf_b1"] = 0.9
         hp["tf_eps"] = None
@@ -294,12 +288,9 @@ class PodnnModel:
         # Batch size
         # hp["batch_size_u"] = hp["N_i"] + hp["N_b"]
         hp["batch_size_u"] = X_v_train.shape[0]
-        hp["batch_size_f"] = hp["N_f"]
-        # Noise on initial data
-        hp["noise"] = 0.1
-        hp["noise_is_gaussian"] = False
+        hp["batch_size_f"] = X_v_train.shape[0]
         # Logging
-        hp["log_frequency"] = 100
+        hp["log_frequency"] = freq
 
         self.regnn = AdvNeuralNetwork(hp, logger, None, None)
         print("SHAPES: ", U_val_mean.shape, U_val_std.shape)
