@@ -28,7 +28,7 @@ HP["lr"] = 0.001
 HP["decay"] = 0.
 HP["lambda"] = 1e-4
 # Frequency of the logger
-HP["log_frequency"] = 1000
+HP["log_frequency"] = 100
 # Non-spatial params
 # bet = 1/10 * np.array([1, 2, 2, 4, 4, 6, 3, 7, 5, 5])
 # gam = 1. * np.array([4, 1, 8, 6, 3, 2, 5, 8, 6, 7])

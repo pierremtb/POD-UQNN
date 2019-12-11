@@ -12,6 +12,7 @@ from .pod import perform_pod, perform_fast_pod
 from .handling import pack_layers
 from .logger import Logger
 from .neuralnetwork import NeuralNetwork
+from .advneuralnetwork import AdvNeuralNetwork
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
 from .metrics import re
 
@@ -235,7 +236,7 @@ class PodnnModel:
     def initNN(self, h_layers, lr, lam):
         """Create the neural net model."""
         self.layers = pack_layers(self.n_d, h_layers, self.n_L)
-        self.regnn = NeuralNetwork(self.layers, lr, lam, lb=self.lb, ub=self.ub)
+        # self.regnn = NeuralNetwork(self.layers, lr, lam, lb=self.lb, ub=self.ub)
 
     def train(self, X_v, v, epochs, train_val_test, freq=100):
         """Train the POD-NN's regression model, and save it."""
@@ -251,6 +252,56 @@ class PodnnModel:
         if self.has_t:
             U_val_mean = U_val_mean.mean(-1)
             U_val_std = U_val_std.std(-1)
+
+
+        hp = {}
+        # Data size on the initial condition solution
+        hp["N_i"] = 50
+        # Collocation points on the boundaries
+        hp["N_b"] = 100
+        # Collocation points on the domain
+        hp["N_f"] = 10000
+        # Dimension of input, output and latent variable
+        hp["X_dim"] = self.layers[0]
+        hp["Y_dim"] = self.layers[-1]
+        hp["T_dim"] = 0
+        hp["Z_dim"] = self.layers[-1]
+        # DeepNNs topologies
+        hp["layers_P"] = [hp["X_dim"]+hp["T_dim"] + hp["Z_dim"],
+                        50, 50, 50, 50,
+                        hp["Y_dim"]]
+        hp["layers_Q"] = [hp["X_dim"]+hp["T_dim"] + hp["Y_dim"],
+                        50, 50, 50, 50,
+                        hp["Z_dim"]]
+        hp["layers_T"] = [hp["X_dim"]+hp["T_dim"]+hp["Y_dim"],
+                        50, 50, 50,
+                        1]
+        # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
+        hp["tf_epochs"] = 1000
+        hp["tf_lr"] = 0.0001
+        hp["tf_b1"] = 0.9
+        hp["tf_eps"] = None
+        # Setting up the quasi-newton LBGFS optimizer (set nt_epochs=0 to cancel)
+        # hp["nt_epochs"] = 500
+        # hp["nt_lr"] = 1.0
+        # hp["nt_ncorr"] = 50
+        # Loss coefficients
+        hp["lambda"] = 1.5
+        hp["beta"] = 1.0
+        # MinMax switching
+        hp["k1"] = 1
+        hp["k2"] = 5
+        # Batch size
+        # hp["batch_size_u"] = hp["N_i"] + hp["N_b"]
+        hp["batch_size_u"] = X_v_train.shape[0]
+        hp["batch_size_f"] = hp["N_f"]
+        # Noise on initial data
+        hp["noise"] = 0.1
+        hp["noise_is_gaussian"] = False
+        # Logging
+        hp["log_frequency"] = 100
+
+        self.regnn = AdvNeuralNetwork(hp, logger, None, None)
         print("SHAPES: ", U_val_mean.shape, U_val_std.shape)
         def get_val_err():
             v_val_pred = self.predict_v(X_v_val)
@@ -259,17 +310,18 @@ class PodnnModel:
                 U_val_pred_mean = U_val_pred_mean.mean(-1)
                 U_val_pred_std = U_val_pred_std.std(-1)
             return {
-                "L_v": self.regnn.loss(v_val, v_val_pred),
-                "REM_v": re(U_val_mean, U_val_pred_mean),
-                "RES_v": re(U_val_std, U_val_pred_std),
+                # "L_v": self.regnn.loss(v_val, v_val_pred),
+                # "REM_v": re(U_val_mean, U_val_pred_mean),
+                # "RES_v": re(U_val_std, U_val_pred_std),
                 }
         logger.set_val_err_fn(get_val_err)
 
         # Training
-        self.regnn.fit(X_v_train, v_train, epochs, logger)
+        self.regnn.fit(X_v_train, v_train)
+        # self.regnn.fit(X_v_train, v_train, epochs, logger)
 
         # Saving
-        self.save_model()
+        # self.save_model()
 
         return logger.get_logs()
 
@@ -303,11 +355,13 @@ class PodnnModel:
 
     def predict_v(self, X_v):
         """Return the predicted POD projection coefficients."""
-        v_pred = self.regnn.predict(X_v).astype(self.dtype)
-        return v_pred
+        # v_pred, v_pred_mean = self.regnn.predict(X_v)
+        v_pred = self.regnn.predict_sample(X_v).numpy()
+        return v_pred.astype(self.dtype)
 
     def predict(self, X_v):
         """Returns the predicted solutions, via proj coefficients."""
+        # v_pred, v_pred_mean = self.predict_v(X_v)
         v_pred = self.predict_v(X_v)
 
         # Retrieving the function with the predicted coefficients
