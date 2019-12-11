@@ -22,7 +22,6 @@ HP["eps"] = 1e-2
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)
 # Deep NN hidden layers topology
-# HP["h_layers"] = [64, 64]
 HP["h_layers"] = [50, 50, 50, 50]
 HP["h_layers_t"] = [50, 50, 50]
 # Setting up TF SGD-based optimizer

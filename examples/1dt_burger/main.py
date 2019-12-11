@@ -42,7 +42,9 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                         use_cache=use_cached_dataset)
 
     # Train
-    model.initNN(hp["h_layers"], hp["lr"], hp["lambda"])
+    model.initNN(hp["h_layers"], hp["h_layers_t"],
+                 hp["lr"], hp["lambda"], hp["beta"],
+                 hp["k1"], hp["k2"])
     train_res = model.train(X_v_train, v_train, hp["epochs"],
                             hp["train_val_test"], freq=hp["log_frequency"])
 

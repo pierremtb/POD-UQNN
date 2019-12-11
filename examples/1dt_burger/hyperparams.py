@@ -23,12 +23,15 @@ HP["eps"] = 1e-10
 HP["eps_init"] = 1e-10
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)
-# Deep NN hidden layers topology
-HP["h_layers"] = [64, 64]
-# Setting up _structthe TF SGD-based optimizer
-HP["epochs"] = 45000
-HP["lr"] = 0.008
-HP["lambda"] = 1e-8
+HP["h_layers"] = [50, 50, 50, 50]
+HP["h_layers_t"] = [50, 50, 50]
+# Setting up TF SGD-based optimizer
+HP["epochs"] = 15000
+HP["lr"] = 0.001
+HP["lambda"] = 1.5
+HP["beta"] = 1e-4
+HP["k1"] = 1
+HP["k2"] = 5
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Burgers params
