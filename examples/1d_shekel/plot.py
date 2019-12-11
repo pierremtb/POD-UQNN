@@ -31,6 +31,12 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     # Using nanstd() to prevent NotANumbers from appearing
     U_pred_std = np.nanstd(U_pred, axis=-1)
 
+    U_pred_hifi_mean_sig = U_pred_hifi_mean[1]
+    U_pred_hifi_std_sig = U_pred_hifi_std[1]
+
+    U_pred_hifi_mean = U_pred_hifi_mean[0]
+    U_pred_hifi_std = U_pred_hifi_std[0]
+
     hifi_error_test_mean = re(U_test_hifi_mean, U_pred_hifi_mean)
     hifi_error_test_std = re(U_test_hifi_std, U_pred_hifi_std)
     print(f"HiFi test relative error: mean {hifi_error_test_mean:4f}, std {hifi_error_test_std:4f}")
@@ -45,6 +51,10 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     ax1.plot(x, U_pred_mean[0], "k,", label=r"$\hat{u}_T(x)$")
     ax1.plot(x, U_pred_hifi_mean[0], "b-", label=r"$\hat{u}_{T,hf}(x)$")
     ax1.plot(x, U_test_hifi_mean[0], "r--", label=r"$u_{T,hf}(x)$")
+    lower = U_pred_hifi_mean[0] - 2.0*U_pred_hifi_mean_sig
+    upper = U_pred_hifi_mean[0] + 2.0*U_pred_hifi_mean_sig
+    plt.fill_between(x, lower, upper, 
+                        facecolor='orange', alpha=0.5, label="Two std band")
     ax1.legend()
     ax1.set_title("Means")
     ax1.set_xlabel("$x$")
@@ -54,6 +64,10 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     ax2.plot(x, U_pred_std[0], "k,", label=r"$\hat{u}_T(x)$")
     ax2.plot(x, U_pred_hifi_std[0], "b-", label=r"$\hat{u}_{T,hf}(x)$")
     ax2.plot(x, U_test_hifi_std[0], "r--", label=r"$u_{T,hf}(x)$")
+    lower = U_pred_hifi_std[0] - 2.0*U_pred_hifi_std_sig
+    upper = U_pred_hifi_std[0] + 2.0*U_pred_hifi_std_sig
+    plt.fill_between(x, lower, upper, 
+                        facecolor='orange', alpha=0.5, label="Two std band")
     ax2.set_title("Standard deviations")
     ax2.set_xlabel("$x$")
 
