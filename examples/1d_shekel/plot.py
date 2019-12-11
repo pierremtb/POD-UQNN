@@ -51,8 +51,8 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     ax1.plot(x, U_pred_mean[0], "k,", label=r"$\hat{u}_T(x)$")
     ax1.plot(x, U_pred_hifi_mean[0], "b-", label=r"$\hat{u}_{T,hf}(x)$")
     ax1.plot(x, U_test_hifi_mean[0], "r--", label=r"$u_{T,hf}(x)$")
-    lower = U_pred_hifi_mean[0] - 2.0*U_pred_hifi_mean_sig
-    upper = U_pred_hifi_mean[0] + 2.0*U_pred_hifi_mean_sig
+    lower = U_pred_hifi_mean[0] - 2.0*U_pred_hifi_mean_sig[0]
+    upper = U_pred_hifi_mean[0] + 2.0*U_pred_hifi_mean_sig[0]
     plt.fill_between(x, lower, upper, 
                         facecolor='orange', alpha=0.5, label="Two std band")
     ax1.legend()
@@ -64,8 +64,8 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     ax2.plot(x, U_pred_std[0], "k,", label=r"$\hat{u}_T(x)$")
     ax2.plot(x, U_pred_hifi_std[0], "b-", label=r"$\hat{u}_{T,hf}(x)$")
     ax2.plot(x, U_test_hifi_std[0], "r--", label=r"$u_{T,hf}(x)$")
-    lower = U_pred_hifi_std[0] - 2.0*U_pred_hifi_std_sig
-    upper = U_pred_hifi_std[0] + 2.0*U_pred_hifi_std_sig
+    lower = U_pred_hifi_std[0] - 2.0*U_pred_hifi_std_sig[0]
+    upper = U_pred_hifi_std[0] + 2.0*U_pred_hifi_std_sig[0]
     plt.fill_between(x, lower, upper, 
                         facecolor='orange', alpha=0.5, label="Two std band")
     ax2.set_title("Standard deviations")
