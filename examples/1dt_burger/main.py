@@ -52,9 +52,12 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     v_pred, v_pred_sig = model.predict_v(X_v_test)
     U_pred = model.V.dot(v_pred.T)
     Sigma_pred = model.V.dot(v_pred_sig.T)
-    U_pred_m = U_pred.mean(-1)
-    U_test_m = U_test.mean(-1)
-    Sigma_pred_m = Sigma_pred.mean(-1)
+    # U_pred_m = U_pred.mean(-1)
+    # U_test_m = U_test.mean(-1)
+    # Sigma_pred_m = Sigma_pred.mean(-1)
+    U_pred_m = U_pred[:, 50]
+    U_test_m = U_test.[:, 50]
+    Sigma_pred_m = Sigma_pred[:, 50]
 
     import matplotlib.pyplot as plt
     # x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
