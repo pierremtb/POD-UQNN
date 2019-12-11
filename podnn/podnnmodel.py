@@ -235,6 +235,7 @@ class PodnnModel:
 
     def initNN(self, h_layers, lr, lam):
         """Create the neural net model."""
+        self.lr = lr
         self.layers = pack_layers(self.n_d, h_layers, self.n_L)
         # self.regnn = NeuralNetwork(self.layers, lr, lam, lb=self.lb, ub=self.ub)
 
@@ -259,7 +260,7 @@ class PodnnModel:
         hp["X_dim"] = self.layers[0]
         hp["Y_dim"] = self.layers[-1]
         hp["T_dim"] = 0
-        hp["Z_dim"] = self.layers[0]
+        hp["Z_dim"] = 1
         # DeepNNs topologies
         hp["layers_P"] = [hp["X_dim"]+hp["T_dim"] + hp["Z_dim"],
                         50, 50, 50, 50,
@@ -269,9 +270,9 @@ class PodnnModel:
                         hp["Z_dim"]]
         hp["layers_T"] = [hp["X_dim"]+hp["T_dim"]+hp["Y_dim"],
                         50, 50, 50,
-                        1]
+                        2]
         # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
-        hp["tf_epochs"] = epochs
+        hp["tf_epochs"] = 20000
         hp["tf_lr"] = 0.0001
         hp["tf_b1"] = 0.9
         hp["tf_eps"] = None
@@ -295,6 +296,7 @@ class PodnnModel:
         self.regnn = AdvNeuralNetwork(hp, logger, None, None)
         print("SHAPES: ", U_val_mean.shape, U_val_std.shape)
         def get_val_err():
+            return { "L": 0. }
             v_val_pred = self.predict_v(X_v_val)
             U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
             if self.has_t:
@@ -346,8 +348,8 @@ class PodnnModel:
 
     def predict_v(self, X_v):
         """Return the predicted POD projection coefficients."""
-        # v_pred, v_pred_mean = self.regnn.predict(X_v)
-        v_pred = self.regnn.predict_sample(X_v).numpy()
+        v_pred, v_pred_mean = self.regnn.predict(X_v)
+        # v_pred = self.regnn.predict_sample(X_v).numpy()
         return v_pred.astype(self.dtype)
 
     def predict(self, X_v):

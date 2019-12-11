@@ -56,7 +56,7 @@ class AdvNeuralNetwork(object):
         return tf.reduce_mean(tf.square(f_pred))
 
     # Mininizing the G-Loss
-    # @tf.function
+    @tf.function
     def generator_loss(self, X_u, u, u_pred, f_pred, Z_u):
         # Prior:
         z_u_prior = Z_u
@@ -84,7 +84,7 @@ class AdvNeuralNetwork(object):
         return loss_G, loss_KL, loss_recon, loss_PDE
 
     # Minimizing the D-loss
-    # @tf.function
+    @tf.function
     def discriminator_loss(self, X_u, u, Z_u):
         # Prior: p(z)
         z_prior = Z_u
@@ -103,7 +103,7 @@ class AdvNeuralNetwork(object):
 
         return T_loss
 
-    # @tf.function
+    @tf.function
     def generator_grad(self, X_u, u, X_f, Z_u, Z_f, var):
         with tf.GradientTape(persistent=True) as tape:
             tape.watch(var)
@@ -116,7 +116,7 @@ class AdvNeuralNetwork(object):
         del tape
         return loss_G, loss_KL, loss_recon, loss_PDE, grads
 
-    # @tf.function
+    @tf.function
     def discriminator_grad(self, X_u, u, Z_u, var):
         with tf.GradientTape() as tape:
             tape.watch(var)
@@ -168,7 +168,7 @@ class AdvNeuralNetwork(object):
         # u_batch = self.tensor(u[idx_u, :])
         # return X_u_batch, u_batch, X_f_batch
 
-    # @tf.function
+    @tf.function
     def optimization_step(self, X_u_batch, u_batch, X_f_batch, z_u, z_f):
         # Dual-Optimization step
         for _ in range(self.k1):
@@ -221,17 +221,17 @@ class AdvNeuralNetwork(object):
     # def predict(self, X_star, X, T):
     def predict(self, X_star):
         N_samples = 500
-        samples_mean = np.zeros((X_star.shape[0], N_samples))
+        samples_mean = np.zeros((X_star.shape[0], self.Y_dim, N_samples))
         for i in range(0, N_samples):
-            samples_mean[:, i:i+1] = self.predict_sample(X_star)
+            samples_mean[:, :, i] = self.predict_sample(X_star)
 
         # XT = np.hstack((X.flatten()[:, None], T.flatten()[:, None]))
 
         # Compare mean and variance of the predicted samples
         # as prediction and uncertainty
-        U_pred = np.mean(samples_mean, axis=1)
+        U_pred = np.mean(samples_mean, axis=-1)
         # U_pred = griddata(XT, U_pred.flatten(), (X, T), method='cubic')
-        Sigma_pred = np.var(samples_mean, axis=1)
+        Sigma_pred = np.var(samples_mean, axis=-1)
         # Sigma_pred = griddata(XT, Sigma_pred.flatten(), (X, T), method='cubic')
 
         return U_pred, Sigma_pred
