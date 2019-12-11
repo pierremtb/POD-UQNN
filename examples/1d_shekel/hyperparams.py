@@ -18,7 +18,7 @@ HP["n_s"] = 300
 # HP["n_s_hifi"] = int(1e5)
 HP["n_s_hifi"] = 500
 # POD stopping param
-HP["eps"] = 1e-1
+HP["eps"] = 1e-2
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)
 # Deep NN hidden layers topology
