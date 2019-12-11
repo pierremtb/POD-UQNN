@@ -259,7 +259,7 @@ class PodnnModel:
         hp["X_dim"] = self.layers[0]
         hp["Y_dim"] = self.layers[-1]
         hp["T_dim"] = 0
-        hp["Z_dim"] = self.layers[-1]
+        hp["Z_dim"] = self.layers[0]
         # DeepNNs topologies
         hp["layers_P"] = [hp["X_dim"]+hp["T_dim"] + hp["Z_dim"],
                         50, 50, 50, 50,
