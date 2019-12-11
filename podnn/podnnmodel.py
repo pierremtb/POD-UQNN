@@ -261,7 +261,7 @@ class PodnnModel:
         hp["Y_dim"] = self.layers[-1]
         hp["T_dim"] = 0
         # hp["Z_dim"] = self.layers[0]
-        hp["Z_dim"] = 1
+        hp["Z_dim"] = self.layers[0]
         # DeepNNs topologies
         print(self.layers)
         hp["layers_P"] = [hp["X_dim"]+hp["T_dim"] + hp["Z_dim"],
@@ -288,7 +288,7 @@ class PodnnModel:
         hp["beta"] = 1.0
         # MinMax switching
         hp["k1"] = 1
-        hp["k2"] = 5
+        hp["k2"] = 10
         # Batch size
         # hp["batch_size_u"] = hp["N_i"] + hp["N_b"]
         hp["batch_size_u"] = X_v_train.shape[0]
