@@ -46,7 +46,31 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                             hp["train_val_test"], freq=hp["log_frequency"])
 
     # Predict and restruct
-    U_pred = model.predict(X_v_test)
+    v_pred, v_pred_sig = model.predict_v(X_v_test)
+    U_pred = model.V.dot(v_pred.T)
+    Sigma_pred = model.V.dot(v_pred_sig.T)
+    U_pred_m = U_pred.mean(-1)
+    U_test_m = U_test.mean(-1)
+    Sigma_pred_m = Sigma_pred.mean(-1)
+
+    import matplotlib.pyplot as plt
+    # x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+    # plt.plot(x, U_pred[:, 0], "b-")
+    # plt.plot(x, U_test[:, 0], "r--")
+    # lower = U_pred[:, 0] - 2.0*Sigma_pred[:, 0]
+    # upper = U_pred[:, 0] + 2.0*Sigma_pred[:, 0]
+    # plt.fill_between(x, lower, upper, 
+    #                     facecolor='orange', alpha=0.5, label="Two std band")
+    # plt.show()
+    x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+    plt.plot(x, U_pred_m, "b-")
+    plt.plot(x, U_test_m, "r--")
+    lower = U_pred_m - 2.0*Sigma_pred_m
+    upper = U_pred_m + 2.0*Sigma_pred_m
+    plt.fill_between(x, lower, upper, 
+                        facecolor='orange', alpha=0.5, label="Two std band")
+    plt.show()
+
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)
 
@@ -77,5 +101,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    # main(HP, gen_test=False, use_cached_dataset=False)
-    main(HP, gen_test=False, use_cached_dataset=True)
+    main(HP, gen_test=False, use_cached_dataset=False)
+    # main(HP, gen_test=False, use_cached_dataset=True)

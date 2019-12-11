@@ -260,8 +260,9 @@ class PodnnModel:
         hp["X_dim"] = self.layers[0]
         hp["Y_dim"] = self.layers[-1]
         hp["T_dim"] = 0
-        hp["Z_dim"] = 1
+        hp["Z_dim"] = self.layers[0]
         # DeepNNs topologies
+        print(self.layers)
         hp["layers_P"] = [hp["X_dim"]+hp["T_dim"] + hp["Z_dim"],
                         50, 50, 50, 50,
                         hp["Y_dim"]]
@@ -272,7 +273,8 @@ class PodnnModel:
                         50, 50, 50,
                         2]
         # Setting up the TF SGD-based optimizer (set tf_epochs=0 to cancel it)
-        hp["tf_epochs"] = 20000
+        hp["tf_epochs"] = epochs
+        # hp["tf_epochs"] = 0
         hp["tf_lr"] = 0.0001
         hp["tf_b1"] = 0.9
         hp["tf_eps"] = None
@@ -350,12 +352,12 @@ class PodnnModel:
         """Return the predicted POD projection coefficients."""
         v_pred, v_pred_mean = self.regnn.predict(X_v)
         # v_pred = self.regnn.predict_sample(X_v).numpy()
-        return v_pred.astype(self.dtype)
+        return v_pred.astype(self.dtype), v_pred_mean.astype(self.dtype)
 
     def predict(self, X_v):
         """Returns the predicted solutions, via proj coefficients."""
         # v_pred, v_pred_mean = self.predict_v(X_v)
-        v_pred = self.predict_v(X_v)
+        v_pred, _ = self.predict_v(X_v)
 
         # Retrieving the function with the predicted coefficients
         U_pred = self.V.dot(v_pred.T)
@@ -363,7 +365,7 @@ class PodnnModel:
 
     def predict_heavy(self, X_v):
         """Returns the predicted solutions, via proj coefficients (large inputs)."""
-        v_pred_hifi = self.predict_v(X_v)
+        v_pred_hifi, _ = self.predict_v(X_v)
         return self.do_vdot(v_pred_hifi)
 
     def do_vdot(self, v):

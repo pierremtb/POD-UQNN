@@ -231,7 +231,8 @@ class AdvNeuralNetwork(object):
         # as prediction and uncertainty
         U_pred = np.mean(samples_mean, axis=-1)
         # U_pred = griddata(XT, U_pred.flatten(), (X, T), method='cubic')
-        Sigma_pred = np.var(samples_mean, axis=-1)
+        # Sigma_pred = np.var(samples_mean, axis=-1)
+        Sigma_pred = np.nanstd(samples_mean, axis=-1)
         # Sigma_pred = griddata(XT, Sigma_pred.flatten(), (X, T), method='cubic')
 
         return U_pred, Sigma_pred
