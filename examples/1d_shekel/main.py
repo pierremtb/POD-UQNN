@@ -84,10 +84,8 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                                hp["mu_min"], hp["mu_max"])
     print("Predicting the {n_s_hifi} corresponding solutions")
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
-    U_pred_hifi_mean[0] = model.restruct(U_pred_hifi_mean[0], no_s=True)
-    U_pred_hifi_std[0] = model.restruct(U_pred_hifi_std[0], no_s=True)
-    U_pred_hifi_mean[1] = model.restruct(U_pred_hifi_mean[1], no_s=True)
-    U_pred_hifi_std[1] = model.restruct(U_pred_hifi_std[1], no_s=True)
+    U_pred_hifi_mean = model.restruct(U_pred_hifi_mean[0], no_s=True), model.restruct(U_pred_hifi_mean[1], no_s=True)
+    U_pred_hifi_std = model.restruct(U_pred_hifi_std[0], no_s=True), model.restruct(U_pred_hifi_std[1], no_s=True)
 
     # Plot against test and save
     return plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
