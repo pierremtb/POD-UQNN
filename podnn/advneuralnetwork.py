@@ -55,6 +55,11 @@ class AdvNeuralNetwork(object):
     def physics_informed_loss(self, f_pred):
         return tf.reduce_mean(tf.square(f_pred))
 
+    def regularization(self):
+        l2_norms = [tf.nn.l2_loss(v) for v in self.wrap_generator_variables()]
+        l2_norm = tf.reduce_sum(l2_norms)
+        return l2_norm
+
     # Mininizing the G-Loss
     @tf.function
     def generator_loss(self, X_u, u, u_pred, f_pred, Z_u):
@@ -74,7 +79,8 @@ class AdvNeuralNetwork(object):
         log_q = -tf.reduce_mean(tf.square(z_u_prior - z_u_encoder))
 
         # Physics-informed loss
-        loss_f = self.physics_informed_loss(f_pred)
+        # loss_f = self.physics_informed_loss(f_pred)
+        loss_f = self.regularization()
 
         # Generator loss
         loss_PDE = self.kl_beta * loss_f
@@ -135,6 +141,13 @@ class AdvNeuralNetwork(object):
         var = []
         var.extend(self.model_p.trainable_variables)
         var.extend(self.model_q.trainable_variables)
+        return var
+
+    def wrap_training_variables(self):
+        var = []
+        var.extend(self.model_p.trainable_variables)
+        var.extend(self.model_q.trainable_variables)
+        var.extend(self.model_t.trainable_variables)
         return var
 
     def wrap_discriminator_variables(self):

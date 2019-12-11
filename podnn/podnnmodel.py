@@ -285,7 +285,7 @@ class PodnnModel:
         # hp["nt_ncorr"] = 50
         # Loss coefficients
         hp["lambda"] = 1.5
-        hp["beta"] = 1.0
+        hp["beta"] = 1e-2
         # MinMax switching
         hp["k1"] = 1
         hp["k2"] = 10
