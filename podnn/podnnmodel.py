@@ -260,7 +260,8 @@ class PodnnModel:
         hp["X_dim"] = self.layers[0]
         hp["Y_dim"] = self.layers[-1]
         hp["T_dim"] = 0
-        hp["Z_dim"] = self.layers[0]
+        # hp["Z_dim"] = self.layers[0]
+        hp["Z_dim"] = 1
         # DeepNNs topologies
         print(self.layers)
         hp["layers_P"] = [hp["X_dim"]+hp["T_dim"] + hp["Z_dim"],
@@ -298,16 +299,15 @@ class PodnnModel:
         self.regnn = AdvNeuralNetwork(hp, logger, None, None)
         print("SHAPES: ", U_val_mean.shape, U_val_std.shape)
         def get_val_err():
-            return { "L": 0. }
-            v_val_pred = self.predict_v(X_v_val)
+            v_val_pred, _ = self.predict_v(X_v_val)
             U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
             if self.has_t:
                 U_val_pred_mean = U_val_pred_mean.mean(-1)
                 U_val_pred_std = U_val_pred_std.std(-1)
             return {
                 # "L_v": self.regnn.loss(v_val, v_val_pred),
-                # "REM_v": re(U_val_mean, U_val_pred_mean),
-                # "RES_v": re(U_val_std, U_val_pred_std),
+                "REM_v": re(U_val_mean, U_val_pred_mean),
+                "RES_v": re(U_val_std, U_val_pred_std),
                 }
         logger.set_val_err_fn(get_val_err)
 

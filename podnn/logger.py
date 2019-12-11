@@ -60,14 +60,15 @@ class Logger(object):
             logs_message = ""
             for i, key in enumerate(self.logs_keys):
                 # if i >= len(logs_values) - 2:
-                if i >= 2:
+                # if i >= 2:
+                if i >= 1:
                     logs_message += f" {key}: {logs_values[i]:.4f}"
                 else:
                     logs_message += f" {key}: {logs_values[i]:.4e}"
 
             name = 'nt_epoch' if is_iter else '#'
             message = f"{name}: {epoch:6d} " + \
-                      logs_message + custom
+                      logs_message + " " + custom
             self.pbar.write(message)
 
             self.epochs.append(epoch)
