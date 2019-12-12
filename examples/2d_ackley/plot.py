@@ -65,6 +65,12 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     # Using nanstd() to prevent NotANumbers from appearing
     U_pred_std = np.nanstd(U_pred, axis=-1).reshape(u_shape)
 
+    U_pred_hifi_mean_sig = U_pred_hifi_mean[1]
+    U_pred_hifi_std_sig = U_pred_hifi_std[1]
+
+    U_pred_hifi_mean = U_pred_hifi_mean[0]
+    U_pred_hifi_std = U_pred_hifi_std[0]
+
     U_pred_hifi_mean = U_pred_hifi_mean.reshape(u_shape)
     U_pred_hifi_std = U_pred_hifi_std.reshape(u_shape)
     U_test_hifi_mean = U_test_hifi_mean.reshape(u_shape)

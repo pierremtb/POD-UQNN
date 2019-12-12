@@ -158,10 +158,17 @@ class AdvNeuralNetwork(object):
         self.model_q.summary()
         self.model_t.summary()
 
+    def set_normalize_bounds(self, X):
+        # self.lb = X_u.mean(0)
+        # self.ub = X_u.std(0)
+        self.lb = np.amin(X, axis=0)
+        self.ub = np.amax(X, axis=0)
+
     def normalize(self, X):
         if self.ub is None or self.lb is None:
             return X
-        return (X - self.lb) / self.ub
+        return (X - self.lb) - 0.5 * (self.ub - self.lb)
+        # return (X - self.lb) / self.ub
 
     def tensor(self, X):
         return tf.convert_to_tensor(X, dtype=self.dtype)
@@ -197,8 +204,8 @@ class AdvNeuralNetwork(object):
         self.logger = logger
         self.logger.log_train_start()
 
-        self.lb = X_u.mean(0)
-        self.ub = X_u.std(0)
+        self.set_normalize_bounds(X_u)
+
         # Creating the tensors
         X_u = self.normalize(X_u)
         X_f = X_u
