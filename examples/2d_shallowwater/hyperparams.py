@@ -12,7 +12,7 @@ HP["n_v"] = len(HP["mesh_idx"][2])
 HP["n_t"] = 0
 # Snapshots count
 HP["n_s"] = 300
-# HP["n_s"] = 100
+HP["n_s_hifi"] = 500
 # POD stopping param
 HP["eps"] = 1e-10
 # Train/val split

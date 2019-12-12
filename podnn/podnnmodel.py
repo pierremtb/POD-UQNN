@@ -130,30 +130,32 @@ class PodnnModel:
 
         return loop_u(u, n_s, n_h, X_v, U, X, mu_lhs)
 
+    def u_mesh_to_U(self, u_mesh, n_s):
+        # Reshaping manually
+        U = np.zeros((self.n_h, n_s))
+        for i in range(n_s):
+            st = self.n_xyz * i
+            en = self.n_xyz * (i + 1)
+            U[:, i] = u_mesh[st:en, :].T.reshape((self.n_h,))
+        return U
+
     def convert_dataset(self, u_mesh, X_v, train_val_test, eps, eps_init=None,
                         use_cache=False):
         """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
         if use_cache and os.path.exists(self.train_data_path):
             return self.load_train_data()
 
-        n_xyz = self.x_mesh.shape[0]
-        n_h = n_xyz * self.n_v
         n_s = X_v.shape[0]
 
         # U = u_mesh.reshape(n_h, n_st)
-        # Reshaping manually
-        U = np.zeros((n_h, n_s))
-        for i in range(n_s):
-            st = self.n_xyz * i
-            en = self.n_xyz * (i + 1)
-            U[:, i] = u_mesh[st:en, :].T.reshape((n_h,))
+        U = self.u_mesh_to_U(u_mesh, n_s)
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
         if eps_init is not None and self.has_t:
             # Never tested
             n_s = int(n_s / self.n_t)
-            self.V = perform_fast_pod(U.reshape((n_h, self.n_t, n_s)),
+            self.V = perform_fast_pod(U.reshape((self.n_h, self.n_t, n_s)),
                                       eps, eps_init)
         else:
             self.V = perform_pod(U, eps, True)

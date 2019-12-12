@@ -53,6 +53,16 @@ def main(hp, use_cached_dataset=False):
     error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
     print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
 
+    mu_path = os.path.join("data", f"INPUT_{hp['n_s_hifi']}_Scenarios.txt")
+    x_u_mesh_path = os.path.join("data", f"SOL_FV_{hp['n_s_hifi']}_Scenarios.txt")
+    _, u_mesh_test_hifi, X_v_test_hifi = \
+        read_space_sol_input_mesh(hp["n_s"], hp["mesh_idx"], x_u_mesh_path, mu_path)
+    U_test_hifi = model.u_mesh_to_U(u_mesh_test_hifi, hp["n_s_hifi"])
+    U_test_hifi_mean, U_test_hifi_std = U_test_hifi.mean(-1), np.nanstd(U_test_hifi, -1)
+    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
+    U_pred_hifi_mean = model.restruct(U_pred_hifi_mean, no_s=True)
+    U_pred_hifi_std = model.restruct(U_pred_hifi_std, no_s=True)
+
     # Time for one pred
     # import time
     # st = time.time()
@@ -61,7 +71,9 @@ def main(hp, use_cached_dataset=False):
     # exit(0)
 
     # Plot and save the results
-    return plot_results(x_mesh, U_test, U_pred, hp, train_res)
+    return plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+                        U_test_hifi_mean, U_test_hifi_std,
+                        train_res, HP=hp, export_vtk=True, export_txt=True)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg

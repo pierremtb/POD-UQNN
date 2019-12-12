@@ -47,8 +47,9 @@ def get_min_max(z1, z2):
     return z_min, z_max
 
 
-def plot_results(x_mesh, U_test, U_pred,
-                 HP=None, train_res=None,
+dk def plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+                        U_test_hifi_mean, U_test_hifi_std
+                 train_res=None, HP=None,
                  export_vtk=False, export_txt=False):
     """Handles the plots and exports of 3d_shallowwater data."""
 
@@ -56,14 +57,12 @@ def plot_results(x_mesh, U_test, U_pred,
     y = x_mesh[:, 2]
 
     # Computing means
-    U_test_mean = np.mean(U_test, axis=-1)
     U_pred_mean = np.mean(U_pred, axis=-1)
-    U_test_std = np.nanstd(U_test, axis=-1)
     U_pred_std = np.nanstd(U_pred, axis=-1)
 
     if export_txt:
         print("Saving to .txt")
-        x_u_mean_std = np.concatenate((x_mesh, U_test_mean.T, U_test_std), axis=1)
+        x_u_mean_std = np.concatenate((x_mesh, U_pred_hifi_mean.T, U_pred_hifi_std), axis=1)
         # x_u_std = np.concatenate((x_mesh, U_test_std.T), axis=1)
         non_idx_len = x_u_mean_std.shape[1] - 1
         np.savetxt(os.path.join("cache", "x_u_mean_std.txt"), x_u_mean_std,
@@ -108,12 +107,12 @@ def plot_results(x_mesh, U_test, U_pred,
                               connectivity, offsets, cell_types,
                               cellData=None,
                               pointData={
-                                  "h_mean" : U_test_mean[0],
-                                  "hu_mean" : U_test_mean[1],
-                                  "hv_mean" : U_test_mean[2],
-                                  "h_std" : U_test_std[0],
-                                  "hu_std" : U_test_std[1],
-                                  "hv_std" : U_test_std[2],
+                                  "h_mean" : U_pred_hifi_mean[0],
+                                  "hu_mean" : U_pred_hifi_mean[1],
+                                  "hv_mean" : U_pred_hifi_mean[2],
+                                  "h_std" : U_pred_hifi_std[0],
+                                  "hu_std" : U_pred_hifi_std[1],
+                                  "hv_std" : U_pred_hifi_std[2],
                                   })
         return
 
@@ -125,10 +124,6 @@ def plot_results(x_mesh, U_test, U_pred,
     y = y[i_min:i_max]
 
     # Computing means
-    U_test_mean = np.mean(U_test[:, i_min:i_max, :], axis=-1)
-    U_pred_mean = np.mean(U_pred[:, i_min:i_max, :], axis=-1)
-    U_test_std = np.nanstd(U_test[:, i_min:i_max, :], axis=-1)
-    U_pred_std = np.nanstd(U_pred[:, i_min:i_max, :], axis=-1)
     n_plot_x = 4
     n_plot_y = 4
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.5))
@@ -137,15 +132,15 @@ def plot_results(x_mesh, U_test, U_pred,
     quantities = np.array([r"h", r"\eta", r"(hu)", r"(hv)"])
     idx_u = [i - 4 for i in HP["mesh_idx"][2]]
     for i, qty in enumerate(quantities[idx_u]):
-        z_min, z_max = get_min_max(U_pred_mean[i], U_test_mean[i])
-        plot_plot(fig, gs[0, i], x, y, U_pred_mean[i],
+        z_min, z_max = get_min_max(U_pred_hifi_mean[i], U_test_hifi_mean[i])
+        plot_plot(fig, gs[0, i], x, y, U_pred_hifi_mean[i],
                   z_min, z_max, f"Mean ${qty}(x,y)$ [pred]")
-        plot_plot(fig, gs[1, i], x, y, U_test_mean[i],
+        plot_plot(fig, gs[1, i], x, y, U_test_hifi_mean[i],
                   z_min, z_max, f"Mean ${qty}(x,y)$ [val]")
-        z_min, z_max = get_min_max(U_pred_std[i], U_test_std[i])
-        plot_plot(fig, gs[2, i], x, y, U_pred_std[i],
+        z_min, z_max = get_min_max(U_pred_hifi_std[i], U_test_hifi_std[i])
+        plot_plot(fig, gs[2, i], x, y, U_pred_hifi_std[i],
                   z_min, z_max, f"Std ${qty}(x,y)$ [pred]")
-        plot_plot(fig, gs[3, i], x, y, U_test_std[i],
+        plot_plot(fig, gs[3, i], x, y, U_test_hifi_std[i],
                   z_min, z_max, f"Std ${qty}(x,y)$ [val]")
 
     plt.tight_layout()
