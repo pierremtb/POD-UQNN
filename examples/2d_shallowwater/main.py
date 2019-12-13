@@ -84,5 +84,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    # main(HP, use_cached_dataset=False)
-    main(HP, use_cached_dataset=True)
+    main(HP, use_cached_dataset=False)
+    # main(HP, use_cached_dataset=True)

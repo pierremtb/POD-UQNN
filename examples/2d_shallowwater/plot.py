@@ -47,8 +47,8 @@ def get_min_max(z1, z2):
     return z_min, z_max
 
 
-dk def plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
-                        U_test_hifi_mean, U_test_hifi_std
+def plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+                 U_test_hifi_mean, U_test_hifi_std,
                  train_res=None, HP=None,
                  export_vtk=False, export_txt=False):
     """Handles the plots and exports of 3d_shallowwater data."""
