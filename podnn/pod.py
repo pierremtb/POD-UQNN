@@ -46,7 +46,7 @@ def perform_pod(U, eps, verbose=True):
     for i in prange(n_L):
         Z_i = np.ascontiguousarray(Z[:, i])
         V[:, i] = U.dot(Z_i) / np.sqrt(lambdas_trunc[i])
-    
+
     return np.ascontiguousarray(V)
 
 

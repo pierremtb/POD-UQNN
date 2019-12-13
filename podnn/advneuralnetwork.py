@@ -1,9 +1,11 @@
 import numpy as np
 import tensorflow as tf
 
+NORM_MEANSTD = "meanstd"
+NORM_CENTER = "center"
 
 class AdvNeuralNetwork(object):
-    def __init__(self, layers, gan_dims, lr, lam, bet, k1, k2,
+    def __init__(self, layers, gan_dims, lr, lam, bet, k1, k2, norm=NORM_MEANSTD,
                  model=None, ub=None, lb=None):
 
         self.ub = ub
@@ -28,6 +30,7 @@ class AdvNeuralNetwork(object):
         self.kl_beta = bet
         self.k1 = k1
         self.k2 = k2
+        self.norm = norm
         # self.batch_size_u = hp["batch_size_u"]
         # self.batch_size_f = hp["batch_size_f"]
 
@@ -159,16 +162,20 @@ class AdvNeuralNetwork(object):
         self.model_t.summary()
 
     def set_normalize_bounds(self, X):
-        # self.lb = X_u.mean(0)
-        # self.ub = X_u.std(0)
-        self.lb = np.amin(X, axis=0)
-        self.ub = np.amax(X, axis=0)
+        if self.norm == NORM_CENTER:
+            self.lb = np.amin(X, axis=0)
+            self.ub = np.amax(X, axis=0)
+        else:
+            self.lb = X.mean(0)
+            self.ub = X.std(0)
 
     def normalize(self, X):
         if self.ub is None or self.lb is None:
             return X
-        return (X - self.lb) - 0.5 * (self.ub - self.lb)
-        # return (X - self.lb) / self.ub
+        if self.norm == NORM_CENTER:
+            return (X - self.lb) - 0.5 * (self.ub - self.lb)
+        else:
+            return (X - self.lb) / self.ub
 
     def tensor(self, X):
         return tf.convert_to_tensor(X, dtype=self.dtype)

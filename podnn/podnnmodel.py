@@ -12,7 +12,7 @@ from .pod import perform_pod, perform_fast_pod
 from .handling import pack_layers
 from .logger import Logger
 from .neuralnetwork import NeuralNetwork
-from .advneuralnetwork import AdvNeuralNetwork
+from .advneuralnetwork import AdvNeuralNetwork, NORM_MEANSTD
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
 from .metrics import re
 
@@ -110,7 +110,7 @@ class PodnnModel:
         return X_v_train, X_v_val, v_train, v_val
 
     def create_snapshots(self, n_s, n_st, n_d, n_h, u, mu_lhs,
-                         t_min=0, t_max=0):
+                         t_min=0, t_max=0, u_noise=0., x_noise=0.):
         """Create a generated snapshots matrix and inputs for benchmarks."""
         n_xyz = self.x_mesh.shape[0]
 
@@ -129,7 +129,7 @@ class PodnnModel:
             return loop_u_t(u, n_s, self.n_t, self.n_v, n_xyz, n_h,
                             X_v, U, U_struct, X, mu_lhs, t_min, t_max)
 
-        return loop_u(u, n_s, n_h, X_v, U, X, mu_lhs)
+        return loop_u(u, n_s, n_h, X_v, U, X, mu_lhs, u_noise, x_noise)
 
     def convert_dataset(self, u_mesh, X_v, train_val_test, eps, eps_init=None,
                         use_cache=False):
@@ -175,7 +175,7 @@ class PodnnModel:
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
                          train_val_test, eps, eps_init=None,
-                         t_min=0, t_max=0,
+                         t_min=0, t_max=0, u_noise=0., x_noise=0.,
                          use_cache=False):
         """Generate a training dataset for benchmark problems."""
         if use_cache:
@@ -206,7 +206,7 @@ class PodnnModel:
         print(f"Generating {n_st} corresponding snapshots")
         X_v, U, U_struct = \
             self.create_snapshots(n_s, n_st, n_d, n_h, u, mu_lhs,
-                                  t_min, t_max)
+                                  t_min, t_max, u_noise, x_noise)
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
@@ -234,7 +234,7 @@ class PodnnModel:
         return tf.convert_to_tensor(X, dtype=self.dtype)
 
     def initNN(self, h_layers, h_layers_t,
-               lr, lam, bet, k1, k2):
+               lr, lam, bet, k1, k2, norm=NORM_MEANSTD):
         """Create the neural net model."""
         self.lr = lr
         gan_dims = (self.n_d, self.n_L, self.n_d)
@@ -245,7 +245,7 @@ class PodnnModel:
         self.layers = (layers_p, layers_q, layers_t)
 
         self.regnn = AdvNeuralNetwork(self.layers, gan_dims,
-                                      lr, lam, bet, k1, k2)
+                                      lr, lam, bet, k1, k2, norm)
         self.regnn.summary()
 
     def train(self, X_v, v, epochs, train_val_test, freq=100):
@@ -264,15 +264,20 @@ class PodnnModel:
             U_val_std = U_val_std.std(-1)
         print("SHAPES: ", U_val_mean.shape, U_val_std.shape)
         def get_val_err():
-            v_val_pred, _ = self.predict_v(X_v_val)
-            U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
-            if self.has_t:
-                U_val_pred_mean = U_val_pred_mean.mean(-1)
-                U_val_pred_std = U_val_pred_std.std(-1)
+            v_val_pred, v_val_pred_std = self.predict_v(X_v_val)
+            # U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
+            # if self.has_t:
+            #     U_val_pred_mean = U_val_pred_mean.mean(-1)
+            #     U_val_pred_std = U_val_pred_std.std(-1)
             return {
                 # "L_v": self.regnn.loss(v_val, v_val_pred),
-                "REM_v": re(U_val_mean, U_val_pred_mean),
-                "RES_v": re(U_val_std, U_val_pred_std),
+                # "REM_v": re(U_val_mean, U_val_pred_mean),
+                # "RES_v": re(U_val_std, U_val_pred_std),
+                "RE": re(v_val, v_val_pred),
+                "v": v_val.mean(),
+                "vt": v_val_pred.mean(),
+                "st": v_val_pred_std.mean(),
+                # "RES_v": re(U_val_std, U_val_pred_std),
                 }
         logger.set_val_err_fn(get_val_err)
 
@@ -314,9 +319,9 @@ class PodnnModel:
 
     def predict_v(self, X_v):
         """Return the predicted POD projection coefficients."""
-        v_pred, v_pred_mean = self.regnn.predict(X_v)
+        v_pred, v_pred_std = self.regnn.predict(X_v)
         # v_pred = self.regnn.predict_sample(X_v).numpy()
-        return v_pred.astype(self.dtype), v_pred_mean.astype(self.dtype)
+        return v_pred.astype(self.dtype), v_pred_std.astype(self.dtype)
 
     def predict(self, X_v):
         """Returns the predicted solutions, via proj coefficients."""
