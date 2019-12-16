@@ -175,7 +175,7 @@ class PodnnModel:
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
                          train_val_test, eps, eps_init=None,
-                         t_min=0, t_max=0, u_noise=0., x_noise=0.,
+                         t_min=0, t_max=0, u_noise=0., x_noise=0., v_noise=0.,
                          use_cache=False):
         """Generate a training dataset for benchmark problems."""
         if use_cache:
@@ -217,6 +217,10 @@ class PodnnModel:
 
         # Projecting
         v = (self.V.T.dot(U)).T
+
+        if v_noise > 0.:
+            for i in range(v.shape[0]):
+                v[i, :] += v_noise*np.std(v[i, :])*np.random.randn(v.shape[1])
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_test, v_train, v_test = \
@@ -266,14 +270,14 @@ class PodnnModel:
         v_val_mean = v_val.mean(-1)
         def get_val_err():
             v_val_pred, v_val_pred_std = self.predict_v(X_v_val)
-            U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
-            if self.has_t:
-                U_val_pred_mean = U_val_pred_mean.mean(-1)
-                U_val_pred_std = U_val_pred_std.std(-1)
+            # U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
+            # if self.has_t:
+                # U_val_pred_mean = U_val_pred_mean.mean(-1)
+                # U_val_pred_std = U_val_pred_std.std(-1)
             return {
                 # "L_v": self.regnn.loss(v_val, v_val_pred),
-                "REM_v": re(U_val_mean, U_val_pred_mean),
-                "RES_v": re(U_val_std, U_val_pred_std),
+                # "REM_v": re(U_val_mean, U_val_pred_mean),
+                # "RES_v": re(U_val_std, U_val_pred_std),
                 "RE": re(v_val_mean, v_val_pred.mean(-1)),
                 # "v": v_val.mean(),
                 # "vt": v_val_pred.mean(),

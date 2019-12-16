@@ -40,7 +40,8 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                         hp["train_val_test"],
                                         hp["eps"],
                                         x_noise=0.0,
-                                        u_noise=0.,
+                                        u_noise=0.0,
+                                        v_noise=0.1,
                                         use_cache=use_cached_dataset)
 
     # Train
@@ -51,12 +52,20 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                             hp["train_val_test"], freq=hp["log_frequency"])
 
     # Predict and restruct
-    v_pred, v_pred_sig = model.predict_v(X_v_test[0:1])
+    v_pred, v_pred_sig = model.predict_v(X_v_test)
+    print(X_v_test[0, :], v_pred[0, :], v_test[0, :])
     x = np.arange(1, v_pred.shape[1] + 1)
     plt.plot(x, v_pred[0, :], "b-")
     plt.plot(x, v_test[0, :], "r--")
     lower = v_pred[0, :] - 2.0*v_pred_sig[0, :]
     upper = v_pred[0, :] + 2.0*v_pred_sig[0, :]
+    plt.fill_between(x, lower, upper, 
+                        facecolor='orange', alpha=0.5, label="Two std band")
+    print(X_v_test[50, :], v_pred[50, :], v_test[50, :])
+    plt.plot(x, v_pred[50, :], "c-")
+    plt.plot(x, v_test[50, :], "k--")
+    lower = v_pred[50, :] - 2.0*v_pred_sig[50, :]
+    upper = v_pred[50, :] + 2.0*v_pred_sig[50, :]
     plt.fill_between(x, lower, upper, 
                         facecolor='orange', alpha=0.5, label="Two std band")
     plt.show()
