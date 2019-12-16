@@ -39,7 +39,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                         hp["n_s"],
                                         hp["train_val_test"],
                                         hp["eps"],
-                                        x_noise=0.05,
+                                        x_noise=0.0,
                                         u_noise=0.,
                                         use_cache=use_cached_dataset)
 

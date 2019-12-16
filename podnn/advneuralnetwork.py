@@ -1,11 +1,12 @@
 import numpy as np
 import tensorflow as tf
 
+NORM_NONE = "none"
 NORM_MEANSTD = "meanstd"
 NORM_CENTER = "center"
 
 class AdvNeuralNetwork(object):
-    def __init__(self, layers, gan_dims, lr, lam, bet, k1, k2, norm=NORM_MEANSTD,
+    def __init__(self, layers, gan_dims, lr, lam, bet, k1, k2, norm=NORM_NONE,
                  model=None, ub=None, lb=None):
 
         self.ub = ub
@@ -165,17 +166,16 @@ class AdvNeuralNetwork(object):
         if self.norm == NORM_CENTER:
             self.lb = np.amin(X, axis=0)
             self.ub = np.amax(X, axis=0)
-        else:
+        elif self.norm == NORM_MEANSTD:
             self.lb = X.mean(0)
             self.ub = X.std(0)
 
     def normalize(self, X):
-        if self.ub is None or self.lb is None:
-            return X
         if self.norm == NORM_CENTER:
-            return (X - self.lb) - 0.5 * (self.ub - self.lb)
-        else:
-            return (X - self.lb) / self.ub
+            X_n = (X - self.lb) - 0.5 * (self.ub - self.lb)
+        elif self.norm == NORM_MEANSTD:
+            X_n = (X - self.lb) / self.ub
+        return self.tensor(X)
 
     def tensor(self, X):
         return tf.convert_to_tensor(X, dtype=self.dtype)
@@ -215,12 +215,12 @@ class AdvNeuralNetwork(object):
 
         # Creating the tensors
         X_u = self.normalize(X_u)
+        u = self.tensor(u)
         X_f = X_u
 
         self.batch_size_u = X_u.shape[0]
         self.batch_size_f = X_f.shape[0]
 
-        self.logger.log_train_opt("Adam")
         for epoch in range(epochs):
             X_u_batch, u_batch, X_f_batch = self.fetch_minibatch(X_u, u, X_f)
             z_u, z_f = self.generate_latent_variables()
@@ -235,7 +235,7 @@ class AdvNeuralNetwork(object):
         self.logger.log_train_end(epochs, 0.)
 
     def predict_sample(self, X_star):
-        X_star = self.tensor(self.normalize(X_star))
+        X_star = self.normalize(X_star)
         Z = np.random.randn(X_star.shape[0], self.Z_dim)
         u_star = self.model_p(tf.concat([X_star, Z], axis=1))
         return u_star

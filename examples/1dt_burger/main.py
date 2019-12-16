@@ -56,7 +56,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     # U_test_m = U_test.mean(-1)
     # Sigma_pred_m = Sigma_pred.mean(-1)
     U_pred_m = U_pred[:, 50]
-    U_test_m = U_test.[:, 50]
+    U_test_m = U_test[:, 50]
     Sigma_pred_m = Sigma_pred[:, 50]
 
     import matplotlib.pyplot as plt

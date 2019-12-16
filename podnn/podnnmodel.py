@@ -263,20 +263,21 @@ class PodnnModel:
             U_val_mean = U_val_mean.mean(-1)
             U_val_std = U_val_std.std(-1)
         print("SHAPES: ", U_val_mean.shape, U_val_std.shape)
+        v_val_mean = v_val.mean(-1)
         def get_val_err():
             v_val_pred, v_val_pred_std = self.predict_v(X_v_val)
-            # U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
-            # if self.has_t:
-            #     U_val_pred_mean = U_val_pred_mean.mean(-1)
-            #     U_val_pred_std = U_val_pred_std.std(-1)
+            U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
+            if self.has_t:
+                U_val_pred_mean = U_val_pred_mean.mean(-1)
+                U_val_pred_std = U_val_pred_std.std(-1)
             return {
                 # "L_v": self.regnn.loss(v_val, v_val_pred),
-                # "REM_v": re(U_val_mean, U_val_pred_mean),
-                # "RES_v": re(U_val_std, U_val_pred_std),
-                "RE": re(v_val, v_val_pred),
-                "v": v_val.mean(),
-                "vt": v_val_pred.mean(),
-                "st": v_val_pred_std.mean(),
+                "REM_v": re(U_val_mean, U_val_pred_mean),
+                "RES_v": re(U_val_std, U_val_pred_std),
+                "RE": re(v_val_mean, v_val_pred.mean(-1)),
+                # "v": v_val.mean(),
+                # "vt": v_val_pred.mean(),
+                # "st": v_val_pred_std.mean(),
                 # "RES_v": re(U_val_std, U_val_pred_std),
                 }
         logger.set_val_err_fn(get_val_err)

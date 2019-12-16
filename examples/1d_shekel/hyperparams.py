@@ -2,7 +2,7 @@
 
 import numpy as np
 import tensorflow as tf
-from podnn.advneuralnetwork import NORM_MEANSTD
+from podnn.advneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
 
 
 HP = {}
@@ -26,15 +26,16 @@ HP["train_val_test"] = (3/5, 1/5, 1/5)
 HP["h_layers"] = [50, 50, 50, 50]
 HP["h_layers_t"] = [50, 50, 50]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 100000
-HP["lr"] = 0.0001
+HP["epochs"] = 20000
+HP["lr"] = 0.001
 HP["lambda"] = 1.5
-HP["beta"] = 1e-2
+HP["beta"] = 1e-4
 HP["k1"] = 1
 HP["k2"] = 5
 HP["norm"] = NORM_MEANSTD
+# HP["norm"] = NORM_NONE
 # Frequency of the logger
-HP["log_frequency"] = 100
+HP["log_frequency"] = 1000
 # Non-spatial params
 # bet = 1/10 * np.array([1, 2, 2, 4, 4, 6, 3, 7, 5, 5])
 # gam = 1. * np.array([4, 1, 8, 6, 3, 2, 5, 8, 6, 7])
