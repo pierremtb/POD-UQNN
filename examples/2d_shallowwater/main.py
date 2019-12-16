@@ -7,7 +7,7 @@ import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import re_mean_std
+from podnn.metrics import re_mean_std, re
 from podnn.mesh import read_space_sol_input_mesh
 
 from plot import plot_results
@@ -59,7 +59,15 @@ def main(hp, use_cached_dataset=False):
         read_space_sol_input_mesh(hp["n_s"], hp["mesh_idx"], x_u_mesh_path, mu_path)
     U_test_hifi = model.u_mesh_to_U(u_mesh_test_hifi, hp["n_s_hifi"])
     U_test_hifi_mean, U_test_hifi_std = U_test_hifi.mean(-1), np.nanstd(U_test_hifi, -1)
+
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
+    error_test_hifi_mean = re(U_pred_hifi_mean, U_test_hifi_mean)
+    error_test_hifi_std = re(U_pred_hifi_std, U_test_hifi_std)
+    print(f"Hifi Test relative error: mean {error_test_hifi_mean:4f}, std {error_test_hifi_std:4f}")
+
+    # Restruct for plotting
+    U_test_hifi_mean = model.restruct(U_test_hifi_mean, no_s=True)
+    U_test_hifi_std = model.restruct(U_test_hifi_std, no_s=True)
     U_pred_hifi_mean = model.restruct(U_pred_hifi_mean, no_s=True)
     U_pred_hifi_std = model.restruct(U_pred_hifi_std, no_s=True)
 
@@ -73,7 +81,7 @@ def main(hp, use_cached_dataset=False):
     # Plot and save the results
     return plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                         U_test_hifi_mean, U_test_hifi_std,
-                        train_res, HP=hp, export_vtk=True, export_txt=True)
+                        train_res, HP=hp, export_vtk=True, export_txt=False)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg
@@ -84,5 +92,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    main(HP, use_cached_dataset=False)
-    # main(HP, use_cached_dataset=True)
+    # main(HP, use_cached_dataset=False)
+    main(HP, use_cached_dataset=True)

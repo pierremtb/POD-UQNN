@@ -11,6 +11,8 @@ from pyevtk.vtk import VtkTriangle
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.plotting import figsize, saveresultdir
+from podnn.metrics import re_mean_std, re
+from podnn.mesh import read_space_sol_input_mesh
 
 
 def plot_plot(fig, pos, x, y, z, z_min, z_max, title):
@@ -102,7 +104,19 @@ def plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
         z = np.ascontiguousarray(np.zeros_like(x))
 
         # Exporting
-        unstructuredGridToVTK(os.path.join("cache", "x_u_mean_std"),
+        unstructuredGridToVTK(os.path.join("cache", "x_u_test_mean_std"),
+                              x, y, z,
+                              connectivity, offsets, cell_types,
+                              cellData=None,
+                              pointData={
+                                  "h_mean" : U_test_hifi_mean[0],
+                                  "hu_mean" : U_test_hifi_mean[1],
+                                  "hv_mean" : U_test_hifi_mean[2],
+                                  "h_std" : U_test_hifi_std[0],
+                                  "hu_std" : U_test_hifi_std[1],
+                                  "hv_std" : U_test_hifi_std[2],
+                                  })
+        unstructuredGridToVTK(os.path.join("cache", "x_u_pred_mean_std"),
                               x, y, z,
                               connectivity, offsets, cell_types,
                               cellData=None,
@@ -114,14 +128,18 @@ def plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                                   "hu_std" : U_pred_hifi_std[1],
                                   "hv_std" : U_pred_hifi_std[2],
                                   })
-        return
+        # return
 
     print("Plotting")
     # Keeping only the first nodes
-    i_min = 0
-    i_max = 10000
+    i_min = int(243161 / 2 - 5000)
+    i_max = int(243161 / 2 + 5000)
     x = x[i_min:i_max]
     y = y[i_min:i_max]
+    U_test_hifi_mean = U_test_hifi_mean[:, i_min:i_max]
+    U_test_hifi_std = U_test_hifi_std[:, i_min:i_max]
+    U_pred_hifi_mean = U_pred_hifi_mean[:, i_min:i_max]
+    U_pred_hifi_std = U_pred_hifi_std[:, i_min:i_max]
 
     # Computing means
     n_plot_x = 4
@@ -158,7 +176,26 @@ if __name__ == "__main__":
     # Predict and restruct
     U_pred = model.predict(X_v_test)
     U_pred = model.restruct(U_pred)
-    U_test = model.restruct(U_test)
+
+    mu_path = os.path.join("data", f"INPUT_{hp['n_s_hifi']}_Scenarios.txt")
+    x_u_mesh_path = os.path.join("data", f"SOL_FV_{hp['n_s_hifi']}_Scenarios.txt")
+    _, u_mesh_test_hifi, X_v_test_hifi = \
+        read_space_sol_input_mesh(hp["n_s"], hp["mesh_idx"], x_u_mesh_path, mu_path)
+    U_test_hifi = model.u_mesh_to_U(u_mesh_test_hifi, hp["n_s_hifi"])
+    U_test_hifi_mean, U_test_hifi_std = U_test_hifi.mean(-1), np.nanstd(U_test_hifi, -1)
+
+    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
+    error_test_hifi_mean = re(U_pred_hifi_mean, U_test_hifi_mean)
+    error_test_hifi_std = re(U_pred_hifi_std, U_test_hifi_std)
+    print(f"Hifi Test relative error: mean {error_test_hifi_mean:4f}, std {error_test_hifi_std:4f}")
+
+    # Restruct for plotting
+    U_test_hifi_mean = model.restruct(U_test_hifi_mean, no_s=True)
+    U_test_hifi_std = model.restruct(U_test_hifi_std, no_s=True)
+    U_pred_hifi_mean = model.restruct(U_pred_hifi_mean, no_s=True)
+    U_pred_hifi_std = model.restruct(U_pred_hifi_std, no_s=True)
 
     # Plot and save the results
-    plot_results(x_mesh, U_test, U_pred, hp, export_txt=True, export_vtk=True)
+    plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+                 U_test_hifi_mean, U_test_hifi_std,
+                 train_res=None, HP=hp, export_vtk=True, export_txt=False)
