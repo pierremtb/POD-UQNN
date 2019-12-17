@@ -39,7 +39,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                         hp["n_s"],
                                         hp["train_val_test"],
                                         hp["eps"],
-                                        u_noise=0.05,
+                                        u_noise=0.0,
                                         use_cache=use_cached_dataset)
 
     # Train
@@ -51,35 +51,18 @@ def main(hp, gen_test=False, use_cached_dataset=False,
 
     # Predict and restruct
     v_pred, v_pred_sig = model.predict_v(X_v_test)
-    print(X_v_test[0, :], v_pred[0, :], v_test[0, :])
-    x = np.arange(1, v_pred.shape[1] + 1)
-    plt.plot(x, v_pred[0, :], "b-")
-    plt.plot(x, v_test[0, :], "r--")
-    lower = v_pred[0, :] - 2.0*v_pred_sig[0, :]
-    upper = v_pred[0, :] + 2.0*v_pred_sig[0, :]
-    plt.fill_between(x, lower, upper, 
-                        facecolor='orange', alpha=0.5, label="Two std band")
-    print(X_v_test[50, :], v_pred[50, :], v_test[50, :])
-    plt.plot(x, v_pred[50, :], "c-")
-    plt.plot(x, v_test[50, :], "k--")
-    lower = v_pred[50, :] - 2.0*v_pred_sig[50, :]
-    upper = v_pred[50, :] + 2.0*v_pred_sig[50, :]
+    U_pred = model.V.dot(v_pred.T)
+    Sigma_pred = model.V.dot(v_pred_sig.T)
+    print(U_pred.shape, Sigma_pred.shape)
+
+    x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+    plt.plot(x, U_pred[:, 0], "b-")
+    plt.plot(x, U_test[:, 0], "r--")
+    lower = U_pred[:, 0] - 2.0*Sigma_pred[:, 0]
+    upper = U_pred[:, 0] + 2.0*Sigma_pred[:, 0]
     plt.fill_between(x, lower, upper, 
                         facecolor='orange', alpha=0.5, label="Two std band")
     plt.show()
-
-    U_pred = model.V.dot(v_pred.T)
-    Sigma_pred = model.V.dot(v_pred_sig.T)
-    # print(U_pred.shape, Sigma_pred.shape)
-
-    # x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
-    # plt.plot(x, U_pred[:, 0], "b-")
-    # plt.plot(x, U_test[:, 0], "r--")
-    # lower = U_pred[:, 0] - 2.0*Sigma_pred[:, 0]
-    # upper = U_pred[:, 0] + 2.0*Sigma_pred[:, 0]
-    # plt.fill_between(x, lower, upper, 
-    #                     facecolor='orange', alpha=0.5, label="Two std band")
-    # plt.show()
 
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)

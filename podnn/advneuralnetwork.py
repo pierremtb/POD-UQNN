@@ -167,6 +167,7 @@ class AdvNeuralNetwork(object):
             self.lb = np.amin(X, axis=0)
             self.ub = np.amax(X, axis=0)
         elif self.norm == NORM_MEANSTD:
+            print("good")
             self.lb = X.mean(0)
             self.ub = X.std(0)
 
