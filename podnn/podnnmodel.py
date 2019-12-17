@@ -359,7 +359,7 @@ class PodnnModel:
 
     def predict_heavy(self, X_v):
         """Returns the predicted solutions, via proj coefficients (large inputs)."""
-        v_pred_hifi = self.predict_sample(X_v)
+        v_pred_hifi = self.regnn.predict_sample(X_v)
         return self.do_vdot(v_pred_hifi)
 
     def do_vdot(self, v):

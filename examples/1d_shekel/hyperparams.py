@@ -28,7 +28,7 @@ HP["h_layers_t"] = [50, 50, 50]
 # Setting up TF SGD-based optimizer
 HP["epochs"] = 40000
 HP["epochs"] = 8000
-HP["lr"] = 0.002
+HP["lr"] = 0.001
 HP["lambda"] = 1.5
 HP["beta"] = 1e0
 # HP["beta"] = 0
