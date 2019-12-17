@@ -76,8 +76,8 @@ class AdvNeuralNetwork(object):
         log_q = -tf.reduce_mean(tf.square(z_u_prior - z_u_encoder))
 
         # Physics-informed loss
-        # loss_f = self.physics_informed_loss(f_pred)
-        loss_f = self.regularization()
+        loss_f = self.physics_informed_loss(f_pred)
+        # loss_f = self.regularization()
 
         # Generator loss
         loss_PDE = self.kl_beta * loss_f
@@ -167,15 +167,14 @@ class AdvNeuralNetwork(object):
             self.lb = np.amin(X, axis=0)
             self.ub = np.amax(X, axis=0)
         elif self.norm == NORM_MEANSTD:
-            print("good")
             self.lb = X.mean(0)
             self.ub = X.std(0)
 
     def normalize(self, X):
         if self.norm == NORM_CENTER:
-            X_n = (X - self.lb) - 0.5 * (self.ub - self.lb)
+            X = (X - self.lb) - 0.5 * (self.ub - self.lb)
         elif self.norm == NORM_MEANSTD:
-            X_n = (X - self.lb) / self.ub
+            X = (X - self.lb) / self.ub
         return self.tensor(X)
 
     def tensor(self, X):
