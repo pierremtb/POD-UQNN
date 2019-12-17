@@ -40,10 +40,10 @@ def loop_vdot_t(n_s, n_t, U_tot, U_tot_sq, V, v_pred_hifi):
 
 
 @jit(nopython=True, parallel=True)
-def loop_u(u, n_s, n_h, X_v, U, X, mu_lhs, u_noise=0., x_noise=0.):
+def loop_u(u, n_h, X_v, U, X, mu_lhs, u_noise=0., x_noise=0.):
     """Return the inputs/snapshots matrices from parallel computation."""
     # pylint: disable=not-an-iterable
-    for i in prange(n_s):
+    for i in prange(mu_lhs.shape[0]):
         X_v[i, :] = mu_lhs[i]
         U_i = u(X, 0, mu_lhs[i, :]).reshape((n_h,))
         if u_noise > 0.:
@@ -56,14 +56,14 @@ def loop_u(u, n_s, n_h, X_v, U, X, mu_lhs, u_noise=0., x_noise=0.):
 
 
 @jit(nopython=True, parallel=True)
-def loop_u_t(u, n_s, n_t, n_v, n_xyz, n_h,
-             X_v, U, U_struct, X, mu_lhs, t_min, t_max):
+def loop_u_t(u, n_t, n_v, n_xyz, n_h,
+             X_v, U, U_struct, X, mu_lhs, t_min, t_max, u_noise=0.):
     """Return the inputs/snapshots matrices from parallel computation (w/ t)."""
     # Creating the time steps
     t = np.linspace(t_min, t_max, n_t)
     tT = t.reshape((n_t, 1))
     # pylint: disable=not-an-iterable
-    for i in prange(n_s):
+    for i in prange(mu_lhs.shape[0]):
         # Getting the snapshot times indices
         s = n_t * i
         e = n_t * (i + 1)
@@ -74,7 +74,10 @@ def loop_u_t(u, n_s, n_t, n_v, n_xyz, n_h,
         # Calling the analytical solution function
         Ui = np.zeros((n_v, n_xyz, n_t))
         for j in range(n_t):
-            Ui[:, :, j] = u(X, t[j], mu_lhs[i])
+            Uij = u(X, t[j], mu_lhs[i])
+            if u_noise > 0.:
+                Uij += u_noise*np.std(Uij)*np.random.randn(Uij.shape[0], Uij.shape[1])
+            Ui[:, :, j] = Uij
 
         U[:, s:e] = Ui.reshape((n_h, n_t))
         U_struct[:, :, i] = U[:, s:e]

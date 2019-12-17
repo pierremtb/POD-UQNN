@@ -37,6 +37,9 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     U_pred_hifi_mean = U_pred_hifi_mean[0]
     U_pred_hifi_std = U_pred_hifi_std[0]
 
+    print(U_pred_hifi_mean, U_pred_hifi_mean.shape)
+    print(U_pred_hifi_mean_sig, U_pred_hifi_mean_sig.shape)
+
     hifi_error_test_mean = re(U_test_hifi_mean, U_pred_hifi_mean)
     hifi_error_test_std = re(U_test_hifi_std, U_pred_hifi_std)
     print(f"HiFi test relative error: mean {hifi_error_test_mean:4f}, std {hifi_error_test_std:4f}")

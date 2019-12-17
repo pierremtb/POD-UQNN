@@ -33,33 +33,47 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
 
     # Generate the dataset from the mesh and params
-    X_v_train, v_train, \
-        X_v_test, v_test, \
+    X_v_train, v_train, U_train, \
+        X_v_test, \
         U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                         hp["n_s"],
                                         hp["train_val_test"],
                                         hp["eps"],
-                                        u_noise=0.0,
+                                        u_noise=0.05,
                                         use_cache=use_cached_dataset)
+
+    # x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+    # plt.plot(x, U_train.mean(1))
+    # plt.plot(x, U_test.mean(1))
+    # plt.show()
+    # print(X_v_train.shape, v_train.shape)
+    # print(X_v_test.shape, U_test.shape)
 
     # Train
     model.initNN(hp["h_layers"], hp["h_layers_t"],
                  hp["lr"], hp["lambda"], hp["beta"],
                  hp["k1"], hp["k2"], hp["norm"])
+
     train_res = model.train(X_v_train, v_train, hp["epochs"],
                             hp["train_val_test"], freq=hp["log_frequency"])
+
+    v_pred, v_pred_std = model.predict_v(X_v_test[0:1])
+    plt.plot(v_pred[0])
+    lower = v_pred[0] - 2*v_pred_std[0]
+    upper = v_pred[0] + 2*v_pred_std[0]
+    plt.fill_between(lower, upper)
+    plt.show()
 
     # Predict and restruct
     v_pred, v_pred_sig = model.predict_v(X_v_test)
     U_pred = model.V.dot(v_pred.T)
     Sigma_pred = model.V.dot(v_pred_sig.T)
-    print(U_pred.shape, Sigma_pred.shape)
 
     x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
-    plt.plot(x, U_pred[:, 0], "b-")
-    plt.plot(x, U_test[:, 0], "r--")
-    lower = U_pred[:, 0] - 2.0*Sigma_pred[:, 0]
-    upper = U_pred[:, 0] + 2.0*Sigma_pred[:, 0]
+    plt.plot(x, U_pred.mean(1), "b-")
+    plt.plot(x, U_test.mean(1), "r--")
+    lower = U_pred.mean(1) - 2.0*Sigma_pred.mean(1)
+    upper = U_pred.mean(1) + 2.0*Sigma_pred.mean(1)
     plt.fill_between(x, lower, upper, 
                         facecolor='orange', alpha=0.5, label="Two std band")
     plt.show()

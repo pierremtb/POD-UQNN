@@ -34,7 +34,7 @@ def main(hp, use_cached_dataset=False):
     # Generate the dataset from the mesh and params
     
     X_v_train, v_train, \
-        X_v_test, _, \
+        X_v_test, v_test, \
         U_test = model.convert_dataset(u_mesh, X_v,
                                        hp["train_val_test"], hp["eps"],
                                        use_cache=use_cached_dataset)
@@ -43,6 +43,7 @@ def main(hp, use_cached_dataset=False):
     model.initNN(hp["h_layers"], hp["lr"], hp["lambda"])
     train_res = model.train(X_v_train, v_train, hp["epochs"],
                             hp["train_val_test"], freq=hp["log_frequency"])
+
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)

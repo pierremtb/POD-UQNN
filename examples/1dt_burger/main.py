@@ -32,9 +32,8 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
 
     # Generate the dataset from the mesh and params
-    X_v_train, v_train, \
-        X_v_test, _, \
-        U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
+    X_v_train, v_train, U \
+        X_v_test, U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                         hp["n_s"],
                                         hp["train_val_test"],
                                         hp["eps"], eps_init=hp["eps_init"],

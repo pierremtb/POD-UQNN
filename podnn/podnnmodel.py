@@ -109,13 +109,18 @@ class PodnnModel:
         X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
         return X_v_train, X_v_val, v_train, v_val
 
-    def create_snapshots(self, n_s, n_st, n_d, n_h, u, mu_lhs,
+    def create_snapshots(self, n_d, n_h, u, mu_lhs,
                          t_min=0, t_max=0, u_noise=0., x_noise=0.):
         """Create a generated snapshots matrix and inputs for benchmarks."""
+        n_s = mu_lhs.shape[0]
         n_xyz = self.x_mesh.shape[0]
 
         # Numba-ifying the function
         u = nb.njit(u)
+
+        n_st = n_s
+        if self.has_t:
+            n_st *= self.n_t
 
         # Getting the nodes coordinates
         X = self.x_mesh[:, 1:].T
@@ -126,10 +131,10 @@ class PodnnModel:
 
         if self.has_t:
             U_struct = np.zeros((n_h, self.n_t, n_s))
-            return loop_u_t(u, n_s, self.n_t, self.n_v, n_xyz, n_h,
+            return loop_u_t(u, self.n_t, self.n_v, n_xyz, n_h,
                             X_v, U, U_struct, X, mu_lhs, t_min, t_max)
 
-        return loop_u(u, n_s, n_h, X_v, U, X, mu_lhs, u_noise, x_noise)
+        return loop_u(u, n_h, X_v, U, X, mu_lhs, u_noise, x_noise)
 
     def convert_dataset(self, u_mesh, X_v, train_val_test, eps, eps_init=None,
                         use_cache=False):
@@ -194,6 +199,7 @@ class PodnnModel:
         n_d = mu_min.shape[0]
         if self.has_t:
             n_d += 1
+        self.n_d = n_d
 
         # Number of DOFs
         n_h = self.n_v * self.x_mesh.shape[0]
@@ -201,12 +207,22 @@ class PodnnModel:
         # LHS sampling (first uniform, then perturbated)
         print("Doing the LHS sampling on the non-spatial params...")
         mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
+        fake_x = np.zeros_like(mu_lhs)
+
+        _, _, mu_lhs_train, mu_lhs_test = \
+             train_test_split(fake_x, mu_lhs, test_size=train_val_test[2])
+        print(mu_lhs_train)
+        print(mu_lhs_test)
+        print(mu_lhs_train.shape, mu_lhs_test.shape)
 
         # Creating the snapshots
         print(f"Generating {n_st} corresponding snapshots")
-        X_v, U, U_struct = \
-            self.create_snapshots(n_s, n_st, n_d, n_h, u, mu_lhs,
+        X_v_train, U, U_struct = \
+            self.create_snapshots(n_d, n_h, u, mu_lhs_train,
                                   t_min, t_max, u_noise, x_noise)
+        X_v_test, U_test, U_test_struct = \
+            self.create_snapshots(n_d, n_h, u, mu_lhs_test,
+                                  t_min, t_max)
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
@@ -215,23 +231,27 @@ class PodnnModel:
         else:
             self.V = perform_fast_pod(U_struct, eps, eps_init)
 
+        self.n_L = self.V.shape[1]
+
         # Projecting
-        v = (self.V.T.dot(U)).T
+        v_train = (self.V.T.dot(U)).T
+
+        print(self.V.shape, v_train.shape)
 
         if v_noise > 0.:
             for i in range(v.shape[0]):
                 v[i, :] += v_noise*np.std(v[i, :])*np.random.randn(v.shape[1])
 
-        # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_test, v_train, v_test = \
-            self.split_dataset(X_v, v, train_val_test[2])
+        # # Randomly splitting the dataset (X_v, v)
+        # X_v_train, X_v_test, v_train, v_test = \
+        #     self.split_dataset(X_v, v, train_val_test[2])
 
         # Creating the validation snapshots matrix
-        U_test = self.V.dot(v_test.T)
+        # U_test = self.V.dot(v_test.T)
 
-        self.save_train_data(X_v, X_v_train, v_train, X_v_test, v_test, U_test)
+        # self.save_train_data(X_v, X_v_train, v_train, X_v_test, v_test, U_test)
 
-        return X_v_train, v_train, X_v_test, v_test, U_test
+        return X_v_train, v_train, U, X_v_test, U_test
 
     def tensor(self, X):
         """Convert input into a TensorFlow Tensor with the class dtype."""
