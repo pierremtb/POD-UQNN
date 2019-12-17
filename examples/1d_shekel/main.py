@@ -39,9 +39,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                         hp["n_s"],
                                         hp["train_val_test"],
                                         hp["eps"],
-                                        x_noise=0.0,
-                                        u_noise=0.0,
-                                        v_noise=0.1,
+                                        u_noise=0.05,
                                         use_cache=use_cached_dataset)
 
     # Train
