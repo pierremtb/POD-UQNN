@@ -90,9 +90,18 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"],
                                                hp["mu_min"], hp["mu_max"])
     print("Predicting the {n_s_hifi} corresponding solutions")
-    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
-    U_pred_hifi_mean = model.restruct(U_pred_hifi_mean[0], no_s=True), model.restruct(U_pred_hifi_mean[1], no_s=True)
-    U_pred_hifi_std = model.restruct(U_pred_hifi_std[0], no_s=True), model.restruct(U_pred_hifi_std[1], no_s=True)
+    samples = 500
+    U_tot = np.zeros((model.n_h,))
+    U_tot_sq = np.zeros((model.n_h,))
+    for i in range(samples):
+        U_tot += model.predict_heavy(X_v_test_hifi)
+        U_tot_sq += U_tot ** 2
+    U_pred_hifi_mean = U_tot / samples
+    U_pred_hifi_sig = np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
+    U_pred_hifi_sig = np.nan_to_num(U_pred_hifi_sig)
+
+    U_pred_hifi_mean = model.restruct(U_pred_hifi_mean, no_s=True), model.restruct(U_pred_hifi_mean_sig, no_s=True)
+    U_pred_hifi_std = U_pred_hifi_mean
 
     # Plot against test and save
     return plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
