@@ -48,8 +48,6 @@ class PodnnModel:
         self.n_L = None
         self.n_d = None
         self.V = None
-        self.ub = None
-        self.lb = None
         self.layers = None
 
         self.save_setup_data()
@@ -180,7 +178,7 @@ class PodnnModel:
         return X_v_train, v_train, X_v_test, v_test, U_test
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
-                         train_val_test, eps, eps_init=None,
+                         train_val_test, eps=0., eps_init=None, n_L=0,
                          t_min=0, t_max=0, u_noise=0., x_noise=0., v_noise=0.,
                          use_cache=False):
         """Generate a training dataset for benchmark problems."""
@@ -225,7 +223,7 @@ class PodnnModel:
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
         if eps_init is None:
-            self.V = perform_pod(U, eps, True)
+            self.V = perform_pod(U, eps=eps, verbose=True, n_L=n_L)
         else:
             self.V = perform_fast_pod(U_struct, eps, eps_init)
 
@@ -234,20 +232,24 @@ class PodnnModel:
         # Projecting
         v_train = (self.V.T.dot(U)).T
 
-        print(self.V.shape, v_train.shape)
-
         if v_noise > 0.:
             for i in range(v.shape[0]):
-                v[i, :] += v_noise*np.std(v[i, :])*np.random.randn(v.shape[1])
+                v_train[i, :] += v_noise*np.std(v_train[i, :])*np.random.randn(v_train.shape[1])
 
         # # Randomly splitting the dataset (X_v, v)
         # X_v_train, X_v_test, v_train, v_test = \
         #     self.split_dataset(X_v, v, train_val_test[2])
 
         # Creating the validation snapshots matrix
-        # U_test = self.V.dot(v_test.T)
+        U_pod = self.V.dot(v_train.T)
+        import matplotlib.pyplot as plt
+        x = np.linspace(0, 10, 300)
+        plt.plot(x, U[:, 0], "b-")
+        plt.plot(x, U_pod[:, 0], "r--")
+        print("n_L: ", self.n_L)
+        plt.show()
 
-        # self.save_train_data(X_v, X_v_train, v_train, X_v_test, v_test, U_test)
+        self.save_train_data(X_v_train, v_train, U, X_v_test, U_test)
 
         return X_v_train, v_train, U, X_v_test, U_test
 
@@ -414,21 +416,14 @@ class PodnnModel:
             self.n_L = data[0]
             self.n_d = data[1]
             self.V = data[2]
-            self.ub = data[3]
-            self.lb = data[4]
-            return data[5:]
+            return data[3:]
 
-    def save_train_data(self, X_v, X_v_train, v_train, X_v_test, v_test, U_test):
+    def save_train_data(self, X_v_train, v_train, U_train, X_v_test, U_test):
         """Save training data, such as datasets."""
-        # Set dataset dependent params
-        self.n_L = self.V.shape[1]
-        self.n_d = X_v.shape[1]
-        self.lb = np.amin(X_v, axis=0)
-        self.ub = np.amax(X_v, axis=0)
 
         with open(self.train_data_path, "wb") as f:
-            pickle.dump((self.n_L, self.n_d, self.V, self.ub, self.lb,
-                         X_v_train, v_train, X_v_test, v_test, U_test), f)
+            pickle.dump((self.n_L, self.n_d, self.V,
+                         X_v_train, v_train, U_train, X_v_test, U_test), f)
 
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""

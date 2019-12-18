@@ -5,8 +5,8 @@ from tqdm import tqdm
 from numba import njit, prange
 
 
-@njit(["f8[:, :](f8[:, :], f8, b1)"], parallel=True)
-def perform_pod(U, eps, verbose=True):
+@njit(parallel=True)
+def perform_pod(U, eps=0., verbose=True, n_L=0):
     """POD algorithmm."""
     # Number of DOFs
     n_h = U.shape[0]
@@ -25,13 +25,13 @@ def perform_pod(U, eps, verbose=True):
     sum_lambdas = np.sum(lambdas)
   
     # Finding n_L
-    n_L = 0
-    sum_lambdas_trunc = 0.
-    for i in prange(n_st):
-        sum_lambdas_trunc += lambdas[i]
-        n_L += 1
-        if sum_lambdas_trunc/sum_lambdas >= (1 - eps):
-            break
+    if n_L == 0:
+        sum_lambdas_trunc = 0.
+        for i in prange(n_st):
+            sum_lambdas_trunc += lambdas[i]
+            n_L += 1
+            if sum_lambdas_trunc/sum_lambdas >= (1 - eps):
+                break
  
     # Truncating according to n_L
     lambdas_trunc = lambdas[0:n_L]
@@ -65,7 +65,7 @@ def perform_fast_pod(U, eps, eps_init):
     T = np.zeros((n_h, n_L_init, n_s))
     for k in range(n_s):
         U_k = U[:, :, k]
-        T_k = perform_pod(U_k, eps_init, False)
+        T_k = perform_pod(U_k, eps=eps_init, verbose=False, n_L=0)
         n_L_k = T_k.shape[1]
         if n_L_k < n_L_init:
             n_L_init = n_L_k
@@ -78,4 +78,4 @@ def perform_fast_pod(U, eps, eps_init):
     # Reshaping the 3d-mat into a 2d-mat
     U_f = np.reshape(T, (n_h, n_s*n_L_init))
     print("Performing SVD")
-    return perform_pod(U_f, eps, True)
+    return perform_pod(U_f, eps=eps_init, verbose=True, n_L=0)

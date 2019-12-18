@@ -38,8 +38,8 @@ def main(hp, gen_test=False, use_cached_dataset=False,
         U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                         hp["n_s"],
                                         hp["train_val_test"],
-                                        hp["eps"],
-                                        u_noise=0.05,
+                                        n_L=hp["n_L"],
+                                        u_noise=hp["u_noise"],
                                         use_cache=use_cached_dataset)
 
     # x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
