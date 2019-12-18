@@ -17,7 +17,7 @@ HP["n_t"] = 0
 # Snapshots count
 HP["n_s"] = 300
 # HP["n_s_hifi"] = int(1e5)
-HP["n_s_hifi"] = int(5e3)
+HP["n_s_hifi"] = int(1e4)
 # POD stopping param
 HP["eps"] = 1e-2
 # Train/val split

@@ -11,7 +11,6 @@ import numba as nb
 from .pod import perform_pod, perform_fast_pod
 from .handling import pack_layers
 from .logger import Logger
-from .neuralnetwork import NeuralNetwork
 from .advneuralnetwork import AdvNeuralNetwork, NORM_MEANSTD
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
 from .metrics import re
@@ -19,7 +18,7 @@ from .metrics import re
 
 SETUP_DATA_NAME = "setup_data.pkl"
 TRAIN_DATA_NAME = "train_data.pkl"
-MODEL_NAME = "model.h5"
+MODEL_NAME = ("model_p.h5", "model_q.h5", "model_t.h5")
 MODEL_PARAMS_NAME = "model_params.pkl"
 
 
@@ -40,8 +39,10 @@ class PodnnModel:
         self.save_dir = save_dir
         self.setup_data_path = os.path.join(save_dir, SETUP_DATA_NAME)
         self.train_data_path = os.path.join(save_dir, TRAIN_DATA_NAME)
-        self.model_path = os.path.join(save_dir, MODEL_NAME)
         self.model_params_path = os.path.join(save_dir, MODEL_PARAMS_NAME)
+        self.model_path = (os.path.join(save_dir, MODEL_NAME[0]),
+                           os.path.join(save_dir, MODEL_NAME[1]),
+                           os.path.join(save_dir, MODEL_NAME[2]))
 
         self.regnn = None
         self.n_L = None
@@ -211,9 +212,6 @@ class PodnnModel:
 
         _, _, mu_lhs_train, mu_lhs_test = \
              train_test_split(fake_x, mu_lhs, test_size=train_val_test[2])
-        print(mu_lhs_train)
-        print(mu_lhs_test)
-        print(mu_lhs_train.shape, mu_lhs_test.shape)
 
         # Creating the snapshots
         print(f"Generating {n_st} corresponding snapshots")
@@ -296,13 +294,9 @@ class PodnnModel:
                 U_val_pred_std = U_val_pred_std.std(-1)
             return {
                 # "L_v": self.regnn.loss(v_val, v_val_pred),
+                "RE": re(v_val_mean, v_val_pred.mean(-1)),
                 "REM_v": re(U_val_mean, U_val_pred_mean),
                 "RES_v": re(U_val_std, U_val_pred_std),
-                "RE": re(v_val_mean, v_val_pred.mean(-1)),
-                # "v": v_val.mean(),
-                # "vt": v_val_pred.mean(),
-                # "st": v_val_pred_std.mean(),
-                # "RES_v": re(U_val_std, U_val_pred_std),
                 }
         logger.set_val_err_fn(get_val_err)
 
@@ -310,7 +304,7 @@ class PodnnModel:
         self.regnn.fit(X_v_train, v_train, epochs, logger)
 
         # Saving
-        # self.save_model()
+        self.save_model()
 
         return logger.get_logs()
 
@@ -350,13 +344,36 @@ class PodnnModel:
 
     def predict(self, X_v):
         """Returns the predicted solutions, via proj coefficients."""
-        # v_pred, v_pred_mean = self.predict_v(X_v)
         v_pred, _ = self.predict_v(X_v)
 
         # Retrieving the function with the predicted coefficients
         U_pred = self.V.dot(v_pred.T)
         return U_pred
 
+    def predict_sample(self, X_v):
+        """Returns the predicted solutions, via proj coefficients."""
+        # v_pred, v_pred_mean = self.predict_v(X_v)
+        v_pred = self.regnn.predict_sample(X_v)
+
+        # Retrieving the function with the predicted coefficients
+        U_pred = self.V.dot(v_pred.T)
+        return U_pred
+
+    def predict_var(self, X_v):
+        samples = 200
+        U_tot = np.zeros((self.n_h, X_v.shape[0]))
+        U_tot_sq = np.zeros((self.n_h, X_v.shape[0]))
+        for i in range(samples):
+            print(i)
+            U = self.predict_sample(X_v)
+            U_tot += U
+            U_tot_sq += U ** 2
+        U_pred_hifi_mean = U_tot / samples
+        U_pred_hifi_mean_sig = np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
+        U_pred_hifi_mean_sig = np.nan_to_num(U_pred_hifi_mean_sig)
+
+        return U_pred_hifi_mean, U_pred_hifi_mean_sig
+    
     def predict_heavy(self, X_v):
         """Returns the predicted solutions, via proj coefficients (large inputs)."""
         v_pred_hifi = self.regnn.predict_sample(X_v)
@@ -415,12 +432,12 @@ class PodnnModel:
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""
 
-        if not os.path.exists(self.model_path):
+        if not os.path.exists(self.model_path[0]) or not os.path.exists(self.model_path[1]) or not os.path.exists(self.model_path[2]):
             raise FileNotFoundError("Can't find cached model.")
         if not os.path.exists(self.model_params_path):
             raise FileNotFoundError("Can't find cached model params.")
 
-        self.regnn = NeuralNetwork.load_from(self.model_path, self.model_params_path)
+        self.regnn = AdvNeuralNetwork.load_from(self.model_path, self.model_params_path)
 
     def save_model(self):
         """Save the POD-NN's regression neural network and parameters."""

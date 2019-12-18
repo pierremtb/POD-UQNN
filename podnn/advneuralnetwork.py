@@ -1,3 +1,5 @@
+import os
+import pickle
 import numpy as np
 import tensorflow as tf
 
@@ -9,8 +11,6 @@ class AdvNeuralNetwork(object):
     def __init__(self, layers, gan_dims, lr, lam, bet, k1, k2, norm=NORM_NONE,
                  model=None, ub=None, lb=None):
 
-        self.ub = ub
-        self.lb = lb
 
         # Setting up the optimizers with the previously defined hp
         self.optimizer_KL = tf.keras.optimizers.Adam(lr)
@@ -19,19 +19,28 @@ class AdvNeuralNetwork(object):
         # Descriptive Keras models
         self.dtype = "float64"
         tf.keras.backend.set_floatx(self.dtype)
-        self.model_p = self.declare_model(layers[0])
-        self.model_q = self.declare_model(layers[1])
-        self.model_t = self.declare_model(layers[2])
+        if model is None:
+            self.model_p = self.declare_model(layers[0])
+            self.model_q = self.declare_model(layers[1])
+            self.model_t = self.declare_model(layers[2])
+        else:
+            self.model_p = model[0]
+            self.model_q = model[1]
+            self.model_t = model[2]
 
         # Hp
         self.X_dim = gan_dims[0]
         self.Y_dim = gan_dims[1]
         self.Z_dim = gan_dims[2]
-        self.kl_lambda = lam
-        self.kl_beta = bet
+        self.lam = lam
+        self.bet = bet
         self.k1 = k1
         self.k2 = k2
         self.norm = norm
+        self.ub = ub
+        self.lb = lb
+        self.layers = layers
+        self.lr = lr
         # self.batch_size_u = hp["batch_size_u"]
         # self.batch_size_f = hp["batch_size_f"]
 
@@ -80,8 +89,8 @@ class AdvNeuralNetwork(object):
         # loss_f = self.regularization()
 
         # Generator loss
-        loss_PDE = self.kl_beta * loss_f
-        loss_recon = (1.0 - self.kl_lambda)*log_q
+        loss_PDE = self.bet * loss_f
+        loss_recon = (1.0 - self.lam)*log_q
         loss_G = loss_KL + loss_recon + loss_PDE
 
         return loss_G, loss_KL, loss_recon, loss_PDE
@@ -238,7 +247,7 @@ class AdvNeuralNetwork(object):
         X_star = self.normalize(X_star)
         Z = np.random.randn(X_star.shape[0], self.Z_dim)
         u_star = self.model_p(tf.concat([X_star, Z], axis=1))
-        return u_star
+        return u_star.numpy()
 
     def predict_f(self, X_star):
         # Center around the origin
@@ -266,3 +275,33 @@ class AdvNeuralNetwork(object):
         # Sigma_pred = griddata(XT, Sigma_pred.flatten(), (X, T), method='cubic')
 
         return U_pred, Sigma_pred
+
+    def save_to(self, model_path, params_path):
+        """Save the (trained) model and params for later use."""
+        with open(params_path, "wb") as f:
+            pickle.dump((self.layers, (self.X_dim, self.Y_dim, self.Z_dim),
+                         self.lr, self.lam, self.bet, self.k1, self.k2, self.norm,
+                         self.lb, self.ub), f)
+        tf.keras.models.save_model(self.model_p, model_path[0])
+        tf.keras.models.save_model(self.model_q, model_path[1])
+        tf.keras.models.save_model(self.model_t, model_path[2])
+
+    @classmethod
+    def load_from(cls, model_path, params_path):
+        """Load a (trained) model and params."""
+
+        if not os.path.exists(model_path[0]) or not os.path.exists(model_path[1]) or not os.path.exists(model_path[2]):
+            raise FileNotFoundError("Can't find cached model.")
+        if not os.path.exists(params_path):
+            raise FileNotFoundError("Can't find cached model params.")
+
+        print(f"Loading model from {model_path}")
+        with open(params_path, "rb") as f:
+            layers, gan_dims, lr, lam, bet, k1, k2, norm, lb, ub = pickle.load(f)
+        print(f"Loading model params from {params_path}")
+
+        model = (tf.keras.models.load_model(model_path[0]),
+                 tf.keras.models.load_model(model_path[1]),
+                 tf.keras.models.load_model(model_path[2]))
+
+        return cls(layers, gan_dims, lr, lam, bet, k1, k2, norm, model=model, lb=lb, ub=ub)

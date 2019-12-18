@@ -56,27 +56,30 @@ def main(hp, gen_test=False, use_cached_dataset=False,
 
     train_res = model.train(X_v_train, v_train, hp["epochs"],
                             hp["train_val_test"], freq=hp["log_frequency"])
+    # model.load_train_data()
+    # model.load_model()
+    # train_res = None
 
-    v_pred, v_pred_std = model.predict_v(X_v_test[0:1])
-    plt.plot(v_pred[0])
-    lower = v_pred[0] - 2*v_pred_std[0]
-    upper = v_pred[0] + 2*v_pred_std[0]
-    plt.fill_between(lower, upper)
-    plt.show()
+    # v_pred, v_pred_std = model.predict_v(X_v_test[0:1])
+    # plt.plot(v_pred[0])
+    # lower = v_pred[0] - 2*v_pred_std[0]
+    # upper = v_pred[0] + 2*v_pred_std[0]
+    # plt.fill_between(lower, upper)
+    # plt.show()
 
     # Predict and restruct
     v_pred, v_pred_sig = model.predict_v(X_v_test)
     U_pred = model.V.dot(v_pred.T)
     Sigma_pred = model.V.dot(v_pred_sig.T)
 
-    x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
-    plt.plot(x, U_pred.mean(1), "b-")
-    plt.plot(x, U_test.mean(1), "r--")
-    lower = U_pred.mean(1) - 2.0*Sigma_pred.mean(1)
-    upper = U_pred.mean(1) + 2.0*Sigma_pred.mean(1)
-    plt.fill_between(x, lower, upper, 
-                        facecolor='orange', alpha=0.5, label="Two std band")
-    plt.show()
+    # x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+    # plt.plot(x, U_pred.mean(1), "b-")
+    # plt.plot(x, U_test.mean(1), "r--")
+    # lower = U_pred.mean(1) - 2.0*Sigma_pred.mean(1)
+    # upper = U_pred.mean(1) + 2.0*Sigma_pred.mean(1)
+    # plt.fill_between(x, lower, upper, 
+    #                     facecolor='orange', alpha=0.5, label="Two std band")
+    # plt.show()
 
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)
@@ -90,18 +93,10 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"],
                                                hp["mu_min"], hp["mu_max"])
     print("Predicting the {n_s_hifi} corresponding solutions")
-    samples = 500
-    U_tot = np.zeros((model.n_h,))
-    U_tot_sq = np.zeros((model.n_h,))
-    for i in range(samples):
-        U_tot += model.predict_heavy(X_v_test_hifi)
-        U_tot_sq += U_tot ** 2
-    U_pred_hifi_mean = U_tot / samples
-    U_pred_hifi_sig = np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
-    U_pred_hifi_sig = np.nan_to_num(U_pred_hifi_sig)
+    U_pred_hifi, U_pred_hifi_sig = model.predict_var(X_v_test_hifi)
 
-    U_pred_hifi_mean = model.restruct(U_pred_hifi_mean, no_s=True), model.restruct(U_pred_hifi_mean_sig, no_s=True)
-    U_pred_hifi_std = U_pred_hifi_mean
+    U_pred_hifi_mean = model.restruct(U_pred_hifi.mean(-1), no_s=True), model.restruct(U_pred_hifi_sig.mean(-1), no_s=True)
+    U_pred_hifi_std = model.restruct(U_pred_hifi.std(-1), no_s=True), model.restruct(U_pred_hifi_sig.std(-1), no_s=True)
 
     # Plot against test and save
     return plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
