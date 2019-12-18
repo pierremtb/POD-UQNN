@@ -287,14 +287,16 @@ class PodnnModel:
         print("SHAPES: ", U_val_mean.shape, U_val_std.shape)
         v_val_mean = v_val.mean(-1)
         def get_val_err():
-            v_val_pred, v_val_pred_std = self.predict_v(X_v_val)
-            U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
-            if self.has_t:
-                U_val_pred_mean = U_val_pred_mean.mean(-1)
-                U_val_pred_std = U_val_pred_std.std(-1)
+            U_val_pred, U_val_pred_sig = self.predict_var(X_v_val)
+            U_val_pred_mean = U_val_pred.mean(-1)
+            U_val_pred_std = U_val_pred.std(-1)
+            # U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
+            # if self.has_t:
+            #     U_val_pred_mean = U_val_pred_mean.mean(-1)
+            #     U_val_pred_std = U_val_pred_std.std(-1)
             return {
                 # "L_v": self.regnn.loss(v_val, v_val_pred),
-                "RE": re(v_val_mean, v_val_pred.mean(-1)),
+                # "RE": re(v_val_mean, v_val_pred.mean(-1)),
                 "REM_v": re(U_val_mean, U_val_pred_mean),
                 "RES_v": re(U_val_std, U_val_pred_std),
                 }
@@ -364,7 +366,6 @@ class PodnnModel:
         U_tot = np.zeros((self.n_h, X_v.shape[0]))
         U_tot_sq = np.zeros((self.n_h, X_v.shape[0]))
         for i in range(samples):
-            print(i)
             U = self.predict_sample(X_v)
             U_tot += U
             U_tot_sq += U ** 2
