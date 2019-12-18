@@ -85,8 +85,8 @@ class AdvNeuralNetwork(object):
         log_q = -tf.reduce_mean(tf.square(z_u_prior - z_u_encoder))
 
         # Physics-informed loss
-        loss_f = self.physics_informed_loss(f_pred)
-        # loss_f = self.regularization()
+        # loss_f = self.physics_informed_loss(f_pred)
+        loss_f = self.regularization()
 
         # Generator loss
         loss_PDE = self.bet * loss_f
