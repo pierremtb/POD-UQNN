@@ -40,19 +40,24 @@ def loop_vdot_t(n_s, n_t, U_tot, U_tot_sq, V, v_pred_hifi):
 
 
 @jit(nopython=True, parallel=True)
-def loop_u(u, n_h, X_v, U, X, mu_lhs, u_noise=0., x_noise=0.):
+def loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise=0., x_noise=0.):
     """Return the inputs/snapshots matrices from parallel computation."""
     # pylint: disable=not-an-iterable
+
+
     for i in prange(mu_lhs.shape[0]):
         X_v[i, :] = mu_lhs[i]
-        U_i = u(X, 0, mu_lhs[i, :]).reshape((n_h,))
+        U_i_no_noise = u(X, 0, X_v[i, :]).reshape((n_h,))
+        if x_noise > 0.:
+            # X_v[i, :] += x_noise*np.std(X_v[i, :])*np.random.randn(X_v[i, :].shape[0])
+            X_v[i, :] += np.random.normal(0., x_noise*np.std(X_v[i, :]), X_v.shape[1])
+        U_i = u(X, 0, X_v[i, :]).reshape((n_h,))
         if u_noise > 0.:
             U_i += u_noise*np.std(U_i)*np.random.randn(U_i.shape[0])
         U[:, i] = U_i
-        if x_noise > 0.:
-            X_v[i, :] += x_noise*np.std(X_v[i, :])*np.random.randn(X_v[i, :].shape[0])
+        U_no_noise[:, i] = U_i_no_noise
     U_struct = U
-    return X_v, U, U_struct
+    return X_v, U, U_struct, U_no_noise
 
 
 @jit(nopython=True, parallel=True)

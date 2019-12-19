@@ -133,7 +133,8 @@ class PodnnModel:
             return loop_u_t(u, self.n_t, self.n_v, n_xyz, n_h,
                             X_v, U, U_struct, X, mu_lhs, t_min, t_max)
 
-        return loop_u(u, n_h, X_v, U, X, mu_lhs, u_noise, x_noise)
+        U_no_noise = np.zeros((n_h, n_st))
+        return loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise, x_noise)
 
     def convert_dataset(self, u_mesh, X_v, train_val_test, eps, eps_init=None,
                         use_cache=False):
@@ -173,7 +174,7 @@ class PodnnModel:
         # Creating the validation snapshots matrix
         U_test = self.V.dot(v_test.T)
 
-        self.save_train_data(X_v, X_v_train, v_train, X_v_test, v_test, U_test)
+        self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_test)
 
         return X_v_train, v_train, X_v_test, v_test, U_test
 
@@ -213,10 +214,10 @@ class PodnnModel:
 
         # Creating the snapshots
         print(f"Generating {n_st} corresponding snapshots")
-        X_v_train, U, U_struct = \
+        X_v_train, U, U_struct, U_no_noise = \
             self.create_snapshots(n_d, n_h, u, mu_lhs_train,
                                   t_min, t_max, u_noise, x_noise)
-        X_v_test, U_test, U_test_struct = \
+        X_v_test, U_test, U_test_struct, _ = \
             self.create_snapshots(n_d, n_h, u, mu_lhs_test,
                                   t_min, t_max)
 
@@ -233,7 +234,7 @@ class PodnnModel:
         v_train = (self.V.T.dot(U)).T
 
         if v_noise > 0.:
-            for i in range(v.shape[0]):
+            for i in range(v_train.shape[0]):
                 v_train[i, :] += v_noise*np.std(v_train[i, :])*np.random.randn(v_train.shape[1])
 
         # # Randomly splitting the dataset (X_v, v)
@@ -245,12 +246,13 @@ class PodnnModel:
         import matplotlib.pyplot as plt
         print("n_L: ", self.n_L)
         x = np.linspace(0, 10, 300)
-        plt.plot(x, U_pod[:, 0], "b-")
+        # plt.plot(x, U_pod[:, 0], "b-")
         plt.plot(x, U[:, 0], "r--")
+        plt.plot(x, U_no_noise[:, 0], "b--")
         plt.show()
-        plt.plot(mu_lhs[0], "b-")
-        plt.plot(X_v_train[0], "r--")
-        plt.show()
+        # plt.plot(mu_lhs_train[0], "bx")
+        # plt.plot(X_v_train[0], "rx")
+        # plt.show()
 
         self.save_train_data(X_v_train, v_train, U, X_v_test, U_test)
 
