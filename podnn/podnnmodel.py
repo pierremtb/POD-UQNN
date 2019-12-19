@@ -243,10 +243,13 @@ class PodnnModel:
         # Creating the validation snapshots matrix
         U_pod = self.V.dot(v_train.T)
         import matplotlib.pyplot as plt
-        x = np.linspace(0, 10, 300)
-        plt.plot(x, U[:, 0], "b-")
-        plt.plot(x, U_pod[:, 0], "r--")
         print("n_L: ", self.n_L)
+        x = np.linspace(0, 10, 300)
+        plt.plot(x, U_pod[:, 0], "b-")
+        plt.plot(x, U[:, 0], "r--")
+        plt.show()
+        plt.plot(mu_lhs[0], "b-")
+        plt.plot(X_v_train[0], "r--")
         plt.show()
 
         self.save_train_data(X_v_train, v_train, U, X_v_test, U_test)
