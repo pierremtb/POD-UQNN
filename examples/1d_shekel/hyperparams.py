@@ -15,22 +15,22 @@ HP["x_max"] = 10.
 # Time
 HP["n_t"] = 0
 # Snapshots count
-HP["n_s"] = 300
+HP["n_s"] = 900
 # HP["n_s_hifi"] = int(1e5)
 HP["n_s_hifi"] = int(1e4)
 # POD stopping param
 HP["eps"] = 1e-3
 # HP["n_L"] = 20
 HP["n_L"] = 0
-HP["x_noise"] = 0.01
+HP["x_noise"] = 0.03
 HP["u_noise"] = 0.
 # Train/val split
-HP["train_val_test"] = (3/5, 1/5, 1/5)
+HP["train_val_test"] = (300/400, 99/400, 1/400)
 # Deep NN hidden layers topology
 HP["h_layers"] = [50, 50, 50, 50]
 HP["h_layers_t"] = [50, 50, 50]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 26000
+HP["epochs"] = 8000
 HP["lr"] = 0.001
 HP["lambda"] = 1.5
 HP["beta"] = 0
