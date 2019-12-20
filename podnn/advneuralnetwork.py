@@ -9,7 +9,7 @@ NORM_CENTER = "center"
 
 class AdvNeuralNetwork(object):
     def __init__(self, layers, gan_dims, lr, lam, bet, k1, k2, norm=NORM_NONE,
-                 model=None, ub=None, lb=None):
+                 model=None, lb=None, ub=None):
 
 
         # Setting up the optimizers with the previously defined hp
@@ -299,6 +299,7 @@ class AdvNeuralNetwork(object):
         with open(params_path, "rb") as f:
             layers, gan_dims, lr, lam, bet, k1, k2, norm, lb, ub = pickle.load(f)
         print(f"Loading model params from {params_path}")
+        print(lb, ub)
 
         model = (tf.keras.models.load_model(model_path[0]),
                  tf.keras.models.load_model(model_path[1]),

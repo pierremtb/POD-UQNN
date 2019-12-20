@@ -34,14 +34,13 @@ def main(hp, gen_test=False, use_cached_dataset=False,
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, U_train, \
-        X_v_test, \
-        U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
-                                        hp["n_s"],
-                                        hp["train_val_test"],
-                                        eps=hp["eps"], n_L=hp["n_L"],
-                                        u_noise=hp["u_noise"],
-                                        x_noise=hp["x_noise"],
-                                        use_cache=use_cached_dataset)
+        X_v_test, U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
+                                                  hp["n_s"],
+                                                  hp["train_val_test"],
+                                                  eps=hp["eps"], n_L=hp["n_L"],
+                                                  u_noise=hp["u_noise"],
+                                                  x_noise=hp["x_noise"],
+                                                  use_cache=use_cached_dataset)
 
     # x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
     # plt.plot(x, U_train.mean(1))
@@ -60,7 +59,6 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     # model.load_train_data()
     # model.load_model()
     # train_res = None
-
     # v_pred, v_pred_std = model.predict_v(X_v_test[0:1])
     # plt.plot(v_pred[0])
     # lower = v_pred[0] - 2*v_pred_std[0]

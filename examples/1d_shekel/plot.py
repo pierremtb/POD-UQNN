@@ -54,7 +54,7 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     lower = U_pred_hifi_mean[0] - 2.0*U_pred_hifi_mean_sig[0]
     upper = U_pred_hifi_mean[0] + 2.0*U_pred_hifi_mean_sig[0]
     plt.fill_between(x, lower, upper, 
-                     facecolor='orange', alpha=0.5, label=r"2\textrm{std}(\hat{u}_T(x))")
+                     facecolor='orange', alpha=0.5, label=r"$2\textrm{std}(\hat{u}_T(x))$")
     ax1.legend()
     ax1.set_title("Means")
     ax1.set_xlabel("$x$")
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     model = PodnnModel.load("cache")
 
     x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-    _, _, X_v_test, _, U_test = model.load_train_data()
+    _, _, _, X_v_test, U_test = model.load_train_data()
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)

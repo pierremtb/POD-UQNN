@@ -70,7 +70,6 @@ class PodnnModel:
         if self.has_t:
             t_min, t_max = np.array(t_min), np.array(t_max)
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
-
         mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
 
         n_st = n_s
@@ -214,7 +213,7 @@ class PodnnModel:
 
         # Creating the snapshots
         print(f"Generating {n_st} corresponding snapshots")
-        X_v_train, U, U_struct, U_no_noise = \
+        X_v_train, U_train, U_train_struct, U_no_noise = \
             self.create_snapshots(n_d, n_h, u, mu_lhs_train,
                                   t_min, t_max, u_noise, x_noise)
         X_v_test, U_test, U_test_struct, _ = \
@@ -224,14 +223,14 @@ class PodnnModel:
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
         if eps_init is None:
-            self.V = perform_pod(U, eps=eps, verbose=True, n_L=n_L)
+            self.V = perform_pod(U_train, eps=eps, verbose=True, n_L=n_L)
         else:
-            self.V = perform_fast_pod(U_struct, eps, eps_init)
+            self.V = perform_fast_pod(U_train_struct, eps, eps_init)
 
         self.n_L = self.V.shape[1]
 
         # Projecting
-        v_train = (self.V.T.dot(U)).T
+        v_train = (self.V.T.dot(U_train)).T
 
         if v_noise > 0.:
             for i in range(v_train.shape[0]):
@@ -242,21 +241,21 @@ class PodnnModel:
         #     self.split_dataset(X_v, v, train_val_test[2])
 
         # Creating the validation snapshots matrix
-        U_pod = self.V.dot(v_train.T)
-        import matplotlib.pyplot as plt
-        print("n_L: ", self.n_L)
-        x = np.linspace(0, 10, 300)
-        # plt.plot(x, U_pod[:, 0], "b-")
-        plt.plot(x, U[:, 0], "r--")
-        plt.plot(x, U_no_noise[:, 0], "b--")
-        plt.show()
+        # U_pod = self.V.dot(v_train.T)
+        # import matplotlib.pyplot as plt
+        # print("n_L: ", self.n_L)
+        # x = np.linspace(0, 10, 300)
+        # # plt.plot(x, U_pod[:, 0], "b-")
+        # plt.plot(x, U_train[:, 0], "r--")
+        # plt.plot(x, U_no_noise[:, 0], "b--")
+        # plt.show()
         # plt.plot(mu_lhs_train[0], "bx")
         # plt.plot(X_v_train[0], "rx")
         # plt.show()
 
-        self.save_train_data(X_v_train, v_train, U, X_v_test, U_test)
+        self.save_train_data(X_v_train, v_train, U_train, X_v_test, U_test)
 
-        return X_v_train, v_train, U, X_v_test, U_test
+        return X_v_train, v_train, U_train, X_v_test, U_test
 
     def tensor(self, X):
         """Convert input into a TensorFlow Tensor with the class dtype."""

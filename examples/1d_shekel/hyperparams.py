@@ -22,7 +22,7 @@ HP["n_s_hifi"] = int(1e4)
 HP["eps"] = 1e-3
 # HP["n_L"] = 20
 HP["n_L"] = 0
-HP["x_noise"] = 0.03
+HP["x_noise"] = 0.02
 HP["u_noise"] = 0.
 # Train/val split
 HP["train_val_test"] = (300/400, 99/400, 1/400)
@@ -30,11 +30,11 @@ HP["train_val_test"] = (300/400, 99/400, 1/400)
 HP["h_layers"] = [50, 50, 50, 50]
 HP["h_layers_t"] = [50, 50, 50]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 8000
-HP["lr"] = 0.001
+HP["epochs"] = 26000
+HP["lr"] = 0.0005
 HP["lambda"] = 1.5
 HP["beta"] = 0
-# HP["beta"] = 1e-5
+HP["beta"] = 1e-5
 HP["k1"] = 1
 HP["k2"] = 5
 HP["norm"] = NORM_MEANSTD
