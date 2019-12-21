@@ -3,6 +3,7 @@
 import os
 import sys
 import numpy as np
+import scipy as sp
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pyevtk.hl import unstructuredGridToVTK
@@ -19,7 +20,7 @@ def plot_plot(fig, pos, x, y, z, z_min, z_max, title):
     """Does a colorplot from unstructured, 1d (x, y, z) data."""
     ax = fig.add_subplot(pos)
     h = plt.tripcolor(x, y, z)
-    h.set_clim(z_min, z_max)
+    # h.set_clim(z_min, z_max)
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
     fig.colorbar(h, cax=cax)
@@ -104,7 +105,7 @@ def plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
         z = np.ascontiguousarray(np.zeros_like(x))
 
         # Exporting
-        unstructuredGridToVTK(os.path.join("cache", "x_u_test_mean_std"),
+        unstructuredGridToVTK(os.path.join("cache", "x_u_test_pred_mean_std"),
                               x, y, z,
                               connectivity, offsets, cell_types,
                               cellData=None,
@@ -115,31 +116,62 @@ def plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                                   "h_std" : U_test_hifi_std[0],
                                   "hu_std" : U_test_hifi_std[1],
                                   "hv_std" : U_test_hifi_std[2],
+                                  "h_mean_pred" : U_pred_hifi_mean[0],
+                                  "hu_mean_pred" : U_pred_hifi_mean[1],
+                                  "hv_mean_pred" : U_pred_hifi_mean[2],
+                                  "h_std_pred" : U_pred_hifi_std[0],
+                                  "hu_std_pred" : U_pred_hifi_std[1],
+                                  "hv_std_pred" : U_pred_hifi_std[2],
                                   })
-        unstructuredGridToVTK(os.path.join("cache", "x_u_pred_mean_std"),
-                              x, y, z,
-                              connectivity, offsets, cell_types,
-                              cellData=None,
-                              pointData={
-                                  "h_mean" : U_pred_hifi_mean[0],
-                                  "hu_mean" : U_pred_hifi_mean[1],
-                                  "hv_mean" : U_pred_hifi_mean[2],
-                                  "h_std" : U_pred_hifi_std[0],
-                                  "hu_std" : U_pred_hifi_std[1],
-                                  "hv_std" : U_pred_hifi_std[2],
-                                  })
-        # return
+        return
 
-    print("Plotting")
-    # Keeping only the first nodes
-    i_min = int(243161 / 2 - 5000)
-    i_max = int(243161 / 2 + 5000)
-    x = x[i_min:i_max]
-    y = y[i_min:i_max]
-    U_test_hifi_mean = U_test_hifi_mean[:, i_min:i_max]
-    U_test_hifi_std = U_test_hifi_std[:, i_min:i_max]
-    U_pred_hifi_mean = U_pred_hifi_mean[:, i_min:i_max]
-    U_pred_hifi_std = U_pred_hifi_std[:, i_min:i_max]
+    # print("Plotting")
+    # # Keeping only the first nodes
+    # xy = x_mesh[:, 1:]
+    # x = xy[:, 0]
+    # y = xy[:, 1]
+    # z = U_pred_hifi_mean[0]
+    # r1, c1 = 275275., 5043882.
+    # r2, c2 = 274262., 5045214.
+    # x_world, y_world = np.array([[r1, r2]]), np.array([[c1, c2]])
+    # col = z.shape[1] * (x_world - x.min()) / x.ptp()
+    # row = z.shape[0] * (y_world - y.min()) / y.ptp()
+
+    # print("Interpolate the line at num points...")
+    # num = 1000
+    # row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
+
+    # print("Extract the values along the line, using cubic interpolation")
+    # zi = scipy.ndimage.map_coordinates(z, np.vstack((row, col)))
+
+    # x_min_filter = xy[:, 0] < r1
+    # x_max_filter = xy[:, 0] > r2
+    # y_min_filter = xy[:, 1] > c1
+    # y_max_filter = xy[:, 1] < c2
+    # trim_filter = x_min_filter & x_max_filter & y_max_filter & y_min_filter
+    # idx = np.where(trim_filter == True)[0]
+    # i_min = idx.min()
+    # i_max = idx.max()
+    # print(idx.shape)
+
+    # x = x[i_min:i_max]
+    # y = y[i_min:i_max]
+    # U_test_hifi_mean = U_test_hifi_mean[:, i_min:i_max]
+    # U_test_hifi_std = U_test_hifi_std[:, i_min:i_max]
+    # U_pred_hifi_mean = U_pred_hifi_mean[:, i_min:i_max]
+    # U_pred_hifi_std = U_pred_hifi_std[:, i_min:i_max]
+
+    # print("Interping")
+    # f = sp.interpolate.interp2d(x, y, U_test_hifi_mean[0])
+
+    # num_points = 1000
+    # xvalues = np.linspace(c1, c2, num_points)
+    # yvalues = np.linspace(r1, r2, num_points)
+    # print("Projing")
+    # z_values = f(xvalues, yvalues)
+    plt.plot(zi)
+    exit(0)
+
 
     # Computing means
     n_plot_x = 4
@@ -198,4 +230,4 @@ if __name__ == "__main__":
     # Plot and save the results
     plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                  U_test_hifi_mean, U_test_hifi_std,
-                 train_res=None, HP=hp, export_vtk=True, export_txt=False)
+                 train_res=None, HP=hp, export_vtk=False, export_txt=False)

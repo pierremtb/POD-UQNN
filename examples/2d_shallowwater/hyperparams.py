@@ -12,18 +12,20 @@ HP["n_v"] = len(HP["mesh_idx"][2])
 HP["n_t"] = 0
 # Snapshots count
 HP["n_s"] = 300
-HP["n_s_hifi"] = 500
+HP["n_s_hifi"] = 100
 # POD stopping param
 HP["eps"] = 1e-10
 # Train/val split
-HP["train_val_test"] = (3/5, 1/5, 1/5)
+# HP["train_val_test"] = (3/5, 1/5, 1/5)
+HP["train_val_test"] = (298/300, 1/300, 1/300)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up the TF SGD-based optimizer
-HP["epochs"] = 200000
+HP["epochs"] = 1000000
 HP["lr"] = 0.001
 HP["decay"] = 0.
-HP["lambda"] = 1e-5
+HP["lambda"] = 1e-6
+HP["lambda"] = 0.
 # Frequency of the logger
 HP["log_frequency"] = 5000
 

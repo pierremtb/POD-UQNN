@@ -10,7 +10,7 @@ from podnn.podnnmodel import PodnnModel
 from podnn.metrics import re_mean_std, re
 from podnn.mesh import read_space_sol_input_mesh
 
-from plot import plot_results
+from export import plot_results
 
 
 def main(hp, use_cached_dataset=False):
@@ -60,6 +60,11 @@ def main(hp, use_cached_dataset=False):
     U_test_hifi = model.u_mesh_to_U(u_mesh_test_hifi, hp["n_s_hifi"])
     U_test_hifi_mean, U_test_hifi_std = U_test_hifi.mean(-1), np.nanstd(U_test_hifi, -1)
 
+    U_pred_hifi = model.predict(X_v_test_hifi)
+    errors_test_hifi = np.array([re(U_pred_hifi[i], U_test_hifi_mean[i]) for i in range(hp["n_s_hifi"])])
+    # print(errors_test_hifi)
+    # print(errors_test_hifi.mean())
+
     U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
     error_test_hifi_mean = re(U_pred_hifi_mean, U_test_hifi_mean)
     error_test_hifi_std = re(U_pred_hifi_std, U_test_hifi_std)
@@ -92,5 +97,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    # main(HP, use_cached_dataset=False)
-    main(HP, use_cached_dataset=True)
+    main(HP, use_cached_dataset=False)
+    # main(HP, use_cached_dataset=True)
