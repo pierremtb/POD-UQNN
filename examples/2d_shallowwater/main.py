@@ -10,7 +10,8 @@ from podnn.podnnmodel import PodnnModel
 from podnn.metrics import re_mean_std, re
 from podnn.mesh import read_space_sol_input_mesh
 
-from export import plot_results
+from export import export
+from plot import plot_results
 
 
 def main(hp, use_cached_dataset=False):
@@ -84,9 +85,10 @@ def main(hp, use_cached_dataset=False):
     # exit(0)
 
     # Plot and save the results
-    return plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
-                        U_test_hifi_mean, U_test_hifi_std,
-                        train_res, HP=hp, export_vtk=True, export_txt=False)
+    export(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+                 U_test_hifi_mean, U_test_hifi_std,
+                 train_res, HP=hp, export_vtk=True, export_txt=False)
+    plot_results(os.path.join("cache", "x_u_pred_mean_std.csv"), hp)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg

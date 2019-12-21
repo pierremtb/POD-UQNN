@@ -50,7 +50,7 @@ def get_min_max(z1, z2):
     return z_min, z_max
 
 
-def plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+def export(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                  U_test_hifi_mean, U_test_hifi_std,
                  train_res=None, HP=None,
                  export_vtk=False, export_txt=False):
@@ -228,6 +228,6 @@ if __name__ == "__main__":
     U_pred_hifi_std = model.restruct(U_pred_hifi_std, no_s=True)
 
     # Plot and save the results
-    plot_results(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
-                 U_test_hifi_mean, U_test_hifi_std,
-                 train_res=None, HP=hp, export_vtk=False, export_txt=False)
+    export(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+           U_test_hifi_mean, U_test_hifi_std,
+           train_res=None, HP=hp, export_vtk=False, export_txt=False)
