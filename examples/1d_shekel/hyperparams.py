@@ -38,8 +38,6 @@ HP["beta"] = 1e-5
 HP["k1"] = 1
 HP["k2"] = 5
 HP["norm"] = NORM_MEANSTD
-# HP["norm"] = NORM_CENTER
-# HP["norm"] = NORM_NONE
 # Frequency of the logger
 HP["log_frequency"] = 500
 # Non-spatial params

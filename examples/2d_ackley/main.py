@@ -38,14 +38,13 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                                   hp["n_s"],
                                                   hp["train_val_test"],
                                                   eps=hp["eps"], n_L=hp["n_L"],
-                                                  u_noise=hp["u_noise"],
                                                   x_noise=hp["x_noise"],
                                                   use_cache=use_cached_dataset)
 
     # Train
     model.initNN(hp["h_layers"], hp["h_layers_t"],
                  hp["lr"], hp["lambda"], hp["beta"],
-                 hp["k1"], hp["k2"])
+                 hp["k1"], hp["k2"], hp["norm"])
     train_res = model.train(X_v_train, v_train, hp["epochs"],
                             hp["train_val_test"], freq=hp["log_frequency"])
 
@@ -69,8 +68,10 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     print("Predicting the {n_s_hifi} corresponding solutions")
     U_pred_hifi, U_pred_hifi_sig = model.predict_var(X_v_test_hifi)
 
-    U_pred_hifi_mean = model.restruct(U_pred_hifi.mean(-1), no_s=True), model.restruct(U_pred_hifi_sig.mean(-1), no_s=True)
-    U_pred_hifi_std = model.restruct(U_pred_hifi.std(-1), no_s=True), model.restruct(U_pred_hifi_sig.std(-1), no_s=True)
+    U_pred_hifi_mean = (model.restruct(U_pred_hifi.mean(-1), no_s=True),
+                        model.restruct(U_pred_hifi_sig.mean(-1), no_s=True))
+    U_pred_hifi_std = (model.restruct(U_pred_hifi.std(-1), no_s=True),
+                       model.restruct(U_pred_hifi_sig.std(-1), no_s=True))
 
     # Plot against test and save
     return plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,

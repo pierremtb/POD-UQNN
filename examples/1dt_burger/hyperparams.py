@@ -2,7 +2,7 @@
 
 import numpy as np
 import tensorflow as tf
-
+from podnn.advneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
 
 HP = {}
 # Dimension of u(x, t, mu)
@@ -27,14 +27,15 @@ HP["train_val_test"] = (3/5, 1/5, 1/5)
 HP["h_layers"] = [50, 50, 50, 50]
 HP["h_layers_t"] = [50, 50, 50]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 15000
+HP["epochs"] = 26000
 HP["lr"] = 0.001
 HP["lambda"] = 1.5
-HP["beta"] = 1e-4
+HP["beta"] = 1e-5
 HP["k1"] = 1
 HP["k2"] = 5
+HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 1000
+HP["log_frequency"] = 500
 # Burgers params
 HP["mu_min"] = [0.001]
 HP["mu_max"] = [0.0100]

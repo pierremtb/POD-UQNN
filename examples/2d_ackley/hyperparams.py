@@ -3,6 +3,8 @@
 import numpy as np
 import tensorflow as tf
 
+from podnn.advneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
+
 
 HP = {}
 # Dimension of u(x, t, mu)
@@ -17,8 +19,8 @@ HP["y_max"] = +5.
 # Time
 HP["n_t"] = 0
 # Snapshots count
-HP["n_s"] = 300
-HP["n_s_hifi"] = int(1e3)
+HP["n_s"] = 100
+HP["n_s_hifi"] = int(1e2)
 # POD stopping param
 HP["eps"] = 1e-3
 # HP["n_L"] = 20
@@ -33,12 +35,14 @@ HP["h_layers"] = [50, 50, 50, 50]
 HP["h_layers_t"] = [50, 50, 50]
 # Setting up TF SGD-based optimizer
 HP["epochs"] = 25000
-HP["lr"] = 0.005
+# HP["lr"] = 0.0005
+HP["lr"] = 0.001
 HP["lambda"] = 1.5
 # HP["beta"] = 1e-6
 HP["beta"] = 0
 HP["k1"] = 1
 HP["k2"] = 5
+HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Non-spatial params

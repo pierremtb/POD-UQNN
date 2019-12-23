@@ -242,19 +242,19 @@ class PodnnModel:
 
         # Creating the validation snapshots matrix
         # U_pod = self.V.dot(v_train.T)
-        import matplotlib.pyplot as plt
-        print("n_L: ", self.n_L)
-        x = np.linspace(-5, 5, 400)
-        u_shape = (1, 400, 400)
-        plt.plot(x, U_train[:, 0].reshape(u_shape)[0, :, 199], "b-")
-        plt.plot(x,U_no_noise[:, 0].reshape(u_shape)[0, :, 199], "r--")
-        plt.show()
-        plt.plot(x, U_train[:, 0].reshape(u_shape)[0, :, 299], "b-")
-        plt.plot(x,U_no_noise[:, 0].reshape(u_shape)[0, :, 299], "r--")
-        plt.show()
-        plt.plot(mu_lhs_train[0], "bx")
-        plt.plot(X_v_train[0], "rx")
-        plt.show()
+        # import matplotlib.pyplot as plt
+        # print("n_L: ", self.n_L)
+        # x = np.linspace(-5, 5, 400)
+        # u_shape = (1, 400, 400)
+        # plt.plot(x, U_train[:, 0].reshape(u_shape)[0, :, 199], "b-")
+        # plt.plot(x,U_no_noise[:, 0].reshape(u_shape)[0, :, 199], "r--")
+        # plt.show()
+        # plt.plot(x, U_train[:, 0].reshape(u_shape)[0, :, 299], "b-")
+        # plt.plot(x,U_no_noise[:, 0].reshape(u_shape)[0, :, 299], "r--")
+        # plt.show()
+        # plt.plot(mu_lhs_train[0], "bx")
+        # plt.plot(X_v_train[0], "rx")
+        # plt.show()
 
         self.save_train_data(X_v_train, v_train, U_train, X_v_test, U_test)
 
