@@ -127,12 +127,13 @@ class PodnnModel:
         X_v = np.zeros((n_st, n_d))
         U = np.zeros((n_h, n_st))
 
+        U_no_noise = np.zeros((n_h, n_st))
         if self.has_t:
             U_struct = np.zeros((n_h, self.n_t, n_s))
             return loop_u_t(u, self.n_t, self.n_v, n_xyz, n_h,
-                            X_v, U, U_struct, X, mu_lhs, t_min, t_max)
+                            X_v, U, U_no_noise, U_struct, X, mu_lhs, t_min, t_max, u_noise, x_noise)
 
-        U_no_noise = np.zeros((n_h, n_st))
+        # U_no_noise = np.zeros((n_h, n_st))
         return loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise, x_noise)
 
     def convert_dataset(self, u_mesh, X_v, train_val_test, eps, eps_init=None,

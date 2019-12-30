@@ -62,7 +62,7 @@ def loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise=0., x_noise=0.):
 
 @jit(nopython=True, parallel=True)
 def loop_u_t(u, n_t, n_v, n_xyz, n_h,
-             X_v, U, U_struct, X, mu_lhs, t_min, t_max, u_noise=0.):
+             X_v, U, U_no_noise, U_struct, X, mu_lhs, t_min, t_max, u_noise=0., x_noise=0.):
     """Return the inputs/snapshots matrices from parallel computation (w/ t)."""
     # Creating the time steps
     t = np.linspace(t_min, t_max, n_t)
@@ -75,18 +75,24 @@ def loop_u_t(u, n_t, n_v, n_xyz, n_h,
 
         # Setting the regression inputs (t, mu)
         X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
+        if x_noise > 0.:
+            X_v[s:e, :] += np.random.normal(0., x_noise*np.std(X_v[s:e, :]), X_v.shape[1])
 
         # Calling the analytical solution function
         Ui = np.zeros((n_v, n_xyz, n_t))
+        Ui_no_noise = np.zeros((n_v, n_xyz, n_t))
         for j in range(n_t):
             Uij = u(X, t[j], mu_lhs[i])
+            Uij_no_noise = u(X, t[j], mu_lhs[i])
             if u_noise > 0.:
                 Uij += u_noise*np.std(Uij)*np.random.randn(Uij.shape[0], Uij.shape[1])
             Ui[:, :, j] = Uij
+            Ui_no_noise[:, :, j] = Uij_no_noise
 
         U[:, s:e] = Ui.reshape((n_h, n_t))
+        U_no_noise[:, s:e] = Ui_no_noise.reshape((n_h, n_t))
         U_struct[:, :, i] = U[:, s:e]
-    return X_v, U, U_struct
+    return X_v, U, U_struct, U_no_noise
 
 
 @jit(nopython=True, parallel=True)

@@ -21,6 +21,8 @@ HP["n_s_hifi"] = int(1e3)
 # POD stopping param
 HP["eps"] = 1e-10
 HP["eps_init"] = 1e-10
+HP["n_L"] = 0
+HP["x_noise"] = 0.01
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)
 # DeepNN Topology
