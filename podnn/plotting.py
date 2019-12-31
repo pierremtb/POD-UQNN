@@ -58,7 +58,7 @@ def saveresultdir(save_HP, train_res=None):
                    fmt="\t".join(["%i"] + ["%1.6f"]*qty_count))
     filename = os.path.join(resdir, "graph")
     savefig(filename)
-    openPdfGraph(filename)
+#    openPdfGraph(filename)
 
 def openPdfGraph(filename):
     """Open filename (without extension) in default PDF viewer."""
