@@ -67,6 +67,8 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                                                hp["t_min"], hp["t_max"])
     print("Predicting the {n_s_hifi} corresponding solutions")
     U_pred_hifi, U_pred_hifi_sig = model.predict_var(X_v_test_hifi)
+    U_pred_hifi = model.restruct(U_pred_hifi)
+    U_pred_hifi_sig = model.restruct(U_pred_hifi_sig)
     U_pred_hifi_mean = (model.restruct(U_pred_hifi.mean(-1), no_s=True),
                         model.restruct(U_pred_hifi_sig.mean(-1), no_s=True))
     U_pred_hifi_std = (model.restruct(U_pred_hifi.std(-1), no_s=True),
