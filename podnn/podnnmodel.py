@@ -301,9 +301,9 @@ class PodnnModel:
             U_val_pred_mean = U_val_pred.mean(-1)
             U_val_pred_std = U_val_pred.std(-1)
             # U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
-            # if self.has_t:
-            #     U_val_pred_mean = U_val_pred_mean.mean(-1)
-            #     U_val_pred_std = U_val_pred_std.std(-1)
+            if self.has_t:
+                U_val_pred_mean = U_val_pred_mean.mean(-1)
+                U_val_pred_std = U_val_pred_std.std(-1)
             return {
                 # "L_v": self.regnn.loss(v_val, v_val_pred),
                 # "RE": re(v_val_mean, v_val_pred.mean(-1)),
