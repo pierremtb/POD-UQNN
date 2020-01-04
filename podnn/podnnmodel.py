@@ -131,7 +131,8 @@ class PodnnModel:
         if self.has_t:
             U_struct = np.zeros((n_h, self.n_t, n_s))
             return loop_u_t(u, self.n_t, self.n_v, n_xyz, n_h,
-                            X_v, U, U_no_noise, U_struct, X, mu_lhs, t_min, t_max, u_noise, x_noise)
+                            X_v, U, U_no_noise, U_struct, X, mu_lhs, t_min, t_max,
+                            u_noise, x_noise)
 
         # U_no_noise = np.zeros((n_h, n_st))
         return loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise, x_noise)
@@ -244,6 +245,14 @@ class PodnnModel:
         # Creating the validation snapshots matrix
         # U_pod = self.V.dot(v_train.T)
         # import matplotlib.pyplot as plt
+        # import matplotlib.pyplot as plt
+        # print("n_L: ", self.n_L)
+        # x = np.linspace(0, 1.5, 256)
+        # t = np.linspace(1, 5, 100)
+        # plt.plot(x, self.restruct(U_train).mean(-1)[0, :, 99], "b-")
+        # plt.plot(x, self.restruct(U_no_noise).mean(-1)[0, :, 99], "r--")
+        # plt.show()
+        # exit(0)
         # print("n_L: ", self.n_L)
         # x = np.linspace(-5, 5, 400)
         # u_shape = (1, 400, 400)
