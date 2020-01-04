@@ -39,12 +39,16 @@ def plot_map(fig, pos, x, t, X, T, U, title):
 
 
 def plot_spec_time(fig, pos, x, t_i,
-                   U_pred, U_pred_hifi, U_test_hifi,
+                   U_pred, U_pred_hifi, U_pred_hifi_sig, U_test_hifi,
                    title, show_legend=False):
     ax = fig.add_subplot(pos)
     ax.plot(x, U_pred[0, :, t_i], "k,", label="$\hat{u_T}$")
     ax.plot(x, U_pred_hifi[0, :, t_i], "b-", label="$\hat{u_{T,hf}}$")
     ax.plot(x, U_test_hifi[0, :, t_i], "r--", label="$u_{T,hf}$")
+    lower = U_pred_hifi[0, :, t_i] - 2.0*U_pred_hifi_sig[0, :, t_i]
+    upper = U_pred_hifi[0, :, t_i] + 2.0*U_pred_hifi_sig[0, :, t_i]
+    plt.fill_between(x, lower, upper, 
+                     facecolor='orange', alpha=0.5, label=r"2*std")
     ax.set_xlabel("$x$")
     ax.set_title(title)
     if show_legend:
@@ -82,22 +86,22 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     plot_map(fig, gs[0, :n_plot_y], x, t, xx, tt, U_pred_hifi_mean, "Mean $u(x,t)$ [pred]")
     plot_map(fig, gs[1, :n_plot_y], x, t, xx, tt, U_test_hifi_mean, "Mean $u(x,t)$ [test]")
     plot_spec_time(fig, gs[2, 0], x, 25, 
-                   U_pred_mean, U_pred_hifi_mean, U_test_hifi_mean,
+                   U_pred_mean, U_pred_hifi_mean, U_pred_hifi_mean_sig, U_test_hifi_mean,
                    "Means $u(x, t=0.25)$", show_legend=True)
     plot_spec_time(fig, gs[2, 1], x, 50,
-                   U_pred_mean, U_pred_hifi_mean, U_test_hifi_mean,
+                   U_pred_mean, U_pred_hifi_mean, U_pred_hifi_mean_sig, U_test_hifi_mean,
                    "Means $u(x, t=0.50)$")
     plot_spec_time(fig, gs[2, 2], x, 75,
-                   U_pred_mean, U_pred_hifi_mean, U_test_hifi_mean,
+                   U_pred_mean, U_pred_hifi_mean, U_pred_hifi_mean_sig, U_test_hifi_mean,
                    "Means $u(x, t=0.75)$")
     plot_spec_time(fig, gs[3, 0], x, 25,
-                   U_pred_std, U_pred_hifi_std, U_test_hifi_std,
+                   U_pred_std, U_pred_hifi_std, U_pred_hifi_std_sig, U_test_hifi_std,
                    "Std dev $u(x, t=0.25)$")
     plot_spec_time(fig, gs[3, 1], x, 50,
-                   U_pred_std, U_pred_hifi_std, U_test_hifi_std,
+                   U_pred_std, U_pred_hifi_std, U_pred_hifi_std_sig, U_test_hifi_std,
                    "Std dev $u(x, t=0.50)$")
     plot_spec_time(fig, gs[3, 2], x, 75,
-                   U_pred_std, U_pred_hifi_std, U_test_hifi_std,
+                   U_pred_std, U_pred_hifi_std, U_pred_hifi_std_sig, U_test_hifi_std,
                    "Std dev $u(x, t=0.75)$")
 
     plt.tight_layout()

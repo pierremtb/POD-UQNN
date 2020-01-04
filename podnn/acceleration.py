@@ -74,16 +74,21 @@ def loop_u_t(u, n_t, n_v, n_xyz, n_h,
         e = n_t * (i + 1)
 
         # Setting the regression inputs (t, mu)
-        X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
-        if x_noise > 0.:
-            X_v[s:e, :] += np.random.normal(0., x_noise*np.std(X_v[s:e, :]), X_v.shape[1])
+        mu_i_no_noise = mu_lhs[i, :]
+        mu_i = mu_lhs[i, :]
+        dev = np.std(mu_i)
+        if dev == 0.:
+            dev = mu_i[0]
+        mu_i = mu_i_no_noise + \
+               x_noise*dev*np.random.randn(mu_i.shape[0])
+        X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_i))
 
         # Calling the analytical solution function
         Ui = np.zeros((n_v, n_xyz, n_t))
         Ui_no_noise = np.zeros((n_v, n_xyz, n_t))
         for j in range(n_t):
-            Uij = u(X, t[j], mu_lhs[i])
-            Uij_no_noise = u(X, t[j], mu_lhs[i])
+            Uij = u(X, t[j], mu_i)
+            Uij_no_noise = u(X, t[j], mu_i_no_noise)
             if u_noise > 0.:
                 Uij += u_noise*np.std(Uij)*np.random.randn(Uij.shape[0], Uij.shape[1])
             Ui[:, :, j] = Uij
