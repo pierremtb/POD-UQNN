@@ -13,7 +13,7 @@ from .handling import pack_layers
 from .logger import Logger
 from .advneuralnetwork import AdvNeuralNetwork, NORM_MEANSTD
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
-from .metrics import re
+from .metrics import re, re_s
 
 
 SETUP_DATA_NAME = "setup_data.pkl"
@@ -245,7 +245,6 @@ class PodnnModel:
         # Creating the validation snapshots matrix
         # U_pod = self.V.dot(v_train.T)
         # import matplotlib.pyplot as plt
-        # import matplotlib.pyplot as plt
         # print("n_L: ", self.n_L)
         # x = np.linspace(0, 1.5, 256)
         # t = np.linspace(1, 5, 100)
@@ -253,11 +252,16 @@ class PodnnModel:
         # plt.plot(x, self.restruct(U_no_noise).mean(-1)[0, :, 99], "r--")
         # plt.show()
         # exit(0)
+        # import matplotlib.pyplot as plt
         # print("n_L: ", self.n_L)
         # x = np.linspace(-5, 5, 400)
         # u_shape = (1, 400, 400)
-        # plt.plot(x, U_train[:, 0].reshape(u_shape)[0, :, 199], "b-")
-        # plt.plot(x,U_no_noise[:, 0].reshape(u_shape)[0, :, 199], "r--")
+        # U_train_pod = self.V.dot(v_train.T)
+        # plt.plot(x, U_train[:, 0].reshape(u_shape)[0, :, 199], "b--")
+        # plt.plot(x, U_train_pod[:, 0].reshape(u_shape)[0, :, 199], "k,")
+        # plt.plot(x, U_train[:, 0].reshape(u_shape)[0, :, 0], "b--")
+        # plt.plot(x, U_train_pod[:, 0].reshape(u_shape)[0, :, 0], "k,")
+        # # plt.plot(x,U_no_noise[:, 0].reshape(u_shape)[0, :, 199], "r--")
         # plt.show()
         # plt.plot(x, U_train[:, 0].reshape(u_shape)[0, :, 299], "b-")
         # plt.plot(x,U_no_noise[:, 0].reshape(u_shape)[0, :, 299], "r--")
@@ -299,6 +303,7 @@ class PodnnModel:
         val_size = train_val_test[1] / (train_val_test[0] + train_val_test[1])
         X_v_train, X_v_val, v_train, v_val = \
             self.split_dataset(X_v, v, val_size)
+        U_val = self.V.dot(v_val.T)
         U_val_mean, U_val_std = self.do_vdot(v_val)
         if self.has_t:
             U_val_mean = U_val_mean.mean(-1)
@@ -315,7 +320,7 @@ class PodnnModel:
             #     U_val_pred_std = U_val_pred_std.std(-1)
             return {
                 # "L_v": self.regnn.loss(v_val, v_val_pred),
-                # "RE": re(v_val_mean, v_val_pred.mean(-1)),
+                "RE": re_s(U_val, U_val_pred),
                 "REM_v": re(U_val_mean, U_val_pred_mean),
                 "RES_v": re(U_val_std, U_val_pred_std),
                 }
