@@ -50,6 +50,8 @@ class PodnnModel:
         self.V = None
         self.layers = None
 
+        self.pod_sig = None
+
         self.save_setup_data()
 
         self.dtype = "float64"
@@ -242,14 +244,23 @@ class PodnnModel:
         # X_v_train, X_v_test, v_train, v_test = \
         #     self.split_dataset(X_v, v, train_val_test[2])
 
+        # Saving the POD error
+        U_train_pod = self.V.dot(v_train.T)
+        self.pod_sig = np.abs(U_train - U_train_pod).mean(-1)
+
         # Testing stuff out
-        # U_pod = self.V.dot(v_train.T)
         # import matplotlib.pyplot as plt
         # print("n_L: ", self.n_L)
         # x = np.linspace(0, 1.5, 256)
         # t = np.linspace(1, 5, 100)
-        # plt.plot(x, self.restruct(U_train).mean(-1)[0, :, 75], "r--")
-        # plt.plot(x, self.restruct(U_pod).mean(-1)[0, :, 75], "b-")
+        # plt.plot(x, U_train_mean, "r--")
+        # plt.plot(x, U_train_pod_mean, "b-")
+        # U_train_mean = U_train.mean(-1)
+        # U_train_pod_mean = U_train_pod.mean(-1)
+        # lower = U_train_pod_mean - self.pod_sig
+        # upper = U_train_pod_mean + self.pod_sig
+        # plt.fill_between(x, lower, upper, 
+        #                  facecolor='orange', alpha=0.5, label=r"$2\textrm{std}(\hat{u}_T(x))$")
         # plt.show()
         # exit(0)
         # import matplotlib.pyplot as plt
@@ -396,6 +407,9 @@ class PodnnModel:
         U_pred_hifi_mean = U_tot / samples
         U_pred_hifi_mean_sig = np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
         U_pred_hifi_mean_sig = np.nan_to_num(U_pred_hifi_mean_sig)
+
+        if self.pod_sig is not None:
+            U_pred_hifi_mean_sig += self.pod_sig[:, np.newaxis]
 
         return U_pred_hifi_mean, U_pred_hifi_mean_sig
     
