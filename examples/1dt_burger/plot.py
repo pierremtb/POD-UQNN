@@ -48,7 +48,7 @@ def plot_spec_time(fig, pos, x, t_i,
     lower = U_pred_hifi[0, :, t_i] - 2.0*U_pred_hifi_sig[0, :, t_i]
     upper = U_pred_hifi[0, :, t_i] + 2.0*U_pred_hifi_sig[0, :, t_i]
     plt.fill_between(x, lower, upper, 
-                     facecolor='orange', alpha=0.5, label=r"2*std")
+                     facecolor='orange', alpha=0.5, label=r"$2\sigma_{T,hf}(x)$")
     ax.set_xlabel("$x$")
     ax.set_title(title)
     if show_legend:
