@@ -33,7 +33,6 @@ HP["h_layers_t"] = [50, 50, 50]
 HP["epochs"] = 26000
 HP["lr"] = 0.0005
 HP["lambda"] = 1.5
-HP["beta"] = 0
 HP["beta"] = 1e-5
 HP["k1"] = 1
 HP["k2"] = 5

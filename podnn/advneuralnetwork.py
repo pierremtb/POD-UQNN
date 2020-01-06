@@ -62,8 +62,8 @@ class AdvNeuralNetwork(object):
         return tf.reduce_mean(tf.square(f_pred))
 
     def regularization(self):
-        l2_norms = [tf.nn.l2_loss(v) for v in self.wrap_generator_variables()]
-        l2_norm = tf.reduce_sum(l2_norms)
+        l2_norms = [tf.nn.l2_loss(v) for v in self.wrap_training_variables()]
+        l2_norm = tf.reduce_mean(l2_norms)
         return l2_norm
 
     # Mininizing the G-Loss

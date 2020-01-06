@@ -242,14 +242,14 @@ class PodnnModel:
         # X_v_train, X_v_test, v_train, v_test = \
         #     self.split_dataset(X_v, v, train_val_test[2])
 
-        # Creating the validation snapshots matrix
+        # Testing stuff out
         # U_pod = self.V.dot(v_train.T)
         # import matplotlib.pyplot as plt
         # print("n_L: ", self.n_L)
         # x = np.linspace(0, 1.5, 256)
         # t = np.linspace(1, 5, 100)
-        # plt.plot(x, self.restruct(U_train).mean(-1)[0, :, 99], "b-")
-        # plt.plot(x, self.restruct(U_no_noise).mean(-1)[0, :, 99], "r--")
+        # plt.plot(x, self.restruct(U_train).mean(-1)[0, :, 75], "r--")
+        # plt.plot(x, self.restruct(U_pod).mean(-1)[0, :, 75], "b-")
         # plt.show()
         # exit(0)
         # import matplotlib.pyplot as plt
