@@ -54,7 +54,7 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     lower = U_pred_hifi_mean[0] - 2.0*U_pred_hifi_mean_sig[0]
     upper = U_pred_hifi_mean[0] + 2.0*U_pred_hifi_mean_sig[0]
     plt.fill_between(x, lower, upper, 
-                     facecolor='orange', alpha=0.5, label=r"$2\textrm{std}(\hat{u}_T(x))$")
+                     facecolor='orange', alpha=0.5, label=r"$2\sigma_{T,hf}(x)$")
     ax1.legend()
     ax1.set_title("Means")
     ax1.set_xlabel("$x$")
