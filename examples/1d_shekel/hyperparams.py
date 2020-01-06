@@ -15,14 +15,13 @@ HP["x_max"] = 10.
 # Time
 HP["n_t"] = 0
 # Snapshots count
-HP["n_s"] = 900
+HP["n_s"] = 300
 # HP["n_s_hifi"] = int(1e5)
 HP["n_s_hifi"] = int(1e4)
 # POD stopping param
-HP["eps"] = 1e-3
-# HP["n_L"] = 20
-HP["n_L"] = 0
-HP["x_noise"] = 0.02
+HP["eps"] = 0
+HP["n_L"] = 10
+HP["x_noise"] = 0.01
 HP["u_noise"] = 0.
 # Train/val split
 HP["train_val_test"] = (300/400, 99/400, 1/400)
@@ -30,15 +29,15 @@ HP["train_val_test"] = (300/400, 99/400, 1/400)
 HP["h_layers"] = [50, 50, 50, 50]
 HP["h_layers_t"] = [50, 50, 50]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 26000
+HP["epochs"] = 20000
 HP["lr"] = 0.0005
 HP["lambda"] = 1.5
-HP["beta"] = 1e-5
+HP["beta"] = 0.
 HP["k1"] = 1
 HP["k2"] = 5
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 500
+HP["log_frequency"] = 1000
 # Non-spatial params
 # bet = 1/10 * np.array([1, 2, 2, 4, 4, 6, 3, 7, 5, 5])
 # gam = 1. * np.array([4, 1, 8, 6, 3, 2, 5, 8, 6, 7])
