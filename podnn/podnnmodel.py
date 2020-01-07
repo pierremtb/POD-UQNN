@@ -405,7 +405,7 @@ class PodnnModel:
             U_tot += U
             U_tot_sq += U ** 2
         U_pred_hifi_mean = U_tot / samples
-        U_pred_hifi_mean_sig = np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
+        U_pred_hifi_mean_sig = 2 * np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
         U_pred_hifi_mean_sig = np.nan_to_num(U_pred_hifi_mean_sig)
 
         if self.pod_sig is not None:
