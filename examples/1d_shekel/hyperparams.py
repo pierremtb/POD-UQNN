@@ -24,21 +24,20 @@ HP["n_L"] = 0
 HP["x_noise"] = 0.0
 HP["u_noise"] = 0.
 # Train/val split
-HP["train_val_test"] = (300/400, 99/400, 1/400)
 HP["train_val_test"] = (3/5, 1/5, 1/5)
 # Deep NN hidden layers topology
 HP["h_layers"] = [50, 50, 50, 50]
 HP["h_layers_t"] = [50, 50, 50]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 18000
-HP["lr"] = 0.001
+HP["epochs"] = 48000
+HP["lr"] = 0.0001
 HP["lambda"] = 1.5
-HP["beta"] = 0.
+HP["beta"] = 0.001
 HP["k1"] = 1
 HP["k2"] = 5
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 1000
+HP["log_frequency"] = 200
 # Non-spatial params
 # bet = 1/10 * np.array([1, 2, 2, 4, 4, 6, 3, 7, 5, 5])
 # gam = 1. * np.array([4, 1, 8, 6, 3, 2, 5, 8, 6, 7])

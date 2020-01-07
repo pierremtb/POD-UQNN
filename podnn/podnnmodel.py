@@ -246,19 +246,18 @@ class PodnnModel:
 
         # Saving the POD error
         U_train_pod = self.V.dot(v_train.T)
-        self.pod_sig = np.abs(U_train - U_train_pod).mean(-1)
+        self.pod_sig = np.stack((U_train, U_train_pod), axis=-1).std(-1).mean(-1)
 
         # Testing stuff out
         # import matplotlib.pyplot as plt
         # print("n_L: ", self.n_L)
         # x = np.linspace(0, 1.5, 256)
-        # t = np.linspace(1, 5, 100)
-        # plt.plot(x, U_train_mean, "r--")
-        # plt.plot(x, U_train_pod_mean, "b-")
         # U_train_mean = U_train.mean(-1)
         # U_train_pod_mean = U_train_pod.mean(-1)
-        # lower = U_train_pod_mean - self.pod_sig
-        # upper = U_train_pod_mean + self.pod_sig
+        # plt.plot(x, U_train_mean, "r--")
+        # plt.plot(x, U_train_pod_mean, "b-")
+        # lower = U_train_pod_mean - 2 * self.pod_sig
+        # upper = U_train_pod_mean + 2 * self.pod_sig
         # plt.fill_between(x, lower, upper, 
         #                  facecolor='orange', alpha=0.5, label=r"$2\textrm{std}(\hat{u}_T(x))$")
         # plt.show()
@@ -315,26 +314,11 @@ class PodnnModel:
         X_v_train, X_v_val, v_train, v_val = \
             self.split_dataset(X_v, v, val_size)
         U_val = self.V.dot(v_val.T)
-        U_val_mean, U_val_std = self.do_vdot(v_val)
-        if self.has_t:
-            U_val_mean = U_val_mean.mean(-1)
-            U_val_std = U_val_std.std(-1)
-        print("SHAPES: ", U_val_mean.shape, U_val_std.shape)
-        v_val_mean = v_val.mean(-1)
         def get_val_err():
-            U_val_pred, U_val_pred_sig = self.predict_var(X_v_val)
-            U_val_pred_mean = U_val_pred.mean(-1)
-            U_val_pred_std = U_val_pred.std(-1)
-            # U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
-            # if self.has_t:
-            #     U_val_pred_mean = U_val_pred_mean.mean(-1)
-            #     U_val_pred_std = U_val_pred_std.std(-1)
+            U_val_pred, _ = self.predict_var(X_v_val)
             return {
-                # "L_v": self.regnn.loss(v_val, v_val_pred),
                 "RE": re_s(U_val, U_val_pred),
-                "REM_v": re(U_val_mean, U_val_pred_mean),
-                "RES_v": re(U_val_std, U_val_pred_std),
-                }
+            }
         logger.set_val_err_fn(get_val_err)
 
         # Training
@@ -405,7 +389,7 @@ class PodnnModel:
             U_tot += U
             U_tot_sq += U ** 2
         U_pred_hifi_mean = U_tot / samples
-        U_pred_hifi_mean_sig = 2 * np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
+        U_pred_hifi_mean_sig = np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
         U_pred_hifi_mean_sig = np.nan_to_num(U_pred_hifi_mean_sig)
 
         if self.pod_sig is not None:
