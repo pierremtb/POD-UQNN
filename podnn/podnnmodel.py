@@ -314,12 +314,20 @@ class PodnnModel:
         X_v_train, X_v_val, v_train, v_val = \
             self.split_dataset(X_v, v, val_size)
         U_val = self.V.dot(v_val.T)
+        U_train = self.V.dot(v_train.T)
         def get_val_err():
-            U_val_pred, _, v_val_pred = self.predict_var(X_v_val)
-            z = np.random.randn(X_v_val.shape[0], self.regnn.Z_dim)
+            # U_train_pred, _ = self.predict_var(X_v_train)
+            # U_val_pred, _ = self.predict_var(X_v_val)
+            v_train_pred, _ = self.regnn.predict(X_v_train)
+            v_val_pred, _ = self.regnn.predict(X_v_val)
+            U_val_pred = self.V.dot(v_val_pred.T)
+            U_train_pred = self.V.dot(v_train_pred.T)
+            # z = np.random.randn(X_v_val.shape[0], self.regnn.Z_dim)
             return {
-                "L_v": tf.reduce_mean(tf.square(v_val - v_val_pred)),
-                "RE": re_s(U_val, U_val_pred),
+                "MSE": tf.reduce_mean(tf.square(v_train - v_train_pred)),
+                "MSE_V": tf.reduce_mean(tf.square(v_val - v_val_pred)),
+                "RE": re_s(U_train, U_train_pred),
+                "RE_V": re_s(U_val, U_val_pred),
             }
         logger.set_val_err_fn(get_val_err)
 
@@ -380,27 +388,24 @@ class PodnnModel:
 
         # Retrieving the function with the predicted coefficients
         U_pred = self.V.dot(v_pred.T)
-        return U_pred, v_pred
+        return U_pred
 
     def predict_var(self, X_v):
         samples = 200
-        v_tot = np.zeros((X_v.shape[0], self.n_L))
         U_tot = np.zeros((self.n_h, X_v.shape[0]))
         U_tot_sq = np.zeros((self.n_h, X_v.shape[0]))
         for i in range(samples):
-            U, v = self.predict_sample(X_v)
-            v_tot += v
+            U = self.predict_sample(X_v)
             U_tot += U
             U_tot_sq += U ** 2
         U_pred_hifi_mean = U_tot / samples
-        v_pred_mean = v_tot / samples
         U_pred_hifi_mean_sig = np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
         U_pred_hifi_mean_sig = np.nan_to_num(U_pred_hifi_mean_sig)
 
         if self.pod_sig is not None:
             U_pred_hifi_mean_sig += self.pod_sig[:, np.newaxis]
 
-        return U_pred_hifi_mean, U_pred_hifi_mean_sig, v_pred_mean
+        return U_pred_hifi_mean, U_pred_hifi_mean_sig
     
     def predict_heavy(self, X_v):
         """Returns the predicted solutions, via proj coefficients (large inputs)."""

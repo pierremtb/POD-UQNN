@@ -59,9 +59,8 @@ class Logger(object):
 
             logs_message = ""
             for i, key in enumerate(self.logs_keys):
-                # if i >= len(logs_values) - 2:
-                # if i >= 2:
-                if i >= 1:
+                if i >= 3:
+                # if i >= 1:
                     logs_message += f" {key}: {logs_values[i]:.4f}"
                 else:
                     logs_message += f" {key}: {logs_values[i]:.4e}"

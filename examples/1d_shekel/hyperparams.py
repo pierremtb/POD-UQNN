@@ -15,32 +15,32 @@ HP["x_max"] = 10.
 # Time
 HP["n_t"] = 0
 # Snapshots count
-HP["n_s"] = 300
+HP["n_s"] = 500
 # HP["n_s_hifi"] = int(1e5)
 HP["n_s_hifi"] = int(1e4)
 # POD stopping param
 HP["eps"] = 0.001
 HP["n_L"] = 0
-HP["x_noise"] = 0.02
+HP["x_noise"] = 0.0
 HP["u_noise"] = 0.
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)
 # Deep NN hidden layers topology
-HP["h_layers"] = [50, 50]
-HP["h_layers_t"] = [50]
+HP["h_layers"] = [50, 50, 50, 50]
+HP["h_layers_t"] = [50, 50, 50]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 22000
+HP["epochs"] = 8000
 HP["lr"] = 0.001
 HP["lambda"] = 1.5
-HP["beta"] = 0.001
+HP["beta"] = 0.
 HP["k1"] = 1
 HP["k2"] = 5
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 200
+HP["log_frequency"] = 1000
 # Non-spatial params
-# bet = 1/10 * np.array([1, 2, 2, 4, 4, 6, 3, 7, 5, 5])
-# gam = 1. * np.array([4, 1, 8, 6, 3, 2, 5, 8, 6, 7])
+bet = 1/10 * np.array([1, 2, 2, 4, 4, 6, 3, 7, 5, 5])
+gam = 1. * np.array([4, 1, 8, 6, 3, 2, 5, 8, 6, 7])
 bet = 1/10 * np.array([1, 2, 2, 4, 4])
 gam = 1. * np.array([4, 1, 8, 6, 3])
 mu_mean = np.hstack((bet, gam))
