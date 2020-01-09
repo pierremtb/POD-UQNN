@@ -33,7 +33,7 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
 
     # Generate the dataset from the mesh and params
-    X_v_train, v_train, U_train, \
+    X_v_train, v_train, _, \
         X_v_test, U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                                   hp["n_s"],
                                                   hp["train_val_test"],
@@ -51,7 +51,6 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     # Predict and restruct
     v_pred, v_pred_sig = model.predict_v(X_v_test)
     U_pred = model.V.dot(v_pred.T)
-    Sigma_pred = model.V.dot(v_pred_sig.T)
 
     # Predict and restruct
     U_pred = model.restruct(U_pred)

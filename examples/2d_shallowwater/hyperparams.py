@@ -3,6 +3,8 @@
 import numpy as np
 import tensorflow as tf
 
+from podnn.advneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
+
 
 HP = {}
 HP["mesh_idx"] = ([0], [1, 2], [4, 6, 7])
@@ -14,16 +16,21 @@ HP["n_t"] = 0
 HP["n_s"] = 300
 # HP["n_s"] = 100
 # POD stopping param
-HP["eps"] = 1e-10
+HP["eps"] = 0
+HP["n_L"] = 10
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)
-# Deep NN hidden layers topology
-HP["h_layers"] = [64, 64]
-# Setting up the TF SGD-based optimizer
-HP["epochs"] = 200000
-HP["lr"] = 0.001
-HP["decay"] = 0.
-HP["lambda"] = 1e-5
+# DeepNN Topology
+HP["h_layers"] = [50, 50, 50, 50]
+HP["h_layers_t"] = [50, 50, 50]
+# Setting up TF SGD-based optimizer
+HP["epochs"] = 480000
+HP["lr"] = 0.0001
+HP["lambda"] = 1.5
+HP["beta"] = 0.000001
+HP["k1"] = 1
+HP["k2"] = 5
+HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 5000
 
