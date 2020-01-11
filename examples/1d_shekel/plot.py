@@ -9,7 +9,7 @@ import numpy as np
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.plotting import figsize, saveresultdir
-from podnn.metrics import re
+from podnn.metrics import re, re_mean_std
 from podnn.testgenerator import X_FILE, U_MEAN_FILE, U_STD_FILE
 
 
@@ -84,14 +84,26 @@ if __name__ == "__main__":
     x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
     _, _, _, X_v_test, U_test = model.load_train_data()
 
-    # Predict and restruct
-    U_pred = model.predict(X_v_test)
+    v_pred, v_pred_sig = model.predict_v(X_v_test)
+    U_pred = model.V.dot(v_pred.T)
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)
 
-    # Sample the new model to generate a HiFi prediction
-    X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"], hp["mu_min"], hp["mu_max"])
-    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
+    # Compute relative error
+    error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
+    print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
 
-    # Plot and save the results
-    plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std, HP=hp)
+    # Sample the new model to generate a HiFi prediction
+    print("Sampling {n_s_hifi} parameters")
+    X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"],
+                                               hp["mu_min"], hp["mu_max"])
+    print("Predicting the {n_s_hifi} corresponding solutions")
+    U_pred_hifi, U_pred_hifi_sig = model.predict_var(X_v_test_hifi)
+    U_pred_hifi_mean = (model.restruct(U_pred_hifi.mean(-1), no_s=True),
+                        model.restruct(U_pred_hifi_sig.mean(-1), no_s=True))
+    U_pred_hifi_std = (model.restruct(U_pred_hifi.std(-1), no_s=True),
+                       model.restruct(U_pred_hifi_sig.mean(-1), no_s=True))
+
+    # Plot against test and save
+    plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+                 HP=hp)

@@ -2,6 +2,7 @@
 
 import numpy as np
 import tensorflow as tf
+from collections import OrderedDict
 from podnn.advneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
 
 
@@ -19,25 +20,25 @@ HP["n_s"] = 500
 # HP["n_s_hifi"] = int(1e5)
 HP["n_s_hifi"] = int(1e4)
 # POD stopping param
-HP["eps"] = 0.001
-HP["n_L"] = 0
-HP["x_noise"] = 0.0
+HP["eps"] = 0
+HP["n_L"] = 10
+HP["x_noise"] = 0.01
 HP["u_noise"] = 0.
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)
 # Deep NN hidden layers topology
 HP["h_layers"] = [50, 50, 50, 50]
-HP["h_layers_t"] = [50, 50, 50]
+HP["h_layers_t"] = [50, 50]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 58000
-HP["lr"] = 0.0001
+HP["epochs"] = 40000
+HP["lr"] = 0.001
 HP["lambda"] = 1.5
 HP["beta"] = 1e-6
 HP["k1"] = 1
 HP["k2"] = 25
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 100
+HP["log_frequency"] = 1000
 # Non-spatial params
 bet = 1/10 * np.array([1, 2, 2, 4, 4, 6, 3, 7, 5, 5])
 gam = 1. * np.array([4, 1, 8, 6, 3, 2, 5, 8, 6, 7])

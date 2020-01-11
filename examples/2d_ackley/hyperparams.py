@@ -32,10 +32,10 @@ HP["train_val_test"] = (3/5, 1/5, 1/5)
 HP["h_layers"] = [50, 50, 50, 50]
 HP["h_layers_t"] = [50, 50, 50]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 100000
-HP["lr"] = 0.0001
+HP["epochs"] = 194000
+HP["lr"] = 0.00005
 HP["lambda"] = 1.5
-HP["beta"] = 0.
+HP["beta"] = 1e-6
 HP["k1"] = 1
 HP["k2"] = 25
 HP["norm"] = NORM_MEANSTD
