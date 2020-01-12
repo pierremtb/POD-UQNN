@@ -22,8 +22,8 @@ HP["n_s_hifi"] = int(1e4)
 # POD stopping param
 HP["eps"] = 0
 HP["n_L"] = 10
-# HP["x_noise"] = 0.01
-HP["x_noise"] = 0.
+HP["x_noise"] = 0.02
+# HP["x_noise"] = 0.
 HP["u_noise"] = 0.
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)
@@ -32,7 +32,7 @@ HP["h_layers"] = [50, 50, 50, 50]
 HP["h_layers_t"] = [50]
 # Setting up TF SGD-based optimizer
 HP["epochs"] = 80000
-HP["lr"] = 0.0002
+HP["lr"] = 0.0001
 HP["lambda"] = 1.5
 HP["beta"] = 1e-6
 HP["k1"] = 1

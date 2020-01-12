@@ -2,6 +2,7 @@
 
 import os
 import sys
+import yaml
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -10,7 +11,7 @@ from scipy.interpolate import griddata
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.plotting import figsize, saveresultdir
-from podnn.metrics import re
+from podnn.metrics import re, re_mean_std
 from podnn.testgenerator import X_FILE, T_FILE, U_MEAN_FILE, U_STD_FILE
 
 
@@ -55,8 +56,8 @@ def plot_spec_time(fig, pos, x, t_i,
         ax.legend()
 
 
-def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
-                 train_res=None, HP=None, no_plot=False):
+def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+                 resdir=None, train_res=None, HP=None, no_plot=False):
     X, t, U_test_hifi_mean, U_test_hifi_std = get_test_data()
     x = X[0]
 
@@ -74,9 +75,22 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     U_pred_hifi_mean = U_pred_hifi_mean[0]
     U_pred_hifi_std = U_pred_hifi_std[0]
 
+    # Compute relative error
+    error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
     hifi_error_test_mean = re(U_test_hifi_mean, U_pred_hifi_mean)
     hifi_error_test_std = re(U_test_hifi_std, U_pred_hifi_std)
+    print(U_pred_hifi_mean_sig.shape)
+    sigma_Thf = U_pred_hifi_mean_sig.mean()
+    print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
     print(f"HiFi test relative error: mean {hifi_error_test_mean:4f}, std {hifi_error_test_std:4f}")
+    print(f"Mean Sigma on hifi predictions: {sigma_Thf:4f}")
+    errors = {
+        "REM_T": error_test_mean.item(),
+        "RES_T": error_test_std.item(),
+        "REM_Thf": hifi_error_test_mean.item(),
+        "RES_Thf": hifi_error_test_std.item(),
+        "sigma": sigma_Thf.item(),
+    }
 
     n_plot_x = 5
     n_plot_y = 3
@@ -105,16 +119,22 @@ def plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                    "Std dev $u(x, t=0.75)$")
 
     plt.tight_layout()
-    saveresultdir(HP, train_res)
+    saveresultdir(resdir, HP, errors, train_res)
 
 
 if __name__ == "__main__":
-    from hyperparams import HP as hp
+    if len(sys.argv) <= 1:
+        raise FileNotFoundError("Provide a resdir")
 
-    model = PodnnModel.load("cache")
+    resdir = sys.argv[1]
 
-    x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-    _, _, X_v_test, _, U_test = model.load_train_data()
+    with open(os.path.join(resdir, "HP.txt")) as HPFile:
+        hp = yaml.load(HPFile)
+
+    model = PodnnModel.load(resdir)
+
+    x_mesh = np.load(os.path.join(resdir, "x_mesh.npy"))
+    _, _, _, X_v_test, U_test = model.load_train_data()
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
@@ -127,7 +147,14 @@ if __name__ == "__main__":
     X_v_test_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"],
                                                hp["t_min"], hp["t_max"])
     print("Predicting the {n_s_hifi} corresponding solutions")
-    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
+    U_pred_hifi, U_pred_hifi_sig = model.predict_var(X_v_test_hifi)
+    U_pred_hifi = model.restruct(U_pred_hifi)
+    U_pred_hifi_sig = model.restruct(U_pred_hifi_sig)
+    U_pred_hifi_mean = (model.restruct(U_pred_hifi.mean(-1), no_s=True),
+                        model.restruct(U_pred_hifi_sig.mean(-1), no_s=True))
+    U_pred_hifi_std = (model.restruct(U_pred_hifi.std(-1), no_s=True),
+                       model.restruct(U_pred_hifi_sig.std(-1), no_s=True))
 
     # Plot and save the results
-    plot_results(U_pred_struct, U_pred_hifi_mean, U_pred_hifi_std, HP=hp)
+    plot_results(U_test_struct, U_pred_struct, U_pred_hifi_mean, U_pred_hifi_std,
+                 resdir=resdir, HP=hp)

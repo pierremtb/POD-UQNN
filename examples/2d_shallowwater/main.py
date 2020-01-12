@@ -7,13 +7,13 @@ import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import re_mean_std
 from podnn.mesh import read_space_sol_input_mesh
+from podnn.plotting import genresultdir
 
 from plot import plot_results
 
 
-def main(hp, use_cached_dataset=False):
+def main(resdir, hp, use_cached_dataset=False):
     """Full example to run POD-NN on 2d_shallowwater."""
 
     if not use_cached_dataset:
@@ -22,14 +22,14 @@ def main(hp, use_cached_dataset=False):
         x_u_mesh_path = os.path.join("data", f"SOL_FV_{hp['n_s']}_Scenarios.txt")
         x_mesh, u_mesh, X_v = \
             read_space_sol_input_mesh(hp["n_s"], hp["mesh_idx"], x_u_mesh_path, mu_path)
-        np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
+        np.save(os.path.join(resdir, "x_mesh.npy"), x_mesh)
     else:
-        x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
+        x_mesh = np.load(os.path.join(resdir, "x_mesh.npy"))
         u_mesh = None
         X_v = None
 
     # Init the model
-    model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
+    model = PodnnModel(resdir, hp["n_v"], x_mesh, hp["n_t"])
 
     # Generate the dataset from the mesh and params
     
@@ -51,10 +51,6 @@ def main(hp, use_cached_dataset=False):
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)
 
-    # Compute relative error
-    error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
-    print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
-
     # Time for one pred
     # import time
     # st = time.time()
@@ -63,7 +59,7 @@ def main(hp, use_cached_dataset=False):
     # exit(0)
 
     # Plot and save the results
-    return plot_results(x_mesh, U_test, U_pred, hp, train_res)
+    return plot_results(x_mesh, U_test, U_pred, resdir, train_res, hp)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg
@@ -74,5 +70,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    # main(HP, use_cached_dataset=False)
-    main(HP, use_cached_dataset=True)
+    resdir = genresultdir()
+    main(resdir, HP, use_cached_dataset=False)

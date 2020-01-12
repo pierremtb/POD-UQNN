@@ -2,6 +2,7 @@
 
 import os
 import sys
+import yaml
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -10,6 +11,7 @@ from pyevtk.vtk import VtkTriangle
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
+from podnn.metrics import re, re_mean_std
 from podnn.plotting import figsize, saveresultdir
 
 
@@ -48,7 +50,7 @@ def get_min_max(z1, z2):
 
 
 def plot_results(x_mesh, U_test, U_pred,
-                 HP=None, train_res=None,
+                 resdir=None, train_res=None, HP=None,
                  export_vtk=False, export_txt=False):
     """Handles the plots and exports of 3d_shallowwater data."""
 
@@ -61,15 +63,26 @@ def plot_results(x_mesh, U_test, U_pred,
     U_test_std = np.nanstd(U_test, axis=-1)
     U_pred_std = np.nanstd(U_pred, axis=-1)
 
+    # Compute relative error
+    error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
+    sigma_T = U_pred_mean_sig.mean(0).mean(0)
+    print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
+    print(f"Mean Sigma on hifi predictions: {sigma_Thf:4f}")
+    errors = {
+        "REM_T": error_test_mean.item(),
+        "RES_T": error_test_std.item(),
+        "sigma": sigma_T.item(),
+    }
+
     if export_txt:
         print("Saving to .txt")
         x_u_mean_std = np.concatenate((x_mesh, U_test_mean.T, U_test_std), axis=1)
         # x_u_std = np.concatenate((x_mesh, U_test_std.T), axis=1)
         non_idx_len = x_u_mean_std.shape[1] - 1
-        np.savetxt(os.path.join("cache", "x_u_mean_std.txt"), x_u_mean_std,
+        np.savetxt(os.path.join(resdir, "x_u_mean_std.txt"), x_u_mean_std,
                    fmt=' '.join(["%i"] + ["%1.6f"]*non_idx_len),
                    delimiter="\t")
-        # np.savetxt(os.path.join("cache", "x_u_std.txt"), x_u_std,
+        # np.savetxt(os.path.join(resdir, "x_u_std.txt"), x_u_std,
         #            fmt=' '.join(["%i"] + ["%1.6f"]*non_idx_len),
         #            delimiter="\t")
         if not export_vtk:
@@ -103,7 +116,7 @@ def plot_results(x_mesh, U_test, U_pred,
         z = np.ascontiguousarray(np.zeros_like(x))
 
         # Exporting
-        unstructuredGridToVTK(os.path.join("cache", "x_u_mean_std"),
+        unstructuredGridToVTK(os.path.join(resdir, "x_u_mean_std"),
                               x, y, z,
                               connectivity, offsets, cell_types,
                               cellData=None,
@@ -149,16 +162,22 @@ def plot_results(x_mesh, U_test, U_pred,
                   z_min, z_max, f"Std ${qty}(x,y)$ [val]")
 
     plt.tight_layout()
-    saveresultdir(HP, train_res)
+    saveresultdir(resdir, HP, errors, train_res)
 
 
 if __name__ == "__main__":
-    from hyperparams import HP as hp
+    if len(sys.argv) <= 1:
+        raise FileNotFoundError("Provide a resdir")
 
-    model = PodnnModel.load("cache")
+    resdir = sys.argv[1]
 
-    x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-    _, _, X_v_test, _, U_test = model.load_train_data()
+    with open(os.path.join(resdir, "HP.txt")) as HPFile:
+        hp = yaml.load(HPFile)
+
+    model = PodnnModel.load(resdir)
+
+    x_mesh = np.load(os.path.join(resdir, "x_mesh.npy"))
+    _, _, _, X_v_test, U_test = model.load_train_data()
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
@@ -166,4 +185,5 @@ if __name__ == "__main__":
     U_test = model.restruct(U_test)
 
     # Plot and save the results
-    plot_results(x_mesh, U_test, U_pred, hp, export_txt=True, export_vtk=True)
+    plot_results(x_mesh, U_test, U_pred,
+                 resdir=resdir, HP=hp, export_txt=True, export_vtk=True)

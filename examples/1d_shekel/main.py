@@ -4,11 +4,9 @@ import sys
 import os
 import yaml
 import numpy as np
-import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import re_mean_std
 from podnn.mesh import create_linear_mesh
 from podnn.plotting import genresultdir
 

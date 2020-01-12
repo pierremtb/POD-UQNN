@@ -42,7 +42,7 @@ def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
     hifi_error_test_mean = re(U_test_hifi_mean, U_pred_hifi_mean)
     hifi_error_test_std = re(U_test_hifi_std, U_pred_hifi_std)
-    sigma_Thf = U_pred_hifi_mean_sig[0].mean(0)
+    sigma_Thf = U_pred_hifi_mean_sig.mean(0).mean(0)
     print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
     print(f"HiFi test relative error: mean {hifi_error_test_mean:4f}, std {hifi_error_test_std:4f}")
     print(f"Mean Sigma on hifi predictions: {sigma_Thf:4f}")
@@ -106,10 +106,6 @@ if __name__ == "__main__":
     U_pred = model.V.dot(v_pred.T)
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)
-
-    # Compute relative error
-    error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
-    print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
 
     # Sample the new model to generate a HiFi prediction
     print("Sampling {n_s_hifi} parameters")

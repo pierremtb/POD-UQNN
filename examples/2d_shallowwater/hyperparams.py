@@ -25,14 +25,15 @@ HP["h_layers"] = [50, 50, 50, 50]
 HP["h_layers_t"] = [50, 50, 50]
 # Setting up TF SGD-based optimizer
 HP["epochs"] = 480000
+HP["epochs"] = 8000
 HP["lr"] = 0.0001
 HP["lambda"] = 1.5
-HP["beta"] = 0.000001
+HP["beta"] = 0.
 HP["k1"] = 1
 HP["k2"] = 5
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 5000
+HP["log_frequency"] = 500
 
 np.random.seed(1111)
 tf.random.set_seed(1111)

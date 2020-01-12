@@ -46,7 +46,7 @@ def genresultdir():
     scriptname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
     resdir = os.path.join("results", f"{now.strftime('%y%m%d-%H%M%S')}-{scriptname}")
     os.mkdir(resdir)
-    print("Saving results to directory ", resdir)
+    print("Working directory: ", resdir)
     return resdir
 
 def saveresultdir(resdir, save_HP, errors, train_res=None):
@@ -62,6 +62,7 @@ def saveresultdir(resdir, save_HP, errors, train_res=None):
                    fmt="\t".join(["%i"] + ["%1.6f"]*qty_count))
     filename = os.path.join(resdir, "graph")
     savefig(filename)
+    print("Saved results to: ", resdir)
 #    openPdfGraph(filename)
 
 def openPdfGraph(filename):

@@ -7,14 +7,14 @@ import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import re_mean_std
 from podnn.mesh import create_linear_mesh
+from podnn.plotting import genresultdir
 
 from genhifi import u, generate_test_dataset
 from plot import plot_results
 
 
-def main(hp, gen_test=False, use_cached_dataset=False,
+def main(resdir, hp, gen_test=False, use_cached_dataset=False,
          no_plot=False):
     """Full example to run POD-NN on 1dt_burger."""
 
@@ -24,12 +24,12 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     if not use_cached_dataset:
         # Create linear space mesh
         x_mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"])
-        np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
+        np.save(os.path.join(resdir, "x_mesh.npy"), x_mesh)
     else:
-        x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
+        x_mesh = np.load(os.path.join(resdir, "x_mesh.npy"))
 
     # Init the model
-    model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
+    model = PodnnModel(resdir, hp["n_v"], x_mesh, hp["n_t"])
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, U, \
@@ -56,10 +56,6 @@ def main(hp, gen_test=False, use_cached_dataset=False,
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)
 
-    # Compute relative error
-    error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
-    print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
-
     # Sample the new model to generate a HiFi prediction
     n_s_hifi = hp["n_s_hifi"]
     print("Sampling {n_s_hifi} parameters")
@@ -75,8 +71,8 @@ def main(hp, gen_test=False, use_cached_dataset=False,
                        model.restruct(U_pred_hifi_sig.std(-1), no_s=True))
 
     # Plot against test and save
-    return plot_results(U_pred, U_pred_hifi_mean, U_pred_hifi_std,
-                        train_res, hp, no_plot)
+    return plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+                        resdir, train_res, hp, no_plot)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg
@@ -87,5 +83,5 @@ if __name__ == "__main__":
     else:
         from hyperparams import HP
 
-    main(HP, gen_test=False, use_cached_dataset=False)
-    # main(HP, gen_test=False, use_cached_dataset=True)
+    resdir = genresultdir()
+    main(resdir, HP, gen_test=False, use_cached_dataset=False)
