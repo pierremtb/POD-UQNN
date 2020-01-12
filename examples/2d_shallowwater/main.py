@@ -47,9 +47,12 @@ def main(resdir, hp, use_cached_dataset=False):
 
 
     # Predict and restruct
-    U_pred = model.predict(X_v_test)
-    U_pred = model.restruct(U_pred)
-    U_test = model.restruct(U_test)
+    U_pred, U_pred_sig = model.predict_var(X_v_test)
+    U_pred_mean = (model.restruct(U_pred.mean(-1), no_s=True),
+                        model.restruct(U_pred_sig.mean(-1), no_s=True))
+    U_pred_std = (model.restruct(U_pred.std(-1), no_s=True),
+                       model.restruct(U_pred_sig.std(-1), no_s=True))
+    sigma_pod = model.pod_sig.mean()
 
     # Time for one pred
     # import time
@@ -59,7 +62,7 @@ def main(resdir, hp, use_cached_dataset=False):
     # exit(0)
 
     # Plot and save the results
-    return plot_results(x_mesh, U_test, U_pred, resdir, train_res, hp)
+    return plot_results(x_mesh, U_test, U_pred_mean, U_pred_std, sigma_pod, resdir, train_res, hp)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg

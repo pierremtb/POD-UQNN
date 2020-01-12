@@ -22,7 +22,7 @@ def get_test_data():
     return X, U_test_mean, U_test_std
 
 
-def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, sigma_pod,
                  resdir=None, train_res=None, HP=None, no_plot=False):
 
     X, U_test_hifi_mean, U_test_hifi_std = get_test_data()
@@ -46,12 +46,14 @@ def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
     print(f"HiFi test relative error: mean {hifi_error_test_mean:4f}, std {hifi_error_test_std:4f}")
     print(f"Mean Sigma on hifi predictions: {sigma_Thf:4f}")
+    print(f"Mean Sigma contrib from POD: {sigma_pod:4f}")
     errors = {
         "REM_T": error_test_mean.item(),
         "RES_T": error_test_std.item(),
         "REM_Thf": hifi_error_test_mean.item(),
         "RES_Thf": hifi_error_test_std.item(),
         "sigma": sigma_Thf.item(),
+        "sigma_pod": sigma_pod.item(),
     }
 
     if no_plot:

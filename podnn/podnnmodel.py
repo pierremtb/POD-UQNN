@@ -183,7 +183,7 @@ class PodnnModel:
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
                          train_val_test, eps=0., eps_init=None, n_L=0,
-                         t_min=0, t_max=0, u_noise=0., x_noise=0., v_noise=0.,
+                         t_min=0, t_max=0, u_noise=0., x_noise=0.,
                          use_cache=False):
         """Generate a training dataset for benchmark problems."""
         if use_cache:
@@ -235,14 +235,6 @@ class PodnnModel:
 
         # Projecting
         v_train = (self.V.T.dot(U_train)).T
-
-        if v_noise > 0.:
-            for i in range(v_train.shape[0]):
-                v_train[i, :] += v_noise*np.std(v_train[i, :])*np.random.randn(v_train.shape[1])
-
-        # # Randomly splitting the dataset (X_v, v)
-        # X_v_train, X_v_test, v_train, v_test = \
-        #     self.split_dataset(X_v, v, train_val_test[2])
 
         # Saving the POD error
         U_train_pod = self.V.dot(v_train.T)
@@ -316,13 +308,10 @@ class PodnnModel:
         U_val = self.V.dot(v_val.T)
         U_train = self.V.dot(v_train.T)
         def get_val_err():
-            # U_train_pred, _ = self.predict_var(X_v_train)
-            # U_val_pred, _ = self.predict_var(X_v_val)
             v_train_pred, _ = self.regnn.predict(X_v_train)
             v_val_pred, _ = self.regnn.predict(X_v_val)
             U_val_pred = self.V.dot(v_val_pred.T)
             U_train_pred = self.V.dot(v_train_pred.T)
-            # z = np.random.randn(X_v_val.shape[0], self.regnn.Z_dim)
             return {
                 "MSE": tf.reduce_mean(tf.square(v_train - v_train_pred)),
                 "MSE_V": tf.reduce_mean(tf.square(v_val - v_val_pred)),
@@ -402,8 +391,8 @@ class PodnnModel:
         U_pred_hifi_mean_sig = np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
         U_pred_hifi_mean_sig = np.nan_to_num(U_pred_hifi_mean_sig)
 
-        # if self.pod_sig is not None:
-            # U_pred_hifi_mean_sig += self.pod_sig[:, np.newaxis]
+        if self.pod_sig is not None:
+            U_pred_hifi_mean_sig += self.pod_sig[:, np.newaxis]
 
         return U_pred_hifi_mean, U_pred_hifi_mean_sig
     
@@ -433,8 +422,6 @@ class PodnnModel:
         U_pred_hifi_std = np.nan_to_num(U_pred_hifi_std)
 
         return U_pred_hifi_mean, U_pred_hifi_std
-        # tup = self.get_u_tuple()
-        # return U_pred_hifi_mean.reshape(tup), U_pred_hifi_std.reshape(tup)
 
     def load_train_data(self):
         """Load training data, such as datasets."""
@@ -446,13 +433,14 @@ class PodnnModel:
             self.n_L = data[0]
             self.n_d = data[1]
             self.V = data[2]
-            return data[3:]
+            self.pod_sig = data[3]
+            return data[4:]
 
     def save_train_data(self, X_v_train, v_train, U_train, X_v_test, U_test):
         """Save training data, such as datasets."""
 
         with open(self.train_data_path, "wb") as f:
-            pickle.dump((self.n_L, self.n_d, self.V,
+            pickle.dump((self.n_L, self.n_d, self.V, self.pod_sig,
                          X_v_train, v_train, U_train, X_v_test, U_test), f)
 
     def load_model(self):

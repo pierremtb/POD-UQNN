@@ -59,7 +59,7 @@ def plot_map(fig, pos, x, t, X, T, U, title):
     ax.set_xlabel("$t$")
     ax.set_ylabel("$x$")
 
-def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, sigma_pod,
                  resdir=None, train_res=None, HP=None, no_plot=False):
     X, U_test_hifi_mean, U_test_hifi_std = get_test_data()
     X, Y = X[0], X[1]
@@ -91,12 +91,14 @@ def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
     print(f"HiFi test relative error: mean {hifi_error_test_mean:4f}, std {hifi_error_test_std:4f}")
     print(f"Mean Sigma on hifi predictions: {sigma_Thf:4f}")
+    print(f"Mean Sigma contrib from POD: {sigma_pod:4f}")
     errors = {
         "REM_T": error_test_mean.item(),
         "RES_T": error_test_std.item(),
         "REM_Thf": hifi_error_test_mean.item(),
         "RES_Thf": hifi_error_test_std.item(),
         "sigma": sigma_Thf.item(),
+        "sigma_pod": sigma_pod.item(),
     }
 
     if no_plot:
@@ -172,7 +174,8 @@ if __name__ == "__main__":
                         model.restruct(U_pred_hifi_sig.mean(-1), no_s=True))
     U_pred_hifi_std = (model.restruct(U_pred_hifi.std(-1), no_s=True),
                        model.restruct(U_pred_hifi_sig.std(-1), no_s=True))
+    sigma_pod = model.pod_sig.mean()
 
     # Plot and save the results
-    plot_results(U_test_struct, U_pred_struct, U_pred_hifi_mean, U_pred_hifi_std,
+    plot_results(U_test_struct, U_pred_struct, U_pred_hifi_mean, U_pred_hifi_std, sigma_pod,
                  resdir=resdir, HP=hp)

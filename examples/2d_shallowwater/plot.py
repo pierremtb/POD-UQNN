@@ -49,7 +49,7 @@ def get_min_max(z1, z2):
     return z_min, z_max
 
 
-def plot_results(x_mesh, U_test, U_pred,
+def plot_results(x_mesh, U_test, U_pred_mean, U_pred_std, sigma_pod,
                  resdir=None, train_res=None, HP=None,
                  export_vtk=False, export_txt=False):
     """Handles the plots and exports of 3d_shallowwater data."""
@@ -57,21 +57,25 @@ def plot_results(x_mesh, U_test, U_pred,
     x = x_mesh[:, 1]
     y = x_mesh[:, 2]
 
-    # Computing means
     U_test_mean = np.mean(U_test, axis=-1)
-    U_pred_mean = np.mean(U_pred, axis=-1)
     U_test_std = np.nanstd(U_test, axis=-1)
-    U_pred_std = np.nanstd(U_pred, axis=-1)
+
+    U_pred_mean = U_pred_mean[0]
+    U_pred_std = U_pred_std[0]
+    U_pred_mean_sig = U_pred_mean[1]
+    U_pred_std_sig = U_pred_std[1]
 
     # Compute relative error
     error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
-    sigma_T = U_pred_mean_sig.mean(0).mean(0)
+    sigma_T = U_pred_mean_sig.mean()
     print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
     print(f"Mean Sigma on hifi predictions: {sigma_Thf:4f}")
+    print(f"Mean Sigma contrib from POD: {sigma_pod:4f}")
     errors = {
         "REM_T": error_test_mean.item(),
         "RES_T": error_test_std.item(),
         "sigma": sigma_T.item(),
+        "sigma_pod": sigma_pod.item(),
     }
 
     if export_txt:
@@ -183,7 +187,8 @@ if __name__ == "__main__":
     U_pred = model.predict(X_v_test)
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)
+    sigma_pod = model.sig_pod.mean()
 
     # Plot and save the results
-    plot_results(x_mesh, U_test, U_pred,
+    plot_results(x_mesh, U_test, U_pred, sigma_pod,
                  resdir=resdir, HP=hp, export_txt=True, export_vtk=True)

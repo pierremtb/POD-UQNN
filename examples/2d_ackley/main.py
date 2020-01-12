@@ -67,9 +67,10 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
                         model.restruct(U_pred_hifi_sig.mean(-1), no_s=True))
     U_pred_hifi_std = (model.restruct(U_pred_hifi.std(-1), no_s=True),
                        model.restruct(U_pred_hifi_sig.std(-1), no_s=True))
+    sigma_pod = model.pod_sig.mean()
 
     # Plot against test and save
-    return plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
+    return plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, sigma_pod,
                         resdir, train_res, hp, no_plot)
 
 
