@@ -40,17 +40,21 @@ pgf_with_latex = {                      # setup matplotlib to use latex for outp
     }
 mpl.rcParams.update(pgf_with_latex)
 
-
-def saveresultdir(save_HP, train_res=None):
-    """Save plots and hyperparams to a subdirectory of './results/'."""
-
+def genresultdir():
+    """Generate the results dir name."""
     now = datetime.now()
     scriptname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
     resdir = os.path.join("results", f"{now.strftime('%y%m%d-%H%M%S')}-{scriptname}")
     os.mkdir(resdir)
-    print("saving results to directory ", resdir)
+    print("Saving results to directory ", resdir)
+    return resdir
+
+def saveresultdir(resdir, save_HP, errors, train_res=None):
+    """Save plots and hyperparams to a subdirectory of './results/'."""
     with open(os.path.join(resdir, "HP.txt"), "w") as f:
          yaml.dump(save_HP, f)
+    with open(os.path.join(resdir, "errors.txt"), "w") as f:
+         yaml.dump(errors, f)
     if train_res is not None:
         qty_count = train_res[1].shape[1] - 1
         np.savetxt(os.path.join(resdir, "res.txt"), train_res[1],

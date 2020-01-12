@@ -299,8 +299,6 @@ class AdvNeuralNetwork(object):
         with open(params_path, "rb") as f:
             layers, gan_dims, lr, lam, bet, k1, k2, norm, lb, ub = pickle.load(f)
         print(f"Loading model params from {params_path}")
-        print(lb, ub)
-
         model = (tf.keras.models.load_model(model_path[0]),
                  tf.keras.models.load_model(model_path[1]),
                  tf.keras.models.load_model(model_path[2]))

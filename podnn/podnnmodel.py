@@ -23,7 +23,7 @@ MODEL_PARAMS_NAME = "model_params.pkl"
 
 
 class PodnnModel:
-    def __init__(self, save_dir, n_v, x_mesh, n_t):
+    def __init__(self, resdir, n_v, x_mesh, n_t):
         # Dimension of the function output
         self.n_v = n_v
         # Mesh definition array in space
@@ -36,13 +36,13 @@ class PodnnModel:
         self.has_t = self.n_t > 0
 
         # Cache paths
-        self.save_dir = save_dir
-        self.setup_data_path = os.path.join(save_dir, SETUP_DATA_NAME)
-        self.train_data_path = os.path.join(save_dir, TRAIN_DATA_NAME)
-        self.model_params_path = os.path.join(save_dir, MODEL_PARAMS_NAME)
-        self.model_path = (os.path.join(save_dir, MODEL_NAME[0]),
-                           os.path.join(save_dir, MODEL_NAME[1]),
-                           os.path.join(save_dir, MODEL_NAME[2]))
+        self.resdir = resdir
+        self.setup_data_path = os.path.join(resdir, SETUP_DATA_NAME)
+        self.train_data_path = os.path.join(resdir, TRAIN_DATA_NAME)
+        self.model_params_path = os.path.join(resdir, MODEL_PARAMS_NAME)
+        self.model_path = (os.path.join(resdir, MODEL_NAME[0]),
+                           os.path.join(resdir, MODEL_NAME[1]),
+                           os.path.join(resdir, MODEL_NAME[2]))
 
         self.regnn = None
         self.n_L = None
@@ -402,8 +402,8 @@ class PodnnModel:
         U_pred_hifi_mean_sig = np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
         U_pred_hifi_mean_sig = np.nan_to_num(U_pred_hifi_mean_sig)
 
-        if self.pod_sig is not None:
-            U_pred_hifi_mean_sig += self.pod_sig[:, np.newaxis]
+        # if self.pod_sig is not None:
+            # U_pred_hifi_mean_sig += self.pod_sig[:, np.newaxis]
 
         return U_pred_hifi_mean, U_pred_hifi_mean_sig
     
