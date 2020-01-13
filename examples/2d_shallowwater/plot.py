@@ -66,10 +66,11 @@ def plot_results(x_mesh, U_test, U_pred_mean, U_pred_std, sigma_pod,
     U_pred_std_sig = U_pred_std[1]
 
     # Compute relative error
-    error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
+    error_test_mean = re(U_test_mean, U_pred_mean)
+    error_test_std = re(U_test_std, U_pred_std)
     sigma_T = U_pred_mean_sig.mean()
     print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
-    print(f"Mean Sigma on hifi predictions: {sigma_Thf:4f}")
+    print(f"Mean Sigma on hifi predictions: {sigma_T:4f}")
     print(f"Mean Sigma contrib from POD: {sigma_pod:4f}")
     errors = {
         "REM_T": error_test_mean.item(),
@@ -142,10 +143,10 @@ def plot_results(x_mesh, U_test, U_pred_mean, U_pred_std, sigma_pod,
     y = y[i_min:i_max]
 
     # Computing means
-    U_test_mean = np.mean(U_test[:, i_min:i_max, :], axis=-1)
-    U_pred_mean = np.mean(U_pred[:, i_min:i_max, :], axis=-1)
-    U_test_std = np.nanstd(U_test[:, i_min:i_max, :], axis=-1)
-    U_pred_std = np.nanstd(U_pred[:, i_min:i_max, :], axis=-1)
+    U_test_mean = U_test_mean[:, i_min:i_max]
+    U_pred_mean = U_pred_mean[:, i_min:i_max]
+    U_test_std = U_test_std[:, i_min:i_max]
+    U_pred_std = U_pred_std[:, i_min:i_max]
     n_plot_x = 4
     n_plot_y = 4
     fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.5))

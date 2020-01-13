@@ -22,10 +22,9 @@ HP["n_L"] = 10
 HP["train_val_test"] = (3/5, 1/5, 1/5)
 # DeepNN Topology
 HP["h_layers"] = [50, 50, 50, 50]
-HP["h_layers_t"] = [50, 50, 50]
+HP["h_layers_t"] = [50, 50]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 480000
-HP["epochs"] = 8000
+HP["epochs"] = 200000
 HP["lr"] = 0.0001
 HP["lambda"] = 1.5
 HP["beta"] = 0.

@@ -145,11 +145,13 @@ class PodnnModel:
         if use_cache and os.path.exists(self.train_data_path):
             return self.load_train_data()
 
-        n_xyz = self.x_mesh.shape[0]
-        n_h = n_xyz * self.n_v
+        self.n_xyz = self.x_mesh.shape[0]
+        n_h = self.n_xyz * self.n_v
         n_s = X_v.shape[0]
 
-        # U = u_mesh.reshape(n_h, n_st)
+        # Number of input in time (1) + number of params
+        self.n_d = X_v.shape[1]
+
         # Reshaping manually
         U = np.zeros((n_h, n_s))
         for i in range(n_s):
@@ -167,12 +169,17 @@ class PodnnModel:
         else:
             self.V = perform_pod(U, eps, True)
 
+        self.n_L = self.V.shape[1]
+
         # Projecting
         v = (self.V.T.dot(U)).T
+        
+        # Checking the POD error
+        U_pod = self.V.dot(v.T)
+        self.pod_sig = np.stack((U, U_pod), axis=-1).std(-1).mean(-1)
 
         # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_test, v_train, v_test = \
-            self.split_dataset(X_v, v, train_val_test[2])
+        X_v_train, X_v_test, v_train, v_test = train_test_split(X_v, v, test_size=train_val_test[2])
 
         # Creating the validation snapshots matrix
         U_test = self.V.dot(v_test.T)
@@ -293,7 +300,6 @@ class PodnnModel:
 
         self.regnn = AdvNeuralNetwork(self.layers, gan_dims,
                                       lr, lam, bet, k1, k2, norm)
-        self.regnn.summary()
 
     def train(self, X_v, v, epochs, train_val_test, freq=100):
         """Train the POD-NN's regression model, and save it."""
