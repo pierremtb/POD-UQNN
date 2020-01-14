@@ -140,7 +140,7 @@ class PodnnModel:
         return loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise, x_noise)
 
     def convert_dataset(self, u_mesh, X_v, train_val_test, eps, eps_init=None,
-                        use_cache=False):
+                        use_cache=False, save_cache=False):
         """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
         if use_cache and os.path.exists(self.train_data_path):
             return self.load_train_data()
@@ -184,7 +184,8 @@ class PodnnModel:
         # Creating the validation snapshots matrix
         U_test = self.V.dot(v_test.T)
 
-        self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_test)
+        if save_cache:
+            self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_test)
 
         return X_v_train, v_train, X_v_test, v_test, U_test
 
