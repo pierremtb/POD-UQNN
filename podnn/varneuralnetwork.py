@@ -8,9 +8,11 @@ from sklearn.preprocessing import normalize as sknormalize
 import numpy as np
 from tqdm import tqdm
 
+from .advneuralnetwork import NORM_NONE, NORM_MEANSTD, NORM_CENTER
+
 
 class VarNeuralNetwork:
-    def __init__(self, layers, lr, lam, model=None, lb=None, ub=None):
+    def __init__(self, layers, lr, lam, norm=NORM_NONE, model=None, lb=None, ub=None):
         # Making sure the dtype is consistent
         self.dtype = "float64"
 
@@ -23,6 +25,7 @@ class VarNeuralNetwork:
         self.ub = ub
         self.logger = None
         self.batch_size = 0
+        self.norm = norm
 
         self.adv_eps = 1e-3
 
@@ -60,12 +63,18 @@ class VarNeuralNetwork:
 
         return model
 
+    def set_normalize_bounds(self, X):
+        if self.norm == NORM_CENTER:
+            self.lb = np.amin(X, axis=0)
+            self.ub = np.amax(X, axis=0)
+        elif self.norm == NORM_MEANSTD:
+            self.lb = X.mean(0)
+            self.ub = X.std(0)
+
     def normalize(self, X):
-        """Apply a kind of normalization to the inputs X."""
-        if self.lb is not None and self.ub is not None:
-            # X = (X - self.lb) - 0.5*(self.ub - self.lb)
-            # X = sknormalize(X, norm="max")
-            # X = (X - X.mean(0)) / X.std(0)
+        if self.norm == NORM_CENTER:
+            X = (X - self.lb) - 0.5 * (self.ub - self.lb)
+        elif self.norm == NORM_MEANSTD:
             X = (X - self.lb) / self.ub
         return self.tensor(X)
 
@@ -126,6 +135,7 @@ class VarNeuralNetwork:
         self.logger.log_train_start()
 
         # Normalizing and preparing inputs
+        self.set_normalize_bounds(X_v)
         X_v = self.normalize(X_v)
         v = self.tensor(v)
 
@@ -161,7 +171,7 @@ class VarNeuralNetwork:
     def save_to(self, model_path, params_path):
         """Save the (trained) model and params for later use."""
         with open(params_path, "wb") as f:
-            pickle.dump((self.layers, self.lr, self.lam, self.lb, self.ub), f)
+            pickle.dump((self.layers, self.lr, self.lam, self.norm), f)
         tf.keras.models.save_model(self.model, model_path)
 
     @classmethod
@@ -175,7 +185,7 @@ class VarNeuralNetwork:
 
         print(f"Loading model from {model_path}")
         with open(params_path, "rb") as f:
-            layers, lam, lr, lb, ub = pickle.load(f)
+            layers, lam, lr, norm = pickle.load(f)
         print(f"Loading model params from {params_path}")
         model = tf.keras.models.load_model(model_path)
-        return cls(layers, lam, lr, model=model, lb=lb, ub=ub)
+        return cls(layers, lam, lr, model=model, norm=norm)
