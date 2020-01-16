@@ -7,26 +7,23 @@ from tqdm import trange, tqdm
 
 
 class Logger(object):
-    def __init__(self, epochs, frequency):
-        # print("Hyperparameters:")
-        # print(json.dumps(HP, indent=2))
-        # print()
-
-        print("TensorFlow version: {}".format(tf.__version__))
-        print("Eager execution: {}".format(tf.executing_eagerly()))
-        print("GPU-accerelated: {}".format(tf.test.is_gpu_available()))
-
+    def __init__(self, epochs, frequency, silent=False):
         self.start_time = time.time()
         self.prev_time = self.start_time
         self.tf_epochs = epochs
         self.frequency = frequency
+        self.silent = silent
 
         self.pbar = None
         self.epochs = []
         self.logs = []
         self.logs_keys = None
-
         self.get_val_err = None
+
+        if not self.silent:
+            print("TensorFlow version: {}".format(tf.__version__))
+            print("Eager execution: {}".format(tf.executing_eagerly()))
+            print("GPU-accerelated: {}".format(tf.test.is_gpu_available()))
 
     def get_epoch_duration(self):
         now = time.time()
@@ -43,13 +40,17 @@ class Logger(object):
         self.get_val_err = fn
 
     def log_train_start(self):
-        print("\nTraining started")
-        print("================")
+        if not self.silent:
+            print("\nTraining started")
+            print("================")
         self.pbar = tqdm(total=self.tf_epochs)
 
     def log_train_epoch(self, epoch, loss, custom="", is_iter=False):
         self.pbar.update(1)
         self.pbar.set_description(f"L: {loss:.4e}")
+
+        if self.silent:
+            return
 
         if epoch % self.frequency == 0:
             logs = {"L": loss, **self.get_val_err()}
@@ -73,12 +74,11 @@ class Logger(object):
             self.epochs.append(epoch)
             self.logs.append(logs_values)
 
-    def log_train_opt(self, name):
-        print(f"-- Starting {name} optimization --")
-
     def log_train_end(self, epoch, loss, custom=""):
         self.log_train_epoch(epoch, loss, custom)
         self.pbar.close()
+        if self.silent:
+            return
         print("==================")
         print(f"Training finished (epoch {epoch}): " +
               f"duration = {self.get_elapsed()}  " + custom)
