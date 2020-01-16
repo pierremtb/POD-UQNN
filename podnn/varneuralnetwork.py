@@ -12,7 +12,7 @@ from tqdm import tqdm
 class VarNeuralNetwork:
     def __init__(self, layers, lr, lam, model=None, lb=None, ub=None):
         # Making sure the dtype is consistent
-        self.dtype = "float32"
+        self.dtype = "float64"
 
         # Setting up optimizer and params
         self.tf_optimizer = tf.keras.optimizers.Adam(lr)
@@ -23,6 +23,8 @@ class VarNeuralNetwork:
         self.ub = ub
         self.logger = None
         self.batch_size = 0
+
+        self.adv_eps = 1e-3
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
@@ -48,7 +50,8 @@ class VarNeuralNetwork:
         # Output processing function
         def split_mean_var(data):
             mean, out_var = tf.split(data, num_or_size_splits=2, axis=1)
-            var = tf.math.log(1.0 + tf.exp(out_var)) + 1e-4
+            # var = tf.math.log(1.0 + tf.exp(out_var)) + 1e-6
+            var = tf.math.softplus(out_var) + 1e-6
             return [mean, var]
         
         outputs = tf.keras.layers.Lambda(split_mean_var)(x)
@@ -71,21 +74,30 @@ class VarNeuralNetwork:
         l2_norm = tf.reduce_sum(l2_norms)
         return self.lam * l2_norm
 
-    # @tf.function
+    @tf.function
     def loss(self, y, y_pred):
         """Return the Gaussian NLL loss function between the pred and val."""
         y_pred_mean, y_pred_var = y_pred
-        return tf.reduce_mean(tf.math.log(y_pred_var + 1e-4)) / 2 + \
-               tf.reduce_mean(tf.divide(tf.square(y -  y_pred_mean), y_pred_var + 1e-4)) / 2 + \
-               tf.math.log(2*np.pi) / 2
+        return tf.reduce_mean(tf.math.log(y_pred_var) / 2) + \
+               tf.reduce_mean(tf.divide(tf.square(y -  y_pred_mean), 2*y_pred_var))
 
-    # @tf.function
+    @tf.function
     def grad(self, X, v):
         """Compute the loss and its derivatives w.r.t. the inputs."""
-        with tf.GradientTape() as tape:
+        with tf.GradientTape(persistent=True) as tape:
+            tape.watch(X)
             loss_value = self.loss(v, self.model(X))
+            loss_x = tape.gradient(loss_value, X)
+            X_adv = X + self.adv_eps * tf.math.sign(loss_x)
+            loss_value += self.loss(v, self.model(X_adv))
         grads = tape.gradient(loss_value, self.wrap_training_variables())
+        del tape
         return loss_value, grads
+
+    def compute_model(self, X):
+        res = self.model(X)
+        idx = int(self.layers[-1] / 2)
+        return res[:idx], res[idx:]
 
     def wrap_training_variables(self):
         """Convenience method. Should be extended if needed."""
@@ -114,11 +126,8 @@ class VarNeuralNetwork:
         self.logger.log_train_start()
 
         # Normalizing and preparing inputs
-        # X_v = self.normalize(X_v)
-        X_v = self.tensor(X_v)
+        X_v = self.normalize(X_v)
         v = self.tensor(v)
-        print(X_v.shape)
-        print(v.shape)
 
         # Optimizing
         last_loss = self.tf_optimization(X_v, v, epochs)
