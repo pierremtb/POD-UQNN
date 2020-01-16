@@ -21,9 +21,9 @@ class Logger(object):
         self.get_val_err = None
 
         if not self.silent:
-            print("TensorFlow version: {}".format(tf.__version__))
-            print("Eager execution: {}".format(tf.executing_eagerly()))
-            print("GPU-accerelated: {}".format(tf.test.is_gpu_available()))
+            print(f"TensorFlow version: {tf.version}")
+            print(f"Eager execution: {tf.executing_eagerly()}")
+            print(f"GPU-accerelated: {len(tf.config.list_physical_devices('GPU')) > 0}")
 
     def get_epoch_duration(self):
         now = time.time()

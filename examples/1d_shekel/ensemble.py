@@ -33,7 +33,7 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
 
     # Generate the dataset from the mesh and params
     X_v_train, v_train, U_train, \
-        X_v_test, U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
+        X_v_test, v_test, U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                                   hp["n_s"],
                                                   hp["train_val_test"],
                                                   eps=hp["eps"], n_L=hp["n_L"],
@@ -41,9 +41,10 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
                                                   x_noise=hp["x_noise"],
                                                   use_cache=use_cached_dataset)
 
-    hp["lambda"] = 0.
+    # hp["lambda"] = 0.00001
+    hp["x_noise"] = 0.
     hp["lr"] = 0.001
-    hp["epochs"] = 4000
+    hp["epochs"] = 25000
     print(hp)
     # Train
     def gen_and_train_model():
@@ -55,7 +56,7 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
         # Predict and restruct
         return model.predict_v(X_v_test)
 
-    M = 1
+    M = 5
     v_pred_samples = np.zeros((100, v_train.shape[1], M))
     v_pred_var_samples = np.zeros((100, v_train.shape[1], M))
     for i in range(0, M):
@@ -66,15 +67,26 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
     v_pred = v_pred_samples.mean(-1)
     v_pred_var = (v_pred_var_samples + v_pred_samples ** 2).mean(-1) - v_pred ** 2
 
+    import matplotlib.pyplot as plt
+    plt.plot(v_pred.mean(0))
+    plt.plot(v_test.mean(0))
+    plt.show()
+
     U_pred = model.V.dot(v_pred.T)
+    U_pred_var = model.V.dot(v_pred_var.T)
     U_pred = model.restruct(U_pred)
+    U_pred_var = model.restruct(U_pred_var)
     U_test = model.restruct(U_test)
     print(U_pred.shape, U_test.shape)
 
     import matplotlib.pyplot as plt
     x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
-    plt.plot(x, U_pred.mean(-1)[0])
-    plt.plot(x, U_test.mean(-1)[0])
+    lower = U_pred - 3 * np.sqrt(U_pred_var)
+    upper = U_pred + 3 * np.sqrt(U_pred_var)
+    plt.fill_between(x, lower.mean(-1)[0], upper.mean(-1)[0], 
+                        facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
+    plt.plot(x, U_pred.mean(-1)[0], "b-")
+    plt.plot(x, U_test.mean(-1)[0], "r--")
     plt.show()
     
 

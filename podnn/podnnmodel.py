@@ -244,6 +244,7 @@ class PodnnModel:
 
         # Projecting
         v_train = (self.V.T.dot(U_train)).T
+        v_test = (self.V.T.dot(U_test)).T
 
         # Saving the POD error
         U_train_pod = self.V.dot(v_train.T)
@@ -283,7 +284,7 @@ class PodnnModel:
 
         self.save_train_data(X_v_train, v_train, U_train, X_v_test, U_test)
 
-        return X_v_train, v_train, U_train, X_v_test, U_test
+        return X_v_train, v_train, U_train, X_v_test, v_test, U_test
 
     def tensor(self, X):
         """Convert input into a TensorFlow Tensor with the class dtype."""
@@ -308,7 +309,7 @@ class PodnnModel:
         self.lr = lr
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.model_path = os.path.join(self.resdir, "vnn.h5")
-        self.regnn = VarNeuralNetwork(self.layers, lr, lam)
+        self.regnn = VarNeuralNetwork(self.layers, lr, lam, norm)
 
     def train(self, X_v, v, epochs, train_val_test, freq=100):
         """Train the POD-NN's regression model, and save it."""

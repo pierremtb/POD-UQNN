@@ -28,6 +28,7 @@ class VarNeuralNetwork:
         self.norm = norm
 
         self.adv_eps = 1e-3
+        self.adv_eps = 0.
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
