@@ -32,8 +32,8 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
     model = PodnnModel(resdir, hp["n_v"], x_mesh, hp["n_t"])
 
     # Generate the dataset from the mesh and params
-    X_v_train, v_train, U_train, \
-        X_v_test, U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
+    X_v_train, v_train, _, \
+        X_v_test, v_test, U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                                   hp["n_s"],
                                                   hp["train_val_test"],
                                                   eps=hp["eps"], n_L=hp["n_L"],
@@ -50,8 +50,21 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
     # Predict and restruct
     v_pred, _ = model.predict_v(X_v_test)
     U_pred = model.V.dot(v_pred.T)
+    U_test = model.V.dot(v_test.T)
     U_pred = model.restruct(U_pred)
     U_test = model.restruct(U_test)
+
+    x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+    # lower = U_pred - 3 * U_pred_sig
+    # upper = U_pred + 3 * U_pred_sig
+    # plt.fill_between(x, lower[:, 0], upper[:, 0], 
+    #                     facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
+    import matplotlib.pyplot as plt
+    plt.plot(x, U_pred[0, :, 0], "b-")
+    plt.plot(x, U_test[0, :, 0], "r--")
+    # plt.plot(x, model.predict(X_v_test)[:, 0])
+    plt.show()
+    exit()
 
     # Sample the new model to generate a HiFi prediction
     print("Sampling {n_s_hifi} parameters")

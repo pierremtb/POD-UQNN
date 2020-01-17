@@ -284,7 +284,7 @@ class PodnnModel:
 
         self.save_train_data(X_v_train, v_train, U_train, X_v_test, U_test)
 
-        return X_v_train, v_train, U_train, X_v_test, v_test, U_test
+        return X_v_train, v_train, U_train, U_train_pod, X_v_test, v_test, U_test
 
     def tensor(self, X):
         """Convert input into a TensorFlow Tensor with the class dtype."""
