@@ -1,6 +1,7 @@
 """Module declaring a class for a POD-NN model."""
 
 import os
+import random
 import pickle
 import tensorflow as tf
 import numpy as np
@@ -284,7 +285,7 @@ class PodnnModel:
 
         self.save_train_data(X_v_train, v_train, U_train, X_v_test, U_test)
 
-        return X_v_train, v_train, U_train, U_train_pod, X_v_test, v_test, U_test
+        return X_v_train, v_train, U_train, X_v_test, v_test, U_test
 
     def tensor(self, X):
         """Convert input into a TensorFlow Tensor with the class dtype."""
@@ -301,49 +302,53 @@ class PodnnModel:
         layers_t = [X_dim+Y_dim, *h_layers_t, 1]
         self.layers = (layers_p, layers_q, layers_t)
 
-        self.regnn = AdvNeuralNetwork(self.layers, gan_dims,
-                                      lr, lam, bet, k1, k2, norm)
+        self.regnn = [AdvNeuralNetwork(self.layers, gan_dims,
+                                      lr, lam, bet, k1, k2, norm)]
 
-    def initVNN(self, h_layers, lr, lam, adv_eps, norm=NORM_MEANSTD):
+    def initVNNs(self, n_M, h_layers, lr, lam, adv_eps, norm=NORM_MEANSTD):
         """Create the neural net model."""
         self.lr = lr
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.model_path = os.path.join(self.resdir, "vnn.h5")
-        self.regnn = VarNeuralNetwork(self.layers, lr, lam, adv_eps, norm)
-        self.regnn.summary()
+        self.regnn = []
+        for _ in range(n_M):
+            self.regnn.append(VarNeuralNetwork(self.layers, lr, lam, adv_eps, norm))
 
     def train(self, X_v, v, epochs, train_val_test, freq=100):
         """Train the POD-NN's regression model, and save it."""
-        if self.regnn is None:
+        if self.regnn is None or len(self.regnn) == 0:
             raise ValueError("Regression model isn't defined.")
 
-        # Validation and logging
-        logger = Logger(epochs, freq)
         val_size = train_val_test[1] / (train_val_test[0] + train_val_test[1])
         X_v_train, X_v_val, v_train, v_val = \
             self.split_dataset(X_v, v, val_size)
         U_val = self.V.dot(v_val.T)
         U_train = self.V.dot(v_train.T)
-        def get_val_err():
-            v_train_pred, _ = self.regnn.predict(X_v_train)
-            v_val_pred, _ = self.regnn.predict(X_v_val)
-            U_val_pred = self.V.dot(v_val_pred.T)
-            U_train_pred = self.V.dot(v_train_pred.T)
-            return {
-                "MSE": tf.reduce_mean(tf.square(v_train - v_train_pred)),
-                "MSE_V": tf.reduce_mean(tf.square(v_val - v_val_pred)),
-                "RE": re_s(U_train, U_train_pred),
-                "RE_V": re_s(U_val, U_val_pred),
-            }
-        logger.set_val_err_fn(get_val_err)
 
-        # Training
-        self.regnn.fit(X_v_train, v_train, epochs, logger)
+        logs = []
+
+        for model in self.regnn:
+            def get_val_err():
+                v_train_pred, _ = model.predict(X_v_train)
+                v_val_pred, _ = model.predict(X_v_val)
+                U_val_pred = self.V.dot(v_val_pred.T)
+                U_train_pred = self.V.dot(v_train_pred.T)
+                return {
+                    "MSE": tf.reduce_mean(tf.square(v_train - v_train_pred)),
+                    "MSE_V": tf.reduce_mean(tf.square(v_val - v_val_pred)),
+                    "RE": re_s(U_train, U_train_pred),
+                    "RE_V": re_s(U_val, U_val_pred),
+                }
+            # Validation, logging, training
+            logger = Logger(epochs, freq)
+            logger.set_val_err_fn(get_val_err)
+            model.fit(X_v_train, v_train, epochs, logger)
+            logs.append(logger.get_logs())
 
         # Saving
         self.save_model()
 
-        return logger.get_logs()
+        return logs
 
     def restruct(self, U, no_s=False):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
@@ -375,43 +380,38 @@ class PodnnModel:
 
     def predict_v(self, X_v):
         """Return the predicted POD projection coefficients."""
-        v_pred, v_pred_std = self.regnn.predict(X_v)
-        # v_pred = self.regnn.predict_sample(X_v).numpy()
-        return v_pred.astype(self.dtype), v_pred_std.astype(self.dtype)
+        n_M = len(self.regnn)
+        v_pred_samples = np.zeros((X_v.shape[0], self.n_L, n_M))
+        v_pred_var_samples = np.zeros((X_v.shape[0], self.n_L, n_M))
+
+        for i, model in enumerate(self.regnn):
+            v_pred_samples[:, :, i], v_pred_var_samples[:, :, i] = model.predict(X_v)
+            v_pred = v_pred_samples.mean(-1)
+            v_pred_var = (v_pred_var_samples + v_pred_samples ** 2).mean(-1) - v_pred ** 2
+            v_pred_sig = np.sqrt(v_pred_var)
+
+        return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
     def predict(self, X_v):
         """Returns the predicted solutions, via proj coefficients."""
-        v_pred, _ = self.predict_v(X_v)
+        v_pred, v_pred_sig = self.predict_v(X_v)
 
         # Retrieving the function with the predicted coefficients
         U_pred = self.V.dot(v_pred.T)
-        return U_pred
+        U_pred_sig = self.V.dot(v_pred_sig.T)
+        return U_pred, U_pred_sig
 
     def predict_sample(self, X_v):
         """Returns the predicted solutions, via proj coefficients."""
-        # v_pred, v_pred_mean = self.predict_v(X_v)
+        i = random.randint(0, len(self.regnn))
+
+        v_pred, v_pred_var = self.regnn[i].predict(X_v)
+        v_pred_sig = np.sqrt(v_pred_var)
+
         v_pred = self.regnn.predict_sample(X_v)
-
-        # Retrieving the function with the predicted coefficients
         U_pred = self.V.dot(v_pred.T)
-        return U_pred
-
-    def predict_var(self, X_v):
-        samples = 200
-        U_tot = np.zeros((self.n_h, X_v.shape[0]))
-        U_tot_sq = np.zeros((self.n_h, X_v.shape[0]))
-        for i in range(samples):
-            U = self.predict_sample(X_v)
-            U_tot += U
-            U_tot_sq += U ** 2
-        U_pred_hifi_mean = U_tot / samples
-        U_pred_hifi_mean_sig = np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
-        U_pred_hifi_mean_sig = np.nan_to_num(U_pred_hifi_mean_sig)
-
-        if self.pod_sig is not None:
-            U_pred_hifi_mean_sig += self.pod_sig[:, np.newaxis]
-
-        return U_pred_hifi_mean, U_pred_hifi_mean_sig
+        U_pred_sig = self.V.dot(v_pred_sig.T)
+        return U_pred, U_pred_sig
     
     def predict_heavy(self, X_v):
         """Returns the predicted solutions, via proj coefficients (large inputs)."""
@@ -468,11 +468,13 @@ class PodnnModel:
         if not os.path.exists(self.model_params_path):
             raise FileNotFoundError("Can't find cached model params.")
 
+        # TODO: fix loading model
         self.regnn = AdvNeuralNetwork.load_from(self.model_path, self.model_params_path)
 
     def save_model(self):
         """Save the POD-NN's regression neural network and parameters."""
-        self.regnn.save_to(self.model_path, self.model_params_path)
+        for model in self.regnn:
+            model.save_to(self.model_path + ".0", self.model_params_path)
 
     def save_setup_data(self):
         """Save setup-related data, such as n_v, x_mesh or n_t."""

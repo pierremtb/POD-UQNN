@@ -50,16 +50,12 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
                                                   x_noise=hp["x_noise"],
                                                   use_cache=use_cached_dataset)
 
-    print(hp)
     # Train
-    def gen_and_train_model():
-        model.initVNN(hp["h_layers"],
-                      hp["lr"], hp["lambda"],
-                      hp["adv_eps"], hp["norm"])
-        train_res = model.train(X_v_train, v_train, hp["epochs"],
-                                hp["train_val_test"], freq=hp["log_frequency"])
-        # Predict and restruct
-        return model.predict_v(X_v_test)
+    model.initVNNs(hp["h_layers"],
+                  hp["lr"], hp["lambda"],
+                  hp["adv_eps"], hp["norm"])
+    train_res = model.train(X_v_train, v_train, hp["epochs"],
+                            hp["train_val_test"], freq=hp["log_frequency"])
 
     M = 1
     v_pred_samples = np.zeros((v_test.shape[0], v_test.shape[1], M))
