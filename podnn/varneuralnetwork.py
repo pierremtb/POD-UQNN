@@ -12,7 +12,7 @@ from .advneuralnetwork import NORM_NONE, NORM_MEANSTD, NORM_CENTER
 
 
 class VarNeuralNetwork:
-    def __init__(self, layers, lr, lam, norm=NORM_NONE, model=None, lb=None, ub=None):
+    def __init__(self, layers, lr, lam, adv_eps=0., norm=NORM_NONE, model=None, lb=None, ub=None):
         # Making sure the dtype is consistent
         self.dtype = "float64"
 
@@ -26,9 +26,7 @@ class VarNeuralNetwork:
         self.logger = None
         self.batch_size = 0
         self.norm = norm
-
-        self.adv_eps = 1e-3
-        self.adv_eps = 0.
+        self.adv_eps = adv_eps
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
@@ -89,7 +87,8 @@ class VarNeuralNetwork:
         """Return the Gaussian NLL loss function between the pred and val."""
         y_pred_mean, y_pred_var = y_pred
         return tf.reduce_mean(tf.math.log(y_pred_var) / 2) + \
-               tf.reduce_mean(tf.divide(tf.square(y -  y_pred_mean), 2*y_pred_var))
+               tf.reduce_mean(tf.divide(tf.square(y -  y_pred_mean), 2*y_pred_var)) + \
+               self.regularization()
 
     @tf.function
     def grad(self, X, v):

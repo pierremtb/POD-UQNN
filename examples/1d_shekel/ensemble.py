@@ -43,20 +43,22 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
 
     # hp["lambda"] = 0.00001
     hp["x_noise"] = 0.
-    hp["lr"] = 0.001
+    hp["lr"] = 0.01
     hp["epochs"] = 25000
+    hp["lambda"] = 1e-3
+    hp["adv_eps"] = 1e-3
     print(hp)
     # Train
     def gen_and_train_model():
         model.initVNN(hp["h_layers"],
                       hp["lr"], hp["lambda"],
-                      hp["norm"])
+                      hp["adv_eps"], hp["norm"])
         train_res = model.train(X_v_train, v_train, hp["epochs"],
                                 hp["train_val_test"], freq=hp["log_frequency"])
         # Predict and restruct
         return model.predict_v(X_v_test)
 
-    M = 5
+    M = 1
     v_pred_samples = np.zeros((100, v_train.shape[1], M))
     v_pred_var_samples = np.zeros((100, v_train.shape[1], M))
     for i in range(0, M):

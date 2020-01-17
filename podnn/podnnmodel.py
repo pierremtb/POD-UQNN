@@ -304,12 +304,12 @@ class PodnnModel:
         self.regnn = AdvNeuralNetwork(self.layers, gan_dims,
                                       lr, lam, bet, k1, k2, norm)
 
-    def initVNN(self, h_layers, lr, lam, norm=NORM_MEANSTD):
+    def initVNN(self, h_layers, lr, lam, adv_eps, norm=NORM_MEANSTD):
         """Create the neural net model."""
         self.lr = lr
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.model_path = os.path.join(self.resdir, "vnn.h5")
-        self.regnn = VarNeuralNetwork(self.layers, lr, lam, norm)
+        self.regnn = VarNeuralNetwork(self.layers, lr, lam, adv_eps, norm)
 
     def train(self, X_v, v, epochs, train_val_test, freq=100):
         """Train the POD-NN's regression model, and save it."""
