@@ -35,11 +35,12 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
     # hp["lambda"] = 0.00001
     hp["x_noise"] = 0.
     hp["lr"] = 0.01
-    hp["epochs"] = 55000
-    hp["lambda"] = 1e-2
+    hp["epochs"] = 45000
+    hp["lambda"] = 0.001
     hp["adv_eps"] = 1e-3
     hp["eps"] = 1e-6
     hp["n_L"] = 0
+    hp["h_layers"] = [64, 64]
     X_v_train, v_train, U_train, U_train_pod, \
         X_v_test, v_test, U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                                   hp["n_s"],
@@ -72,15 +73,6 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
     v_pred_var = (v_pred_var_samples + v_pred_samples ** 2).mean(-1) - v_pred ** 2
     v_pred_sig = np.sqrt(v_pred_var)
 
-    # import matplotlib.pyplot as plt
-    # plt.plot(v_pred[0])
-    # plt.plot(v_test[0])
-    # lower = v_pred - 3 * v_pred_sig
-    # upper = v_pred + 3 * v_pred_sig
-    # plt.fill_between(np.arange(0, v_pred.shape[1]), lower[0], upper[0], 
-    #                     facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
-    # plt.show()
-
     U_pred = model.V.dot(v_pred.T)
     U_pred_sig = model.V.dot(v_pred_sig.T)
     
@@ -98,6 +90,11 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
                         facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
     plt.plot(x, U_pred[:, 0], "b-")
     plt.plot(x, U_test[:, 0], "r--")
+    plt.show()
+    plt.fill_between(x, lower.mean(-1), upper.mean(-1), 
+                        facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
+    plt.plot(x, U_pred.mean(-1), "b-")
+    plt.plot(x, U_test.mean(-1), "r--")
     plt.show()
 
     # # Sample the new model to generate a HiFi prediction
