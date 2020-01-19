@@ -32,7 +32,7 @@ def plot_slice(fig, pos, x, U_pred, U_pred_hifi, U_pred_hifi_sig, U_test_hifi, t
     lower = U_pred_hifi - 2 * U_pred_hifi_sig
     upper = U_pred_hifi + 2 * U_pred_hifi_sig
     plt.fill_between(x, lower, upper, 
-                     facecolor='orange', alpha=0.5, label=r"$2\sigma_{T,hf}(x)$")
+                     facecolor='C0', alpha=0.3, label=r"$2\sigma_{T,hf}(x)$")
     ax.set_xlabel("$x$")
     ax.set_title(title)
     if legend:

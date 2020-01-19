@@ -386,31 +386,28 @@ class PodnnModel:
 
         for i, model in enumerate(self.regnn):
             v_pred_samples[:, :, i], v_pred_var_samples[:, :, i] = model.predict(X_v)
-            v_pred = v_pred_samples.mean(-1)
-            v_pred_var = (v_pred_var_samples + v_pred_samples ** 2).mean(-1) - v_pred ** 2
-            v_pred_sig = np.sqrt(v_pred_var)
+
+        v_pred = v_pred_samples.mean(-1)
+        v_pred_var = (v_pred_var_samples + v_pred_samples ** 2).mean(-1) - v_pred ** 2
+        v_pred_sig = np.sqrt(v_pred_var)
 
         return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
     def predict(self, X_v):
         """Returns the predicted solutions, via proj coefficients."""
         v_pred, v_pred_sig = self.predict_v(X_v)
+        v_pred_up = v_pred + v_pred_sig
 
         # Retrieving the function with the predicted coefficients
         U_pred = self.V.dot(v_pred.T)
-        U_pred_sig = self.V.dot(v_pred_sig.T)
-        return U_pred, U_pred_sig
+        U_pred_up = self.V.dot(v_pred_up.T)
 
-    def predict_sample(self, X_v):
-        """Returns the predicted solutions, via proj coefficients."""
-        i = random.randint(0, len(self.regnn))
+        # Retrieving sig
+        U_pred_sig = np.abs(U_pred_up - U_pred)
 
-        v_pred, v_pred_var = self.regnn[i].predict(X_v)
-        v_pred_sig = np.sqrt(v_pred_var)
+        if self.pod_sig is not None:
+            U_pred_sig += self.pod_sig[:, np.newaxis]
 
-        v_pred = self.regnn.predict_sample(X_v)
-        U_pred = self.V.dot(v_pred.T)
-        U_pred_sig = self.V.dot(v_pred_sig.T)
         return U_pred, U_pred_sig
     
     def predict_heavy(self, X_v):
@@ -469,7 +466,9 @@ class PodnnModel:
             raise FileNotFoundError("Can't find cached model params.")
 
         # TODO: fix loading model
-        self.regnn = AdvNeuralNetwork.load_from(self.model_path, self.model_params_path)
+        self.regnn = []
+        for path in self.model_path:
+            self.regnn.append(VarNeuralNetwork.load_from(path, self.model_params_path))
 
     def save_model(self):
         """Save the POD-NN's regression neural network and parameters."""

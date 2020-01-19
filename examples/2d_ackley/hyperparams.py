@@ -22,29 +22,28 @@ HP["n_t"] = 0
 HP["n_s"] = 500
 HP["n_s_hifi"] = int(5e2)
 # POD stopping param
-HP["eps"] = 0
-HP["n_L"] = 5
-HP["x_noise"] = 0.
+HP["eps"] = 1e-4
+HP["n_L"] = 0
+HP["x_noise"] = 0.01
 HP["u_noise"] = 0.
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)
-# DeepNN Topology
-HP["h_layers"] = [50, 50, 50, 50]
-HP["h_layers_t"] = [50]
+# Deep NN hidden layers topology
+HP["h_layers"] = [128, 128, 128]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 390000
-HP["lr"] = 0.0001
-HP["lambda"] = 1.5
-HP["beta"] = 0
-HP["k1"] = 1
-HP["k2"] = 5
+HP["n_M"] = 5
+HP["epochs"] = 40000
+HP["lr"] = 0.01
+HP["lambda"] = 0.001
+HP["adv_eps"] = 1e-1
 HP["norm"] = NORM_MEANSTD
-# HP["norm"] = NORM_CENTER
 # Frequency of the logger
-HP["log_frequency"] = 1000
+HP["log_frequency"] = 10000
 # Non-spatial params
 HP["mu_min"] = [-1., -1., -1.]
 HP["mu_max"] = [+1., +1., +1.]
+HP["mu_min_out"] = [-2., -2., -2.]
+HP["mu_max_out"] = [+2., +2., +2.]
 
 
 # np.random.seed(1111)

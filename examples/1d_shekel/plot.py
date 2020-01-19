@@ -69,7 +69,7 @@ def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, sigma_pod,
     lower = U_pred_hifi_mean[0] - 2 * U_pred_hifi_mean_sig[0]
     upper = U_pred_hifi_mean[0] + 2 * U_pred_hifi_mean_sig[0]
     plt.fill_between(x, lower, upper, 
-                     facecolor='orange', alpha=0.5, label=r"$2\sigma_{T,hf}(x)$")
+                     facecolor='C0', alpha=0.3, label=r"$2\sigma_{T,hf}(x)$")
     ax1.legend()
     ax1.set_title("Means")
     ax1.set_xlabel("$x$")
@@ -82,7 +82,7 @@ def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, sigma_pod,
     lower = U_pred_hifi_std[0] - 2 * U_pred_hifi_std_sig[0]
     upper = U_pred_hifi_std[0] + 2 * U_pred_hifi_std_sig[0]
     plt.fill_between(x, lower, upper, 
-                     facecolor='orange', alpha=0.5, label=r"2\text{std}(\hat{u}_T(x))")
+                     facecolor='C0', alpha=0.3, label=r"2\text{std}(\hat{u}_T(x))")
     ax2.set_title("Standard deviations")
     ax2.set_xlabel("$x$")
 
@@ -104,9 +104,9 @@ if __name__ == "__main__":
     x_mesh = np.load(os.path.join(resdir, "x_mesh.npy"))
     _, _, _, X_v_test, U_test = model.load_train_data()
 
-    v_pred, v_pred_sig = model.predict_v(X_v_test)
-    U_pred = model.V.dot(v_pred.T)
+    U_pred, U_pred_sig = model.predict(X_v_test)
     U_pred = model.restruct(U_pred)
+    U_pred_sig = model.restruct(U_pred_sig)
     U_test = model.restruct(U_test)
 
     # Sample the new model to generate a HiFi prediction
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"],
                                                hp["mu_min"], hp["mu_max"])
     print("Predicting the {n_s_hifi} corresponding solutions")
-    U_pred_hifi, U_pred_hifi_sig = model.predict_var(X_v_test_hifi)
+    U_pred_hifi, U_pred_hifi_sig = model.predict(X_v_test_hifi)
     U_pred_hifi_mean = (model.restruct(U_pred_hifi.mean(-1), no_s=True),
                         model.restruct(U_pred_hifi_sig.mean(-1), no_s=True))
     U_pred_hifi_std = (model.restruct(U_pred_hifi.std(-1), no_s=True),
