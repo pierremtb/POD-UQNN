@@ -24,7 +24,7 @@ HP["n_s_hifi"] = int(5e2)
 # POD stopping param
 HP["eps"] = 1e-4
 HP["n_L"] = 0
-HP["x_noise"] = 0.01
+HP["x_noise"] = 0.0
 HP["u_noise"] = 0.
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)
@@ -32,13 +32,13 @@ HP["train_val_test"] = (3/5, 1/5, 1/5)
 HP["h_layers"] = [128, 128, 128]
 # Setting up TF SGD-based optimizer
 HP["n_M"] = 5
-HP["epochs"] = 40000
+HP["epochs"] = 10000
 HP["lr"] = 0.01
 HP["lambda"] = 0.001
 HP["adv_eps"] = 1e-1
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 10000
+HP["log_frequency"] = 2000
 # Non-spatial params
 HP["mu_min"] = [-1., -1., -1.]
 HP["mu_max"] = [+1., +1., +1.]
