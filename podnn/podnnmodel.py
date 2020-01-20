@@ -71,8 +71,8 @@ class PodnnModel:
 
     def generate_hifi_inputs(self, n_s, mu_min, mu_max, t_min=0, t_max=0):
         """Return large inputs to be used in a HiFi prediction task."""
-        if self.has_t:
-            t_min, t_max = np.array(t_min), np.array(t_max)
+        # if self.has_t:
+        #     t_min, t_max = np.array(t_min), np.array(t_max)
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
         mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
 

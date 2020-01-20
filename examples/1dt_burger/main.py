@@ -55,34 +55,10 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
     U_pred_sig = model.restruct(U_pred_sig)
     U_test = model.restruct(U_test)
 
-    x = np.linspace(0, 1.5, 256)
-    import matplotlib.pyplot as plt
-    U_pred_mean = U_pred.mean(-1)
-    # Using nanstd() to prevent NotANumbers from appearing
-    U_pred_std = U_pred.std(-1)
-    plt.plot(x, U_pred_mean[0, :, 0, 30])
-    plt.plot(x, U_pred_std[0, :, 0, 30])
-    plt.plot(x, U_pred_mean[0, :, 50, 30])
-    plt.plot(x, U_pred_std[0, :, 50, 30])
-    plt.show()
-
-
-    plt.plot(x, U_pred_mean[0, :, 0])
-    plt.plot(x, U_pred_std[0, :, 0])
-    plt.show()
-    plt.plot(x, U_pred_mean[0, :, 50])
-    plt.plot(x, U_pred_std[0, :, 50])
-    plt.show()
-    
-    # print(U_pred.shape)
-    # plt.plot(x, U_pred[0, :, 0, 0])
-    # plt.plot(x, U_test[0, :, 0, 0])
-    # plt.show()
-
     # Sample the new model to generate a HiFi prediction
     print("Sampling {n_s_hifi} parameters")
     X_v_test_hifi = model.generate_hifi_inputs(hp["n_s_hifi"],
-                                               hp["mu_min"], hp["mu_max"])
+                                               hp["mu_min"], hp["mu_max"], hp["t_min"], hp["t_max"])
     print("Predicting the {n_s_hifi} corresponding solutions")
     U_pred_hifi, U_pred_hifi_sig = model.predict(X_v_test_hifi)
     U_pred_hifi = model.restruct(U_pred_hifi)

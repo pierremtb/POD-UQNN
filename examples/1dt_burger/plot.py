@@ -66,15 +66,9 @@ def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, sigma_pod,
     tt = ttT.T
 
     U_pred_mean = U_pred.mean(-1)
-    # Using nanstd() to prevent NotANumbers from appearing
     U_pred_std = U_pred.std(-1)
-
-    plt.plot(x, U_pred_mean[0, :, 0])
-    plt.plot(x, U_pred_std[0, :, 0])
-    plt.show()
-    plt.plot(x, U_pred_mean[0, :, 50])
-    plt.plot(x, U_pred_std[0, :, 50])
-    plt.show()
+    U_test_mean = U_test.mean(-1)
+    U_test_std = U_test.std(-1)
 
     U_pred_hifi_mean_sig = U_pred_hifi_mean[1]
     U_pred_hifi_std_sig = U_pred_hifi_std[1]
