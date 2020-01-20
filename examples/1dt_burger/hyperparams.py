@@ -29,8 +29,8 @@ HP["h_layers"] = [128, 128, 128]
 HP["n_M"] = 1
 HP["epochs"] = 10000
 HP["lr"] = 0.01
-HP["lambda"] = 0.01
-HP["adv_eps"] = 1e-1
+HP["lambda"] = 0.0
+HP["adv_eps"] = 1e+1
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 150
