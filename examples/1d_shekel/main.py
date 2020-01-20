@@ -62,7 +62,7 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
     U_pred_hifi_mean = (model.restruct(U_pred_hifi.mean(-1), no_s=True),
                         model.restruct(U_pred_hifi_sig.mean(-1), no_s=True))
     U_pred_hifi_var = ((U_pred_hifi_sig - model.pod_sig[:, np.newaxis])**2 + U_pred_hifi ** 2).mean(-1) - U_pred_hifi.mean(-1) ** 2
-    U_pred_hifi_std = (model.restruct(U_pred_hifi.std(-1), no_s=True),
+    U_pred_hifi_std = (model.restruct(np.sqrt(U_pred_hifi_var), no_s=True),
                     #    model.restruct(U_pred_hifi_sig.std(-1), no_s=True))
                        model.restruct(U_pred_hifi_sig.mean(-1), no_s=True))
     sigma_pod = model.pod_sig.mean()

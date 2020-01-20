@@ -23,19 +23,17 @@ HP["n_L"] = 20
 HP["x_noise"] = 0.01
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)
-# DeepNN Topology
-HP["h_layers"] = [50, 50, 50, 50]
-HP["h_layers_t"] = [50, 50, 50]
+# Deep NN hidden layers topology
+HP["h_layers"] = [128, 128, 128]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 80000
-HP["lr"] = 0.0001
-HP["lambda"] = 1.5
-HP["beta"] = 1e-1
-HP["k1"] = 1
-HP["k2"] = 10
+HP["n_M"] = 3
+HP["epochs"] = 2000
+HP["lr"] = 0.01
+HP["lambda"] = 0.001
+HP["adv_eps"] = 1e-1
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 500
+HP["log_frequency"] = 2000
 # Burgers params
 HP["mu_min"] = [0.001]
 HP["mu_max"] = [0.0100]
