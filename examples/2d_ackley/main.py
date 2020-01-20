@@ -43,7 +43,7 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
 
     # Train
     model.initVNNs(hp["n_M"], hp["h_layers"],
-                 hp["lr"], hp["lambda"], hp["adv_eps"], hp["norm"])
+                   hp["lr"], hp["lambda"], hp["adv_eps"], hp["norm"])
     train_res = model.train(X_v_train, v_train, hp["epochs"],
                             hp["train_val_test"], freq=hp["log_frequency"])
 

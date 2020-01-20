@@ -39,19 +39,19 @@ def main(resdir, hp, use_cached_dataset=False):
                                           use_cache=use_cached_dataset)
 
     # Train
-    model.initNN(hp["h_layers"], hp["h_layers_t"],
-                 hp["lr"], hp["lambda"], hp["beta"],
-                 hp["k1"], hp["k2"], hp["norm"])
+    model.initVNNs(hp["n_M"], hp["h_layers"],
+                   hp["lr"], hp["lambda"], hp["adv_eps"], hp["norm"])
     train_res = model.train(X_v_train, v_train, hp["epochs"],
                             hp["train_val_test"], freq=hp["log_frequency"])
 
 
     # Predict and restruct
-    U_pred, U_pred_sig = model.predict_var(X_v_test)
+    U_pred, U_pred_sig = model.predict(X_v_test)
     U_pred_mean = (model.restruct(U_pred.mean(-1), no_s=True),
                    model.restruct(U_pred_sig.mean(-1), no_s=True))
+    U_pred_var = ((U_pred_sig - model.pod_sig[:, np.newaxis])**2 + U_pred ** 2).mean(-1) - U_pred.mean(-1) ** 2
     U_pred_std = (model.restruct(U_pred.std(-1), no_s=True),
-                  model.restruct(U_pred_sig.std(-1), no_s=True))
+                       model.restruct(np.sqrt(U_pred_hifi_var), no_s=True))
     U_test = model.restruct(U_test)
     sigma_pod = model.pod_sig.mean()
 
