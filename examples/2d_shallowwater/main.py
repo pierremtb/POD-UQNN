@@ -13,7 +13,7 @@ from podnn.plotting import genresultdir
 from plot import plot_results
 
 
-def main(resdir, hp, use_cached_dataset=False):
+def main(resdir, hp, save_cache=False, use_cached_dataset=False):
     """Full example to run POD-NN on 2d_shallowwater."""
 
     if not use_cached_dataset:
@@ -36,7 +36,7 @@ def main(resdir, hp, use_cached_dataset=False):
     X_v_train, v_train, X_v_test, \
         _, U_test = model.convert_dataset(u_mesh, X_v,
                                           hp["train_val_test"], hp["eps"],
-                                          use_cache=use_cached_dataset)
+                                          save_cache=save_cache, use_cache=use_cached_dataset)
 
     # Train
     model.initVNNs(hp["n_M"], hp["h_layers"],
@@ -51,7 +51,7 @@ def main(resdir, hp, use_cached_dataset=False):
                    model.restruct(U_pred_sig.mean(-1), no_s=True))
     U_pred_var = ((U_pred_sig - model.pod_sig[:, np.newaxis])**2 + U_pred ** 2).mean(-1) - U_pred.mean(-1) ** 2
     U_pred_std = (model.restruct(U_pred.std(-1), no_s=True),
-                       model.restruct(np.sqrt(U_pred_hifi_var), no_s=True))
+                       model.restruct(np.sqrt(U_pred_var), no_s=True))
     U_test = model.restruct(U_test)
     sigma_pod = model.pod_sig.mean()
 
@@ -63,7 +63,7 @@ def main(resdir, hp, use_cached_dataset=False):
     # exit(0)
 
     # Plot and save the results
-    return plot_results(x_mesh, U_test, U_pred_mean, U_pred_std, sigma_pod, resdir, train_res, hp)
+    return plot_results(x_mesh, U_test, U_pred_mean, U_pred_std, sigma_pod, resdir, train_res[0], hp)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg
@@ -75,4 +75,4 @@ if __name__ == "__main__":
         from hyperparams import HP
 
     resdir = genresultdir()
-    main(resdir, HP, use_cached_dataset=False)
+    main(resdir, HP, save_cache=False, use_cached_dataset=False)
