@@ -472,8 +472,8 @@ class PodnnModel:
 
     def save_model(self):
         """Save the POD-NN's regression neural network and parameters."""
-        for model in self.regnn:
-            model.save_to(self.model_path + ".0", self.model_params_path)
+        for i, model in enumerate(self.regnn):
+            model.save_to(self.model_path + f".{i}", self.model_params_path)
 
     def save_setup_data(self):
         """Save setup-related data, such as n_v, x_mesh or n_t."""
