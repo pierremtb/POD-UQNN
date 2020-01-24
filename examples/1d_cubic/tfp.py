@@ -6,6 +6,8 @@ import yaml
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
+tfd = tfp.distributions
+
 tf.get_logger().setLevel('WARNING')
 tf.autograph.set_verbosity(1)
 
@@ -43,6 +45,99 @@ u_train = u_star[lb + idx]
 # noise_std = 0.01*u_train.std(0)
 noise_std = 3
 u_train = u_train + noise_std*np.random.randn(u_train.shape[0], u_train.shape[1])
+
+negloglik = lambda y, rv_y: -rv_y.log_prob(y)
+
+"""Well not only is it possible, but this colab shows how! (In context of linear regression problems.)"""
+
+#@title Synthesize dataset.
+w0 = 0.125
+b0 = 5.
+x_range = [x_train.min(), x_train.max()]
+
+# For numeric stability, set the default floating-point dtype to float64
+tf.keras.backend.set_floatx('float64')
+
+# Build model.
+num_inducing_points = int(N / 2)
+
+class RBFKernelFn(tf.keras.layers.Layer):
+    def __init__(self, **kwargs):
+        super(RBFKernelFn, self).__init__(**kwargs)
+        dtype = kwargs.get('dtype', None)
+
+        self._amplitude = self.add_variable(
+                initializer=tf.constant_initializer(0),
+                dtype=dtype,
+                name='amplitude')
+
+        self._length_scale = self.add_variable(
+                initializer=tf.constant_initializer(0),
+                dtype=dtype,
+                name='length_scale')
+
+    def call(self, x):
+        # Never called -- this is just a layer so it can hold variables
+        # in a way Keras understands.
+        return x
+
+    @property
+    def kernel(self):
+        return tfp.math.psd_kernels.ExponentiatedQuadratic(
+            amplitude=tf.nn.softplus(0.1 * self._amplitude),
+            length_scale=tf.nn.softplus(5. * self._length_scale)
+        )
+
+model = tf.keras.Sequential([
+    tf.keras.layers.InputLayer(input_shape=[1]),
+    tf.keras.layers.Dense(1, kernel_initializer='ones', use_bias=False),
+    tfp.layers.VariationalGaussianProcess(
+        num_inducing_points=num_inducing_points,
+        kernel_provider=RBFKernelFn(),
+        event_shape=[1],
+        inducing_index_points_initializer=tf.constant_initializer(
+            np.linspace(*x_range, num=num_inducing_points,
+                        dtype=x_train.dtype)[..., np.newaxis]),
+        unconstrained_observation_noise_variance_initializer=(
+            tf.constant_initializer(np.array(0.54).astype(x_train.dtype))),
+    ),
+])
+
+# Do inference.
+batch_size = N
+loss = lambda y, rv_y: rv_y.variational_loss(
+    y, kl_weight=np.array(batch_size, x_train.dtype) / x_train.shape[0])
+model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.01), loss=loss)
+model.fit(x_train, u_train, batch_size=batch_size, epochs=1000, verbose=False)
+
+# Profit.
+yhat = model(x_star)
+assert isinstance(yhat, tfd.Distribution)
+
+plt.figure(figsize=[6, 1.5])  # inches
+plt.plot(x_train, u_train, 'r.', label='observed')
+plt.plot(x_star, u_star, 'r--', label='observed')
+plt.plot(x_star, yhat.mean(), 'b-', label='observed')
+num_samples = 500
+samples = np.zeros((num_samples, *u_star.shape))
+for i in range(num_samples):
+  samples[i] = yhat.sample().numpy()
+  if i % 100 == 0:
+    plt.plot(x_star,
+            samples[i],
+            'C0', alpha=0.5,
+            linewidth=0.9,
+            label='ensemble means' if i == 0 else None)
+stddev = samples.std(0)
+lower = yhat.mean().numpy() - 3 * stddev
+upper = yhat.mean().numpy() + 3 * stddev
+print(lower.shape)
+plt.fill_between(x_star[:, 0], lower[:, 0], upper[:, 0],
+                 facecolor='C0', alpha=0.3)
+
+plt.show()
+
+exit(0)
 
 def neg_log_lik(y, rv_y):
     """Evaluate negative log-likelihood of a random variable `rv_y` for data `y`"""
