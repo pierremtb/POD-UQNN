@@ -42,9 +42,7 @@ class PodnnModel:
         self.setup_data_path = os.path.join(resdir, SETUP_DATA_NAME)
         self.train_data_path = os.path.join(resdir, TRAIN_DATA_NAME)
         self.model_params_path = os.path.join(resdir, MODEL_PARAMS_NAME)
-        self.model_path = (os.path.join(resdir, MODEL_NAME[0]),
-                           os.path.join(resdir, MODEL_NAME[1]),
-                           os.path.join(resdir, MODEL_NAME[2]))
+        self.model_path = []
 
         self.regnn = None
         self.n_L = None
@@ -175,6 +173,7 @@ class PodnnModel:
 
         # Projecting
         v = (self.V.T.dot(U)).T
+        v = self.project_to_v(U)
         
         # Checking the POD error
         U_pod = self.V.dot(v.T)
@@ -322,8 +321,8 @@ class PodnnModel:
         val_size = train_val_test[1] / (train_val_test[0] + train_val_test[1])
         X_v_train, X_v_val, v_train, v_val = \
             self.split_dataset(X_v, v, val_size)
-        U_val = self.V.dot(v_val.T)
-        U_train = self.V.dot(v_train.T)
+        U_val = self.project_to_U(v_val)
+        U_train = self.project_to_U(v_train)
 
         logs = []
 
@@ -331,8 +330,8 @@ class PodnnModel:
             def get_val_err():
                 v_train_pred, _ = model.predict(X_v_train)
                 v_val_pred, _ = model.predict(X_v_val)
-                U_val_pred = self.V.dot(v_val_pred.T)
-                U_train_pred = self.V.dot(v_train_pred.T)
+                U_val_pred = self.project_to_U(v_val_pred)
+                U_train_pred = self.project_to_U(v_train_pred)
                 return {
                     "MSE": tf.reduce_mean(tf.square(v_train - v_train_pred)),
                     "MSE_V": tf.reduce_mean(tf.square(v_val - v_val_pred)),
@@ -399,8 +398,8 @@ class PodnnModel:
         v_pred_up = v_pred + v_pred_sig
 
         # Retrieving the function with the predicted coefficients
-        U_pred = self.V.dot(v_pred.T)
-        U_pred_up = self.V.dot(v_pred_up.T)
+        U_pred = self.project_to_U(v_pred)
+        U_pred_up = self.project_to_U(v_pred_up)
 
         # Retrieving sig
         U_pred_sig = np.abs(U_pred_up - U_pred)
@@ -409,6 +408,12 @@ class PodnnModel:
             U_pred_sig += self.pod_sig[:, np.newaxis]
 
         return U_pred, U_pred_sig
+
+    def project_to_U(self, v):
+        return self.V.dot(v.T)
+
+    def project_to_v(self, U):
+        return (self.V.T.dot(U)).T
     
     def predict_heavy(self, X_v):
         """Returns the predicted solutions, via proj coefficients (large inputs)."""
@@ -460,7 +465,10 @@ class PodnnModel:
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""
 
-        if not os.path.exists(self.model_path[0]) or not os.path.exists(self.model_path[1]) or not os.path.exists(self.model_path[2]):
+        models_exist = True
+        for path in self.model_path:
+            models_exist = models_exist and os.path.exists(path)
+        if not models_exist:
             raise FileNotFoundError("Can't find cached model.")
         if not os.path.exists(self.model_params_path):
             raise FileNotFoundError("Can't find cached model params.")
@@ -494,7 +502,15 @@ class PodnnModel:
     def load(cls, save_dir):
         """Recreate a pre-trained POD-NN model."""
         n_v, x_mesh, n_t = PodnnModel.load_setup_data(save_dir)
+
+        model_path = []
+        for file in os.listdir(save_dir):
+            if file.startswith("vnn.h5"):
+                model_path.append(os.path.join(save_dir, file))
+        print(model_path)
+
         podnnmodel = cls(save_dir, n_v, x_mesh, n_t)
+        podnnmodel.model_path = model_path
         podnnmodel.load_train_data()
         podnnmodel.load_model()
         return podnnmodel

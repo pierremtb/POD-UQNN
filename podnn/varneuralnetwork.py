@@ -12,7 +12,7 @@ from .advneuralnetwork import NORM_NONE, NORM_MEANSTD, NORM_CENTER
 
 
 class VarNeuralNetwork:
-    def __init__(self, layers, lr, lam, adv_eps=0., norm=NORM_NONE, model=None, lb=None, ub=None):
+    def __init__(self, layers, lr, lam, adv_eps=0., norm=NORM_NONE, model=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float64"
 
@@ -21,8 +21,7 @@ class VarNeuralNetwork:
         self.layers = layers
         self.lr = lr
         self.lam = lam
-        self.lb = lb
-        self.ub = ub
+        self.norm_bounds = norm_bounds
         self.logger = None
         self.batch_size = 0
         self.norm = norm
@@ -64,17 +63,25 @@ class VarNeuralNetwork:
 
     def set_normalize_bounds(self, X):
         if self.norm == NORM_CENTER:
-            self.lb = np.amin(X, axis=0)
-            self.ub = np.amax(X, axis=0)
+            lb = np.amin(X, axis=0)
+            ub = np.amax(X, axis=0)
+            self.norm_bounds = (lb, ub)
         elif self.norm == NORM_MEANSTD:
-            self.lb = X.mean(0)
-            self.ub = X.std(0)
+            lb = X.mean(0)
+            ub = X.std(0)
+            self.norm_bounds = (lb, ub)
 
     def normalize(self, X):
+        if self.norm_bounds is None:
+            return self.tensor(X)
+
         if self.norm == NORM_CENTER:
-            X = (X - self.lb) - 0.5 * (self.ub - self.lb)
+            lb, ub = self.norm_bounds
+            X = (X - lb) - 0.5 * (ub - lb)
         elif self.norm == NORM_MEANSTD:
-            X = (X - self.lb) / self.ub
+            mean, std = self.norm_bounds
+            X = (X - mean) / std
+
         return self.tensor(X)
 
     def regularization(self):
@@ -171,7 +178,7 @@ class VarNeuralNetwork:
     def save_to(self, model_path, params_path):
         """Save the (trained) model and params for later use."""
         with open(params_path, "wb") as f:
-            pickle.dump((self.layers, self.lr, self.lam, self.norm), f)
+            pickle.dump((self.layers, self.lr, self.lam, self.norm, self.norm_bounds), f)
         tf.keras.models.save_model(self.model, model_path)
 
     @classmethod
@@ -185,7 +192,8 @@ class VarNeuralNetwork:
 
         print(f"Loading model from {model_path}")
         with open(params_path, "rb") as f:
-            layers, lam, lr, norm = pickle.load(f)
+            layers, lam, lr, norm, norm_bounds = pickle.load(f)
         print(f"Loading model params from {params_path}")
         model = tf.keras.models.load_model(model_path)
-        return cls(layers, lam, lr, model=model, norm=norm)
+        return cls(layers, lam, lr, model=model, norm=norm, norm_bounds=norm_bounds
+        )

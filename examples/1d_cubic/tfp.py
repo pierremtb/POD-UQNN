@@ -44,38 +44,27 @@ u_train = u_star[lb + idx]
 noise_std = 3
 u_train = u_train + noise_std*np.random.randn(u_train.shape[0], u_train.shape[1])
 
-# Specify the surrogate posterior over `keras.layers.Dense` `kernel` and `bias`.
-def posterior_mean_field(kernel_size, bias_size=0, dtype=None):
-  n = kernel_size + bias_size
-  c = np.log(np.expm1(1.))
-  return tf.keras.Sequential([
-      tfp.layers.VariableLayer(2 * n, dtype=dtype),
-      tfp.layers.DistributionLambda(lambda t: tfp.distributions.Independent(
-          tfp.distributions.Normal(loc=t[..., :n],
-                     scale=1e-5 + tf.nn.softplus(c + t[..., n:])),
-          reinterpreted_batch_ndims=1)),
-  ])
-# Specify the prior over `keras.layers.Dense` `kernel` and `bias`.
-def prior_trainable(kernel_size, bias_size=0, dtype=None):
-  n = kernel_size + bias_size
-  return tf.keras.Sequential([
-      tfp.layers.VariableLayer(n, dtype=dtype),
-      tfp.layers.DistributionLambda(lambda t: tfp.distributions.Independent(
-          tfp.distributions.Normal(loc=t, scale=1),
-          reinterpreted_batch_ndims=1)),
-  ])
-negloglik = lambda y, rv_y: -rv_y.log_prob(y)
-# Build model.
+def neg_log_lik(y, rv_y):
+    """Evaluate negative log-likelihood of a random variable `rv_y` for data `y`"""
+    return -rv_y.log_prob(y)
+
+# model outputs normal distribution with constant variance
 model = tf.keras.Sequential([
-  tfp.layers.DenseVariational(1 + 1, posterior_mean_field, prior_trainable),
-  tfp.layers.DistributionLambda(
-      lambda t: tfp.distributions.Normal(loc=t[..., :1],
-                           scale=1e-3 + tf.math.softplus(0.01 * t[..., 1:]))),
+    tf.keras.layers.Dense(1),
+    tfp.layers.DistributionLambda(
+        lambda t: tfp.distributions.Normal(loc=t, scale=1.0)
+    )
 ])
 
-# Do inference.
-model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.02), loss=negloglik)
-model.fit(x_train, u_train, epochs=25000)
+# train the model
+model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.01), 
+                    loss=neg_log_lik)
+model.fit(x_train, u_train, 
+                 epochs=5000,
+                 verbose=True)
+
+print(f"predicted w : {model.layers[-2].kernel.numpy()}")
+print(f"predicted b : {model.layers[-2].bias.numpy()}")
 
 # Make predictions.
 M = 100

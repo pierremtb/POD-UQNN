@@ -86,6 +86,9 @@ def plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, sigma_pod,
     ax2.set_title("Standard deviations")
     ax2.set_xlabel("$x$")
 
+    if resdir is None:
+        return hifi_error_test_mean, hifi_error_test_std
+        
     saveresultdir(resdir, HP, errors, train_res)
 
     return hifi_error_test_mean, hifi_error_test_std
@@ -120,6 +123,36 @@ if __name__ == "__main__":
     U_pred_hifi_std = (model.restruct(U_pred_hifi.std(-1), no_s=True),
                        model.restruct(U_pred_hifi_sig.mean(-1), no_s=True))
 
+    # LHS sampling (first uniform, then perturbated)
+    print("Doing the LHS sampling on the non-spatial params...")
+    from genhifi import u
+    mu_min_out, mu_min = np.array(hp["mu_min_out"]), np.array(hp["mu_min"])
+    mu_lhs_out_min = model.sample_mu(100, mu_min_out, mu_min)
+    n_d = mu_lhs_out_min.shape[1]
+    n_h = hp["n_v"] * x_mesh.shape[0]
+    # X_v_test_out, U_test_out, U_test_out_struct, _ = \
+    #     model.create_snapshots(n_d, n_h, u, mu_lhs_out_min)
+    # Projecting
+    v_pred_out, v_pred_out_sig = model.predict_v(mu_lhs_out_min)
+
+    # mu_max, mu_max_out = np.array(hp["mu_max"]), np.array(hp["mu_max_out"])
+    # mu_lhs_out_max = model.sample_mu(100, mu_max, mu_max_out)
+    # X_v_test_out_max, U_test_out_max, U_test_out_struct_max, _ = \
+    #     model.create_snapshots(n_d, n_h, u, mu_lhs_out_max)
+    # # Projecting
+    # v_pred_out_max, v_pred_out_sig_max = model.predict_v(X_v_test_out_max)
+    # after = v_pred_out_sig_max.mean(-1)
+
+    _, v_pred_sig = model.predict_v(X_v_test)
+    _, U_pred_out_sig = model.predict(X_v_test)
+    plt.plot(mu_lhs_out_min[:, 0], U_pred_out_sig.mean(0), "bo")
+    plt.plot(X_v_test[:, 0], U_pred_sig[0].mean(0), "ro")
+    # plt.plot(mu_lhs_out_min[:, 0], v_pred_out_sig.mean(-1), "bo")
+    # plt.plot(X_v_test[:, 0], v_pred_sig.mean(-1), "ro")
+    # plt.plot(mu_lhs_out_max[:, 0], after, "bo")
+    plt.show()
+
+
     # Plot against test and save
-    plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
-                 resdir=resdir, HP=hp)
+    plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, model.pod_sig.mean(),
+                        resdir, train_res=None, HP=hp)

@@ -66,34 +66,6 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
                        model.restruct(np.sqrt(U_pred_hifi_var), no_s=True))
     sigma_pod = model.pod_sig.mean()
 
-    # LHS sampling (first uniform, then perturbated)
-    print("Doing the LHS sampling on the non-spatial params...")
-    mu_min_out, mu_min = np.array(hp["mu_min_out"]), np.array(hp["mu_min"])
-    # mu_lhs = model.sample_mu(hp["n_s"], mu_min_out, mu_min, linear=True)
-    mu_lhs = np.linspace(mu_min_out, mu_min, hp["n_s"])
-    n_d = mu_lhs.shape[1]
-    n_h = hp["n_v"] * x_mesh.shape[0]
-    X_v_test_out, U_test_out, U_test_out_struct, _ = \
-        model.create_snapshots(n_d, n_h, u, mu_lhs)
-    v_test_out = (model.V.T.dot(U_test_out)).T
-    # Projecting
-    v_pred_out, v_pred_out_sig = model.predict_v(X_v_test_out)
-
-    # x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
-    x = np.arange(v_pred_out.shape[1])
-    lower = v_pred_out - 2 * v_pred_out_sig
-    upper = v_pred_out + 2 * v_pred_out_sig
-    print(x.shape, v_pred_out.shape, lower.shape)
-
-    for i in [-1, -10, -100]:
-        print(v_pred_out_sig[i].mean())
-        # plt.fill_between(x, lower[i], upper[i], 
-        #                     facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
-        # plt.plot(x, v_pred_out[i], "b-")
-        # plt.plot(x, v_test_out[i], "r--")
-        # plt.show()
-    exit(0)
-
     # Plot against test and save
     return plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, sigma_pod,
                         resdir, train_res[0], hp, no_plot)
