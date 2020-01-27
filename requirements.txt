@@ -1,8 +1,10 @@
-tensorflow==2.0.0
+tensorflow==2.1.0
+tensorflow-probability==0.9.0
+tensorflow-addons==0.7.1
 matplotlib==3.0.3
 numpy==1.17.4
 scikit-learn==0.21.3
-tqdm==4.34.0
+tqdm==4.42.0
 numba==0.46.0
 colorama==0.4.1
 pandas==0.25.3
