@@ -69,8 +69,8 @@ y = y + noise_std*np.random.randn(y.shape[0], y.shape[1])
 layers = [1, 20, 20, 1]
 # layers = [1, 1]
 dtype = "float64"
-# activation = tf.nn.tanh
-activation = "relu"
+# activation = "tanh"
+# activation = "relu"
 activation = "softplus"
 tf.keras.backend.set_floatx(dtype)
 
@@ -82,7 +82,8 @@ x_tst_n = normalize(x_tst, mean, std)
 #%% Loss
 negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 
-#%% Case 1: no uncertainty, linear reg
+#%% Case 0: no uncertainty
+print("No uncertainty: regular NN regression")
 # Build model.
 model = tfk.Sequential([
     tfk.layers.InputLayer((layers[0],)),
@@ -99,7 +100,8 @@ model.fit(x_n, y, epochs=500, verbose=False)
 yhat = model(x_tst_n)
 plot(x, y, x_tst, y_tst, yhat.mean())
 
-#%% Case 2: known unknowns (aleatoric uncertainty)
+#%% Case 1: known unknowns (aleatoric uncertainty)
+print("Built-in variance: known unknowns (aleatoric)")
 # Build model.
 model = tfk.Sequential([
     tfk.layers.InputLayer((layers[0],)),
@@ -117,11 +119,12 @@ model.fit(x_n, y, epochs=1500, verbose=False)
 
 # Make predictions.
 yhat = model(x_tst_n)
-lower = yhat.mean() - 3 * yhat.stddev()
-upper = yhat.mean() + 3 * yhat.stddev()
+lower = yhat.mean() - 2 * yhat.stddev()
+upper = yhat.mean() + 2 * yhat.stddev()
 plot(x, y, x_tst, y_tst, yhat.mean(), lower=lower, upper=upper)
 
-#%% Case 3: unknown unknowns (epistemic uncertainty)
+#%% Case 2: unknown unknowns (epistemic uncertainty)
+print("Variational inference on layers: unknown unknowns (epistemic)")
 # # Build model.
 
 # # Specify the surrogate posterior over `keras.layers.Dense` `kernel` and `bias`.
@@ -168,11 +171,12 @@ yhat_var = yhats.var(0)
 # yhat = yhats_mean.mean(0)
 # yhat_var = (yhats_var + yhat ** 2).mean(0) - yhat ** 2
 
-lower = yhat - 3 * np.sqrt(yhat_var)
-upper = yhat + 3 * np.sqrt(yhat_var)
+lower = yhat - 2 * np.sqrt(yhat_var)
+upper = yhat + 2 * np.sqrt(yhat_var)
 plot(x, y, x_tst, y_tst, yhat, lower=lower, upper=upper)
 
-#%% both redone
+#%% Case 3: known and unknown unknowns
+print("Built-in var and varitional layers: aleatoric and epistemic")
 model = tfk.Sequential([
     tfk.layers.InputLayer((layers[0],)),
     *[tfp.layers.DenseVariational(width, posterior_mean_field, prior_trainable, activation=activation)
@@ -186,88 +190,24 @@ model = tfk.Sequential([
 
 # Do inference.
 model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.05), loss=negloglik)
-model.fit(x_n, y, batch_size=None, epochs=30000, verbose=False)
+class CustomCallback(tf.keras.callbacks.Callback):
+    def on_train_epoch_end(self, epoch, logs=None):
+        if (epoch % 100 == 0):
+            print(epoch, logs["loss"])
+logger = tfk.callbacks.ProgbarLogger(count_mode="samples")
+model.fit(x_n, y, batch_size=None, epochs=30000, verbose=0, callbacks=[CustomCallback()])
 
+#%%
 # Make predictions.
 yhats = [model(x_tst_n) for _ in range(100)]
 yhats_mean = np.array([p.mean() for p in yhats])
-yhat = yhats_mean.mean(0)
-yhat_var = yhats_mean.var(0)
-# yhats = [model(x_tst_n) for _ in range(100)]
-# yhats_mean = np.array([yh.mean() for yh in yhats])
-# yhats_var = np.array([yh.variance() for yh in yhats])
 # yhat = yhats_mean.mean(0)
-# yhat_var = (yhats_var + yhat ** 2).mean(0) - yhat ** 2
+# yhat_var = yhats_mean.var(0)
+yhats_var = np.array([p.variance() for p in yhats])
+yhat = yhats_mean.mean(0)
+yhat_var = (yhats_var + yhat ** 2).mean(0) - yhat ** 2
 
-lower = yhat - 3 * np.sqrt(yhat_var)
-upper = yhat + 3 * np.sqrt(yhat_var)
+lower = yhat - 2 * np.sqrt(yhat_var)
+upper = yhat + 2 * np.sqrt(yhat_var)
 # plot(x, y, x_tst, y_tst, yhat, lower=lower, upper=upper)
-plot(x, y, x_tst, y_tst, yhat, yhats=yhats_mean)
-
-#%% Additionnal: GP
-
-class RBFKernelFn(tf.keras.layers.Layer):
-  def __init__(self, **kwargs):
-    super(RBFKernelFn, self).__init__(**kwargs)
-    dtype = kwargs.get('dtype', None)
-
-    self._amplitude = self.add_variable(
-            initializer=tf.constant_initializer(0),
-            dtype=dtype,
-            name='amplitude')
-    
-    self._length_scale = self.add_variable(
-            initializer=tf.constant_initializer(0),
-            dtype=dtype,
-            name='length_scale')
-
-  def call(self, x):
-    # Never called -- this is just a layer so it can hold variables
-    # in a way Keras understands.
-    return x
-
-  @property
-  def kernel(self):
-    return tfp.math.psd_kernels.ExponentiatedQuadratic(
-      amplitude=tf.nn.softplus(0.1 * self._amplitude),
-      length_scale=tf.nn.softplus(5. * self._length_scale)
-    )
-# For numeric stability, set the default floating-point dtype to float64
-tf.keras.backend.set_floatx('float64')
-
-# Build model.
-num_inducing_points = 40
-model = tf.keras.Sequential([
-    tf.keras.layers.InputLayer(input_shape=[1]),
-    tf.keras.layers.Dense(1, kernel_initializer='ones', use_bias=False),
-    tfp.layers.VariationalGaussianProcess(
-        num_inducing_points=num_inducing_points,
-        kernel_provider=RBFKernelFn(),
-        event_shape=[1],
-        inducing_index_points_initializer=tf.constant_initializer(
-            np.linspace(*x_range, num=num_inducing_points,
-                        dtype=x.dtype)[..., np.newaxis]),
-        unconstrained_observation_noise_variance_initializer=(
-            tf.constant_initializer(np.array(0.54).astype(x.dtype))),
-    ),
-])
-
-# Do inference.
-batch_size = 32
-loss = lambda y, rv_y: rv_y.variational_loss(
-    y, kl_weight=np.array(batch_size, x.dtype) / x.shape[0])
-model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.01), loss=loss)
-model.fit(x_n, y, batch_size=batch_size, epochs=1000, verbose=False)
-
-# Profit.
-yhat = model(x_tst_n)
-assert isinstance(yhat, tfd.Distribution)
-yhats = np.array([yhat.sample().numpy() for _ in range(100)])
-yhat_mean = yhats.mean(0)
-yhat_var = yhats.var(0)
-lower = yhat_mean - 3 * np.sqrt(yhat_var)
-upper = yhat_mean + 3 * np.sqrt(yhat_var)
-plot(x, y, x_tst, y_tst, yhat_mean, lower=lower, upper=upper, yhats=yhats[:5])
-
-
-# %%
+plot(x, y, x_tst, y_tst, yhat, yhats=yhats_mean[:10], lower=lower, upper=upper)
