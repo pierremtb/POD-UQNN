@@ -49,22 +49,30 @@ def normalize(x, mean, std):
     return (x - mean) / std
 
 #%% Datagen
-N_star = 300
+N_star = 100
 D = 1
 x_tst = np.linspace(-6, 6, N_star).reshape((N_star, 1))
 y_tst = x_tst**3
 
 #%% Training split
-N = 150
+N = 20
 lb = int(2/(2*6) * N_star)
 ub = int((2+2*4)/(2*6) * N_star)
-idx = np.random.choice(x_tst[lb:ub].shape[0], N, replace=False)
-# idx = np.array([26, 23,  4,  3, 27, 64, 58, 30, 18, 16,  2, 31, 65, 15, 11, 17, 57, 28, 34, 50])
+# idx = np.random.choice(x_tst[lb:ub].shape[0], N, replace=False)
+idx = np.array([26, 23,  4,  3, 27, 64, 58, 30, 18, 16,  2, 31, 65, 15, 11, 17, 57, 28, 34, 50])
 x = x_tst[lb + idx]
 x_range = [x.min(), x.max()]
 y = y_tst[lb + idx]
 noise_std = 3
 y = y + noise_std*np.random.randn(y.shape[0], y.shape[1])
+
+layers = [1, 20, 20, 1]
+# layers = [1, 1]
+dtype = "float64"
+# activation = tf.nn.tanh
+activation = "relu"
+activation = "softplus"
+tf.keras.backend.set_floatx(dtype)
 
 mean = x.mean()
 std =  x.std()
@@ -77,9 +85,9 @@ negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 #%% Case 1: no uncertainty, linear reg
 # Build model.
 model = tfk.Sequential([
-  tfk.layers.Dense(20, activation=tf.nn.relu),
-  tfk.layers.Dense(20, activation=tf.nn.relu),
-  tfk.layers.Dense(1),
+    tfk.layers.InputLayer((layers[0],)),
+    *[tfk.layers.Dense(width, activation) for width in layers[1:-1]],
+    tfk.layers.Dense(layers[-1] * 2),
   tfp.layers.DistributionLambda(lambda t: tfd.Normal(loc=t, scale=1)),
 ])
 
@@ -94,9 +102,9 @@ plot(x, y, x_tst, y_tst, yhat.mean())
 #%% Case 2: known unknowns (aleatoric uncertainty)
 # Build model.
 model = tfk.Sequential([
-    tfk.layers.Dense(20, activation=tf.nn.relu),
-    tfk.layers.Dense(20, activation=tf.nn.relu),
-    tfk.layers.Dense(1 + 1),
+    tfk.layers.InputLayer((layers[0],)),
+    *[tfk.layers.Dense(width, activation) for width in layers[1:-1]],
+    tfk.layers.Dense(layers[-1] * 2),
     tfp.layers.DistributionLambda(
         lambda t: tfd.Normal(loc=t[..., :1],
                              scale=1e-3 + tf.math.softplus(0.05 * t[..., 1:]))),
@@ -138,11 +146,10 @@ def prior_trainable(kernel_size, bias_size=0, dtype=None):
     ])
 
 model = tfk.Sequential([
-    tfp.layers.DenseVariational(20, posterior_mean_field, prior_trainable,
-                                activation=tf.nn.relu),
-    tfp.layers.DenseVariational(20, posterior_mean_field, prior_trainable,
-                                activation=tf.nn.relu),
-    tfp.layers.DenseVariational(1, posterior_mean_field, prior_trainable),
+    tfk.layers.InputLayer((layers[0],)),
+    *[tfp.layers.DenseVariational(width, posterior_mean_field, prior_trainable, activation=activation)
+      for width in layers[1:-1]],
+    tfp.layers.DenseVariational(layers[-1], posterior_mean_field, prior_trainable),
     tfp.layers.DistributionLambda(lambda t: tfd.Normal(loc=t, scale=1)),
 ])
 
@@ -152,38 +159,50 @@ model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.05), loss=negloglik)
 model.fit(x_n, y, batch_size=None, epochs=1500, verbose=False)
 
 # Make predictions.
-yhats = np.array([model(x_tst_n).mean() for _ in range(100)])
-plot(x, y, x_tst, y_tst, yhats.mean(0), yhats=yhats)
+yhats = np.array([model(x_tst_n).mean() for _ in range(200)])
+yhat = yhats.mean(0)
+yhat_var = yhats.var(0)
+# yhats = [model(x_tst_n) for _ in range(100)]
+# yhats_mean = np.array([yh.mean() for yh in yhats])
+# yhats_var = np.array([yh.variance() for yh in yhats])
+# yhat = yhats_mean.mean(0)
+# yhat_var = (yhats_var + yhat ** 2).mean(0) - yhat ** 2
 
-#%% Case 4: both unknowns
-# Build model.
-tf.keras.backend.set_floatx('float64')
-
-model = tf.keras.Sequential([
-  tfp.layers.DenseVariational(20, posterior_mean_field, prior_trainable, 
-                              activation=tf.nn.relu),
-  tfp.layers.DenseVariational(20, posterior_mean_field, prior_trainable, 
-                              activation=tf.nn.relu),
-  tfp.layers.DenseVariational(1 + 1, posterior_mean_field, prior_trainable,
-                              activation=None),
-  tfp.layers.DistributionLambda(
-      lambda t: tfd.Normal(loc=t[..., :1],
-                           scale=1e-3 + tf.math.softplus(0.01 * t[...,1:]))),
-])
-
-# Do inference.
-model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.005), loss=negloglik)
-model.fit(x_n, y, epochs=10000, verbose=False)
-
-# Profit.
-yhats = [model(x_tst_n) for _ in range(100)]
-yhats_mean = np.array([yh.mean() for yh in yhats])
-yhats_var = np.array([yh.variance() for yh in yhats])
-yhat = yhats_mean.mean(0)
-yhat_var = (yhats_var + yhat ** 2).mean(0) - yhat ** 2
 lower = yhat - 3 * np.sqrt(yhat_var)
 upper = yhat + 3 * np.sqrt(yhat_var)
 plot(x, y, x_tst, y_tst, yhat, lower=lower, upper=upper)
+
+#%% both redone
+model = tfk.Sequential([
+    tfk.layers.InputLayer((layers[0],)),
+    *[tfp.layers.DenseVariational(width, posterior_mean_field, prior_trainable, activation=activation)
+      for width in layers[1:-1]],
+    tfp.layers.DenseVariational(layers[-1] * 2, posterior_mean_field, prior_trainable),
+    tfp.layers.DistributionLambda(
+        lambda t: tfd.Normal(loc=t[..., :1],
+                             scale=1e-3 + tf.math.softplus(0.05 * t[..., 1:]))),
+])
+
+
+# Do inference.
+model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.05), loss=negloglik)
+model.fit(x_n, y, batch_size=None, epochs=30000, verbose=False)
+
+# Make predictions.
+yhats = [model(x_tst_n) for _ in range(100)]
+yhats_mean = np.array([p.mean() for p in yhats])
+yhat = yhats_mean.mean(0)
+yhat_var = yhats_mean.var(0)
+# yhats = [model(x_tst_n) for _ in range(100)]
+# yhats_mean = np.array([yh.mean() for yh in yhats])
+# yhats_var = np.array([yh.variance() for yh in yhats])
+# yhat = yhats_mean.mean(0)
+# yhat_var = (yhats_var + yhat ** 2).mean(0) - yhat ** 2
+
+lower = yhat - 3 * np.sqrt(yhat_var)
+upper = yhat + 3 * np.sqrt(yhat_var)
+# plot(x, y, x_tst, y_tst, yhat, lower=lower, upper=upper)
+plot(x, y, x_tst, y_tst, yhat, yhats=yhats_mean)
 
 #%% Additionnal: GP
 
