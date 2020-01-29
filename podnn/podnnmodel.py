@@ -318,7 +318,7 @@ class PodnnModel:
         self.lr = lr
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.model_path = os.path.join(self.resdir, "vnn.h5")
-        self.regnn = TFPBayesNeuralNetwork(self.layers, lr, lam, norm)
+        self.regnn = TFPBayesianNeuralNetwork(self.layers, lr, lam, norm)
         self.regnn.summary()
 
     def train(self, X_v, v, epochs, train_val_test, freq=100):
