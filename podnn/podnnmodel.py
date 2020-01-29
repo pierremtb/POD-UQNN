@@ -13,6 +13,7 @@ from .handling import pack_layers
 from .logger import Logger
 from .advneuralnetwork import AdvNeuralNetwork, NORM_MEANSTD
 from .varneuralnetwork import VarNeuralNetwork
+from .tfpbayesneuralnetwork import TFPBayesianNeuralNetwork
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
 from .metrics import re, re_s
 
@@ -310,6 +311,14 @@ class PodnnModel:
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.model_path = os.path.join(self.resdir, "vnn.h5")
         self.regnn = VarNeuralNetwork(self.layers, lr, lam, adv_eps, norm)
+        self.regnn.summary()
+
+    def initBNN(self, h_layers, lr, lam, norm=NORM_MEANSTD):
+        """Create the neural net model."""
+        self.lr = lr
+        self.layers = [self.n_d, *h_layers, self.n_L]
+        self.model_path = os.path.join(self.resdir, "vnn.h5")
+        self.regnn = TFPBayesNeuralNetwork(self.layers, lr, lam, norm)
         self.regnn.summary()
 
     def train(self, X_v, v, epochs, train_val_test, freq=100):
