@@ -14,6 +14,11 @@ from .advneuralnetwork import NORM_NONE, NORM_MEANSTD, NORM_CENTER
 tfk = tf.keras
 tfd = tfp.distributions
 
+class MyCallback(tfk.callbacks.Callback):
+    def __init__(self, logger):
+        self.logger = logger
+    def on_epoch_end(self, epoch, logs):
+        self.logger.log_train_epoch(epoch, logs["loss"])
 
 class TFPBayesianNeuralNetwork:
     def __init__(self, layers, lr, lam, norm=NORM_NONE, model=None, lb=None, ub=None):
@@ -104,12 +109,9 @@ class TFPBayesianNeuralNetwork:
         v = self.tensor(v)
 
         # Optimizing
-        class MyCallback(tfk.callbacks.Callback):
-            def on_train_epoch_end(self, epoch, logs):
-                self.logger.log_train_epoch(epoch, logs["loss"])
-        self.model.fit(X_v, v, epochs=epochs, verbose=0, callbacks=[MyCallback()])
+        self.model.fit(X_v, v, epochs=epochs, verbose=0, callbacks=[MyCallback(logger)])
 
-        self.logger.log_train_end(epochs, last_loss)
+        # self.logger.log_train_end(epochs, np.array(0.))
 
     def fetch_minibatch(self, X_v, v):
         """Return a subset of the training set, for lower memory training."""
@@ -129,7 +131,7 @@ class TFPBayesianNeuralNetwork:
         yhats_var = np.array([p.variance() for p in yhats])
         yhat = yhats_mean.mean(0)
         yhat_var = (yhats_var + yhat ** 2).mean(0) - yhat ** 2
-        return yhat.numpy(), yhat_var.numpy()
+        return yhat, yhat_var
 
     def summary(self):
         """Print a summary of the TensorFlow/Keras model."""
