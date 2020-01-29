@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.logger import Logger
+from podnn.advneuralnetwork import NORM_NONE
 from podnn.tfpbayesneuralnetwork import TFPBayesianNeuralNetwork
 from podnn.plotting import figsize
 
@@ -35,7 +36,7 @@ u_train = u_train + noise_std*np.random.randn(u_train.shape[0], u_train.shape[1]
 #%% Model creation
 layers = [1, 20, 20, D]
 model = TFPBayesianNeuralNetwork(layers, 0.08, 0., NORM_NONE)
-epochs = 1000
+epochs = 30000
 logger = Logger(epochs, frequency=1000)
 logger.set_val_err_fn(lambda: {})
 model.fit(x_train, u_train, epochs, logger=logger)
@@ -65,3 +66,5 @@ plt.show()
 # plt.plot(x_star, u_pred[:, 1], "r--")
 # plt.scatter(x_train, u_train[:, 1],)
 # plt.savefig("results/sin.pdf")
+
+# %%
