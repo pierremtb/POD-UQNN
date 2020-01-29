@@ -108,7 +108,6 @@ class TFPBayesianNeuralNetwork:
             def on_train_epoch_end(self, epoch, logs):
                 self.logger.log_train_epoch(epoch, logs["loss"])
         self.model.fit(X_v, v, epochs=epochs, verbose=0, callbacks=[MyCallback()])
-        last_loss = self.tf_optimization(X_v, v, epochs)
 
         self.logger.log_train_end(epochs, last_loss)
 
@@ -130,7 +129,7 @@ class TFPBayesianNeuralNetwork:
         yhats_var = np.array([p.variance() for p in yhats])
         yhat = yhats_mean.mean(0)
         yhat_var = (yhats_var + yhat ** 2).mean(0) - yhat ** 2
-        return y_pred_mean.numpy(), y_pred_var.numpy()
+        return yhat.numpy(), yhat_var.numpy()
 
     def summary(self):
         """Print a summary of the TensorFlow/Keras model."""
