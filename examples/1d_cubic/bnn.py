@@ -22,7 +22,7 @@ from podnn.metrics import re_mean_std, re_max
 from podnn.mesh import create_linear_mesh
 from podnn.logger import Logger
 from podnn.advneuralnetwork import NORM_MEANSTD, NORM_NONE
-from podnn.tfpbayesneuralnetwork import TFPBayesianNeuralNetwork
+from podnn.bayesneuralnetwork import BayesianNeuralNetwork
 from podnn.plotting import figsize
 
 # Datagen
@@ -48,14 +48,14 @@ u_train = u_train + noise_std*np.random.randn(u_train.shape[0], u_train.shape[1]
 
 # Model creation
 layers = [1, 20, 20, 1]
-model = TFPBayesianNeuralNetwork(layers, 0.08, 0., NORM_NONE)
+model = BayesianNeuralNetwork(layers, 0.08, .0, .0, NORM_NONE)
 logger = Logger(3500, frequency=100)
 logger.set_val_err_fn(lambda: {})
 model.fit(x_train, u_train, epochs=3500, logger=logger)
 
 u_pred, u_pred_var = model.predict(x_star)
-lower = u_pred - 2 * np.sqrt(u_pred_var)
-upper = u_pred + 2 * np.sqrt(u_pred_var)
+lower = u_pred - 3 * np.sqrt(u_pred_var)
+upper = u_pred + 3 * np.sqrt(u_pred_var)
 
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
 plt.fill_between(x_star[:, 0], lower[:, 0], upper[:, 0], 
