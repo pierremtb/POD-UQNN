@@ -49,7 +49,7 @@ def normalize(x, mean, std):
     return (x - mean) / std
 
 #%% Datagen
-N_star = 100
+N_star = 300
 D = 1
 x_tst = np.linspace(-6, 6, N_star).reshape((N_star, 1))
 y_tst = x_tst**3
@@ -58,8 +58,8 @@ y_tst = x_tst**3
 N = 20
 lb = int(2/(2*6) * N_star)
 ub = int((2+2*4)/(2*6) * N_star)
-# idx = np.random.choice(x_tst[lb:ub].shape[0], N, replace=False)
-idx = np.array([26, 23,  4,  3, 27, 64, 58, 30, 18, 16,  2, 31, 65, 15, 11, 17, 57, 28, 34, 50])
+idx = np.random.choice(x_tst[lb:ub].shape[0], N, replace=False)
+# idx = np.array([26, 23,  4,  3, 27, 64, 58, 30, 18, 16,  2, 31, 65, 15, 11, 17, 57, 28, 34, 50])
 x = x_tst[lb + idx]
 x_range = [x.min(), x.max()]
 y = y_tst[lb + idx]
@@ -69,9 +69,8 @@ y = y + noise_std*np.random.randn(y.shape[0], y.shape[1])
 layers = [1, 20, 20, 1]
 # layers = [1, 1]
 dtype = "float64"
-# activation = "tanh"
-# activation = "relu"
-activation = "softplus"
+activation = "relu"
+# activation = "softplus"
 tf.keras.backend.set_floatx(dtype)
 
 mean = x.mean()
