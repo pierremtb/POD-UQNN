@@ -334,8 +334,11 @@ class PodnnModel:
         U_val = self.V.dot(v_val.T)
         U_train = self.V.dot(v_train.T)
         def get_val_err():
-            v_train_pred, _ = self.regnn.predict(X_v_train)
-            v_val_pred, _ = self.regnn.predict(X_v_val)
+            return {}
+            # v_train_pred, _ = self.regnn.predict(X_v_train)
+            # v_val_pred, _ = self.regnn.predict(X_v_val)
+            v_train_pred = self.regnn.model(X_v_train).mean().numpy()
+            v_val_pred = self.regnn.model(X_v_val).mean().numpy()
             U_val_pred = self.V.dot(v_val_pred.T)
             U_train_pred = self.V.dot(v_train_pred.T)
             return {
@@ -350,7 +353,7 @@ class PodnnModel:
         self.regnn.fit(X_v_train, v_train, epochs, logger)
 
         # Saving
-        self.save_model()
+        # self.save_model()
 
         return logger.get_logs()
 
@@ -399,7 +402,8 @@ class PodnnModel:
     def predict_sample(self, X_v):
         """Returns the predicted solutions, via proj coefficients."""
         # v_pred, v_pred_mean = self.predict_v(X_v)
-        v_pred = self.regnn.predict_sample(X_v)
+        # v_pred = self.regnn.predict_sample(X_v)
+        v_pred = self.regnn.model(X_v).mean().numpy()
 
         # Retrieving the function with the predicted coefficients
         U_pred = self.V.dot(v_pred.T)

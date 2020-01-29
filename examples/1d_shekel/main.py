@@ -73,4 +73,4 @@ sigma_pod = model.pod_sig.mean()
 
 # Plot against test and save
 plot_results(U_test, U_pred, U_pred_hifi_mean, U_pred_hifi_std, sigma_pod,
-             resdir, train_res, hp, no_plot)
+             resdir, train_res, hp)
