@@ -62,6 +62,7 @@ def gen_and_train_model():
 tf.debugging.set_log_device_placement(True)
 gpus = tf.config.experimental.list_logical_devices('GPU')
 M = len(gpus)
+print(M)
 u_pred_samples = []
 u_pred_var_samples = []
 
@@ -102,10 +103,10 @@ for gpu in gpus:
         model.fit(x, y, epochs=epochs, verbose=0)
         mean, var = model.predict(tf.convert_to_tensor(x_star))
         u_pred_samples.append(mean)
-        u_pred_samples_var.append(var)
+        u_pred_var_samples.append(var)
 
-u_pred = u_pred_samples.mean(-1)
-u_pred_var = (u_pred_var_samples + u_pred_samples ** 2).mean(-1) - u_pred ** 2
+u_pred = u_pred_var_samples.mean(-1)
+u_pred_var = (np.array(u_pred_var_samples) + np.array(u_pred_samples ** 2)).mean(-1) - u_pred ** 2
 lower = u_pred - 3 * np.sqrt(u_pred_var)
 upper = u_pred + 3 * np.sqrt(u_pred_var)
 print(u_pred.shape, u_pred_var.shape)
