@@ -88,7 +88,8 @@ def main(hp, use_cached_dataset=False):
     export(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                  U_test_hifi_mean, U_test_hifi_std,
                  train_res, HP=hp, export_vtk=True, export_txt=False)
-    plot_results(os.path.join("cache", "x_u_pred_mean_std.csv"), hp)
+    print("Exported. ParaView processing is now needed to create x_u_pred_mean_std.csv")
+    # plot_results(os.path.join("cache", "x_u_pred_mean_std.csv"), hp)
 
 if __name__ == "__main__":
     # Custom hyperparameters as command-line arg

@@ -59,10 +59,6 @@ def export(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
     x = x_mesh[:, 1]
     y = x_mesh[:, 2]
 
-    # Computing means
-    U_pred_mean = np.mean(U_pred, axis=-1)
-    U_pred_std = np.nanstd(U_pred, axis=-1)
-
     if export_txt:
         print("Saving to .txt")
         x_u_mean_std = np.concatenate((x_mesh, U_pred_hifi_mean.T, U_pred_hifi_std), axis=1)
@@ -124,77 +120,6 @@ def export(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
                                   "hv_std_pred" : U_pred_hifi_std[2],
                                   })
         return
-
-    # print("Plotting")
-    # # Keeping only the first nodes
-    # xy = x_mesh[:, 1:]
-    # x = xy[:, 0]
-    # y = xy[:, 1]
-    # z = U_pred_hifi_mean[0]
-    # r1, c1 = 275275., 5043882.
-    # r2, c2 = 274262., 5045214.
-    # x_world, y_world = np.array([[r1, r2]]), np.array([[c1, c2]])
-    # col = z.shape[1] * (x_world - x.min()) / x.ptp()
-    # row = z.shape[0] * (y_world - y.min()) / y.ptp()
-
-    # print("Interpolate the line at num points...")
-    # num = 1000
-    # row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
-
-    # print("Extract the values along the line, using cubic interpolation")
-    # zi = scipy.ndimage.map_coordinates(z, np.vstack((row, col)))
-
-    # x_min_filter = xy[:, 0] < r1
-    # x_max_filter = xy[:, 0] > r2
-    # y_min_filter = xy[:, 1] > c1
-    # y_max_filter = xy[:, 1] < c2
-    # trim_filter = x_min_filter & x_max_filter & y_max_filter & y_min_filter
-    # idx = np.where(trim_filter == True)[0]
-    # i_min = idx.min()
-    # i_max = idx.max()
-    # print(idx.shape)
-
-    # x = x[i_min:i_max]
-    # y = y[i_min:i_max]
-    # U_test_hifi_mean = U_test_hifi_mean[:, i_min:i_max]
-    # U_test_hifi_std = U_test_hifi_std[:, i_min:i_max]
-    # U_pred_hifi_mean = U_pred_hifi_mean[:, i_min:i_max]
-    # U_pred_hifi_std = U_pred_hifi_std[:, i_min:i_max]
-
-    # print("Interping")
-    # f = sp.interpolate.interp2d(x, y, U_test_hifi_mean[0])
-
-    # num_points = 1000
-    # xvalues = np.linspace(c1, c2, num_points)
-    # yvalues = np.linspace(r1, r2, num_points)
-    # print("Projing")
-    # z_values = f(xvalues, yvalues)
-    plt.plot(zi)
-    exit(0)
-
-
-    # Computing means
-    n_plot_x = 4
-    n_plot_y = 4
-    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.5))
-    gs = fig.add_gridspec(n_plot_x, n_plot_y)
-
-    quantities = np.array([r"h", r"\eta", r"(hu)", r"(hv)"])
-    idx_u = [i - 4 for i in HP["mesh_idx"][2]]
-    for i, qty in enumerate(quantities[idx_u]):
-        z_min, z_max = get_min_max(U_pred_hifi_mean[i], U_test_hifi_mean[i])
-        plot_plot(fig, gs[0, i], x, y, U_pred_hifi_mean[i],
-                  z_min, z_max, f"Mean ${qty}(x,y)$ [pred]")
-        plot_plot(fig, gs[1, i], x, y, U_test_hifi_mean[i],
-                  z_min, z_max, f"Mean ${qty}(x,y)$ [val]")
-        z_min, z_max = get_min_max(U_pred_hifi_std[i], U_test_hifi_std[i])
-        plot_plot(fig, gs[2, i], x, y, U_pred_hifi_std[i],
-                  z_min, z_max, f"Std ${qty}(x,y)$ [pred]")
-        plot_plot(fig, gs[3, i], x, y, U_test_hifi_std[i],
-                  z_min, z_max, f"Std ${qty}(x,y)$ [val]")
-
-    plt.tight_layout()
-    saveresultdir(HP, train_res)
 
 
 if __name__ == "__main__":
