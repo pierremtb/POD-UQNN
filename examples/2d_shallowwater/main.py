@@ -35,14 +35,14 @@ def main(resdir, hp, save_cache=False, use_cached_dataset=False):
     
     X_v_train, v_train, X_v_test, \
         _, U_test = model.convert_dataset(u_mesh, X_v,
-                                          hp["train_val_test"], hp["eps"],
+                                          hp["train_val"], hp["eps"],
                                           save_cache=save_cache, use_cache=use_cached_dataset)
 
     # Train
     model.initVNNs(hp["n_M"], hp["h_layers"],
                    hp["lr"], hp["lambda"], hp["adv_eps"], hp["norm"])
     train_res = model.train(X_v_train, v_train, hp["epochs"],
-                            hp["train_val_test"], freq=hp["log_frequency"])
+                            hp["train_val"], freq=hp["log_frequency"])
 
 
     # Predict and restruct

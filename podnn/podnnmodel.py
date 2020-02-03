@@ -139,7 +139,7 @@ class PodnnModel:
         # U_no_noise = np.zeros((n_h, n_st))
         return loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise, x_noise)
 
-    def convert_dataset(self, u_mesh, X_v, train_val_test, eps, eps_init=None,
+    def convert_dataset(self, u_mesh, X_v, train_val, eps, eps_init=None,
                         use_cache=False, save_cache=False):
         """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
         if use_cache and os.path.exists(self.train_data_path):
@@ -180,18 +180,18 @@ class PodnnModel:
         self.pod_sig = np.stack((U, U_pod), axis=-1).std(-1).mean(-1)
 
         # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_test, v_train, v_test = train_test_split(X_v, v, test_size=train_val_test[2])
+        X_v_train, X_v_val, v_train, v_val = train_test_split(X_v, v, test_size=train_val[1])
 
         # Creating the validation snapshots matrix
-        U_test = self.V.dot(v_test.T)
+        U_test = self.V.dot(v_val.T)
 
         if save_cache:
-            self.save_train_data(X_v_train, v_train, X_v_test, v_test, U_test)
+            self.save_train_data(X_v_train, v_train, X_v_val, v_val, U_test)
 
-        return X_v_train, v_train, X_v_test, v_test, U_test
+        return X_v_train, v_train, X_v_val, v_val, U_test
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
-                         train_val_test, eps=0., eps_init=None, n_L=0,
+                         train_val, eps=0., eps_init=None, n_L=0,
                          t_min=0, t_max=0, u_noise=0., x_noise=0.,
                          use_cache=False):
         """Generate a training dataset for benchmark problems."""
@@ -222,7 +222,7 @@ class PodnnModel:
         fake_x = np.zeros_like(mu_lhs)
 
         _, _, mu_lhs_train, mu_lhs_test = \
-             train_test_split(fake_x, mu_lhs, test_size=train_val_test[2])
+             train_test_split(fake_x, mu_lhs, test_size=train_val[1])
 
         # Creating the snapshots
         print(f"Generating {n_st} corresponding snapshots")
@@ -313,14 +313,11 @@ class PodnnModel:
         for _ in range(n_M):
             self.regnn.append(VarNeuralNetwork(self.layers, lr, lam, adv_eps, norm))
 
-    def train(self, X_v, v, epochs, train_val_test, freq=100):
+    def train(self, X_v_train, v_train, X_v_val, v_val, epochs, freq=100):
         """Train the POD-NN's regression model, and save it."""
         if self.regnn is None or len(self.regnn) == 0:
             raise ValueError("Regression model isn't defined.")
 
-        val_size = train_val_test[1] / (train_val_test[0] + train_val_test[1])
-        X_v_train, X_v_val, v_train, v_val = \
-            self.split_dataset(X_v, v, val_size)
         U_val = self.project_to_U(v_val)
         U_train = self.project_to_U(v_train)
 

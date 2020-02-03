@@ -27,7 +27,7 @@ HP["n_L"] = 0
 HP["x_noise"] = 0.0
 HP["u_noise"] = 0.
 # Train/val split
-HP["train_val_test"] = (3/5, 1/5, 1/5)
+HP["train_val"] = (3/5, 1/5, 1/5)
 # Deep NN hidden layers topology
 HP["h_layers"] = [128, 128, 128]
 # Setting up TF SGD-based optimizer

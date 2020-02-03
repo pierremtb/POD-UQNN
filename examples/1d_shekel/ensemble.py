@@ -44,7 +44,7 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
     X_v_train, v_train, U_train, U_train_pod, \
         X_v_test, v_test, U_test = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                                   hp["n_s"],
-                                                  hp["train_val_test"],
+                                                  hp["train_val"],
                                                   eps=hp["eps"], n_L=hp["n_L"],
                                                   u_noise=hp["u_noise"],
                                                   x_noise=hp["x_noise"],
@@ -55,7 +55,7 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
                   hp["lr"], hp["lambda"],
                   hp["adv_eps"], hp["norm"])
     train_res = model.train(X_v_train, v_train, hp["epochs"],
-                            hp["train_val_test"], freq=hp["log_frequency"])
+                            hp["train_val"], freq=hp["log_frequency"])
 
     M = 1
     v_pred_samples = np.zeros((v_test.shape[0], v_test.shape[1], M))

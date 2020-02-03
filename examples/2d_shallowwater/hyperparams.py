@@ -13,13 +13,13 @@ HP["n_v"] = len(HP["mesh_idx"][2])
 # Time
 HP["n_t"] = 0
 # Snapshots count
-HP["n_s"] = 300
-# HP["n_s"] = 100
+HP["n_s"] = 500
+HP["n_s_hifi"] = 300
 # POD stopping param
 HP["eps"] = 0
 HP["n_L"] = 10
 # Train/val split
-HP["train_val_test"] = (3/5, 1/5, 1/5)
+HP["train_val"] = (3/5, 1/5)
 # Deep NN hidden layers topology
 HP["h_layers"] = [128, 128, 128]
 # Setting up TF SGD-based optimizer

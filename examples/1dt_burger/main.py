@@ -36,7 +36,7 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
         X_v_test, v_test, U_test = \
             model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                    hp["n_s"],
-                                   hp["train_val_test"],
+                                   hp["train_val"],
                                    eps=hp["eps"], n_L=hp["n_L"],
                                    eps_init=hp["eps_init"],
                                    x_noise=hp["x_noise"],
@@ -47,7 +47,7 @@ def main(resdir, hp, gen_test=False, use_cached_dataset=False,
     model.initVNNs(hp["n_M"], hp["h_layers"], 
                    hp["lr"], hp["lambda"], hp["adv_eps"], hp["norm"])
     train_res = model.train(X_v_train, v_train, hp["epochs"],
-                            hp["train_val_test"], freq=hp["log_frequency"])
+                            hp["train_val"], freq=hp["log_frequency"])
 
     # Predict and restruct
     U_pred, U_pred_sig = model.predict(X_v_test)
