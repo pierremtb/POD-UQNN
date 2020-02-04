@@ -1,104 +1,90 @@
 """ POD-NN modeling for 2D inviscid Shallow Water Equations."""
 
+#%% Imports
 import sys
 import os
-import yaml
 import numpy as np
+import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import re_mean_std, re
+from podnn.metrics import re_s
 from podnn.mesh import read_space_sol_input_mesh
+from podnn.plotting import figsize, savefig
+from pyevtk.hl import unstructuredGridToVTK
+from pyevtk.vtk import VtkTriangle
 
-from export import export
-from plot import plot_results
+#%% Prepare
+from hyperparams import HP as hp
 
+# Getting data from the files
+mu_path = os.path.join("data", f"INPUT_{hp['n_s']}_Scenarios.txt")
+x_u_mesh_path = os.path.join("data", f"SOL_FV_{hp['n_s']}_Scenarios.txt")
+x_mesh, u_mesh, X_v = \
+    read_space_sol_input_mesh(hp["n_s"], hp["mesh_idx"], x_u_mesh_path, mu_path)
+np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
+# x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
+# u_mesh = None
+# X_v = None
 
-def main(hp, use_cached_dataset=False):
-    """Full example to run POD-NN on 2d_shallowwater."""
+#%% Init the model
+model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
 
-    if not use_cached_dataset:
-        # Getting data from the files
-        mu_path = os.path.join("data", f"INPUT_{hp['n_s']}_Scenarios.txt")
-        x_u_mesh_path = os.path.join("data", f"SOL_FV_{hp['n_s']}_Scenarios.txt")
-        x_mesh, u_mesh, X_v = \
-            read_space_sol_input_mesh(hp["n_s"], hp["mesh_idx"], x_u_mesh_path, mu_path)
-        np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
-    else:
-        x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-        u_mesh = None
-        X_v = None
+#%% Generate the dataset from the mesh and params
+X_v_train, v_train, \
+    X_v_val, v_val, \
+    U_val = model.convert_dataset(u_mesh, X_v,
+                                    hp["train_val"], hp["eps"])
 
-    # Init the model
-    model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
+#%% Train
+model.initNN(hp["h_layers"], hp["lr"], hp["lambda"])
+train_res = model.train(X_v_train, v_train, X_v_train, v_train, hp["epochs"],
+                        freq=hp["log_frequency"])
 
-    # Generate the dataset from the mesh and params
-    
-    X_v_train, v_train, \
-        X_v_test, _, \
-        U_test = model.convert_dataset(u_mesh, X_v,
-                                       hp["train_val"], hp["eps"],
-                                       use_cache=use_cached_dataset)
+#%% Validation metrics
+U_pred = model.predict(X_v_val)
+err_val = re_s(U_val, U_pred)
+print(f"RE_v: {err_val:4f}")
 
-    # Train
-    model.initNN(hp["h_layers"], hp["lr"], hp["lambda"])
-    train_res = model.train(X_v_train, v_train, hp["epochs"],
-                            hp["train_val"], freq=hp["log_frequency"])
+#%% Sample the new model to generate a test prediction
+mu_path_tst = os.path.join("data", f"INPUT_{hp['n_s_tst']}_Scenarios.txt")
+x_u_mesh_tst_path = os.path.join("data", f"SOL_FV_{hp['n_s_tst']}_Scenarios.txt")
+_, u_mesh_tst, X_v_tst = \
+    read_space_sol_input_mesh(hp["n_s_tst"], hp["mesh_idx"], x_u_mesh_tst_path, mu_path_tst)
+U_tst = model.u_mesh_to_U(u_mesh_tst, hp["n_s_tst"])
+U_pred = model.predict(X_v_tst)
 
-    # Predict and restruct
-    U_pred = model.predict(X_v_test)
-    U_pred = model.restruct(U_pred)
-    U_test = model.restruct(U_test)
+print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
-    # Compute relative error
-    error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
-    print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
+#%% VTU export
+print("Saving to .vtu")
+# Retrieving the mesh
+connectivity_raw = np.loadtxt(os.path.join("data", "connectivity.txt"))
+n_element = connectivity_raw.shape[0]
 
-    mu_path = os.path.join("data", f"INPUT_{hp['n_s_tst']}_Scenarios.txt")
-    x_u_mesh_path = os.path.join("data", f"SOL_FV_{hp['n_s_tst']}_Scenarios.txt")
-    _, u_mesh_test_hifi, X_v_test_hifi = \
-        read_space_sol_input_mesh(hp["n_s"], hp["mesh_idx"], x_u_mesh_path, mu_path)
-    U_test_hifi = model.u_mesh_to_U(u_mesh_test_hifi, hp["n_s_tst"])
-    U_test_hifi_mean, U_test_hifi_std = U_test_hifi.mean(-1), np.nanstd(U_test_hifi, -1)
+# 1D list of connections
+connectivity = connectivity_raw[:, 1:4].astype("int64").flatten() - 1
 
-    U_pred_hifi = model.predict(X_v_test_hifi)
-    errors_test_hifi = np.array([re(U_pred_hifi[i], U_test_hifi_mean[i]) for i in range(hp["n_s_tst"])])
-    # print(errors_test_hifi)
-    # print(errors_test_hifi.mean())
+# 1d list of "offsets", ie. the end of each element
+# Since we use triangles, size = 3
+offsets = np.arange(1, n_element + 1) * 3
+cell_types = np.ones(n_element, dtype="int64") * VtkTriangle.tid
 
-    U_pred_hifi_mean, U_pred_hifi_std = model.predict_heavy(X_v_test_hifi)
-    error_test_hifi_mean = re(U_pred_hifi_mean, U_test_hifi_mean)
-    error_test_hifi_std = re(U_pred_hifi_std, U_test_hifi_std)
-    print(f"Hifi Test relative error: mean {error_test_hifi_mean:4f}, std {error_test_hifi_std:4f}")
+# Space points
+x = x_mesh[:, 1]
+y = x_mesh[:, 2]
+x = np.ascontiguousarray(x)
+y = np.ascontiguousarray(y)
+z = np.ascontiguousarray(np.zeros_like(x))
 
-    # Restruct for plotting
-    U_test_hifi_mean = model.restruct(U_test_hifi_mean, no_s=True)
-    U_test_hifi_std = model.restruct(U_test_hifi_std, no_s=True)
-    U_pred_hifi_mean = model.restruct(U_pred_hifi_mean, no_s=True)
-    U_pred_hifi_std = model.restruct(U_pred_hifi_std, no_s=True)
-
-    # Time for one pred
-    # import time
-    # st = time.time()
-    # model.predict(X_v_test[0:1])
-    # print(f"{time.time() - st} sec taken for prediction")
-    # exit(0)
-
-    # Plot and save the results
-    export(x_mesh, U_pred, U_pred_hifi_mean, U_pred_hifi_std,
-                 U_test_hifi_mean, U_test_hifi_std,
-                 train_res, HP=hp, export_vtk=True, export_txt=False)
-    print("Exported. ParaView processing is now needed to create x_u_pred_mean_std.csv")
-    # plot_results(os.path.join("cache", "x_u_pred_mean_std.csv"), hp)
-
-if __name__ == "__main__":
-    # Custom hyperparameters as command-line arg
-    if len(sys.argv) > 1:
-        with open(sys.argv[1]) as HPFile:
-            HP = yaml.load(HPFile)
-    # Default ones
-    else:
-        from hyperparams import HP
-
-    main(HP, use_cached_dataset=False)
-    # main(HP, use_cached_dataset=True)
+# Exporting
+unstructuredGridToVTK(os.path.join("cache", "x_u_test_pred_mean_std"),
+                        x, y, z,
+                        connectivity, offsets, cell_types,
+                        cellData=None,
+                        pointData={
+                            "h_mean" : U_tst.mean(-1)[0],
+                            "h_pred_mean" : U_pred.mean(-1)[0],
+                            })
+print("Exported. ParaView processing is now needed to create x_u_pred_mean_std.csv")
+# plot_results(os.path.join("cache", "x_u_pred_mean_std.csv"), hp)
