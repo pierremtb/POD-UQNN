@@ -50,10 +50,10 @@ U_val_pred_sig = model.restruct(U_val_pred_sig)
 U_val = model.restruct(U_val)
 
 #%% Sample the new test set to generate a HiFi prediction
-print("Sampling {n_s_hifi} parameters")
-X_v_test = model.generate_hifi_inputs(hp["n_s_hifi"],
+print("Sampling {n_s_tst} parameters")
+X_v_test = model.generate_hifi_inputs(hp["n_s_tst"],
                                       hp["mu_min"], hp["mu_max"])
-print("Predicting the {n_s_hifi} corresponding solutions")
+print("Predicting the {n_s_tst} corresponding solutions")
 U_pred, U_pred_sig = model.predict(X_v_test)
 U_pred_mean = (model.restruct(U_pred.mean(-1), no_s=True),
                     model.restruct(U_pred_sig.mean(-1), no_s=True))

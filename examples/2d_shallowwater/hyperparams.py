@@ -14,7 +14,7 @@ HP["n_v"] = len(HP["mesh_idx"][2])
 HP["n_t"] = 0
 # Snapshots count
 HP["n_s"] = 500
-HP["n_s_hifi"] = 300
+HP["n_s_tst"] = 300
 # POD stopping param
 HP["eps"] = 0
 HP["n_L"] = 10
