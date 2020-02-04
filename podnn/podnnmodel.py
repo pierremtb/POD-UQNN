@@ -13,7 +13,7 @@ from .handling import pack_layers
 from .logger import Logger
 from .neuralnetwork import NeuralNetwork
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
-from .metrics import re
+from .metrics import re, re_s
 
 
 SETUP_DATA_NAME = "setup_data.pkl"
@@ -139,7 +139,7 @@ class PodnnModel:
             U[:, i] = u_mesh[st:en, :].T.reshape((self.n_h,))
         return U
 
-    def convert_dataset(self, u_mesh, X_v, train_val_test, eps, eps_init=None,
+    def convert_dataset(self, u_mesh, X_v, train_val, eps, eps_init=None,
                         use_cache=False):
         """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
         if use_cache and os.path.exists(self.train_data_path):
@@ -165,7 +165,7 @@ class PodnnModel:
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_test, v_train, v_test = \
-            self.split_dataset(X_v, v, train_val_test[2])
+            self.split_dataset(X_v, v, train_val[-1])
 
         # Creating the validation snapshots matrix
         U_test = self.V.dot(v_test.T)
@@ -175,7 +175,7 @@ class PodnnModel:
         return X_v_train, v_train, X_v_test, v_test, U_test
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
-                         train_val_test, eps, eps_init=None,
+                         train_val, eps, eps_init=None,
                          t_min=0, t_max=0,
                          use_cache=False):
         """Generate a training dataset for benchmark problems."""
@@ -221,7 +221,7 @@ class PodnnModel:
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_test, v_train, v_test = \
-            self.split_dataset(X_v, v, train_val_test[2])
+            self.split_dataset(X_v, v, train_val[-1])
 
         # Creating the validation snapshots matrix
         U_test = self.V.dot(v_test.T)
@@ -239,31 +239,18 @@ class PodnnModel:
         self.layers = pack_layers(self.n_d, h_layers, self.n_L)
         self.regnn = NeuralNetwork(self.layers, lr, lam, lb=self.lb, ub=self.ub)
 
-    def train(self, X_v, v, epochs, train_val_test, freq=100):
+    def train(self, X_v_train, v_train, X_v_val, v_val, epochs, freq=100):
         """Train the POD-NN's regression model, and save it."""
         if self.regnn is None:
             raise ValueError("Regression model isn't defined.")
 
         # Validation and logging
         logger = Logger(epochs, freq)
-        val_size = train_val_test[1] / (train_val_test[0] + train_val_test[1])
-        X_v_train, X_v_val, v_train, v_val = \
-            self.split_dataset(X_v, v, val_size)
-        U_val_mean, U_val_std = self.do_vdot(v_val)
-        if self.has_t:
-            U_val_mean = U_val_mean.mean(-1)
-            U_val_std = U_val_std.std(-1)
-        print("SHAPES: ", U_val_mean.shape, U_val_std.shape)
         def get_val_err():
             v_val_pred = self.predict_v(X_v_val)
-            U_val_pred_mean, U_val_pred_std = self.do_vdot(v_val_pred)
-            if self.has_t:
-                U_val_pred_mean = U_val_pred_mean.mean(-1)
-                U_val_pred_std = U_val_pred_std.std(-1)
             return {
                 "L_v": self.regnn.loss(v_val, v_val_pred),
-                "REM_v": re(U_val_mean, U_val_pred_mean),
-                "RES_v": re(U_val_std, U_val_pred_std),
+                "RE_v": re_s(v_val.T, v_val_pred.T),
                 }
         logger.set_val_err_fn(get_val_err)
 

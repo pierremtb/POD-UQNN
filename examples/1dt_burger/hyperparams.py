@@ -17,12 +17,12 @@ HP["t_min"] = 1.
 HP["t_max"] = 5.
 # Snapshots count
 HP["n_s"] = 300
-HP["n_s_hifi"] = int(1e3)
+HP["n_s_tst"] = int(1e3)
 # POD stopping param
 HP["eps"] = 1e-10
 HP["eps_init"] = 1e-10
 # Train/val split
-HP["train_val_test"] = (3/5, 1/5, 1/5)
+HP["train_val"] = (3/5, 1/5, 1/5)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up _structthe TF SGD-based optimizer

@@ -37,13 +37,13 @@ def main(hp, use_cached_dataset=False):
     X_v_train, v_train, \
         X_v_test, _, \
         U_test = model.convert_dataset(u_mesh, X_v,
-                                       hp["train_val_test"], hp["eps"],
+                                       hp["train_val"], hp["eps"],
                                        use_cache=use_cached_dataset)
 
     # Train
     model.initNN(hp["h_layers"], hp["lr"], hp["lambda"])
     train_res = model.train(X_v_train, v_train, hp["epochs"],
-                            hp["train_val_test"], freq=hp["log_frequency"])
+                            hp["train_val"], freq=hp["log_frequency"])
 
     # Predict and restruct
     U_pred = model.predict(X_v_test)
@@ -54,15 +54,15 @@ def main(hp, use_cached_dataset=False):
     error_test_mean, error_test_std = re_mean_std(U_test, U_pred)
     print(f"Test relative error: mean {error_test_mean:4f}, std {error_test_std:4f}")
 
-    mu_path = os.path.join("data", f"INPUT_{hp['n_s_hifi']}_Scenarios.txt")
-    x_u_mesh_path = os.path.join("data", f"SOL_FV_{hp['n_s_hifi']}_Scenarios.txt")
+    mu_path = os.path.join("data", f"INPUT_{hp['n_s_tst']}_Scenarios.txt")
+    x_u_mesh_path = os.path.join("data", f"SOL_FV_{hp['n_s_tst']}_Scenarios.txt")
     _, u_mesh_test_hifi, X_v_test_hifi = \
         read_space_sol_input_mesh(hp["n_s"], hp["mesh_idx"], x_u_mesh_path, mu_path)
-    U_test_hifi = model.u_mesh_to_U(u_mesh_test_hifi, hp["n_s_hifi"])
+    U_test_hifi = model.u_mesh_to_U(u_mesh_test_hifi, hp["n_s_tst"])
     U_test_hifi_mean, U_test_hifi_std = U_test_hifi.mean(-1), np.nanstd(U_test_hifi, -1)
 
     U_pred_hifi = model.predict(X_v_test_hifi)
-    errors_test_hifi = np.array([re(U_pred_hifi[i], U_test_hifi_mean[i]) for i in range(hp["n_s_hifi"])])
+    errors_test_hifi = np.array([re(U_pred_hifi[i], U_test_hifi_mean[i]) for i in range(hp["n_s_tst"])])
     # print(errors_test_hifi)
     # print(errors_test_hifi.mean())
 

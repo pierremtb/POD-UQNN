@@ -14,12 +14,12 @@ HP["x_max"] = 10.
 # Time
 HP["n_t"] = 0
 # Snapshots count
-HP["n_s"] = 300
-HP["n_s_hifi"] = int(1e5)
+HP["n_s"] = 500
+HP["n_s_tst"] = 300
 # POD stopping param
 HP["eps"] = 1e-10
 # Train/val split
-HP["train_val_test"] = (3/5, 1/5, 1/5)
+HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up TF SGD-based optimizer
@@ -37,6 +37,8 @@ gam = 1. * np.array([4, 1, 8, 6, 3])
 mu_mean = np.hstack((bet, gam))
 HP["mu_min"] = (mu_mean * (1 - np.sqrt(3)/10)).tolist()
 HP["mu_max"] = (mu_mean * (1 + np.sqrt(3)/10)).tolist()
+HP["mu_min_out"] = (mu_mean * (1 - 1.5*np.sqrt(3)/10)).tolist()
+HP["mu_max_out"] = (mu_mean * (1 + 1.5*np.sqrt(3)/10)).tolist()
 
 
 np.random.seed(1111)
