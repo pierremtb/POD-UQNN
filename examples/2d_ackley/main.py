@@ -123,6 +123,3 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
 plt.tight_layout()
 # plt.show()
 savefig("cache/graph-samples")
-
-
-# %%
