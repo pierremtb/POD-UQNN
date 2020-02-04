@@ -31,7 +31,7 @@ def u(X, _, mu):
 # Create linear space mesh
 x_mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"])
 np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
-x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
+# x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
 
 #%% Init the model
 model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
@@ -51,7 +51,7 @@ train_res = model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
 
 #%% Validation metrics
 U_pred = model.predict(X_v_val)
-err_val = re_s(U_val[0], U_pred)
+err_val = re_s(U_val, U_pred)
 print(f"RE_v: {err_val:4f}")
 
 #%% Sample the new model to generate a test prediction

@@ -239,7 +239,7 @@ class PodnnModel:
         self.layers = pack_layers(self.n_d, h_layers, self.n_L)
         self.regnn = NeuralNetwork(self.layers, lr, lam, lb=self.lb, ub=self.ub)
 
-    def train(self, X_v_train, v_train, X_v_val, v_val, epochs, freq=100):
+    def train(self, X_v, v, X_v_val, v_val, epochs, freq=100):
         """Train the POD-NN's regression model, and save it."""
         if self.regnn is None:
             raise ValueError("Regression model isn't defined.")
@@ -255,7 +255,7 @@ class PodnnModel:
         logger.set_val_err_fn(get_val_err)
 
         # Training
-        self.regnn.fit(X_v_train, v_train, epochs, logger)
+        self.regnn.fit(X_v, v, epochs, logger)
 
         # Saving
         self.save_model()
