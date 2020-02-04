@@ -93,7 +93,7 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         ax.plot(x, U_samples[:, idx_i], "r--", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
         lower = U_pred_i[:, 0] - 3*U_pred_i_sig[:, 0]
         upper = U_pred_i[:, 0] + 3*U_pred_i_sig[:, 0]
-        ax.fill_between(x, lower, upper, alpha=0.2)
+        ax.fill_between(x, lower, upper, alpha=0.2, label=r"$3\sigma_D(s_{" + lbl + r"})$")
         ax.set_xlabel("$x$")
         if col == len(idx) - 1:
             ax.legend()

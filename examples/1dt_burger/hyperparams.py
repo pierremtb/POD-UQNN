@@ -30,10 +30,12 @@ HP["n_M"] = 5
 HP["epochs"] = 13000
 HP["lr"] = 0.01
 HP["lambda"] = 0.0
-HP["adv_eps"] = 1e+1
+HP["adv_eps"] = 0.0
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 2000
 # Burgers params
 HP["mu_min"] = [0.001]
 HP["mu_max"] = [0.0100]
+HP["mu_min_out"] = [0.0005]
+HP["mu_max_out"] = [0.0105]
