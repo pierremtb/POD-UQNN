@@ -160,7 +160,11 @@ if __name__ == "__main__":
     # Add samples graph
     n_samples = 3
     mu_lhs_in = model.sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
-    mu_lhs_out = model.sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
+    mu_lhs_out_min = model.sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
+    mu_lhs_out_max = model.sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
+    print(mu_lhs_out_min.shape)
+    mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
+    print(mu_lhs_out.shape)
 
     n_plot_x = 2
     n_plot_y = n_samples
