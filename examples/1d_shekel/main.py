@@ -3,7 +3,6 @@
 
 import sys
 import os
-import yaml
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -66,20 +65,28 @@ plot_results(U_val, U_val_pred, U_pred_mean, U_pred_std, sigma_pod,
              resdir, train_res[0], hp)
 
 #%% Plot a few samples
-n_samples = 6
-# mu_lhs = model.sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
-mu_lhs = model.sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
-X_v_samples, U_samples, _, _ = \
-    model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
-                          
-x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
-idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
-for idx_i in idx:
-    X_i = X_v_samples[idx_i, :].reshape(1, -1)
-    U_pred_i, U_pred_i_var = predict_alt(model, X_i)
-    plt.plot(x, U_pred_i)
-    plt.plot(x, U_samples[:, idx_i])
-    lower = U_pred_i[:, 0] - 3*U_pred_i_var[:, 0]
-    upper = U_pred_i[:, 0] + 3*U_pred_i_var[:, 0]
-    plt.fill_between(x, lower, upper, alpha=0.2)
-    plt.show()
+from podnn.plotting import figsize
+n_samples = 3
+mu_lhs_in = model.sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
+mu_lhs_out = model.sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
+
+n_plot_x = 2
+n_plot_y = n_samples
+fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
+gs = fig.add_gridspec(n_plot_x, n_plot_y)
+for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
+    X_v_samples, U_samples, _, _ = \
+        model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
+                            
+    x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+    idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
+    for col, idx_i in enumerate(idx):
+        X_i = X_v_samples[idx_i, :].reshape(1, -1)
+        U_pred_i, U_pred_i_var = model.predict(X_i)
+        ax = fig.add_subplot(gs[row, col])
+        ax.plot(x, U_pred_i)
+        ax.plot(x, U_samples[:, idx_i])
+        # lower = U_pred_i[:, 0] - 3*U_pred_i_var[:, 0]
+        # upper = U_pred_i[:, 0] + 3*U_pred_i_var[:, 0]
+        # ax.fill_between(x, lower, upper, alpha=0.2)
+plt.show()
