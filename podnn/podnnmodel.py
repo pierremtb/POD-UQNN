@@ -390,21 +390,24 @@ class PodnnModel:
         return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
     def predict(self, X_v):
-        """Returns the predicted solutions, via proj coefficients."""
-        v_pred, v_pred_sig = self.predict_v(X_v)
-        v_pred_up = v_pred + v_pred_sig
+        """Return the predicted POD projection coefficients."""
+        n_M = len(self.regnn)
+        U_pred_samples = np.zeros((self.n_h, X_v.shape[0], n_M))
+        U_pred_sig_samples = np.zeros((self.n_h, X_v.shape[0], n_M))
 
-        # Retrieving the function with the predicted coefficients
-        U_pred = self.project_to_U(v_pred)
-        U_pred_up = self.project_to_U(v_pred_up)
+        for i, model in enumerate(self.regnn):
+            v_pred, v_pred_var = model.predict(X_v)
+            U_pred_samples[:, :, i] = self.project_to_U(v_pred)
+            U_pred_sig_samples[:, :, i] = self.project_to_U(np.sqrt(v_pred_var))
 
-        # Retrieving sig
-        U_pred_sig = np.abs(U_pred_up - U_pred)
+        U_pred = U_pred_samples.mean(-1)
+        U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(-1) - U_pred ** 2
+        U_pred_sig = np.sqrt(U_pred_var)
 
         if self.pod_sig is not None:
             U_pred_sig += self.pod_sig[:, np.newaxis]
 
-        return U_pred, U_pred_sig
+        return U_pred.astype(self.dtype), U_pred_sig.astype(self.dtype)
 
     def project_to_U(self, v):
         return self.V.dot(v.T)

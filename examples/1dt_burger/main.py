@@ -54,14 +54,15 @@ print("Sampling {n_s_hifi} parameters")
 X_v_test = model.generate_hifi_inputs(hp["n_s_hifi"],
                                       hp["mu_min"], hp["mu_max"], hp["t_min"], hp["t_max"])
 print("Predicting the {n_s_hifi} corresponding solutions")
-U_pred, U_pred_sig = model.predict(X_v_test)
-U_pred_mean = (model.restruct(U_pred.mean(-1), no_s=True),
-                    model.restruct(U_pred_sig.mean(-1), no_s=True))
-U_pred_var = ((U_pred_sig - model.pod_sig[:, np.newaxis])**2 + U_pred ** 2).mean(-1) - U_pred.mean(-1) ** 2
-U_pred_std = (model.restruct(U_pred.std(-1), no_s=True),
-                    model.restruct(np.sqrt(U_pred_var), no_s=True))
+U_pred_hifi, U_pred_hifi_sig = model.predict(X_v_test)
+U_pred_hifi = model.restruct(U_pred_hifi)
+U_pred_hifi_sig = model.restruct(U_pred_hifi_sig)
+U_pred_hifi_mean = (model.restruct(U_pred_hifi.mean(-1), no_s=True),
+                    model.restruct(U_pred_hifi_sig.mean(-1), no_s=True))
+U_pred_hifi_std = (model.restruct(U_pred_hifi.std(-1), no_s=True),
+                    model.restruct(U_pred_hifi_sig.std(-1), no_s=True))
 sigma_pod = model.pod_sig.mean()
 
 # Plot against test and save
-plot_results(U_val, U_val_pred, U_pred_mean, U_pred_std, sigma_pod,
+plot_results(U_val, U_val_pred, U_pred_hifi_mean, U_pred_hifi_std, sigma_pod,
              resdir, train_res[0], hp)

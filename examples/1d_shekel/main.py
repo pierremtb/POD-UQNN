@@ -64,3 +64,22 @@ sigma_pod = model.pod_sig.mean()
 # Plot against test and save
 plot_results(U_val, U_val_pred, U_pred_mean, U_pred_std, sigma_pod,
              resdir, train_res[0], hp)
+
+#%% Plot a few samples
+n_samples = 6
+# mu_lhs = model.sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
+mu_lhs = model.sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
+X_v_samples, U_samples, _, _ = \
+    model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
+                          
+x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
+for idx_i in idx:
+    X_i = X_v_samples[idx_i, :].reshape(1, -1)
+    U_pred_i, U_pred_i_var = predict_alt(model, X_i)
+    plt.plot(x, U_pred_i)
+    plt.plot(x, U_samples[:, idx_i])
+    lower = U_pred_i[:, 0] - 3*U_pred_i_var[:, 0]
+    upper = U_pred_i[:, 0] + 3*U_pred_i_var[:, 0]
+    plt.fill_between(x, lower, upper, alpha=0.2)
+    plt.show()
