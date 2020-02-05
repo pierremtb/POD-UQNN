@@ -109,6 +109,15 @@ class PodnnModel:
         X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
         return X_v_train, X_v_val, v_train, v_val
 
+    def u_mesh_to_U(self, u_mesh, n_s):
+        # Reshaping manually
+        U = np.zeros((self.n_h, n_s))
+        for i in range(n_s):
+            st = self.n_xyz * i
+            en = self.n_xyz * (i + 1)
+            U[:, i] = u_mesh[st:en, :].T.reshape((self.n_h,))
+        return U
+
     def create_snapshots(self, n_d, n_h, u, mu_lhs,
                          t_min=0, t_max=0, u_noise=0., x_noise=0.):
         """Create a generated snapshots matrix and inputs for benchmarks."""
