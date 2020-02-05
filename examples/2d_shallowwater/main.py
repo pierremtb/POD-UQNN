@@ -59,6 +59,7 @@ print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 U_tst = model.restruct(U_tst)
 U_pred = model.restruct(U_pred)
+U_pred_sig = model.restruct(U_pred_sig)
 
 #%% VTU export
 print("Saving to .vtu")
@@ -92,16 +93,22 @@ unstructuredGridToVTK(os.path.join("cache", "x_u_tst_pred"),
                             "h_pred_mean" : U_pred.mean(-1)[0],
                             "h_0": np.ascontiguousarray(U_tst[0, :, idx[0]]),
                             "h_0_pred": np.ascontiguousarray(U_pred[0, :, idx[0]]),
+                            "h_0_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[0]]),
                             "h_1": np.ascontiguousarray(U_tst[0, :, idx[1]]),
                             "h_1_pred": np.ascontiguousarray(U_pred[0, :, idx[1]]),
+                            "h_1_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[1]]),
                             "hu_0": np.ascontiguousarray(U_tst[1, :, idx[0]]),
                             "hu_0_pred": np.ascontiguousarray(U_pred[1, :, idx[0]]),
+                            "hu_0_pred_sig": np.ascontiguousarray(U_pred_sig[1, :, idx[0]]),
                             "hu_1": np.ascontiguousarray(U_tst[1, :, idx[1]]),
                             "hu_1_pred": np.ascontiguousarray(U_pred[1, :, idx[1]]),
+                            "hu_1_pred_sig": np.ascontiguousarray(U_pred_sig[1, :, idx[1]]),
                             "hv_0": np.ascontiguousarray(U_tst[2, :, idx[0]]),
                             "hv_0_pred": np.ascontiguousarray(U_pred[2, :, idx[0]]),
+                            "hv_0_pred_sig": np.ascontiguousarray(U_pred_sig[2, :, idx[0]]),
                             "hv_1": np.ascontiguousarray(U_tst[2, :, idx[1]]),
                             "hv_1_pred": np.ascontiguousarray(U_pred[2, :, idx[1]]),
+                            "hv_1_pred_sig": np.ascontiguousarray(U_pred_sig[2, :, idx[1]]),
                             })
 print("Exported. ParaView processing is now needed to create x_u_tst_pred.csv")
 
@@ -110,8 +117,8 @@ print("Exported. ParaView processing is now needed to create x_u_tst_pred.csv")
 csv_file = os.path.join("cache", "x_u_tst_pred.csv")
 print("Reading paraview results")
 results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
-x_line = results[:, 15]
-idx = [(0, 1, 2, 3), (6, 7, 8, 9), (10, 11, 12, 13)]
+x_line = results[:, 21]
+idx = [(0, 1, 2, 3, 4, 5), (8, 9, 10, 11, 12, 13), (14, 15, 16, 17, 18, 19)]
 y_axis = ["$h$", "$(hu)$", "$(hv)$"]
 
 print("Plotting")
@@ -124,6 +131,9 @@ for col, idx_i in enumerate(idx):
     ax = fig.add_subplot(gs[0, col])
     ax.plot(x_line, results[:, idx[col][1]], "C0-", label=r"$u_D(s_{" + lbl + r"})$")
     ax.plot(x_line, results[:, idx[col][0]], "r--", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+    lower = results[:, idx[col][1]] - 3*results[:, idx[col][2]]
+    upper = results[:, idx[col][1]] + 3*results[:, idx[col][2]]
+    ax.fill_between(x_line, lower, upper, alpha=0.2, label=r"$3\sigma_D(s_{" + lbl + r"})$")
     ax.set_xlabel("$x'$")
     ax.set_ylabel(y_axis[col])
     if col == len(idx) - 1:
@@ -131,8 +141,11 @@ for col, idx_i in enumerate(idx):
 
     lbl = r"{\scriptscriptstyle\textrm{tst},2}"
     ax = fig.add_subplot(gs[1, col])
-    ax.plot(x_line, results[:, idx[col][3]], "C0-", label=r"$u_D(s_{" + lbl + r"})$")
-    ax.plot(x_line, results[:, idx[col][2]], "r--", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+    ax.plot(x_line, results[:, idx[col][4]], "C0-", label=r"$u_D(s_{" + lbl + r"})$")
+    ax.plot(x_line, results[:, idx[col][3]], "r--", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+    lower = results[:, idx[col][4]] - 3*results[:, idx[col][5]]
+    upper = results[:, idx[col][4]] + 3*results[:, idx[col][5]]
+    ax.fill_between(x_line, lower, upper, alpha=0.2, label=r"$3\sigma_D(s_{" + lbl + r"})$")
     ax.set_xlabel("$x'$")
     ax.set_ylabel(y_axis[col])
     if col == len(idx) - 1:

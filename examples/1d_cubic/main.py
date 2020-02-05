@@ -37,7 +37,7 @@ N = 20
 lb = int(2/(2*6) * N_star)
 ub = int((2+2*4)/(2*6) * N_star)
 idx = np.random.choice(x_star[lb:ub].shape[0], N, replace=False)
-idx = np.array([26, 23,  4,  3, 27, 64, 58, 30, 18, 16,  2, 31, 65, 15, 11, 17, 57, 28, 34, 50])
+# idx = np.array([26, 23,  4,  3, 27, 64, 58, 30, 18, 16,  2, 31, 65, 15, 11, 17, 57, 28, 34, 50])
 x_train = x_star[lb + idx]
 u_train = u_star[lb + idx]
 noise_std = 0.01*u_train.std(0)
