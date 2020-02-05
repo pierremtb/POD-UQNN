@@ -88,5 +88,5 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         ax.set_xlabel("$x$")
         if col == len(idx) - 1:
             ax.legend()
-plt.show()
-# savefig("cache/graph-samples")
+# plt.show()
+savefig("cache/podnn-sw-graph-samples")

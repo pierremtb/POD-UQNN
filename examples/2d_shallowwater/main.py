@@ -56,7 +56,10 @@ U_pred = model.predict(X_v_tst)
 
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
-#%% VTU export
+U_tst = model.restruct(U_tst)
+U_pred = model.restruct(U_pred)
+
+#%% VTU export
 print("Saving to .vtu")
 # Retrieving the mesh
 connectivity_raw = np.loadtxt(os.path.join("data", "connectivity.txt"))
@@ -78,13 +81,66 @@ y = np.ascontiguousarray(y)
 z = np.ascontiguousarray(np.zeros_like(x))
 
 # Exporting
-unstructuredGridToVTK(os.path.join("cache", "x_u_test_pred_mean_std"),
+idx = np.random.choice(U_pred.shape[-1], 2)
+unstructuredGridToVTK(os.path.join("cache", "x_u_tst_pred"),
                         x, y, z,
                         connectivity, offsets, cell_types,
                         cellData=None,
                         pointData={
                             "h_mean" : U_tst.mean(-1)[0],
                             "h_pred_mean" : U_pred.mean(-1)[0],
+                            "h_0": np.ascontiguousarray(U_tst[0, :, idx[0]]),
+                            "h_0_pred": np.ascontiguousarray(U_pred[0, :, idx[0]]),
+                            "h_1": np.ascontiguousarray(U_tst[0, :, idx[1]]),
+                            "h_1_pred": np.ascontiguousarray(U_pred[0, :, idx[1]]),
+                            "hu_0": np.ascontiguousarray(U_tst[1, :, idx[0]]),
+                            "hu_0_pred": np.ascontiguousarray(U_pred[1, :, idx[0]]),
+                            "hu_1": np.ascontiguousarray(U_tst[1, :, idx[1]]),
+                            "hu_1_pred": np.ascontiguousarray(U_pred[1, :, idx[1]]),
+                            "hv_0": np.ascontiguousarray(U_tst[2, :, idx[0]]),
+                            "hv_0_pred": np.ascontiguousarray(U_pred[2, :, idx[0]]),
+                            "hv_1": np.ascontiguousarray(U_tst[2, :, idx[1]]),
+                            "hv_1_pred": np.ascontiguousarray(U_pred[2, :, idx[1]]),
                             })
 print("Exported. ParaView processing is now needed to create x_u_pred_mean_std.csv")
-# plot_results(os.path.join("cache", "x_u_pred_mean_std.csv"), hp)
+
+#%% Plotting
+
+csv_file = os.path.join("cache", "x_u_tst_pred.csv")
+print("Reading paraview results")
+results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
+# U_test_hifi_mean = results[:, [0, 4, 8]].T
+# U_pred_hifi_mean = results[:, [1, 5, 9]].T
+# U_test_hifi_std = results[:, [2, 6, 10]].T
+# U_pred_hifi_std = results[:, [3, 7, 11]].T
+x_line = results[:, 15]
+idx = [(0, 1, 2, 3), (6, 7, 8, 9), (10, 11, 12, 13)]
+y_axis = ["$h$", "$(hu)$", "$(hv)$"]
+
+print("Plotting")
+n_plot_x = 2
+n_plot_y = 3
+fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
+gs = fig.add_gridspec(n_plot_x, n_plot_y)
+for col, idx_i in enumerate(idx):
+    lbl = r"{\scriptscriptstyle\textrm{tst},1}"
+    ax = fig.add_subplot(gs[0, col])
+    ax.plot(x_line, results[:, idx[col][1]], "C0-", label=r"$u_D(s_{" + lbl + r"})$")
+    ax.plot(x_line, results[:, idx[col][0]], "r--", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+    ax.set_xlabel("$x'$")
+    ax.set_ylabel(y_axis[col])
+    if col == len(idx) - 1:
+        ax.legend()
+
+    lbl = r"{\scriptscriptstyle\textrm{tst},2}"
+    ax = fig.add_subplot(gs[1, col])
+    ax.plot(x_line, results[:, idx[col][3]], "C0-", label=r"$u_D(s_{" + lbl + r"})$")
+    ax.plot(x_line, results[:, idx[col][2]], "r--", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+    ax.set_xlabel("$x'$")
+    ax.set_ylabel(y_axis[col])
+    if col == len(idx) - 1:
+        ax.legend()
+
+plt.tight_layout()
+# plt.show()
+savefig("cache/podnn-sw-graph-samples")

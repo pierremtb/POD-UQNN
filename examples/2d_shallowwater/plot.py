@@ -51,13 +51,8 @@ def get_min_max(z1, z2):
 
 
 def plot_results(csv_file, HP):
-    print("Reading paraview results")
-    results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
-    U_test_hifi_mean = results[:, [0, 4, 8]].T
-    U_pred_hifi_mean = results[:, [1, 5, 9]].T
-    U_test_hifi_std = results[:, [2, 6, 10]].T
-    U_pred_hifi_std = results[:, [3, 7, 11]].T
-    x_line = results[:, 13]
+    print("Reading paraview results") results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
+    x_line = results[:, 15]
 
     print("Plotting")
     n_plot_x = 4
