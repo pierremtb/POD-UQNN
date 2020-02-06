@@ -102,17 +102,13 @@ unstructuredGridToVTK(os.path.join("cache", "x_u_tst_pred"),
                             "hv_1": np.ascontiguousarray(U_tst[2, :, idx[1]]),
                             "hv_1_pred": np.ascontiguousarray(U_pred[2, :, idx[1]]),
                             })
-print("Exported. ParaView processing is now needed to create x_u_pred_mean_std.csv")
+print("Exported. ParaView processing is now needed to create x_u_tst_pred.csv")
 
 #%% Plotting
 
 csv_file = os.path.join("cache", "x_u_tst_pred.csv")
 print("Reading paraview results")
 results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
-# U_test_hifi_mean = results[:, [0, 4, 8]].T
-# U_pred_hifi_mean = results[:, [1, 5, 9]].T
-# U_test_hifi_std = results[:, [2, 6, 10]].T
-# U_pred_hifi_std = results[:, [3, 7, 11]].T
 x_line = results[:, 15]
 idx = [(0, 1, 2, 3), (6, 7, 8, 9), (10, 11, 12, 13)]
 y_axis = ["$h$", "$(hu)$", "$(hv)$"]
