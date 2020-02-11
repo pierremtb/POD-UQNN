@@ -99,7 +99,7 @@ ax.set_title(r"$\hat{u_D}(\bar{s_{\textrm{tst}}})$")
 gs = fig.add_gridspec(n_plot_x, n_plot_y)
 ax = fig.add_subplot(gs[1, :])
 U_tst_grid = griddata(XT, U_tst.mean(-1).flatten(), (xx, tt), method='cubic')
-h = ax.imshow(U_pred_grid, interpolation='nearest', cmap='rainbow', 
+h = ax.imshow(U_tst_grid, interpolation='nearest', cmap='rainbow', 
                 extent=[t.min(), t.max(), x.min(), x.max()], 
                 origin='lower', aspect='auto')
 divider = make_axes_locatable(ax)
@@ -136,8 +136,8 @@ for j, time in enumerate(times):
             X_i = X_v_samples[st:en, :]
             U_pred_i = model.restruct(model.predict(X_i))[0]
             ax = fig.add_subplot(gs[actual_row, j])
-            ax.plot(x, U_pred_i[:, time, 0], "C0-", label=r"$u_D(s_{" + lbl + r"})$")
-            ax.plot(x, U_samples[:, time, col], "r--", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+            ax.plot(x, U_pred_i[:, time, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+            ax.plot(x, U_samples[:, time, col], "r--", label=r"$u_D(s_{" + lbl + r"})$")
             ax.set_xlabel(f"$x\ (t={time})$")
             actual_row += 1
             if j == len(times) - 1:

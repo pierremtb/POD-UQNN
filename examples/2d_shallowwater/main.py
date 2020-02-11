@@ -121,8 +121,8 @@ gs = fig.add_gridspec(n_plot_x, n_plot_y)
 for col, idx_i in enumerate(idx):
     lbl = r"{\scriptscriptstyle\textrm{tst},1}"
     ax = fig.add_subplot(gs[0, col])
-    ax.plot(x_line, results[:, idx[col][1]], "C0-", label=r"$u_D(s_{" + lbl + r"})$")
-    ax.plot(x_line, results[:, idx[col][0]], "r--", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+    ax.plot(x_line, results[:, idx[col][1]], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+    ax.plot(x_line, results[:, idx[col][0]], "r--", label=r"$u_D(s_{" + lbl + r"})$")
     ax.set_xlabel("$x'$")
     ax.set_ylabel(y_axis[col])
     if col == len(idx) - 1:
@@ -130,8 +130,8 @@ for col, idx_i in enumerate(idx):
 
     lbl = r"{\scriptscriptstyle\textrm{tst},2}"
     ax = fig.add_subplot(gs[1, col])
-    ax.plot(x_line, results[:, idx[col][3]], "C0-", label=r"$u_D(s_{" + lbl + r"})$")
-    ax.plot(x_line, results[:, idx[col][2]], "r--", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+    ax.plot(x_line, results[:, idx[col][3]], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+    ax.plot(x_line, results[:, idx[col][2]], "r--", label=r"$u_D(s_{" + lbl + r"})$")
     ax.set_xlabel("$x'$")
     ax.set_ylabel(y_axis[col])
     if col == len(idx) - 1:
