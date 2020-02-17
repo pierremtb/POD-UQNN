@@ -23,7 +23,7 @@ class Logger(object):
         if not self.silent:
             print(f"TensorFlow version: {tf.version}")
             print(f"Eager execution: {tf.executing_eagerly()}")
-            print(f"GPU-accerelated: {len(tf.config.list_physical_devices('GPU')) > 0}")
+#            print(f"GPU-accerelated: {len(tf.config.list_physical_devices('GPU')) > 0}")
 
     def get_epoch_duration(self):
         now = time.time()
