@@ -102,7 +102,7 @@ ax.set_title(r"$\hat{u_D}(\bar{s_{\textrm{tst}}})$")
 gs = fig.add_gridspec(n_plot_x, n_plot_y)
 ax = fig.add_subplot(gs[1, :])
 U_tst_grid = griddata(XT, U_tst.mean(-1).flatten(), (xx, tt), method='cubic')
-h = ax.imshow(U_pred_grid, interpolation='nearest', cmap='rainbow', 
+h = ax.imshow(U_tst_grid, interpolation='nearest', cmap='rainbow', 
                 extent=[t.min(), t.max(), x.min(), x.max()], 
                 origin='lower', aspect='auto')
 divider = make_axes_locatable(ax)
@@ -141,8 +141,8 @@ for j, time in enumerate(times):
             U_pred_i = np.reshape(U_pred_i, (hp["n_x"], hp["n_t"], -1))
             U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_x"], hp["n_t"], -1))
             ax = fig.add_subplot(gs[actual_row, j])
-            ax.plot(x, U_pred_i[:, time, 0], "C0-", label=r"$u_D(s_{" + lbl + r"})$")
-            ax.plot(x, U_samples[:, time, col], "r--", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+            ax.plot(x, U_pred_i[:, time, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+            ax.plot(x, U_samples[:, time, col], "r--", label=r"$u_D(s_{" + lbl + r"})$")
             lower = U_pred_i[:, time, 0] - 3*U_pred_i_sig[:, time, 0]
             upper = U_pred_i[:, time, 0] + 3*U_pred_i_sig[:, time, 0]
             ax.fill_between(x, lower, upper, alpha=0.2, label=r"$3\sigma_D(s_{" + lbl + r"})$")

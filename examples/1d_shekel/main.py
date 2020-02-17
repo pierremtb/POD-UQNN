@@ -89,8 +89,8 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         X_i = X_v_samples[idx_i, :].reshape(1, -1)
         U_pred_i, U_pred_i_sig = model.predict(X_i)
         ax = fig.add_subplot(gs[row, col])
-        ax.plot(x, U_pred_i, "C0-", label=r"$u_D(s_{" + lbl + r"})$")
-        ax.plot(x, U_samples[:, idx_i], "r--", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+        ax.plot(x, U_pred_i, "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+        ax.plot(x, U_samples[:, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
         lower = U_pred_i[:, 0] - 3*U_pred_i_sig[:, 0]
         upper = U_pred_i[:, 0] + 3*U_pred_i_sig[:, 0]
         ax.fill_between(x, lower, upper, alpha=0.2, label=r"$3\sigma_D(s_{" + lbl + r"})$")

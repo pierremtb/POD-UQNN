@@ -117,8 +117,8 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         U_pred_i = np.reshape(U_pred_i, (hp["n_x"], hp["n_y"], -1))
         U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_x"], hp["n_y"], -1))
         ax = fig.add_subplot(gs[row, col])
-        ax.plot(x, U_pred_i[:, 199, 0], "C0-", label=r"$u_D(s_{" + lbl + r"})$")
-        ax.plot(x, U_samples[:, 199, idx_i], "r--", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+        ax.plot(x, U_pred_i[:, 199, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+        ax.plot(x, U_samples[:, 199, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
         lower = U_pred_i[:, 199, 0] - 3*U_pred_i_sig[:, 199, 0]
         upper = U_pred_i[:, 199, 0] + 3*U_pred_i_sig[:, 199, 0]
         ax.fill_between(x, lower, upper, alpha=0.2, label=r"$3\sigma_D(s_{" + lbl + r"})$")
