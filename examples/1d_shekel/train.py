@@ -33,20 +33,13 @@ with tf.device("/GPU:0"):
     #%% Retrieve model
     model = PodnnModel.load("cache")
     X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
-    print(X_v_train.shape, v_train.shape, X_v_val.shape, v_val.shape)
-    X_v_train, v_train, _, \
-        X_v_val, v_val, U_val = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
-                                                        hp["n_s"],
-                                                        hp["train_val"],
-                                                        eps=hp["eps"], n_L=hp["n_L"],
-                                                        u_noise=hp["u_noise"],
-                                                        x_noise=hp["x_noise"])
-    print(X_v_train.shape, v_train.shape, X_v_val.shape, v_val.shape)
 
     for i in range(local_num):
         model.train_model(i, X_v_train, v_train, X_v_val, v_val, hp["epochs"],
                           freq=hp["log_frequency"])
         v_pred, _ = model.regnn[i].predict(X_v_val)
-        err_val = re_s(v_val, v_pred)
+        err_val = re_s(U_val, model.project_to_U(v_pred))
         print(f"RE_v: {err_val:4f}")
-model.save_model()
+
+with tf.device("/CPU:0"):
+    model.save_model()
