@@ -372,16 +372,17 @@ class PodnnModel:
 
         model = self.regnn[model_id]
         def get_val_err():
-            v_train_pred, _ = model.predict(X_v_train)
-            v_val_pred, _ = model.predict(X_v_val)
-            U_val_pred = self.project_to_U(v_val_pred)
-            U_train_pred = self.project_to_U(v_train_pred)
-            return {
-                "MSE": tf.reduce_mean(tf.square(v_train - v_train_pred)),
-                "MSE_V": tf.reduce_mean(tf.square(v_val - v_val_pred)),
-                "RE": re_s(U_train, U_train_pred),
-                "RE_V": re_s(U_val, U_val_pred),
-            }
+            return {}
+            # v_train_pred, _ = model.predict(X_v_train)
+            # v_val_pred, _ = model.predict(X_v_val)
+            # U_val_pred = self.project_to_U(v_val_pred)
+            # U_train_pred = self.project_to_U(v_train_pred)
+            # return {
+            #     "MSE": tf.reduce_mean(tf.square(v_train - v_train_pred)),
+            #     "MSE_V": tf.reduce_mean(tf.square(v_val - v_val_pred)),
+            #     "RE": re_s(U_train, U_train_pred),
+            #     "RE_V": re_s(U_val, U_val_pred),
+            # }
         # Validation, logging, training
         logger = Logger(epochs, freq)
         logger.set_val_err_fn(get_val_err)

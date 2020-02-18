@@ -6,7 +6,6 @@ import tensorflow as tf
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.metrics import re_s
 from podnn.handling import check_distributed_args
 
 from hyperparams import HP as hp
@@ -33,9 +32,5 @@ with tf.device("/GPU:0"):
         model_id = gpu_id if distributed else i
         model.train_model(model_id, X_v_train, v_train, X_v_val, v_val, hp["epochs"],
                           freq=hp["log_frequency"])
-        v_pred, _ = model.regnn[i].predict(X_v_val)
-        err_val = re_s(U_val, model.project_to_U(v_pred))
-        print(f"RE_v: {err_val:4f}")
-
         model.save_model(model_id)
 exit(0)
