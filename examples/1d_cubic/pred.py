@@ -1,6 +1,7 @@
 """POD-NN modeling for 1D Shekel Equation."""
 
 import sys
+import pickle
 import os
 import yaml
 import numpy as np
@@ -25,7 +26,12 @@ from podnn.logger import Logger
 from podnn.advneuralnetwork import NORM_MEANSTD, NORM_NONE
 from podnn.plotting import figsize
 
-x_star, u_star = pickle.load(os.path.join("cache", "xu_star.pkl"))
+# Loading data
+with open(os.path.join("cache", "xu_star.pkl"), "rb") as f:
+    x_star, u_star = pickle.load(f)
+
+with open(os.path.join("cache", "xu_train.pkl"), "rb") as f:
+    x_train, u_train = pickle.load(f)
 
 # Retrieving the models
 models_paths = []
@@ -33,9 +39,9 @@ params_path = ""
 for root, dirs, files in os.walk("cache"):
     for filename in files:
         if filename.endswith(".h5"):
-            models_paths.append(filename)
-        if filename.endswith(".pkl"):
-            params_path = filename
+            models_paths.append(os.path.join("cache", filename))
+        if filename.startswith("modelparams") and filename.endswith(".pkl"):
+            params_path = os.path.join("cache", filename)
 
 # Predictions
 models = []
@@ -48,12 +54,14 @@ for model_path in models_paths:
     u_pred_var_samples.append(u_var)
     models.append(model)
 
-
 # Plotting
-u_pred = np.array(u_pred_samples).mean(-1)
-u_pred_var = (np.array(u_pred_var_samples) + np.array(u_pred_samples) ** 2).mean(-1) - u_pred ** 2
+u_pred = np.array(u_pred_samples).mean(0)
+u_pred_var = (np.array(u_pred_var_samples) + np.array(u_pred_samples) ** 2).mean(0) - u_pred ** 2
 lower = u_pred - 3 * np.sqrt(u_pred_var)
 upper = u_pred + 3 * np.sqrt(u_pred_var)
+
+print(u_pred.shape, u_pred_var.shape)
+print(u_star.shape)
 
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
 plt.fill_between(x_star[:, 0], lower[:, 0], upper[:, 0], 

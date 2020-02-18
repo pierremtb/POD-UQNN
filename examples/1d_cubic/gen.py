@@ -41,7 +41,7 @@ noise_std = 3
 u_train = u_train + noise_std*np.random.randn(u_train.shape[0], u_train.shape[1])
 
 # Saving data
-with open(os.path.join("cache", "xu_train.pkl"), "wb") as f:
-    pickle.dump((x_star, u_star), f)
 with open(os.path.join("cache", "xu_star.pkl"), "wb") as f:
+    pickle.dump((x_star, u_star), f)
+with open(os.path.join("cache", "xu_train.pkl"), "wb") as f:
     pickle.dump((x_train, u_train), f)

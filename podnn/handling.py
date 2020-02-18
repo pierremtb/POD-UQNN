@@ -1,5 +1,6 @@
 """Various utilities functions."""
 
+import argparse
 import numpy as np
 
 
@@ -21,3 +22,11 @@ def scarcify(X, u, N):
     mask = np.ones(X.shape[0], bool)
     mask[idx] = False
     return X[idx, :], u[idx, :], X[mask, :], u[mask, :]
+
+
+def check_distributed_args():
+    pa = argparse.ArgumentParser()
+    pa.add_argument("--distributed", action="store_true", default=False)
+    pa.add_argument("--models", type=int, default=1)
+    args = pa.parse_args()
+    return args.distributed, args.models
