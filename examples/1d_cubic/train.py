@@ -1,5 +1,6 @@
 """POD-NN modeling for 1D Shekel Equation."""
 
+#%% Imports
 import sys
 import os
 import pickle
@@ -27,13 +28,13 @@ from podnn.handling import check_distributed_args
 distributed, local_num = check_distributed_args()
 print(f"Distributed: {distributed}, Local models: {local_num}")
 
-# Loading data
+#%% Loading data
 with open(os.path.join("cache", "xu_star.pkl"), "rb") as f:
     x_star, u_star = pickle.load(f)
 with open(os.path.join("cache", "xu_train.pkl"), "rb") as f:
     x_train, u_train = pickle.load(f)
 
-# Prep GPUs
+#%% Prep GPUs
 tf.config.set_soft_device_placement(True)
 if distributed:
     import horovod.tensorflow as hvd
@@ -43,14 +44,14 @@ if distributed:
     phys_devices = tf.config.experimental.get_visible_devices('GPU')
     tf.config.experimental.set_visible_devices(phys_devices[gpu_id], 'GPU')
 
-# Hyperparams
+#%% Hyperparams
 layers = [1, 50, 50, 1]
 epochs = 20000
 lr = 0.0001
 dtype = "float64"
 tf.keras.backend.set_floatx(dtype)
 
-# Training
+#%% Training
 for i in range(local_num):
     with tf.device("/GPU:0"):
         X = tf.convert_to_tensor(x_train, dtype="float64")
