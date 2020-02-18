@@ -1,5 +1,6 @@
 """Various utilities functions."""
 
+import os
 import argparse
 import numpy as np
 
@@ -30,3 +31,9 @@ def check_distributed_args():
     pa.add_argument("--models", type=int, default=1)
     args = pa.parse_args()
     return args.distributed, args.models
+
+def clean_dir(dirname):
+    for root, dirs, files in os.walk(dirname):
+        for name in files:
+            if not name.endswith(".gitignore"):
+                os.remove(os.path.join(root, name))

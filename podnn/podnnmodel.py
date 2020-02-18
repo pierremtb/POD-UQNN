@@ -2,6 +2,7 @@
 
 import os
 import random
+import time
 import pickle
 import tensorflow as tf
 import numpy as np
@@ -192,10 +193,11 @@ class PodnnModel:
         X_v_train, X_v_val, v_train, v_val = train_test_split(X_v, v, test_size=train_val[1])
 
         # Creating the validation snapshots matrix
+        U_train = self.V.dot(v_train.T)
         U_test = self.V.dot(v_val.T)
 
         if save_cache:
-            self.save_train_data(X_v_train, v_train, X_v_val, v_val, U_test)
+            self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_test)
 
         return X_v_train, v_train, X_v_val, v_val, U_test
 
@@ -291,7 +293,7 @@ class PodnnModel:
         # plt.plot(X_v_train[0], "rx")
         # plt.show()
 
-        self.save_train_data(X_v_train, v_train, U_train, X_v_test, U_test)
+        self.save_train_data(X_v_train, v_train, U_train, X_v_test, v_test, U_test)
 
         return X_v_train, v_train, U_train, X_v_test, v_test, U_test
 
@@ -317,10 +319,12 @@ class PodnnModel:
         """Create the neural net model."""
         self.lr = lr
         self.layers = [self.n_d, *h_layers, self.n_L]
-        self.model_path = os.path.join(self.resdir, "vnn.h5")
         self.regnn = []
-        for _ in range(n_M):
+        self.model_path = []
+        for i in range(n_M):
             self.regnn.append(VarNeuralNetwork(self.layers, lr, lam, adv_eps, norm))
+            self.model_path.append(os.path.join(self.resdir, f"model-{i}.{time.time()}.h5"))
+        self.save_model()
 
     def train(self, X_v_train, v_train, X_v_val, v_val, epochs, freq=100):
         """Train the POD-NN's regression model, and save it."""
@@ -354,6 +358,40 @@ class PodnnModel:
         self.save_model()
 
         return logs
+
+    def train_model(self, model_id, X_v_train, v_train, X_v_val, v_val,
+                    epochs, freq=100):
+        """Train the POD-NN's regression model, and save it."""
+        if self.regnn is None or len(self.regnn) == 0:
+            raise ValueError("Regression model isn't defined.")
+
+        U_val = self.project_to_U(v_val)
+        U_train = self.project_to_U(v_train)
+
+        logs = []
+
+        model = self.regnn[model_id]
+        def get_val_err():
+            v_train_pred, _ = model.predict(X_v_train)
+            v_val_pred, _ = model.predict(X_v_val)
+            U_val_pred = self.project_to_U(v_val_pred)
+            U_train_pred = self.project_to_U(v_train_pred)
+            return {
+                "MSE": tf.reduce_mean(tf.square(v_train - v_train_pred)),
+                "MSE_V": tf.reduce_mean(tf.square(v_val - v_val_pred)),
+                "RE": re_s(U_train, U_train_pred),
+                "RE_V": re_s(U_val, U_val_pred),
+            }
+        # Validation, logging, training
+        logger = Logger(epochs, freq)
+        logger.set_val_err_fn(get_val_err)
+        model.fit(X_v_train, v_train, epochs, logger)
+        logs.append(logger.get_logs())
+
+        # # Saving
+        # self.save_model()
+
+        # return logs
 
     def restruct(self, U, no_s=False):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
@@ -464,12 +502,12 @@ class PodnnModel:
             self.pod_sig = data[3]
             return data[4:]
 
-    def save_train_data(self, X_v_train, v_train, U_train, X_v_test, U_test):
+    def save_train_data(self, X_v_train, v_train, U_train, X_v_val, v_val, U_val):
         """Save training data, such as datasets."""
 
         with open(self.train_data_path, "wb") as f:
             pickle.dump((self.n_L, self.n_d, self.V, self.pod_sig,
-                         X_v_train, v_train, U_train, X_v_test, U_test), f)
+                         X_v_train, v_train, U_train, X_v_val, v_val, U_val), f)
 
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""
@@ -482,7 +520,6 @@ class PodnnModel:
         if not os.path.exists(self.model_params_path):
             raise FileNotFoundError("Can't find cached model params.")
 
-        # TODO: fix loading model
         self.regnn = []
         for path in self.model_path:
             self.regnn.append(VarNeuralNetwork.load_from(path, self.model_params_path))
@@ -490,7 +527,7 @@ class PodnnModel:
     def save_model(self):
         """Save the POD-NN's regression neural network and parameters."""
         for i, model in enumerate(self.regnn):
-            model.save_to(self.model_path + f".{i}", self.model_params_path)
+            model.save_to(self.model_path[i], self.model_params_path)
 
     def save_setup_data(self):
         """Save setup-related data, such as n_v, x_mesh or n_t."""
@@ -513,10 +550,10 @@ class PodnnModel:
         n_v, x_mesh, n_t = PodnnModel.load_setup_data(save_dir)
 
         model_path = []
-        for file in os.listdir(save_dir):
-            if file.startswith("vnn.h5"):
+        for file in sorted(os.listdir(save_dir)):
+            print(file)
+            if file.startswith("model-"):
                 model_path.append(os.path.join(save_dir, file))
-        print(model_path)
 
         podnnmodel = cls(save_dir, n_v, x_mesh, n_t)
         podnnmodel.model_path = model_path

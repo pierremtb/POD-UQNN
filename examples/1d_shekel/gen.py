@@ -10,22 +10,14 @@ from podnn.podnnmodel import PodnnModel
 from podnn.mesh import create_linear_mesh
 from podnn.plotting import genresultdir, figsize, savefig
 from podnn.metrics import re_s
+from podnn.handling import clean_dir
 
-resdir = genresultdir()
+from hyperparams import HP as hp
+from hyperparams import u
 
-def u(X, _, mu):
-    """The 1D-Shekel function."""
-    x = X[0]
-    sep = int(mu.shape[0] / 2)
-    bet = mu[:sep]
-    gam = mu[sep:]
-
-    u_sum = np.zeros_like(x)
-    for i in range(len(bet)):
-        i_sum = (x - gam[i])**2
-        u_sum += 1 / (bet[i] + i_sum)
-
-    return u_sum.reshape((1, u_sum.shape[0]))
+# resdir = genresultdir()
+resdir = "cache"
+clean_dir(resdir)
 
 # Create linear space mesh
 x_mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"])

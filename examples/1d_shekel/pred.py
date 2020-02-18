@@ -12,9 +12,11 @@ from podnn.plotting import genresultdir, figsize, savefig
 from podnn.metrics import re_s
 
 from hyperparams import HP as hp
-from gen import u, resdir
+from hyperparams import u
 
 #%% Load models
+model = PodnnModel.load("cache")
+X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
 #%% Predict and restruct
 U_pred, U_pred_sig = model.predict(X_v_val)
@@ -27,7 +29,7 @@ print(f"RE_v: {err_val:4f}")
 #%% Sample the new model to generate a test prediction
 mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
 X_v_tst, U_tst, _, _ = \
-    model.create_snapshots(mu_lhs.shape[0], mu_lhs.shape[0], model.n_d, model.n_h, u, mu_lhs)
+    model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
 U_pred, U_pred_sig = model.predict(X_v_tst)
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
@@ -43,8 +45,8 @@ n_plot_y = n_samples
 fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
 gs = fig.add_gridspec(n_plot_x, n_plot_y)
 for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
-    X_v_samples, U_samples, _ = \
-        model.create_snapshots(mu_lhs.shape[0], mu_lhs.shape[0], model.n_d, model.n_h, u, mu_lhs)
+    X_v_samples, U_samples, _, _ = \
+        model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
                             
     x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
     idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
@@ -57,9 +59,9 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         ax.plot(x, U_samples[:, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
         lower = U_pred_i[:, 0] - 3*U_pred_i_sig[:, 0]
         upper = U_pred_i[:, 0] + 3*U_pred_i_sig[:, 0]
-        ax.fill_between(x, lower, upper, alpha=0.2, label=r"$3\sigma_D(s_{" + lbl + r"})$")
+        # ax.fill_between(x, lower, upper, alpha=0.2, label=r"$3\sigma_D(s_{" + lbl + r"})$")
         ax.set_xlabel("$x$")
         if col == len(idx) - 1:
             ax.legend()
-plt.show()
-# savefig("cache/graph-samples")
+# plt.show()
+savefig("results/graph-samples")

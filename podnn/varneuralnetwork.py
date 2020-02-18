@@ -120,11 +120,12 @@ class VarNeuralNetwork:
         var = self.model.trainable_variables
         return var
 
-    def tf_optimization(self, X_v, v, tf_epochs):
+    def tf_optimization(self, X_v, v, tf_epochs, nolog=False):
         """Run the training loop."""
         for epoch in range(tf_epochs):
             loss_value = self.tf_optimization_step(X_v, v)
-            # self.logger.log_train_epoch(epoch, loss_value)
+            if not nolog:
+                self.logger.log_train_epoch(epoch, loss_value)
         return loss_value
 
     @tf.function
@@ -153,8 +154,11 @@ class VarNeuralNetwork:
 
     def fit_simple(self, X_v, v, epochs):
         """Train the model over a given dataset, and parameters."""
+        self.set_normalize_bounds(X_v)
+        X_v = self.normalize(X_v)
+        v = self.tensor(v)
         # Optimizing
-        last_loss = self.tf_optimization(X_v, v, epochs)
+        self.tf_optimization(X_v, v, epochs, nolog=True)
 
     def fetch_minibatch(self, X_v, v):
         """Return a subset of the training set, for lower memory training."""
