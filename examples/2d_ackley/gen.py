@@ -12,12 +12,12 @@ from podnn.handling import clean_dir
 from hyperparams import HP as hp
 from hyperparams import u
 
-# resdir = genresultdir()
 resdir = "cache"
 clean_dir(resdir)
 
 # Create linear space mesh
-x_mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"])
+x_mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"],
+                            hp["y_min"], hp["y_max"], hp["n_y"])
 np.save(os.path.join(resdir, "x_mesh.npy"), x_mesh)
 # x_mesh = np.load(os.path.join(resdir, "x_mesh.npy"))
 

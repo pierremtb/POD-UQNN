@@ -524,8 +524,14 @@ class PodnnModel:
         for path in self.model_path:
             self.regnn.append(VarNeuralNetwork.load_from(path, self.model_params_path))
 
-    def save_model(self):
+    def save_model(self, model_id=-1):
         """Save the POD-NN's regression neural network and parameters."""
+        if model_id > -1:
+            self.regnn[model_id].save_to(self.model_path[model_id], self.model_params_path)
+            return
+        # for file in os.listdir(self.resdir):
+        #     if file.startswith("model-"):
+        #         os.remove(os.path.join(self.resdir, file))
         for i, model in enumerate(self.regnn):
             model.save_to(self.model_path[i], self.model_params_path)
 
@@ -551,7 +557,6 @@ class PodnnModel:
 
         model_path = []
         for file in sorted(os.listdir(save_dir)):
-            print(file)
             if file.startswith("model-"):
                 model_path.append(os.path.join(save_dir, file))
 

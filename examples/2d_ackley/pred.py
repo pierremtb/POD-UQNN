@@ -1,4 +1,4 @@
-"""POD-NN modeling for 1D Shekel Equation."""
+"""POD-NN modeling for 2D Shekel Equation."""
 #%% Imports
 import sys
 import os
@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import re_s
-from podnn.plotting import figsize, savefig
 
 from hyperparams import HP as hp
 from hyperparams import u
+from podnn.plotting import figsize, savefig
 
 #%% Load models
 model = PodnnModel.load("cache")
