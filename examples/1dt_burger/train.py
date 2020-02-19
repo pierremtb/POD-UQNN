@@ -23,14 +23,12 @@ if distributed:
     tf.config.experimental.set_visible_devices(phys_devices[gpu_id], 'GPU')
 
 #%% Train
-with tf.device("/GPU:0"):
-    #%% Retrieve model
-    model = PodnnModel.load("cache")
-    X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
+model = PodnnModel.load("cache")
+X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
-    for i in range(local_num):
-        model_id = gpu_id if distributed else i
-        model.train_model(model_id, X_v_train, v_train, X_v_val, v_val, hp["epochs"],
-                          freq=hp["log_frequency"])
-        model.save_model(model_id)
-exit(0)
+for i in range(local_num):
+    model_id = gpu_id if distributed else i
+    model.train_model(model_id, X_v_train, v_train, X_v_val, v_val, hp["epochs"],
+                      freq=hp["log_frequency"])
+    model.save_model(model_id)
+
