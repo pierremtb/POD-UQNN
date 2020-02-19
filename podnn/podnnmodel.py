@@ -194,11 +194,11 @@ class PodnnModel:
 
         # Creating the validation snapshots matrix
         U_train = self.V.dot(v_train.T)
-        U_test = self.V.dot(v_val.T)
+        U_val = self.V.dot(v_val.T)
 
-        self.save_train_data(X_v_train, v_train, U_train, X_v_test, v_test, U_test)
+        self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
 
-        return X_v_train, v_train, X_v_val, v_val, U_test
+        return X_v_train, v_train, X_v_val, v_val, U_val
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
                          train_val, eps=0., eps_init=None, n_L=0,
