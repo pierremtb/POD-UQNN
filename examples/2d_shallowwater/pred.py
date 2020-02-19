@@ -56,6 +56,7 @@ offsets = np.arange(1, n_element + 1) * 3
 cell_types = np.ones(n_element, dtype="int64") * VtkTriangle.tid
 
 # Space points
+x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
 x = x_mesh[:, 1]
 y = x_mesh[:, 2]
 x = np.ascontiguousarray(x)
