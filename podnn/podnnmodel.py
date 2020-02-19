@@ -196,8 +196,7 @@ class PodnnModel:
         U_train = self.V.dot(v_train.T)
         U_test = self.V.dot(v_val.T)
 
-        if save_cache:
-            self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_test)
+        self.save_train_data(X_v_train, v_train, U_train, X_v_test, v_test, U_test)
 
         return X_v_train, v_train, X_v_val, v_val, U_test
 

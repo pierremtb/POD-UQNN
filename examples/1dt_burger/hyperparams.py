@@ -21,7 +21,7 @@ HP["n_s_tst"] = int(1e3)
 HP["eps"] = 0
 HP["eps_init"] = None
 HP["n_L"] = 20
-HP["x_noise"] = 0.01
+HP["x_noise"] = 0.
 # Train/val split
 HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
