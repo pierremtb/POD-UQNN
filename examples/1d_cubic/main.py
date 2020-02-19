@@ -35,8 +35,8 @@ u_train = u_train + noise_std*np.random.randn(u_train.shape[0], u_train.shape[1]
 
 #%% Model creation
 layers = [1, 20, 20, D]
-model = TFPBayesianNeuralNetwork(layers, 0.08, 0., NORM_NONE)
-epochs = 30000
+model = TFPBayesianNeuralNetwork(layers, 0.005, 0., NORM_NONE)
+epochs = 60000
 logger = Logger(epochs, frequency=1000)
 logger.set_val_err_fn(lambda: {})
 model.fit(x_train, u_train, epochs, logger=logger)

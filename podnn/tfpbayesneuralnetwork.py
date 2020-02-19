@@ -23,7 +23,7 @@ class MyCallback(tfk.callbacks.Callback):
 class TFPBayesianNeuralNetwork:
     def __init__(self, layers, lr, lam, norm=NORM_NONE, model=None, lb=None, ub=None):
         # Making sure the dtype is consistent
-        self.dtype = "float64"
+        self.dtype = "float32"
 
         # Setting up optimizer and params
         self.tf_optimizer = tf.keras.optimizers.Adam(lr)
@@ -35,6 +35,9 @@ class TFPBayesianNeuralNetwork:
         self.logger = None
         self.batch_size = 0
         self.norm = norm
+
+        self.prior_sig1 = 1.5
+        self.prior_sig2 = 0.1
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
@@ -56,27 +59,25 @@ class TFPBayesianNeuralNetwork:
                             scale=1e-5 + tf.nn.softplus(c + t[..., n:])),
                     reinterpreted_batch_ndims=1)),
             ])
+            
         # Specify the prior over `keras.layers.Dense` `kernel` and `bias`.
-        def prior_trainable(kernel_size, bias_size=0, dtype=None):
+        def prior(kernel_size, bias_size=0, dtype=None):
             n = kernel_size + bias_size
-            return tf.keras.Sequential([
-                tfp.layers.VariableLayer(n, dtype=dtype),
-                tfp.layers.DistributionLambda(lambda t: tfd.Independent(
-                    tfd.Normal(loc=t, scale=1),
-                    reinterpreted_batch_ndims=1)),
-            ])
-
+            comp_1_dist = tfd.Normal(0., self.prior_sig1)
+            comp_2_dist = tfd.Normal(0., self.prior_sig2)
+            return tfp.layers.DistributionLambda(lambda t: np.pi * comp_1_dist.prob(t) + (1 - np.pi) * comp_2_dist.prob(t), dtype=dtype)
         model = tfk.Sequential([
             tfk.layers.InputLayer((self.layers[0],)),
-            *[tfp.layers.DenseVariational(width, posterior_mean_field, prior_trainable, activation="relu")
+            *[tfp.layers.DenseVariational(width, posterior_mean_field, prior, activation="relu")
+            # *[tfp.layers.DenseVariational(width, posterior_mean_field, prior_trainable, activation="relu")
             for width in self.layers[1:-1]],
-            tfp.layers.DenseVariational(self.layers[-1] * 2, posterior_mean_field, prior_trainable),
+            tfp.layers.DenseVariational(self.layers[-1] * 2, posterior_mean_field, prior),
             tfp.layers.DistributionLambda(
                 lambda t: tfd.Normal(loc=t[..., :self.layers[-1]],
                                     scale=1e-3 + tf.math.softplus(0.05 * t[..., self.layers[-1]:]))),
         ])
 
-        # Loss
+        # Loss: negative log likelihood (of seeing y)
         negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 
         model.compile(optimizer=tf.optimizers.Adam(self.lr), loss=negloglik)
