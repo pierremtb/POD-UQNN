@@ -20,22 +20,19 @@ HP["n_s"] = 500
 # HP["n_s_hifi"] = int(1e5)
 HP["n_s_hifi"] = int(1e4)
 # POD stopping param
-HP["eps"] = 1e-6
+HP["eps"] = 1e-4
 HP["n_L"] = 0
-HP["x_noise"] = 0.02
+HP["x_noise"] = 0.
 # HP["x_noise"] = 0.
 HP["u_noise"] = 0.
 # Train/val split
 HP["train_val_test"] = (3/5, 1/5, 1/5)
 # Deep NN hidden layers topology
-HP["h_layers"] = [20, 20]
+HP["h_layers"] = [64, 64]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 80000
-HP["epochs"] = 18000
-HP["lr"] = 0.0001
-HP["lr"] = 0.01
-HP["lambda"] = 1.5
-HP["norm"] = NORM_MEANSTD
+HP["epochs"] = 20000
+HP["lr"] = 0.001
+HP["norm"] = NORM_NONE
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Non-spatial params

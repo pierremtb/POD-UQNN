@@ -321,13 +321,13 @@ class PodnnModel:
         self.regnn = TFPBayesianNeuralNetwork(self.layers, lr, lam, norm)
         self.regnn.summary()
 
-    def train(self, X_v, v, epochs, train_val_test, freq=100):
+    def train(self, X_v, v, epochs, train_val_test, freq=100, silent=False):
         """Train the POD-NN's regression model, and save it."""
         if self.regnn is None:
             raise ValueError("Regression model isn't defined.")
 
         # Validation and logging
-        logger = Logger(epochs, freq)
+        logger = Logger(epochs, freq, silent=silent)
         val_size = train_val_test[1] / (train_val_test[0] + train_val_test[1])
         X_v_train, X_v_val, v_train, v_val = \
             self.split_dataset(X_v, v, val_size)

@@ -21,7 +21,7 @@ class MyCallback(tfk.callbacks.Callback):
         self.logger.log_train_epoch(epoch, logs["loss"])
 
 class TFPBayesianNeuralNetwork:
-    def __init__(self, layers, lr, lam, norm=NORM_NONE, model=None, lb=None, ub=None):
+    def __init__(self, layers, lr, klw, norm=NORM_NONE, model=None, lb=None, ub=None):
         # Making sure the dtype is consistent
         self.dtype = "float32"
 
@@ -29,15 +29,12 @@ class TFPBayesianNeuralNetwork:
         self.tf_optimizer = tf.keras.optimizers.Adam(lr)
         self.layers = layers
         self.lr = lr
-        self.lam = lam
+        self.klw = klw
         self.lb = lb
         self.ub = ub
         self.logger = None
         self.batch_size = 0
         self.norm = norm
-
-        self.prior_sig1 = 1.5
-        self.prior_sig2 = 0.1
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
@@ -63,13 +60,16 @@ class TFPBayesianNeuralNetwork:
         # Specify the prior over `keras.layers.Dense` `kernel` and `bias`.
         def prior(kernel_size, bias_size=0, dtype=None):
             n = kernel_size + bias_size
-            comp_1_dist = tfd.Normal(0., self.prior_sig1)
-            comp_2_dist = tfd.Normal(0., self.prior_sig2)
-            return tfp.layers.DistributionLambda(lambda t: np.pi * comp_1_dist.prob(t) + (1 - np.pi) * comp_2_dist.prob(t), dtype=dtype)
+            return tf.keras.Sequential([
+                tfp.layers.VariableLayer(n, dtype=dtype, trainable=False),
+                tfp.layers.DistributionLambda(lambda t: tfd.Independent(
+                    tfd.Normal(loc=t, scale=1), reinterpreted_batch_ndims=1)),
+            ])
+
         model = tfk.Sequential([
             tfk.layers.InputLayer((self.layers[0],)),
-            *[tfp.layers.DenseVariational(width, posterior_mean_field, prior, activation="relu")
-            # *[tfp.layers.DenseVariational(width, posterior_mean_field, prior_trainable, activation="relu")
+            *[tfp.layers.DenseVariational(width, posterior_mean_field, prior,
+                                          activation="softplus", kl_weight=self.klw)
             for width in self.layers[1:-1]],
             tfp.layers.DenseVariational(self.layers[-1] * 2, posterior_mean_field, prior),
             tfp.layers.DistributionLambda(
@@ -78,7 +78,7 @@ class TFPBayesianNeuralNetwork:
         ])
 
         # Loss: negative log likelihood (of seeing y)
-        negloglik = lambda y, rv_y: -rv_y.log_prob(y)
+        negloglik = lambda y, rv_y: -tf.reduce_mean(rv_y.log_prob(y))
 
         model.compile(optimizer=tf.optimizers.Adam(self.lr), loss=negloglik)
         return model
@@ -127,12 +127,13 @@ class TFPBayesianNeuralNetwork:
     def predict(self, X):
         """Get the prediction for a new input X."""
         X = self.normalize(X)
-        yhats = [self.model(X) for _ in range(100)]
-        yhats_mean = np.array([p.mean() for p in yhats])
-        yhats_var = np.array([p.variance() for p in yhats])
-        yhat = yhats_mean.mean(0)
-        yhat_var = (yhats_var + yhat ** 2).mean(0) - yhat ** 2
-        return yhat, yhat_var
+        yhats = np.array([self.model(X).mean().numpy() for _ in range(200)])
+        return yhats.mean(0), np.zeros_like(yhats.mean(0))
+        # yhats_mean = np.array([p.mean() for p in yhats])
+        # yhats_var = np.array([p.variance() for p in yhats])
+        # yhat = yhats_mean.mean(-1)
+        # yhat_var = (yhats_var + yhat ** 2).mean(-1) - yhat ** 2
+        # return yhat, yhat_var
 
     def summary(self):
         """Print a summary of the TensorFlow/Keras model."""

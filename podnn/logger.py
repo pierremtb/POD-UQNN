@@ -23,7 +23,7 @@ class Logger(object):
         if not self.silent:
             print(f"TensorFlow version: {tf.version}")
             print(f"Eager execution: {tf.executing_eagerly()}")
-            print(f"GPU-accerelated: {len(tf.config.list_physical_devices('GPU')) > 0}")
+            # print(f"GPU-accerelated: {len(tf.config.list_physical_devices('GPU')) > 0}")
 
     def get_epoch_duration(self):
         now = time.time()
@@ -46,11 +46,11 @@ class Logger(object):
         self.pbar = tqdm(total=self.tf_epochs)
 
     def log_train_epoch(self, epoch, loss, custom="", is_iter=False):
-        self.pbar.update(1)
-        self.pbar.set_description(f"L: {loss:.4e}")
-
         if self.silent:
             return
+
+        self.pbar.update(1)
+        self.pbar.set_description(f"L: {loss:.4e}")
 
         if epoch % self.frequency == 0:
             logs = {"L": loss, **self.get_val_err()}
@@ -84,6 +84,9 @@ class Logger(object):
               f"duration = {self.get_elapsed()}  " + custom)
 
     def get_logs(self):
+        if self.silent:
+            return
+
         epochs = np.array(self.epochs)[:, None]
         logs = np.array(self.logs)
 

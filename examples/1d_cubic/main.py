@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.logger import Logger
-from podnn.advneuralnetwork import NORM_NONE
+from podnn.advneuralnetwork import NORM_NONE, NORM_MEANSTD
 from podnn.tfpbayesneuralnetwork import TFPBayesianNeuralNetwork
+from podnn.bayesneuralnetwork import BayesianNeuralNetwork
 from podnn.plotting import figsize
 
 #%% Datagen
@@ -34,9 +35,10 @@ noise_std = 5
 u_train = u_train + noise_std*np.random.randn(u_train.shape[0], u_train.shape[1])
 
 #%% Model creation
-layers = [1, 20, 20, D]
-model = TFPBayesianNeuralNetwork(layers, 0.005, 0., NORM_NONE)
-epochs = 60000
+layers = [1, 20, D]
+model = TFPBayesianNeuralNetwork(layers, 0.05, 0., NORM_NONE)
+# model = BayesianNeuralNetwork(layers, 0.001, 0., NORM_NONE)
+epochs = 1000
 logger = Logger(epochs, frequency=1000)
 logger.set_val_err_fn(lambda: {})
 model.fit(x_train, u_train, epochs, logger=logger)

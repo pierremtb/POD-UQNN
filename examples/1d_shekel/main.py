@@ -1,5 +1,7 @@
 """POD-NN modeling for 1D Shekel Equation."""
 #%% Import
+%reload_ext autoreload
+%autoreload 2
 import sys
 import os
 import numpy as np
@@ -9,6 +11,7 @@ from podnn.podnnmodel import PodnnModel
 from podnn.mesh import create_linear_mesh
 from podnn.plotting import genresultdir
 
+sys.path.append(".")
 from genhifi import u, generate_test_dataset
 from plot import plot_results
 
@@ -36,14 +39,13 @@ X_v_train, v_train, _, _, \
 
 #%% Train
 model.initBNN(hp["h_layers"],
-                hp["lr"], hp["lambda"],
+                hp["lr"], 1/X_v_train.shape[0],
                 hp["norm"])
+#%%
 train_res = model.train(X_v_train, v_train, hp["epochs"],
-                        hp["train_val_test"], freq=hp["log_frequency"])
+                        hp["train_val_test"], freq=hp["log_frequency"], silent=True)
 #%% Predict and restruct
-v_pred, _ = model.predict_v(X_v_test)
-U_pred = model.V.dot(v_pred.T)
-U_test = model.V.dot(v_test.T)
+U_pred = model.predict(X_v_test)
 U_pred = model.restruct(U_pred)
 U_test = model.restruct(U_test)
 

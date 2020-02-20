@@ -75,6 +75,8 @@ class DenseVariational(tf.keras.layers.Layer):
         return tf.math.log(self.prior_pi_1 * comp_1_dist.prob(w) +
                      self.prior_pi_2 * comp_2_dist.prob(w))
 
+NOISE = 1.0
+
 class BayesianNeuralNetwork:
     def __init__(self, layers, lr, lam, adv_eps=0.,
                  norm=NORM_NONE, norm_bounds=None, model=None):
@@ -91,7 +93,6 @@ class BayesianNeuralNetwork:
         self.batch_size = 0
         self.norm = norm
         self.adv_eps = adv_eps
-        self.sigma = 3.0
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
@@ -115,10 +116,13 @@ class BayesianNeuralNetwork:
 
         x = inputs
         for width in self.layers[1:-1]:
-            x = DenseVariational(width, kl_weight, **prior_params, activation="relu")(x)
-        outputs = DenseVariational(self.layers[-1], kl_weight, **prior_params, activation=None)(x)
+            x = DenseVariational(width, kl_weight, **prior_params, activation="softplus")(x)
+        x = DenseVariational(self.layers[-1] * 2, kl_weight, **prior_params, activation=None)(x)
+        x = tfp.layers.DistributionLambda(
+                lambda t: tfp.distributions.Normal(loc=t[..., :self.layers[-1]],
+                                    scale=1e-3 + tf.math.softplus(0.05 * t[..., self.layers[-1]:])))(x)
 
-        model = tf.keras.Model(inputs=inputs, outputs=outputs, name="varnn")
+        model = tf.keras.Model(inputs=inputs, outputs=x, name="varnn")
         return model
 
     def set_normalize_bounds(self, X):
@@ -157,12 +161,11 @@ class BayesianNeuralNetwork:
                tf.reduce_mean(tf.divide(tf.square(y -  y_pred_mean), 2*y_pred_var)) + \
                self.regularization()
 
-    @tf.function
+    # @tf.function
     def loss(self, y, y_pred):
-        dist = tfp.distributions.Normal(loc=y_pred, scale=self.sigma)
-        return tf.reduce_sum(-dist.log_prob(y))
+        return tf.reduce_sum(-y_pred.log_prob(y))
 
-    @tf.function
+    # @tf.function
     def grad(self, X, v):
         """Compute the loss and its derivatives w.r.t. the inputs."""
         with tf.GradientTape(persistent=True) as tape:
@@ -192,7 +195,7 @@ class BayesianNeuralNetwork:
             self.logger.log_train_epoch(epoch, loss_value)
         return loss_value
 
-    @tf.function
+    # @tf.function
     def tf_optimization_step(self, X_v, v):
         """For each epoch, get loss+grad and backpropagate it."""
         loss_value, grads = self.grad(X_v, v)
@@ -231,12 +234,28 @@ class BayesianNeuralNetwork:
         X = self.normalize(X)
         return self.model(X).numpy()
 
-    def predict(self, X, num_samples=500):
+    # def predict(self, X, num_samples=500):
+    #     X = self.normalize(X)
+    #     y_pred_samples = np.zeros((X.shape[0], self.layers[-1], num_samples))
+    #     y_pred_var_samples = np.zeros((X.shape[0], self.layers[-1], num_samples))
+    #     for i in range(0, num_samples):
+    #         dist = self.model(X)
+    #         y_pred_samples[:, :, i] = dist.mean().numpy()
+    #         y_pred_var_samples[:, :, i] = dist.variance().numpy()
+    #     yhat = y_pred_samples.mean(-1)
+    #     yhat_var = (y_pred_var_samples + yhat ** 2).mean(-1) - yhat ** 2
+    #     return yhat, yhat_var
+        # return y_pred_samples.mean(-1), y_pred_samples.var(-1)
+
+    def predict(self, X):
+        """Get the prediction for a new input X."""
         X = self.normalize(X)
-        y_pred_samples = np.zeros((X.shape[0], self.layers[-1], num_samples))
-        for i in range(0, num_samples):
-            y_pred_samples[:, :, i] = self.model(X).numpy()
-        return y_pred_samples.mean(-1), y_pred_samples.var(-1)
+        yhats = [self.model(X) for _ in range(100)]
+        yhats_mean = np.array([p.mean() for p in yhats])
+        yhats_var = np.array([p.variance() for p in yhats])
+        yhat = yhats_mean.mean(0)
+        yhat_var = (yhats_var + yhat ** 2).mean(0) - yhat ** 2
+        return yhat, yhat_var
 
     def summary(self):
         """Print a summary of the TensorFlow/Keras model."""
