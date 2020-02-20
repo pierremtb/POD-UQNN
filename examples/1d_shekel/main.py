@@ -1,7 +1,7 @@
 """POD-NN modeling for 1D Shekel Equation."""
 #%% Import
-%reload_ext autoreload
-%autoreload 2
+# %reload_ext autoreload
+# %autoreload 2
 import sys
 import os
 import numpy as np
@@ -43,7 +43,7 @@ model.initBNN(hp["h_layers"],
                 hp["norm"])
 #%%
 train_res = model.train(X_v_train, v_train, hp["epochs"],
-                        hp["train_val_test"], freq=hp["log_frequency"], silent=True)
+                        hp["train_val_test"], freq=hp["log_frequency"], silent=False)
 #%% Predict and restruct
 U_pred = model.predict(X_v_test)
 U_pred = model.restruct(U_pred)
