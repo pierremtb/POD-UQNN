@@ -40,17 +40,18 @@ class Logger(object):
         self.get_val_err = fn
 
     def log_train_start(self):
-        if not self.silent:
-            print("\nTraining started")
-            print("================")
+        if self.silent:
+            return
+        print("\nTraining started")
+        print("================")
         self.pbar = tqdm(total=self.tf_epochs)
 
     def log_train_epoch(self, epoch, loss, custom="", is_iter=False):
+        if self.silent:
+            return
         self.pbar.update(1)
         self.pbar.set_description(f"L: {loss:.4e}")
 
-        if self.silent:
-            return
 
         if epoch % self.frequency == 0:
             logs = {"L": loss, **self.get_val_err()}
@@ -75,15 +76,17 @@ class Logger(object):
             self.logs.append(logs_values)
 
     def log_train_end(self, epoch, loss, custom=""):
-        self.log_train_epoch(epoch, loss, custom)
-        self.pbar.close()
         if self.silent:
             return
+        self.log_train_epoch(epoch, loss, custom)
+        self.pbar.close()
         print("==================")
         print(f"Training finished (epoch {epoch}): " +
               f"duration = {self.get_elapsed()}  " + custom)
 
     def get_logs(self):
+        if self.silent:
+            return
         epochs = np.array(self.epochs)[:, None]
         logs = np.array(self.logs)
 

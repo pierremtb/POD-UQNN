@@ -62,8 +62,11 @@ class PodnnModel:
         """Return the function output, it needs to be extended."""
         raise NotImplementedError
 
-    def sample_mu(self, n_s, mu_min, mu_max):
+    def sample_mu(self, n_s, mu_min, mu_max, indices=None):
         """Return a LHS sampling between mu_min and mu_max of size n_s."""
+        if indices is not None:
+            mu = np.linspace(mu_min, mu_max, n_s)[indices]
+            return mu
         X_lhs = lhs(n_s, mu_min.shape[0]).T
         mu_lhs = mu_min + (mu_max - mu_min)*X_lhs
         return mu_lhs
@@ -348,7 +351,7 @@ class PodnnModel:
                     "RE_V": re_s(U_val, U_val_pred),
                 }
             # Validation, logging, training
-            logger = Logger(epochs, freq)
+            logger = Logger(epochs, freq, silent=True)
             logger.set_val_err_fn(get_val_err)
             model.fit(X_v_train, v_train, epochs, logger)
             logs.append(logger.get_logs())
