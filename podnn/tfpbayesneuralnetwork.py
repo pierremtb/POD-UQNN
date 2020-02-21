@@ -48,12 +48,11 @@ class TFPBayesianNeuralNetwork:
         # # Specify the surrogate posterior over `keras.layers.Dense` `kernel` and `bias`.
         def posterior_mean_field(kernel_size, bias_size=0, dtype=None):
             n = kernel_size + bias_size
-            c = np.log(np.expm1(1.))
             return tf.keras.Sequential([
                 tfp.layers.VariableLayer(2 * n, dtype=dtype),
                 tfp.layers.DistributionLambda(lambda t: tfd.Independent(
                     tfd.Normal(loc=t[..., :n],
-                            scale=1e-5 + tf.nn.softplus(c + t[..., n:])),
+                            scale=1e-6 + tf.math.softplus(t[..., n:])),
                     reinterpreted_batch_ndims=1)),
             ])
             
@@ -71,10 +70,10 @@ class TFPBayesianNeuralNetwork:
             *[tfp.layers.DenseVariational(width, posterior_mean_field, prior,
                                           activation="softplus", kl_weight=self.klw)
             for width in self.layers[1:-1]],
-            tfp.layers.DenseVariational(self.layers[-1] * 2, posterior_mean_field, prior),
+            tfp.layers.DenseVariational(self.layers[-1] * 2, posterior_mean_field, prior, kl_weight=self.klw),
             tfp.layers.DistributionLambda(
                 lambda t: tfd.Normal(loc=t[..., :self.layers[-1]],
-                                    scale=1e-3 + tf.math.softplus(0.05 * t[..., self.layers[-1]:]))),
+                                    scale=1e-6 + tf.math.softplus(t[..., self.layers[-1]:]))),
         ])
 
         # Loss: negative log likelihood (of seeing y)
@@ -112,7 +111,7 @@ class TFPBayesianNeuralNetwork:
         # Optimizing
         self.model.fit(X_v, v, epochs=epochs, verbose=0, callbacks=[MyCallback(logger)])
 
-        # self.logger.log_train_end(epochs, np.array(0.))
+        self.logger.log_train_end(epochs, np.array(0.))
 
     def fetch_minibatch(self, X_v, v):
         """Return a subset of the training set, for lower memory training."""
@@ -124,16 +123,18 @@ class TFPBayesianNeuralNetwork:
         v_batch = self.tensor(v[idx_v, :])
         return X_v_batch, v_batch
 
-    def predict(self, X):
+    def predict(self, X, samples=200):
         """Get the prediction for a new input X."""
         X = self.normalize(X)
-        yhats = np.array([self.model(X).mean().numpy() for _ in range(200)])
-        return yhats.mean(0), np.zeros_like(yhats.mean(0))
-        # yhats_mean = np.array([p.mean() for p in yhats])
-        # yhats_var = np.array([p.variance() for p in yhats])
-        # yhat = yhats_mean.mean(-1)
-        # yhat_var = (yhats_var + yhat ** 2).mean(-1) - yhat ** 2
-        # return yhat, yhat_var
+        yhats_mean = np.zeros((samples, X.shape[0], self.layers[-1]))
+        yhats_var = np.zeros((samples, X.shape[0], self.layers[-1]))
+        for i in range(samples):
+            dist = self.model(X)
+            yhats_mean[i] = dist.mean().numpy()
+            yhats_var[i] = dist.variance().numpy()
+        yhat = yhats_mean.mean(0)
+        yhat_var = (yhats_var + yhats_mean ** 2).mean(0) - yhat ** 2
+        return yhat, np.sqrt(yhat_var)
 
     def summary(self):
         """Print a summary of the TensorFlow/Keras model."""
@@ -146,7 +147,7 @@ class TFPBayesianNeuralNetwork:
     def save_to(self, model_path, params_path):
         """Save the (trained) model and params for later use."""
         with open(params_path, "wb") as f:
-            pickle.dump((self.layers, self.lr, self.lam, self.norm), f)
+            pickle.dump((self.layers, self.lr, self.klw, self.norm), f)
         tf.keras.models.save_model(self.model, model_path)
 
     @classmethod

@@ -35,7 +35,7 @@ def main(resdir, hp, use_cached_dataset=False):
     
     X_v_train, v_train, X_v_test, \
         _, U_test = model.convert_dataset(u_mesh, X_v,
-                                          hp["train_val_test"], hp["eps"],
+                                          hp["train_val"], hp["eps"],
                                           use_cache=use_cached_dataset)
 
     # Train
@@ -43,7 +43,7 @@ def main(resdir, hp, use_cached_dataset=False):
                  hp["lr"], hp["lambda"], hp["beta"],
                  hp["k1"], hp["k2"], hp["norm"])
     train_res = model.train(X_v_train, v_train, hp["epochs"],
-                            hp["train_val_test"], freq=hp["log_frequency"])
+                            hp["train_val"], freq=hp["log_frequency"])
 
 
     # Predict and restruct

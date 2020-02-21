@@ -144,11 +144,11 @@ if __name__ == "__main__":
     U_test_struct = model.restruct(U_test)
 
     # Sample the new model to generate a HiFi prediction
-    n_s_hifi = hp["n_s_hifi"]
-    print("Sampling {n_s_hifi} parameters")
-    X_v_test_hifi = model.generate_hifi_inputs(n_s_hifi, hp["mu_min"], hp["mu_max"],
+    n_s_tst = hp["n_s_tst"]
+    print("Sampling {n_s_tst} parameters")
+    X_v_test_hifi = model.generate_hifi_inputs(n_s_tst, hp["mu_min"], hp["mu_max"],
                                                hp["t_min"], hp["t_max"])
-    print("Predicting the {n_s_hifi} corresponding solutions")
+    print("Predicting the {n_s_tst} corresponding solutions")
     U_pred_hifi, U_pred_hifi_sig = model.predict_var(X_v_test_hifi)
     U_pred_hifi = model.restruct(U_pred_hifi)
     U_pred_hifi_sig = model.restruct(U_pred_hifi_sig)

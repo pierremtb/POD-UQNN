@@ -1,9 +1,8 @@
 import yaml
+import time
 import tensorflow as tf
 import numpy as np
-import time
 from datetime import datetime
-from tqdm.auto import trange, tqdm
 
 
 class Logger(object):
@@ -14,7 +13,6 @@ class Logger(object):
         self.frequency = frequency
         self.silent = silent
 
-        self.pbar = None
         self.epochs = []
         self.logs = []
         self.logs_keys = None
@@ -40,19 +38,13 @@ class Logger(object):
         self.get_val_err = fn
 
     def log_train_start(self):
-        if not self.silent:
-            print("\nTraining started")
-            print("================")
-        self.pbar = tqdm(total=self.tf_epochs)
-
-    def log_train_epoch(self, epoch, loss, custom="", is_iter=False):
         if self.silent:
             return
+        print("\nTraining started")
+        print("================")
 
-        self.pbar.update(1)
-        self.pbar.set_description(f"L: {loss:.4e}")
-
-        if epoch % self.frequency == 0:
+    def log_train_epoch(self, epoch, loss, custom="", is_iter=False):
+        if epoch % self.frequency == 0 and not self.silent:
             logs = {"L": loss, **self.get_val_err()}
             if self.logs_keys is None:
                 self.logs_keys = list(logs.keys())
@@ -69,16 +61,13 @@ class Logger(object):
             name = 'nt_epoch' if is_iter else '#'
             message = f"{name}: {epoch:6d} " + \
                       logs_message + " " + custom
-            self.pbar.write(message)
-
-            self.epochs.append(epoch)
-            self.logs.append(logs_values)
+            print(message)
 
     def log_train_end(self, epoch, loss, custom=""):
-        self.log_train_epoch(epoch, loss, custom)
-        self.pbar.close()
         if self.silent:
             return
+        self.log_train_epoch(epoch, loss, custom)
+
         print("==================")
         print(f"Training finished (epoch {epoch}): " +
               f"duration = {self.get_elapsed()}  " + custom)
@@ -87,12 +76,8 @@ class Logger(object):
         if self.silent:
             return
 
-        epochs = np.array(self.epochs)[:, None]
-        logs = np.array(self.logs)
-
-        header = "epoch\t"
-        header += "\t".join(self.logs_keys)
-
-        values = np.hstack((epochs, logs))
-        
-        return (header, np.hstack((epochs, logs)))
+        # epochs = np.array(self.epochs)[:, None]
+        # logs = np.array(self.logs)
+        # header = "epoch\t"
+        # header += "\t".join(self.logs_keys)
+        # return (header, np.hstack((epochs, logs)))
