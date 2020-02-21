@@ -8,7 +8,7 @@ sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.mesh import create_linear_mesh
 from podnn.metrics import re_s
-from podnn.plotting import genresultdir, savefig, figsize
+from podnn.plotting import savefig, figsize
 
 #%% Prepare
 from hyperparams import HP as hp
@@ -110,6 +110,3 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
             ax.legend()
 # plt.show()
 savefig("results/graph-samples")
-
-
-# %%

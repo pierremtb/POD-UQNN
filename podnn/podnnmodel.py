@@ -11,9 +11,7 @@ from sklearn.model_selection import train_test_split
 from .pod import perform_pod, perform_fast_pod
 from .handling import pack_layers
 from .logger import Logger
-from .advneuralnetwork import AdvNeuralNetwork, NORM_MEANSTD
-from .varneuralnetwork import VarNeuralNetwork
-from .tfpbayesneuralnetwork import TFPBayesianNeuralNetwork
+from .tfpbayesneuralnetwork import TFPBayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
 from .metrics import re, re_s
 

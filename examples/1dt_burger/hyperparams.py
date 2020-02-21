@@ -1,6 +1,6 @@
 """Default hyperparameters for 1D time-dep Burgers Equation."""
 
-from podnn.advneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
+from podnn.tfpbayesneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
 
 HP = {}
 # Dimension of u(x, t, mu)

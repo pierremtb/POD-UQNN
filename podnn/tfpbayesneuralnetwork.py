@@ -9,7 +9,9 @@ from sklearn.preprocessing import normalize as sknormalize
 import numpy as np
 from tqdm import tqdm
 
-from .advneuralnetwork import NORM_NONE, NORM_MEANSTD, NORM_CENTER
+NORM_NONE = "none"
+NORM_MEANSTD = "meanstd"
+NORM_CENTER = "center"
 
 tfk = tf.keras
 tfd = tfp.distributions

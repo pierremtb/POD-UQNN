@@ -8,9 +8,8 @@ import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.logger import Logger
-from podnn.advneuralnetwork import NORM_NONE, NORM_MEANSTD
+from podnn.tfpbayesneuralnetwork import NORM_NONE, NORM_MEANSTD
 from podnn.tfpbayesneuralnetwork import TFPBayesianNeuralNetwork
-from podnn.bayesneuralnetwork import BayesianNeuralNetwork
 from podnn.plotting import figsize
 
 #%% Datagen

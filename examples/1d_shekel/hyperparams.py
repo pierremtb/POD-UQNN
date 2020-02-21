@@ -1,9 +1,13 @@
 """Default hyperparameters for 1D Shekel Equation."""
 
+import sys
+import os
 import numpy as np
 import tensorflow as tf
 from collections import OrderedDict
-from podnn.advneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
+
+sys.path.append(os.path.join("..", ".."))
+from podnn.tfpbayesneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
 
 
 HP = {}
