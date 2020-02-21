@@ -6,7 +6,6 @@ import pickle
 import tensorflow as tf
 from sklearn.preprocessing import normalize as sknormalize
 import numpy as np
-from tqdm import tqdm
 
 NORM_NONE = "none"
 NORM_MEANSTD = "meanstd"
@@ -89,7 +88,7 @@ class VarNeuralNetwork:
         l2_norms = [tf.nn.l2_loss(v) for v in self.wrap_training_variables()]
         l2_norm = tf.reduce_sum(l2_norms)
         return self.lam * l2_norm
-
+        
     @tf.function
     def loss(self, y, y_pred):
         """Return the Gaussian NLL loss function between the pred and val."""

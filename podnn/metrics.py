@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
 from numpy.linalg import norm
-from tqdm import tqdm
 import math
 
 
@@ -32,17 +31,6 @@ def re_mean_std(U_s, U_pred_s):
     err_mean = re(U_mean, U_pred_mean)
     err_std = re(U_std, U_pred_std)
     return err_mean, err_std
-
-
-def error_pod(U, V):
-    n_s = U.shape[1]
-    err_pod = 0.0
-    print("Computing POD error")
-    VV = V.dot(V.T)
-    for j in tqdm(range(n_s)):
-        err_pod += tf.norm(U[:, j] - VV.dot(U[:, j])) / tf.norm(U[:, j])
-    return err_pod.numpy() / n_s
-
 
 def rel_error_mean(U, U_pred):
     per_element_error = np.abs(U - U_pred) / np.maximum(np.abs(U), np.abs(U_pred))

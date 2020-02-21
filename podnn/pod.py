@@ -1,6 +1,5 @@
 import numpy as np
 import tensorflow as tf
-from tqdm import tqdm
 
 from numba import njit, prange
 
@@ -42,7 +41,6 @@ def perform_pod(U, eps=0., verbose=True, n_L=0):
     U = np.ascontiguousarray(U)
 
     V = np.zeros((n_h, n_L))
-    # for i in tqdm(prange(n_L), disable=(not verbose)):
     for i in prange(n_L):
         Z_i = np.ascontiguousarray(Z[:, i])
         V[:, i] = U.dot(Z_i) / np.sqrt(lambdas_trunc[i])

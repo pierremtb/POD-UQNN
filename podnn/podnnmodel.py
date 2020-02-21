@@ -7,7 +7,6 @@ import pickle
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
-from sklearn.model_selection import train_test_split
 import numba as nb
 
 from .pod import perform_pod, perform_fast_pod
@@ -104,14 +103,11 @@ class PodnnModel:
         return X_v
 
     def split_dataset(self, X_v, v, test_size):
-        if not self.has_t:
-            # Randomly splitting the dataset (X_v, v)
-            return train_test_split(X_v, v, test_size=test_size)
-
-        n_st_train = int((1. - test_size) * X_v.shape[0])
-        X_v_train, v_train = X_v[:n_st_train, :], v[:n_st_train, :]
-        X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
-        return X_v_train, X_v_val, v_train, v_val
+        """Randomly splitting the dataset (X_v, v)."""
+        indices = np.random.permutation(X_v.shape[0])
+        limit = np.floor(X_v.shape[0] * test_size).astype(int)
+        train_idx, tst_idx = indices[:limit], indices[limit:]
+        return X_v[train_idx], X_v[tst_idx], v[train_idx], v[tst_idx]
 
     def u_mesh_to_U(self, u_mesh, n_s):
         # Reshaping manually
@@ -193,7 +189,7 @@ class PodnnModel:
         self.pod_sig = np.stack((U, U_pod), axis=-1).std(-1).mean(-1)
 
         # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_val, v_train, v_val = train_test_split(X_v, v, test_size=train_val[1])
+        X_v_train, X_v_val, v_train, v_val = self.split_dataset(X_v, v, test_size=train_val[1])
 
         # Creating the validation snapshots matrix
         U_train = self.V.dot(v_train.T)
@@ -235,7 +231,7 @@ class PodnnModel:
         fake_x = np.zeros_like(mu_lhs)
 
         _, _, mu_lhs_train, mu_lhs_test = \
-             train_test_split(fake_x, mu_lhs, test_size=train_val[1])
+             self.split_dataset(fake_x, mu_lhs, test_size=train_val[1])
 
         # Creating the snapshots
         print(f"Generating {n_st} corresponding snapshots")
