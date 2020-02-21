@@ -81,8 +81,8 @@ class TFPBayesianNeuralNetwork:
         ])
 
         # Loss: negative log likelihood (of seeing y)
-        # negloglik = lambda y, rv_y: -tf.reduce_mean(rv_y.log_prob(y))
-        negloglik = lambda y, rv_y: -rv_y.log_prob(y)
+        negloglik = lambda y, rv_y: -tf.reduce_mean(rv_y.log_prob(y))
+        # negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 
         model.compile(optimizer=tf.optimizers.Adam(self.lr), loss=negloglik)
         return model
