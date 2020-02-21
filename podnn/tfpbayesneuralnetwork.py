@@ -7,7 +7,6 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 from sklearn.preprocessing import normalize as sknormalize
 import numpy as np
-from tqdm import tqdm
 
 NORM_NONE = "none"
 NORM_MEANSTD = "meanstd"
@@ -23,17 +22,16 @@ class MyCallback(tfk.callbacks.Callback):
         self.logger.log_train_epoch(epoch, logs["loss"])
 
 class TFPBayesianNeuralNetwork:
-    def __init__(self, layers, lr, klw, norm=NORM_NONE, model=None, lb=None, ub=None):
+    def __init__(self, layers, lr, klw, norm=NORM_NONE, model=None, norm_bounds=None):
         # Making sure the dtype is consistent
-        self.dtype = "float32"
+        self.dtype = "float64"
 
         # Setting up optimizer and params
         self.tf_optimizer = tf.keras.optimizers.Adam(lr)
         self.layers = layers
         self.lr = lr
         self.klw = klw
-        self.lb = lb
-        self.ub = ub
+        self.norm_bounds = norm_bounds
         self.logger = None
         self.batch_size = 0
         self.norm = norm
@@ -86,17 +84,25 @@ class TFPBayesianNeuralNetwork:
 
     def set_normalize_bounds(self, X):
         if self.norm == NORM_CENTER:
-            self.lb = np.amin(X, axis=0)
-            self.ub = np.amax(X, axis=0)
+            lb = np.amin(X, axis=0)
+            ub = np.amax(X, axis=0)
+            self.norm_bounds = (lb, ub)
         elif self.norm == NORM_MEANSTD:
-            self.lb = X.mean(0)
-            self.ub = X.std(0)
+            lb = X.mean(0)
+            ub = X.std(0)
+            self.norm_bounds = (lb, ub)
 
     def normalize(self, X):
+        if self.norm_bounds is None:
+            return self.tensor(X)
+
         if self.norm == NORM_CENTER:
-            X = (X - self.lb) - 0.5 * (self.ub - self.lb)
+            lb, ub = self.norm_bounds
+            X = (X - lb) - 0.5 * (ub - lb)
         elif self.norm == NORM_MEANSTD:
-            X = (X - self.lb) / self.ub
+            mean, std = self.norm_bounds
+            X = (X - mean) / std
+
         return self.tensor(X)
 
     def fit(self, X_v, v, epochs, logger):
@@ -114,16 +120,6 @@ class TFPBayesianNeuralNetwork:
         self.model.fit(X_v, v, epochs=epochs, verbose=0, callbacks=[MyCallback(logger)])
 
         self.logger.log_train_end(epochs, np.array(0.))
-
-    def fetch_minibatch(self, X_v, v):
-        """Return a subset of the training set, for lower memory training."""
-        if self.batch_size < 1:
-            return self.tensor(X_v), self.tensor(v)
-        N_v = X_v.shape[0]
-        idx_v = np.random.choice(N_v, self.batch_size, replace=False)
-        X_v_batch = self.tensor(X_v[idx_v, :])
-        v_batch = self.tensor(v[idx_v, :])
-        return X_v_batch, v_batch
 
     def predict(self, X, samples=200):
         """Get the prediction for a new input X."""
@@ -149,7 +145,7 @@ class TFPBayesianNeuralNetwork:
     def save_to(self, model_path, params_path):
         """Save the (trained) model and params for later use."""
         with open(params_path, "wb") as f:
-            pickle.dump((self.layers, self.lr, self.klw, self.norm), f)
+            pickle.dump((self.layers, self.lr, self.klw, self.norm, self.norm_bounds), f)
         tf.keras.models.save_model(self.model, model_path)
 
     @classmethod
@@ -163,7 +159,7 @@ class TFPBayesianNeuralNetwork:
 
         print(f"Loading model from {model_path}")
         with open(params_path, "rb") as f:
-            layers, lam, lr, norm = pickle.load(f)
+            layers, lr, klw, norm, norm_bounds = pickle.load(f)
         print(f"Loading model params from {params_path}")
         model = tf.keras.models.load_model(model_path)
-        return cls(layers, lam, lr, model=model, norm=norm)
+        return cls(layers, lr, klw, model=model, norm=norm, norm_bounds=norm_bounds)

@@ -37,7 +37,7 @@ model.initBNN(hp["h_layers"],
                 hp["lr"], 1/X_v_train.shape[0],
                 hp["norm"])
 train_res = model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
-                        hp["train_val"], freq=hp["log_frequency"],
+                        freq=hp["log_frequency"],
                         silent=False)
 
 #%% Validation metrics

@@ -26,7 +26,7 @@ N = 20
 lb = int(2/(2*6) * N_star)
 ub = int((2+2*4)/(2*6) * N_star)
 # idx = np.random.choice(x_star[lb:ub].shape[0], N, replace=False)
-idx = np.array([26, 23,  4,  3, 27, 64, 58, 30, 18, 16,  2, 31, 65, 15, 11, 17, 57, 28, 34, 50])
+idx = np.array([26, 23, 4, 3, 27, 64, 58, 30, 18, 16, 2, 31, 65, 15, 11, 17, 57, 28, 34, 50])
 x_train = x_star[lb + idx]
 u_train = u_star[lb + idx]
 # noise_std = 0.01*u_train.std(0)
@@ -35,9 +35,8 @@ u_train = u_train + noise_std*np.random.randn(u_train.shape[0], u_train.shape[1]
 
 #%% Model creation
 layers = [1, 20, D]
-model = TFPBayesianNeuralNetwork(layers, 0.05, 0., NORM_NONE)
-# model = BayesianNeuralNetwork(layers, 0.001, 0., NORM_NONE)
-epochs = 1000
+model = TFPBayesianNeuralNetwork(layers, 0.001, 1/x_train.shape[0], NORM_NONE)
+epochs = 19000
 logger = Logger(epochs, frequency=1000)
 logger.set_val_err_fn(lambda: {})
 model.fit(x_train, u_train, epochs, logger=logger)
@@ -67,5 +66,3 @@ plt.show()
 # plt.plot(x_star, u_pred[:, 1], "r--")
 # plt.scatter(x_train, u_train[:, 1],)
 # plt.savefig("results/sin.pdf")
-
-# %%

@@ -6,10 +6,8 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 import numba as nb
-from sklearn.model_selection import train_test_split
 
 from .pod import perform_pod, perform_fast_pod
-from .handling import pack_layers
 from .logger import Logger
 from .tfpbayesneuralnetwork import TFPBayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
@@ -103,14 +101,11 @@ class PodnnModel:
         return X_v
 
     def split_dataset(self, X_v, v, test_size):
-        if not self.has_t:
-            # Randomly splitting the dataset (X_v, v)
-            return train_test_split(X_v, v, test_size=test_size)
-
-        n_st_train = int((1. - test_size) * X_v.shape[0])
-        X_v_train, v_train = X_v[:n_st_train, :], v[:n_st_train, :]
-        X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
-        return X_v_train, X_v_val, v_train, v_val
+        """Randomly splitting the dataset (X_v, v)."""
+        indices = np.random.permutation(X_v.shape[0])
+        limit = np.floor(X_v.shape[0] * test_size).astype(int)
+        train_idx, tst_idx = indices[:limit], indices[limit:]
+        return X_v[train_idx], X_v[tst_idx], v[train_idx], v[tst_idx]
 
     def create_snapshots(self, n_d, n_h, u, mu_lhs,
                          t_min=0, t_max=0, u_noise=0., x_noise=0.):
@@ -143,7 +138,7 @@ class PodnnModel:
         return loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise, x_noise)
 
     def convert_dataset(self, u_mesh, X_v, train_val, eps, eps_init=None,
-                        use_cache=False, save_cache=False):
+                        use_cache=False):
         """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
         if use_cache and os.path.exists(self.train_data_path):
             return self.load_train_data()
@@ -183,7 +178,7 @@ class PodnnModel:
         self.pod_sig = np.stack((U, U_pod), axis=-1).std(-1).mean(-1)
 
         # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_val, v_train, v_val = train_test_split(X_v, v, test_size=train_val[1])
+        X_v_train, X_v_val, v_train, v_val = self.split_dataset(X_v, v, train_val[1])
 
         # Creating the validation snapshots matrix
         U_train = self.V.dot(v_train.T)
@@ -225,7 +220,7 @@ class PodnnModel:
         fake_x = np.zeros_like(mu_lhs)
 
         _, _, mu_lhs_train, mu_lhs_test = \
-             train_test_split(fake_x, mu_lhs, test_size=train_val[1])
+             self.split_dataset(fake_x, mu_lhs, train_val[1])
 
         # Creating the snapshots
         print(f"Generating {n_st} corresponding snapshots")
@@ -293,37 +288,23 @@ class PodnnModel:
         """Convert input into a TensorFlow Tensor with the class dtype."""
         return tf.convert_to_tensor(X, dtype=self.dtype)
 
-    def initBNN(self, h_layers, lr, lam, norm=NORM_MEANSTD):
+    def initBNN(self, h_layers, lr, klw, norm=NORM_MEANSTD):
         """Create the neural net model."""
         self.lr = lr
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.model_path = os.path.join(self.resdir, "vnn.h5")
-        self.regnn = TFPBayesianNeuralNetwork(self.layers, lr, lam, norm)
+        self.regnn = TFPBayesianNeuralNetwork(self.layers, lr, klw, norm)
         self.regnn.summary()
 
-    def train(self, X_v, v, X_v_val, v_val, epochs, train_val, freq=100, silent=False):
+    def train(self, X_v, v, X_v_val, v_val, epochs, freq=100, silent=False):
         """Train the POD-NN's regression model, and save it."""
         if self.regnn is None:
             raise ValueError("Regression model isn't defined.")
 
         # Validation and logging
         logger = Logger(epochs, freq, silent=silent)
-        # U_val = self.V.dot(v_val.T)
-        # U_train = self.V.dot(v_train.T)
         def get_val_err():
             return {}
-            # v_train_pred, _ = self.regnn.predict(X_v_train)
-            # v_val_pred, _ = self.regnn.predict(X_v_val)
-            # v_train_pred = self.regnn.model(X_v_train).mean().numpy()
-            # v_val_pred = self.regnn.predict(X_v_val, samples=5),
-            # U_val_pred = self.V.dot(v_val_pred.T)
-            # U_train_pred = self.V.dot(v_train_pred.T)
-            # return {
-            #     "MSE": tf.reduce_mean(tf.square(v_train - v_train_pred)),
-            #     "MSE_V": tf.reduce_mean(tf.square(v_val[0] - v_val_pred[0])),
-            #     "RE": re_s(U_train, U_train_pred),
-            #     "RE_V": re(v_val[0], v_val_pred[0]),
-            # }
         logger.set_val_err_fn(get_val_err)
 
         # Training
@@ -362,9 +343,9 @@ class PodnnModel:
             tup += (self.n_t,)
         return (self.n_v,) + tup
 
-    def predict_v(self, X_v):
+    def predict_v(self, X_v, samples=100):
         """Return the predicted POD projection coefficients."""
-        v_pred, v_pred_std = self.regnn.predict(X_v)
+        v_pred, v_pred_std = self.regnn.predict(X_v, samples=samples)
         return v_pred, v_pred_std
 
     def predict(self, X_v, samples=10):
@@ -393,14 +374,6 @@ class PodnnModel:
     def project_to_v(self, U):
         return (self.V.T.dot(U)).T
 
-    # def predict(self, X_v):
-    #     """Returns the predicted solutions, via proj coefficients."""
-    #     v_pred, _ = self.predict_v(X_v)
-
-    #     # Retrieving the function with the predicted coefficients
-    #     U_pred = self.V.dot(v_pred.T)
-    #     return U_pred
-
     def predict_sample(self, X_v):
         """Returns the predicted solutions, via proj coefficients."""
         # v_pred, v_pred_mean = self.predict_v(X_v)
@@ -410,50 +383,6 @@ class PodnnModel:
         # Retrieving the function with the predicted coefficients
         U_pred = self.V.dot(v_pred.T)
         return U_pred
-
-    def predict_var(self, X_v):
-        samples = 200
-        U_tot = np.zeros((self.n_h, X_v.shape[0]))
-        U_tot_sq = np.zeros((self.n_h, X_v.shape[0]))
-        for i in range(samples):
-            U = self.predict_sample(X_v)
-            U_tot += U
-            U_tot_sq += U ** 2
-        U_pred_hifi_mean = U_tot / samples
-        U_pred_hifi_mean_sig = np.sqrt((samples*U_tot_sq - U_tot**2) / (samples*(samples - 1)))
-        U_pred_hifi_mean_sig = np.nan_to_num(U_pred_hifi_mean_sig)
-
-        if self.pod_sig is not None:
-            U_pred_hifi_mean_sig += self.pod_sig[:, np.newaxis]
-
-        return U_pred_hifi_mean, U_pred_hifi_mean_sig
-    
-    def predict_heavy(self, X_v):
-        """Returns the predicted solutions, via proj coefficients (large inputs)."""
-        v_pred_hifi = self.regnn.predict_sample(X_v)
-        return self.do_vdot(v_pred_hifi)
-
-    def do_vdot(self, v):
-        """Perform an accelerated dot product, return mean and std."""
-        n_s = v.shape[0]
-        if self.has_t:
-            n_s = int(n_s / self.n_t)
-            U_tot = np.zeros((self.n_h, self.n_t))
-            U_tot_sq = np.zeros((self.n_h, self.n_t))
-            U_tot, U_tot_sq = \
-                loop_vdot_t(n_s, self.n_t, U_tot, U_tot_sq, self.V, v)
-        else:
-            U_tot = np.zeros((self.n_h,))
-            U_tot_sq = np.zeros((self.n_h,))
-            U_tot, U_tot_sq = loop_vdot(n_s, U_tot, U_tot_sq, self.V, v)
-
-        # Getting the mean and std
-        U_pred_hifi_mean = U_tot / n_s
-        U_pred_hifi_std = np.sqrt((n_s*U_tot_sq - U_tot**2) / (n_s*(n_s - 1)))
-        # Making sure the std has non NaNs
-        U_pred_hifi_std = np.nan_to_num(U_pred_hifi_std)
-
-        return U_pred_hifi_mean, U_pred_hifi_std
 
     def load_train_data(self):
         """Load training data, such as datasets."""
@@ -483,7 +412,7 @@ class PodnnModel:
         if not os.path.exists(self.model_params_path):
             raise FileNotFoundError("Can't find cached model params.")
 
-        self.regnn = AdvNeuralNetwork.load_from(self.model_path, self.model_params_path)
+        self.regnn = TFPBayesianNeuralNetwork.load_from(self.model_path, self.model_params_path)
 
     def save_model(self):
         """Save the POD-NN's regression neural network and parameters."""
