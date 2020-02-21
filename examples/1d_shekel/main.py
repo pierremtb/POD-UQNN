@@ -41,7 +41,7 @@ train_res = model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
                         silent=False)
 
 #%% Validation metrics
-U_pred, _ = model.predict(X_v_val)
+U_pred, _ = model.predict(X_v_val, samples=100)
 err_val = re_s(U_val, U_pred)
 print(f"RE_v: {err_val:4f}")
 
@@ -71,7 +71,7 @@ plt.show()
 mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
 X_v_tst, U_tst, _, _ = \
     model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
-U_pred, U_pred_sig = model.predict(X_v_tst)
+U_pred, U_pred_sig = model.predict(X_v_tst, samples=100)
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 #%% Samples graph
@@ -98,7 +98,7 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
     for col, idx_i in enumerate([0, 1, 2]):
         lbl = r"{\scriptscriptstyle\textrm{tst}}" if row == 0 else r"{\scriptscriptstyle\textrm{out}}"
         X_i = X_v_samples[idx_i, :].reshape(1, -1)
-        U_pred_i, U_pred_i_sig = model.predict(X_i)
+        U_pred_i, U_pred_i_sig = model.predict(X_i, samples=100)
         ax = fig.add_subplot(gs[row, col])
         ax.plot(x, U_pred_i, "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
         ax.plot(x, U_samples[:, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
@@ -110,3 +110,6 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
             ax.legend()
 # plt.show()
 savefig("results/graph-samples")
+
+
+# %%
