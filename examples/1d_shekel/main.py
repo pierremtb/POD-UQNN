@@ -47,28 +47,28 @@ print(f"RE_v: {err_val:4f}")
 
 import matplotlib.pyplot as plt
 # v_pred, v_pred_sig = model.predict_v(X_v_val)
-# print(v_pred)
-dist = model.regnn.model(X_v_val)
-v_pred, v_pred_sig = dist.mean().numpy(), np.sqrt(dist.variance())
-print(v_pred.shape)
-x = np.arange(v_pred.shape[1])
-plt.plot(x, v_pred[0])
-plt.plot(x, v_val[0])
-plt.fill_between(x, v_pred[0] - 2*v_pred_sig[0],
-                    v_pred[0] + 2*v_pred_sig[0], alpha=0.3)
-plt.show()
+# # print(v_pred)
+# # dist = model.regnn.model(X_v_val)
+# # v_pred, v_pred_sig = dist.mean().numpy(), np.sqrt(dist.variance())
+# print(v_pred.shape)
+# x = np.arange(v_pred.shape[1])
+# plt.plot(x, v_pred[0])
+# plt.plot(x, v_val[0])
+# plt.fill_between(x, v_pred[0] - 2*v_pred_sig[0],
+#                     v_pred[0] + 2*v_pred_sig[0], alpha=0.3)
+# plt.show()
 
-# U_pred = model.restruct(U_pred)
-# U_val = model.restruct(U_val)
-x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
-# lower = U_pred - 3 * U_pred_sig
-# upper = U_pred + 3 * U_pred_sig
-# plt.fill_between(x, lower[:, 0], upper[:, 0], 
-#                     facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
-plt.plot(x, U_pred[0], "b-")
-plt.plot(x, U_val[0], "r--")
-# plt.plot(x, model.predict(X_v_test)[:, 0])
-plt.show()
+# # U_pred = model.restruct(U_pred)
+# # U_val = model.restruct(U_val)
+# x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+# # lower = U_pred - 3 * U_pred_sig
+# # upper = U_pred + 3 * U_pred_sig
+# # plt.fill_between(x, lower[:, 0], upper[:, 0], 
+# #                     facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
+# plt.plot(x, U_pred[0], "b-")
+# plt.plot(x, U_val[0], "r--")
+# # plt.plot(x, model.predict(X_v_test)[:, 0])
+# plt.show()
 
 #%% Sample the new model to generate a test prediction
 mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))

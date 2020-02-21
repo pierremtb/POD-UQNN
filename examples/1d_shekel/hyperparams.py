@@ -32,11 +32,11 @@ HP["train_val"] = (0.8, 0.2)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64, 64]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 120000
+HP["epochs"] = 60000
 HP["lr"] = 0.005
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 500
+HP["log_frequency"] = 5000
 # Non-spatial params
 # bet = 1/10 * np.array([1, 2, 2, 4, 4, 6, 3, 7, 5, 5])
 # gam = 1. * np.array([4, 1, 8, 6, 3, 2, 5, 8, 6, 7])

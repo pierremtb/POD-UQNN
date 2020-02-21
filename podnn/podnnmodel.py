@@ -9,7 +9,7 @@ import numba as nb
 
 from .pod import perform_pod, perform_fast_pod
 from .logger import Logger
-from .tfpbayesneuralnetwork import TFPBayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
+from .tfpbayesneuralnetworknodist import TFPBayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
 from .metrics import re, re_s
 
@@ -355,7 +355,8 @@ class PodnnModel:
 
         for i in range(samples):
             dist = self.regnn.model(X_v)
-            v_pred, v_pred_var = dist.mean().numpy(), dist.variance().numpy()
+            # v_pred, v_pred_var = dist.mean().numpy(), dist.variance().numpy()
+            v_pred, v_pred_var = dist[0].numpy(), dist[1].numpy()
             U_pred_samples[:, :, i] = self.project_to_U(v_pred)
             U_pred_sig_samples[:, :, i] = self.project_to_U(np.sqrt(v_pred_var))
 
