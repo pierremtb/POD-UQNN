@@ -35,16 +35,16 @@ u_train = u_train + noise_std*np.random.randn(u_train.shape[0], u_train.shape[1]
 
 #%% Model creation
 layers = [1, 20, D]
-model = TFPBayesianNeuralNetwork(layers, 0.001, 1/x_train.shape[0], NORM_NONE)
-epochs = 19000
-logger = Logger(epochs, frequency=1000)
+model = TFPBayesianNeuralNetwork(layers, 0.05, 1/x_train.shape[0], NORM_NONE)
+epochs = 6000
+logger = Logger(epochs, frequency=100)
 logger.set_val_err_fn(lambda: {})
 model.fit(x_train, u_train, epochs, logger=logger)
 
 #%% Predictions and plotting
-u_pred, u_pred_var = model.predict(x_star)
-lower = u_pred - 2 * np.sqrt(u_pred_var)
-upper = u_pred + 2 * np.sqrt(u_pred_var)
+u_pred, u_pred_std = model.predict(x_star)
+lower = u_pred - 2 * u_pred_std
+upper = u_pred + 2 * u_pred_std
 
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
 plt.fill_between(x_star[:, 0], lower[:, 0], upper[:, 0], 
@@ -66,3 +66,6 @@ plt.show()
 # plt.plot(x_star, u_pred[:, 1], "r--")
 # plt.scatter(x_train, u_train[:, 1],)
 # plt.savefig("results/sin.pdf")
+
+
+# %%
