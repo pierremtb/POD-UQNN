@@ -65,6 +65,8 @@ z = np.ascontiguousarray(np.zeros_like(x))
 
 # Exporting
 idx = np.random.choice(U_pred.shape[-1], 2)
+idx = [50, 250]
+print(f"Samples are {X_v_tst[idx[0]]}, {X_v_tst[idx[1]]}")
 unstructuredGridToVTK(os.path.join("cache", "x_u_tst_pred"),
                         x, y, z,
                         connectivity, offsets, cell_types,
@@ -76,13 +78,13 @@ unstructuredGridToVTK(os.path.join("cache", "x_u_tst_pred"),
                             "U_1": np.ascontiguousarray(np.sqrt(U_tst[1, :, idx[1]]**2 + U_tst[2, :, idx[1]]**2)),
                             "h_0": np.ascontiguousarray(U_tst[0, :, idx[0]]),
                             "h_0_pred": np.ascontiguousarray(U_pred[0, :, idx[0]]),
-                            "h_0_pred_up": np.ascontiguousarray(U_pred[0, :, idx[0]] + 3*U_pred_sig[0, :, idx[0]]),
-                            "h_0_pred_lo": np.ascontiguousarray(U_pred[0, :, idx[0]] - 3*U_pred_sig[0, :, idx[0]]),
+                            "h_0_pred_up": np.ascontiguousarray(U_pred[0, :, idx[0]] + 2*U_pred_sig[0, :, idx[0]]),
+                            "h_0_pred_lo": np.ascontiguousarray(U_pred[0, :, idx[0]] - 2*U_pred_sig[0, :, idx[0]]),
                             "h_0_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[0]]),
                             "h_1": np.ascontiguousarray(U_tst[0, :, idx[1]]),
                             "h_1_pred": np.ascontiguousarray(U_pred[0, :, idx[1]]),
-                            "h_1_pred_up": np.ascontiguousarray(U_pred[0, :, idx[1]] + 3*U_pred_sig[0, :, idx[1]]),
-                            "h_1_pred_lo": np.ascontiguousarray(U_pred[0, :, idx[1]] - 3*U_pred_sig[0, :, idx[1]]),
+                            "h_1_pred_up": np.ascontiguousarray(U_pred[0, :, idx[1]] + 2*U_pred_sig[0, :, idx[1]]),
+                            "h_1_pred_lo": np.ascontiguousarray(U_pred[0, :, idx[1]] - 2*U_pred_sig[0, :, idx[1]]),
                             "h_1_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[1]]),
                             "hu_0": np.ascontiguousarray(U_tst[1, :, idx[0]]),
                             "hu_0_pred": np.ascontiguousarray(U_pred[1, :, idx[0]]),
@@ -99,45 +101,3 @@ unstructuredGridToVTK(os.path.join("cache", "x_u_tst_pred"),
                             })
 print("Exported. ParaView processing is now needed to create x_u_tst_pred.csv")
 
-#%% Plotting
-exit(0)
-csv_file = os.path.join("cache", "x_u_tst_pred.csv")
-print("Reading paraview results")
-results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
-x_line = results[:, 21]
-idx = [(0, 1, 2, 3, 4, 5), (8, 9, 10, 11, 12, 13), (14, 15, 16, 17, 18, 19)]
-y_axis = ["$h$", "$(hu)$", "$(hv)$"]
-
-print("Plotting")
-n_plot_x = 2
-n_plot_y = 3
-fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
-gs = fig.add_gridspec(n_plot_x, n_plot_y)
-for col, idx_i in enumerate(idx):
-    lbl = r"{\scriptscriptstyle\textrm{tst},1}"
-    ax = fig.add_subplot(gs[0, col])
-    ax.plot(x_line, results[:, idx[col][1]], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
-    ax.plot(x_line, results[:, idx[col][0]], "r--", label=r"$u_D(s_{" + lbl + r"})$")
-    lower = results[:, idx[col][1]] - 3*results[:, idx[col][2]]
-    upper = results[:, idx[col][1]] + 3*results[:, idx[col][2]]
-    ax.fill_between(x_line, lower, upper, alpha=0.2, label=r"$3\sigma_D(s_{" + lbl + r"})$")
-    ax.set_xlabel("$x'$")
-    ax.set_ylabel(y_axis[col])
-    if col == len(idx) - 1:
-        ax.legend()
-
-    lbl = r"{\scriptscriptstyle\textrm{tst},2}"
-    ax = fig.add_subplot(gs[1, col])
-    ax.plot(x_line, results[:, idx[col][4]], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
-    ax.plot(x_line, results[:, idx[col][3]], "r--", label=r"$u_D(s_{" + lbl + r"})$")
-    lower = results[:, idx[col][4]] - 3*results[:, idx[col][5]]
-    upper = results[:, idx[col][4]] + 3*results[:, idx[col][5]]
-    ax.fill_between(x_line, lower, upper, alpha=0.2, label=r"$3\sigma_D(s_{" + lbl + r"})$")
-    ax.set_xlabel("$x'$")
-    ax.set_ylabel(y_axis[col])
-    if col == len(idx) - 1:
-        ax.legend()
-
-plt.tight_layout()
-# plt.show()
-savefig("cache/podnn-sw-graph-samples")

@@ -456,6 +456,7 @@ class PodnnModel:
 
         if self.pod_sig is not None:
             U_pred_sig += self.pod_sig[:, np.newaxis]
+            print(self.pod_sig)
 
         return U_pred.astype(self.dtype), U_pred_sig.astype(self.dtype)
 
