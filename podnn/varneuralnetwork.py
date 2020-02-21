@@ -111,11 +111,6 @@ class VarNeuralNetwork:
         del tape
         return loss_value, grads
 
-    def compute_model(self, X):
-        res = self.model(X)
-        idx = int(self.layers[-1] / 2)
-        return res[:idx], res[idx:]
-
     def wrap_training_variables(self):
         """Convenience method. Should be extended if needed."""
         var = self.model.trainable_variables
@@ -202,8 +197,7 @@ class VarNeuralNetwork:
 
         print(f"Loading model from {model_path}")
         with open(params_path, "rb") as f:
-            layers, lam, lr, norm, norm_bounds = pickle.load(f)
+            layers, lr, lam, norm, norm_bounds = pickle.load(f)
         print(f"Loading model params from {params_path}")
         model = tf.keras.models.load_model(model_path)
-        return cls(layers, lam, lr, model=model, norm=norm, norm_bounds=norm_bounds
-        )
+        return cls(layers, lr, lam, model=model, norm=norm, norm_bounds=norm_bounds)
