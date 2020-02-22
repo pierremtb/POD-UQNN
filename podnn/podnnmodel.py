@@ -9,7 +9,7 @@ import numba as nb
 
 from .pod import perform_pod, perform_fast_pod
 from .logger import Logger
-from .tfpbayesneuralnetworknodist import TFPBayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
+from .vineuralnetwork import VINeuralNetwork, NORM_MEANSTD, NORM_NONE
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
 from .metrics import re, re_s
 
@@ -293,7 +293,7 @@ class PodnnModel:
         self.lr = lr
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.model_path = os.path.join(self.resdir, "vnn.h5")
-        self.regnn = TFPBayesianNeuralNetwork(self.layers, lr, klw, norm)
+        self.regnn = VINeuralNetwork(self.layers, lr, klw, norm=norm)
         self.regnn.summary()
 
     def train(self, X_v, v, X_v_val, v_val, epochs, freq=100, silent=False):
@@ -354,14 +354,16 @@ class PodnnModel:
         U_pred_sig_samples = np.zeros((self.n_h, X_v.shape[0], samples))
 
         for i in range(samples):
-            dist = self.regnn.model(X_v)
+            v_pred = self.regnn.model(X_v).numpy()
+            # dist = self.regnn.model(X_v)
             # v_pred, v_pred_var = dist.mean().numpy(), dist.variance().numpy()
-            v_pred, v_pred_var = dist[0].numpy(), dist[1].numpy()
+            # v_pred, v_pred_var = dist[0].numpy(), dist[1].numpy()
             U_pred_samples[:, :, i] = self.project_to_U(v_pred)
-            U_pred_sig_samples[:, :, i] = self.project_to_U(np.sqrt(v_pred_var))
+            # U_pred_sig_samples[:, :, i] = self.project_to_U(np.sqrt(v_pred_var))
 
         U_pred = U_pred_samples.mean(-1)
-        U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(-1) - U_pred ** 2
+        U_pred_var = U_pred_samples.var(-1)
+        # U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(-1) - U_pred ** 2
         U_pred_sig = np.sqrt(U_pred_var)
 
         if self.pod_sig is not None:

@@ -45,8 +45,7 @@ class TFPBayesianNeuralNetwork:
 
     def build_model(self):
         """Descriptive Keras model."""
-        # # Specify the surrogate posterior over `keras.layers.Dense` `kernel` and `bias`.
-        def posterior_mean_field(kernel_size, bias_size=0, dtype=None):
+        def posterior(kernel_size, bias_size=0, dtype=None):
             n = kernel_size + bias_size
             c = np.log(np.expm1(1.))
             return tf.keras.Sequential([
@@ -57,11 +56,10 @@ class TFPBayesianNeuralNetwork:
                     reinterpreted_batch_ndims=1)),
             ])
             
-        # Specify the prior over `keras.layers.Dense` `kernel` and `bias`.
         def prior(kernel_size, bias_size=0, dtype=None):
             n = kernel_size + bias_size
             return tf.keras.Sequential([
-                tfp.layers.VariableLayer(n, dtype=dtype, trainable=False),
+                tfp.layers.VariableLayer(n, dtype=dtype),
                 tfp.layers.DistributionLambda(lambda t: tfd.Independent(
                     tfd.Normal(loc=t, scale=1), reinterpreted_batch_ndims=1)),
             ])
@@ -70,21 +68,16 @@ class TFPBayesianNeuralNetwork:
             tfk.layers.InputLayer((self.layers[0],)),
             # *[tfk.layers.Dense(width, activation="softplus")
             #     for width in self.layers[1:-1]],
-            # tfk.layers.Dense(self.layers[-1] * 2),
-            *[tfp.layers.DenseVariational(width, posterior_mean_field, prior,
+            *[tfp.layers.DenseVariational(width, posterior, prior,
                                           activation="relu", kl_weight=self.klw)
                 for width in self.layers[1:-1]],
-            tfp.layers.DenseVariational(self.layers[-1] * 2, posterior_mean_field, prior, kl_weight=self.klw),
+            # tfk.layers.Dense(self.layers[-1] * 2),
+            tfp.layers.DenseVariational(self.layers[-1] * 2, posterior, prior, kl_weight=self.klw),
             tfp.layers.DistributionLambda(
                 lambda t: tfd.Normal(loc=t[..., :self.layers[-1]],
                                     scale=1e-3 + tf.math.softplus(0.01 * t[..., self.layers[-1]:]))),
         ])
 
-        # Loss: negative log likelihood (of seeing y)
-        negloglik = lambda y, rv_y: -tf.reduce_mean(rv_y.log_prob(y))
-        # negloglik = lambda y, rv_y: -rv_y.log_prob(y)
-
-        model.compile(optimizer=tf.optimizers.Adam(self.lr), loss=negloglik)
         return model
 
     def set_normalize_bounds(self, X):
@@ -110,6 +103,50 @@ class TFPBayesianNeuralNetwork:
 
         return self.tensor(X)
 
+    @tf.function
+    def loss(self, y, y_pred):
+        """Return the Gaussian NLL loss function between the pred and val."""
+        return tf.reduce_sum(-y_pred.log_prob(y))
+        # y_pred_mean = y_pred[0]
+        # y_pred_var = y_pred[1]
+        # return tf.reduce_mean(tf.math.log(y_pred_var) / 2) + \
+        #        tf.reduce_mean(tf.divide(tf.square(y -  y_pred_mean), 2*y_pred_var))
+
+    @tf.function
+    def grad(self, X, v):
+        """Compute the loss and its derivatives w.r.t. the inputs."""
+        with tf.GradientTape(persistent=True) as tape:
+            tape.watch(X)
+            loss_value = self.loss(v, self.model(X))
+            # if self.adv_eps is not None:
+            #     loss_x = tape.gradient(loss_value, X)
+            #     X_adv = X + self.adv_eps * tf.math.sign(loss_x)
+            #     loss_value += self.loss(v, self.model(X_adv))
+        grads = tape.gradient(loss_value, self.wrap_training_variables())
+        del tape
+        return loss_value, grads
+
+    def wrap_training_variables(self):
+        """Convenience method. Should be extended if needed."""
+        var = self.model.trainable_variables
+        return var
+
+    def tf_optimization(self, X_v, v, tf_epochs, nolog=False):
+        """Run the training loop."""
+        for epoch in range(tf_epochs):
+            loss_value = self.tf_optimization_step(X_v, v)
+            if not nolog:
+                self.logger.log_train_epoch(epoch, loss_value)
+        return loss_value
+
+    @tf.function
+    def tf_optimization_step(self, X_v, v):
+        """For each epoch, get loss+grad and backpropagate it."""
+        loss_value, grads = self.grad(X_v, v)
+        self.tf_optimizer.apply_gradients(
+            zip(grads, self.wrap_training_variables()))
+        return loss_value
+
     def fit(self, X_v, v, epochs, logger):
         """Train the model over a given dataset, and parameters."""
         # Setting up logger
@@ -122,7 +159,8 @@ class TFPBayesianNeuralNetwork:
         v = self.tensor(v)
 
         # Optimizing
-        self.model.fit(X_v, v, epochs=epochs, verbose=0, callbacks=[MyCallback(logger)])
+        self.tf_optimization(X_v, v, epochs)
+        # self.model.fit(X_v, v, epochs=epochs, verbose=0, callbacks=[MyCallback(logger)])
 
         self.logger.log_train_end(epochs, np.array(0.))
 
