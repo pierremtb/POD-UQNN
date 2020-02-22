@@ -12,7 +12,6 @@ import numba as nb
 from .pod import perform_pod, perform_fast_pod
 from .handling import pack_layers
 from .logger import Logger
-from .advneuralnetwork import AdvNeuralNetwork, NORM_MEANSTD
 from .varneuralnetwork import VarNeuralNetwork
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
 from .metrics import re, re_s
@@ -310,7 +309,7 @@ class PodnnModel:
         layers_t = [X_dim+Y_dim, *h_layers_t, 1]
         self.layers = (layers_p, layers_q, layers_t)
 
-        self.regnn = [AdvNeuralNetwork(self.layers, gan_dims,
+        self.regnn = [varneuralnetwork(self.layers, gan_dims,
                                       lr, lam, bet, k1, k2, norm)]
 
     def initVNNs(self, n_M, h_layers, lr, lam, adv_eps, norm=NORM_MEANSTD):

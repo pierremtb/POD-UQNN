@@ -6,13 +6,11 @@ import os
 import yaml
 import numpy as np
 import tensorflow as tf
-import horovod.tensorflow as hvd
 
 tf.get_logger().setLevel('WARNING')
 tf.autograph.set_verbosity(1)
 
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
@@ -23,7 +21,7 @@ from podnn.varneuralnetwork import VarNeuralNetwork
 from podnn.metrics import re_mean_std, re_max
 from podnn.mesh import create_linear_mesh
 from podnn.logger import Logger
-from podnn.advneuralnetwork import NORM_MEANSTD, NORM_NONE
+from podnn.varneuralnetwork import NORM_MEANSTD, NORM_NONE
 from podnn.plotting import figsize
 
 # Loading data

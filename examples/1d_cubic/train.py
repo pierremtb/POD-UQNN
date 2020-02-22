@@ -21,7 +21,7 @@ from podnn.varneuralnetwork import VarNeuralNetwork
 from podnn.metrics import re_mean_std, re_max
 from podnn.mesh import create_linear_mesh
 from podnn.logger import Logger
-from podnn.advneuralnetwork import NORM_MEANSTD, NORM_NONE
+from podnn.varneuralnetwork import NORM_MEANSTD, NORM_NONE
 from podnn.plotting import figsize
 from podnn.handling import check_distributed_args
 
