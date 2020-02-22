@@ -75,7 +75,7 @@ model = tfk.models.Sequential([
     ),
     tfp.layers.DenseVariational(
         units=2,
-        activation="linear"
+        activation="linear",
         make_posterior_fn=posterior_mean_field,
         make_prior_fn=prior_trainable,
         kl_weight=1/N,
@@ -84,7 +84,7 @@ model = tfk.models.Sequential([
     tfp.layers.DistributionLambda(lambda t:
         tfd.Normal(
             loc=t[..., :1],
-            scale=1e-3 + tf.math.softplus(1. * t[..., 1:]),
+            scale=1e-3 + tf.math.softplus(0.01 * t[..., 1:]),
         ),
         # tfd.Normal(
         #     loc=t,
@@ -94,7 +94,7 @@ model = tfk.models.Sequential([
 ])
 lr = 0.01
 model.compile(loss=lambda y, model: -model.log_prob(y), optimizer=tfk.optimizers.Adam(lr))
-epochs = 3000
+epochs = 5000
 model.fit(x, y, epochs=epochs, verbose=0)
 
 # yhat = model(x_tst)
