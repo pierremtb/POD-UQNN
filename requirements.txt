@@ -6,3 +6,5 @@ numba==0.46.0
 pandas==0.25.3
 pyevtk==1.1.1
 PyYAML==5.1.2
+
+# tensorflow-probability matplotlib numba pandas pyevtk pyyaml horovod

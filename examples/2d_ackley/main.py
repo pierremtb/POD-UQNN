@@ -1,4 +1,4 @@
-"""POD-NN modeling for 1D Shekel Equation."""
+"""POD-NN modeling for 2D Ackley Equation."""
 #%% Import
 import sys
 import os
@@ -129,6 +129,7 @@ bnn.fit(normalize(X_v_train), v_train, epochs=epochs,
           verbose=0, callbacks=[LoggerCallback(logger)])
 
 model.regnn = bnn
+n_h = U_val.shape[0]
 
 #%%
 def predict_v(X, samples=20):
@@ -136,10 +137,20 @@ def predict_v(X, samples=20):
     v_pred = np.array([yhat.mean().numpy() for _ in range(samples)]).mean(0)
     return v_pred, np.zeros_like(v_pred)
 def predict(X, samples=20):
-    yhat = bnn(normalize(X))
-    v_pred = np.array([yhat.mean().numpy() for _ in range(samples)]).mean(0)
-    U_pred = model.project_to_U(v_pred)
-    return U_pred, np.zeros_like(U_pred)
+    U_pred_samples = np.zeros((model.n_h, X.shape[0], samples))
+    U_pred_sig_samples = np.zeros((model.n_h, X.shape[0], samples))
+
+    for i in range(samples):
+        v_dist = bnn(normalize(X))
+        v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
+        U_pred_samples[:, :, i] = model.project_to_U(v_pred)
+        U_pred_sig_samples[:, :, i] = model.project_to_U(np.sqrt(v_pred_var))
+
+    U_pred = U_pred_samples.mean(-1)
+    U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(-1) - U_pred ** 2
+    U_pred_sig = np.sqrt(U_pred_var)
+
+    return U_pred.astype(model.dtype), U_pred_sig.astype(model.dtype)
 
 v_pred, _ = predict_v(X_v_val)
 U_pred = model.project_to_U(v_pred)
@@ -208,7 +219,7 @@ plt.show()
 mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
 X_v_tst, U_tst, _, _ = \
     model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
-U_pred, U_pred_sig = model.predict(X_v_tst)
+U_pred, U_pred_sig = predict(X_v_tst)
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 #%% Samples graph
@@ -246,8 +257,8 @@ ax.axis("equal")
 ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
 ax.set_xlabel("$x$")
 ax.set_ylabel("$y$")
-# plt.show()
-savefig("results/graph-means")
+plt.show()
+# savefig("results/graph-means")
 
 #%% Slices
 n_plot_x = 2
@@ -264,7 +275,7 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
     for col, idx_i in enumerate(idx):
         lbl = r"{\scriptscriptstyle\textrm{tst}}" if row == 0 else r"{\scriptscriptstyle\textrm{out}}"
         X_i = X_v_samples[idx_i, :].reshape(1, -1)
-        U_pred_i, U_pred_i_sig = model.predict(X_i)
+        U_pred_i, U_pred_i_sig = predict(X_i)
         U_pred_i = np.reshape(U_pred_i, (hp["n_x"], hp["n_y"], -1))
         U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_x"], hp["n_y"], -1))
         ax = fig.add_subplot(gs[row, col])
@@ -277,5 +288,8 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         if col == len(idx) - 1:
             ax.legend()
 plt.tight_layout()
-# plt.show()
-savefig("results/graph-samples")
+plt.show()
+# savefig("results/graph-samples")
+
+
+# %%

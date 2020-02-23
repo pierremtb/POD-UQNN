@@ -45,6 +45,8 @@ HP["log_frequency"] = 1000
 # Non-spatial params
 HP["mu_min"] = [-1., -1., -1.]
 HP["mu_max"] = [+1., +1., +1.]
+HP["mu_min_out"] = [-2., -2., -2.]
+HP["mu_max_out"] = [+2., +2., +2.]
 
 
 # np.random.seed(1111)
