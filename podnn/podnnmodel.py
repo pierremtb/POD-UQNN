@@ -9,7 +9,7 @@ import numba as nb
 
 from .pod import perform_pod, perform_fast_pod
 from .logger import Logger
-from .vineuralnetwork import VINeuralNetwork, NORM_MEANSTD, NORM_NONE
+from .bayesianneuralnetwork import BayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
 from .metrics import re, re_s
 
@@ -293,7 +293,7 @@ class PodnnModel:
         self.lr = lr
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.model_path = os.path.join(self.resdir, "vnn.h5")
-        self.regnn = VINeuralNetwork(self.layers, lr, klw, norm=norm)
+        self.regnn = BayesianNeuralNetwork(self.layers, lr, klw, norm=norm)
         self.regnn.summary()
 
     def train(self, X_v, v, X_v_val, v_val, epochs, freq=100, silent=False):
@@ -303,12 +303,13 @@ class PodnnModel:
 
         # Validation and logging
         logger = Logger(epochs, freq, silent=silent)
-        def get_val_err():
-            return {}
-        logger.set_val_err_fn(get_val_err)
+        logger.set_val_err_fn(lambda: {
+            "RE_v": re_s(v_val.T, self.regnn.predict_dist(X_v_val).mean().numpy().T),
+            "std": tf.reduce_sum(self.regnn.predict_dist(X_v_val).mean().numpy().std(0)),
+        })
 
         # Training
-        self.regnn.fit(X_v, v, epochs, logger)
+        self.regnn.fit(X_v, v, epochs, logger, batch_size=X_v.shape[0])
 
         # Saving
         # self.save_model()
@@ -343,31 +344,24 @@ class PodnnModel:
             tup += (self.n_t,)
         return (self.n_v,) + tup
 
-    def predict_v(self, X_v, samples=100):
-        """Return the predicted POD projection coefficients."""
-        v_pred, v_pred_std = self.regnn.predict(X_v, samples=samples)
-        return v_pred, v_pred_std
+    def predict_v(self, X, samples=20):
+        yhat = self.regnn.predict_dist(X)
+        v_pred = np.array([yhat.mean().numpy() for _ in range(samples)]).mean(0)
+        return v_pred, np.zeros_like(v_pred)
 
-    def predict(self, X_v, samples=10):
-        """Return the predicted POD projection coefficients."""
-        U_pred_samples = np.zeros((self.n_h, X_v.shape[0], samples))
-        U_pred_sig_samples = np.zeros((self.n_h, X_v.shape[0], samples))
+    def predict(self, X, samples=20):
+        U_pred_samples = np.zeros((self.n_h, X.shape[0], samples))
+        U_pred_sig_samples = np.zeros((self.n_h, X.shape[0], samples))
 
         for i in range(samples):
-            v_pred = self.regnn.model(X_v).numpy()
-            # dist = self.regnn.model(X_v)
-            # v_pred, v_pred_var = dist.mean().numpy(), dist.variance().numpy()
-            # v_pred, v_pred_var = dist[0].numpy(), dist[1].numpy()
+            v_dist = self.regnn.predict_dist(X)
+            v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
             U_pred_samples[:, :, i] = self.project_to_U(v_pred)
-            # U_pred_sig_samples[:, :, i] = self.project_to_U(np.sqrt(v_pred_var))
+            U_pred_sig_samples[:, :, i] = self.project_to_U(np.sqrt(v_pred_var))
 
         U_pred = U_pred_samples.mean(-1)
-        U_pred_var = U_pred_samples.var(-1)
-        # U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(-1) - U_pred ** 2
+        U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(-1) - U_pred ** 2
         U_pred_sig = np.sqrt(U_pred_var)
-
-        if self.pod_sig is not None:
-            U_pred_sig += self.pod_sig[:, np.newaxis]
 
         return U_pred.astype(self.dtype), U_pred_sig.astype(self.dtype)
 
@@ -415,7 +409,7 @@ class PodnnModel:
         if not os.path.exists(self.model_params_path):
             raise FileNotFoundError("Can't find cached model params.")
 
-        self.regnn = TFPBayesianNeuralNetwork.load_from(self.model_path, self.model_params_path)
+        self.regnn = BayesianNeuralNetwork.load_from(self.model_path, self.model_params_path)
 
     def save_model(self):
         """Save the POD-NN's regression neural network and parameters."""

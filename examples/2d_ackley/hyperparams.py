@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 
-from podnn.tfpbayesneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
+from podnn.bayesianneuralnetwork import NORM_MINMAX
 
 
 HP = {}
@@ -20,26 +20,20 @@ HP["y_max"] = +5.
 HP["n_t"] = 0
 # Snapshots count
 HP["n_s"] = 500
-HP["n_s_tst"] = int(5e2)
+HP["n_s_tst"] = 300
 # POD stopping param
 HP["eps"] = 0
-HP["n_L"] = 5
+HP["n_L"] = 15
 HP["x_noise"] = 0.
 HP["u_noise"] = 0.
 # Train/val split
-HP["train_val"] = (3/5, 1/5, 1/5)
+HP["train_val"] = (.8, .2)
 # DeepNN Topology
-HP["h_layers"] = [50, 50, 50, 50]
-HP["h_layers_t"] = [50]
+HP["h_layers"] = [40, 40]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 390000
-HP["lr"] = 0.0001
-HP["lambda"] = 1.5
-HP["beta"] = 0
-HP["k1"] = 1
-HP["k2"] = 5
-HP["norm"] = NORM_MEANSTD
-# HP["norm"] = NORM_CENTER
+HP["epochs"] = 10000
+HP["lr"] = 0.01
+HP["norm"] = NORM_MINMAX
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Non-spatial params
