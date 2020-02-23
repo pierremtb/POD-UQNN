@@ -35,7 +35,6 @@ np.save(os.path.join(resdir, "x_mesh.npy"), x_mesh)
 model = PodnnModel(resdir, hp["n_v"], x_mesh, hp["n_t"])
 
 #%% Generate the dataset from the mesh and params
-hp["n_L"] = 15
 X_v_train, v_train, _, \
     X_v_val, v_val, U_val = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                                     hp["n_s"],
@@ -43,115 +42,13 @@ X_v_train, v_train, _, \
                                                     eps=hp["eps"], n_L=hp["n_L"],
                                                     t_min=hp["t_min"], t_max=hp["t_max"],
                                                     x_noise=hp["x_noise"])
-N = hp["n_s"]
-n_L = hp["n_L"]
-#%% Model creation
-def normalize(X):
-    return (X - X_v_train.min(0)) / (X_v_train.max(0) - X_v_train.min(0))
-def prior_trainable(kernel_size, bias_size=0, dtype=None):
-    n = kernel_size + bias_size
-    return tfk.models.Sequential([
-        tfp.layers.VariableLayer(n, dtype=dtype, trainable=False),
-        # tfp.layers.VariableLayer(n, dtype=dtype, trainable=True),
-        tfp.layers.DistributionLambda(lambda t: tfd.Independent(
-            tfd.Normal(loc=t, scale=1),
-            reinterpreted_batch_ndims=1,
-        ))
-    ])
 
-def posterior_mean_field(kernel_size, bias_size=0, dtype=None):
-    n = kernel_size + bias_size
-    c = tf.math.log(tf.math.expm1(tf.constant(1., dtype=dtype)))
-    return tfk.models.Sequential([
-        tfp.layers.VariableLayer(2 * n, dtype=dtype),
-        tfp.layers.DistributionLambda(lambda t: tfd.Independent(
-            tfd.Normal(
-                loc=t[..., :n],
-                scale=1e-5 + 1. * tf.math.softplus(c + t[..., n:]),
-            ),
-            reinterpreted_batch_ndims=1,
-        ))
-    ])
-klw = 1/(N)
-bnn = tfk.models.Sequential([
-    # tfk.layers.Dense(8, activation="linear"),
-    # tfk.layers.Dense(2, activation="linear"),
-    tfp.layers.DenseVariational(
-        units=40,
-        activation="relu",
-        make_posterior_fn=posterior_mean_field,
-        make_prior_fn=prior_trainable,
-        kl_weight=klw,
-        dtype=dtype,
-    ),
-    tfp.layers.DenseVariational(
-        units=40,
-        activation="relu",
-        make_posterior_fn=posterior_mean_field,
-        make_prior_fn=prior_trainable,
-        kl_weight=klw,
-        dtype=dtype,
-    ),
-    tfp.layers.DenseVariational(
-        units=2 * n_L,
-        activation="linear",
-        make_posterior_fn=posterior_mean_field,
-        make_prior_fn=prior_trainable,
-        kl_weight=klw,
-        dtype=dtype,
-    ),
-    tfp.layers.DistributionLambda(lambda t:
-        tfd.MultivariateNormalDiag(
-            loc=t[..., :n_L],
-            scale_diag=1e-5 + tf.math.softplus(0.01 * t[..., n_L:]),
-        ),
-        # tfd.Normal(
-        #     loc=t,
-        #     scale=1,
-        # ),
-    ),
-])
-lr = 0.01
-# bnn.compile(loss=lambda y, yhat: -tf.reduce_mean(yhat.log_prob(y)),
-#               optimizer=tfk.optimizers.Adam(lr))
-bnn.compile(loss=lambda y, yhat: -tf.reduce_sum(yhat.log_prob(y)),
-              optimizer=tfk.optimizers.Adam(lr))
-epochs = 10000
-freq = 1000
-logger = Logger(epochs, freq)
-X_v_val_n = normalize(X_v_val)
-logger.set_val_err_fn(lambda: {
-    "RE_v": re_s(v_val.T, bnn(X_v_val).mean().numpy().T),
-    "std": tf.reduce_sum(bnn(normalize(X_v_val)).mean().numpy().std(0)),
-    })
-bnn.fit(normalize(X_v_train), v_train, epochs=epochs,
-          verbose=0, callbacks=[LoggerCallback(logger)])
+#%% Train
+model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0], hp["norm"])
+model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"], freq=hp["log_frequency"])
 
-model.regnn = bnn
-n_h = U_val.shape[0]
-
-#%%
-def predict_v(X, samples=20):
-    yhat = bnn(normalize(X))
-    v_pred = np.array([yhat.mean().numpy() for _ in range(samples)]).mean(0)
-    return v_pred, np.zeros_like(v_pred)
-def predict(X, samples=20):
-    U_pred_samples = np.zeros((model.n_h, X.shape[0], samples))
-    U_pred_sig_samples = np.zeros((model.n_h, X.shape[0], samples))
-
-    for i in range(samples):
-        v_dist = bnn(normalize(X))
-        v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
-        U_pred_samples[:, :, i] = model.project_to_U(v_pred)
-        U_pred_sig_samples[:, :, i] = model.project_to_U(np.sqrt(v_pred_var))
-
-    U_pred = U_pred_samples.mean(-1)
-    U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(-1) - U_pred ** 2
-    U_pred_sig = np.sqrt(U_pred_var)
-
-    return U_pred.astype(model.dtype), U_pred_sig.astype(model.dtype)
-
-v_pred, _ = predict_v(X_v_val)
+#%% Generate the dataset from the mesh and params
+v_pred, _ = model.predict_v(X_v_val)
 U_pred = model.project_to_U(v_pred)
 
 err_val = re_s(U_val, U_pred)
@@ -159,60 +56,11 @@ print(f"RE_v: {err_val:4f}")
 err_val = re_s(v_val.T, v_pred.T)
 print(f"RE_v: {err_val:4f}")
 #%%
-yhat = bnn(normalize(X_v_val))
+yhat = model.regnn.predict_dist(X_v_val)
 for i in [0, 1]:
     plt.plot(yhat[i].numpy(), "b-")
     plt.plot(v_val[i], "r--")
 plt.show()
-
-#%%
-# y_pred_list = []
-# y_pred_var_list = []
-# for i in range(200):
-#     yhat = model(x_tst)
-#     y_pred_list.append(yhat.mean().numpy())
-#     y_pred_var_list.append(yhat.variance().numpy())
-
-# u_pred = np.array(y_pred_list).mean(0)
-# u_pred_var = (np.array(y_pred_list)**2 + np.array(y_pred_var_list)).mean(0) - np.array(y_pred_list).mean(0) ** 2
-# u_pred_sig = np.sqrt(u_pred_var)
-#%% Train
-# model.initBNN(hp["h_layers"],
-#                 hp["lr"], 1/X_v_train.shape[0],
-#                 hp["norm"])
-# train_res = model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
-#                         freq=hp["log_frequency"],
-#                         silent=False)
-
-#%% Validation metrics
-# U_pred, _ = model.predict(X_v_val, samples=100)
-# err_val = re_s(U_val, U_pred)
-# print(f"RE_v: {err_val:4f}")
-
-# import matplotlib.pyplot as plt
-# v_pred, v_pred_sig = model.predict_v(X_v_val)
-# # print(v_pred)
-# # dist = model.regnn.model(X_v_val)
-# # v_pred, v_pred_sig = dist.mean().numpy(), np.sqrt(dist.variance())
-# print(v_pred.shape)
-# x = np.arange(v_pred.shape[1])
-# plt.plot(x, v_pred[0])
-# plt.plot(x, v_val[0])
-# plt.fill_between(x, v_pred[0] - 2*v_pred_sig[0],
-#                     v_pred[0] + 2*v_pred_sig[0], alpha=0.3)
-# plt.show()
-
-# # U_pred = model.restruct(U_pred)
-# # U_val = model.restruct(U_val)
-# x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
-# # lower = U_pred - 3 * U_pred_sig
-# # upper = U_pred + 3 * U_pred_sig
-# # plt.fill_between(x, lower[:, 0], upper[:, 0], 
-# #                     facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
-# plt.plot(x, U_pred[0], "b-")
-# plt.plot(x, U_val[0], "r--")
-# # plt.plot(x, model.predict(X_v_test)[:, 0])
-# plt.show()
 
 #%% Sample the new model to generate a test prediction
 mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
@@ -225,8 +73,6 @@ U_tst = model.restruct(U_tst)[0]
 U_pred = model.restruct(U_pred)[0]
 
 #%% Samples graph
-hp["mu_min_out"] = [0.0005]
-hp["mu_max_out"] = [0.0105]
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import griddata
 n_samples = 3

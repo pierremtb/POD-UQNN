@@ -3,11 +3,9 @@
 import sys
 import os
 import numpy as np
-import tensorflow as tf
-from collections import OrderedDict
 
 sys.path.append(os.path.join("..", ".."))
-from podnn.tfpbayesneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
+from podnn.bayesianneuralnetwork import NORM_MINMAX
 
 
 HP = {}
@@ -23,20 +21,20 @@ HP["n_t"] = 0
 HP["n_s"] = 500
 HP["n_s_tst"] = 300
 # POD stopping param
-HP["eps"] = 1e-10
-HP["n_L"] = 0
+HP["eps"] = 0
+HP["n_L"] = 15
 HP["x_noise"] = 0.
 HP["u_noise"] = 0.
 # Train/val split
-HP["train_val"] = (0.8, 0.2)
-# Deep NN hidden layers topology
-HP["h_layers"] = [128, 128, 128]
+HP["train_val"] = (.8, .2)
+# DeepNN Topology
+HP["h_layers"] = [40, 40, 40, 40]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 36000
+HP["epochs"] = 13000
 HP["lr"] = 0.01
-HP["norm"] = NORM_MEANSTD
+HP["norm"] = NORM_MINMAX
 # Frequency of the logger
-HP["log_frequency"] = 5000
+HP["log_frequency"] = 1000
 # Non-spatial params
 # bet = 1/10 * np.array([1, 2, 2, 4, 4, 6, 3, 7, 5, 5])
 # gam = 1. * np.array([4, 1, 8, 6, 3, 2, 5, 8, 6, 7])

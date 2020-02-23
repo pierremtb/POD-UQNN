@@ -309,7 +309,7 @@ class PodnnModel:
         })
 
         # Training
-        self.regnn.fit(X_v, v, epochs, logger, batch_size=X_v.shape[0])
+        self.regnn.fit(X_v, v, epochs, logger)
 
         # Saving
         # self.save_model()

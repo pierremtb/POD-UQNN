@@ -56,7 +56,6 @@ print(f"RE_v: {err_val:4f}")
 err_val = re_s(v_val.T, v_pred.T)
 print(f"RE_v: {err_val:4f}")
 
-exit(0)
 #%%
 yhat = model.regnn.predict_dist(X_v_val)
 for i in [0, 1]:

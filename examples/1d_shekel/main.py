@@ -35,7 +35,6 @@ np.save(os.path.join(resdir, "x_mesh.npy"), x_mesh)
 model = PodnnModel(resdir, hp["n_v"], x_mesh, hp["n_t"])
 
 #%% Generate the dataset from the mesh and params
-hp["n_L"] = 15
 X_v_train, v_train, _, \
     X_v_val, v_val, U_val = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                                 hp["n_s"],
@@ -43,104 +42,12 @@ X_v_train, v_train, _, \
                                                 eps=hp["eps"], n_L=hp["n_L"],
                                                 u_noise=hp["u_noise"],
                                                 x_noise=hp["x_noise"])
-N = hp["n_s"]
-n_L = hp["n_L"]
 #%% Model creation
-def normalize(X):
-    return (X - X_v_train.min(0)) / (X_v_train.max(0) - X_v_train.min(0))
-def prior_trainable(kernel_size, bias_size=0, dtype=None):
-    n = kernel_size + bias_size
-    return tfk.models.Sequential([
-        tfp.layers.VariableLayer(n, dtype=dtype, trainable=False),
-        # tfp.layers.VariableLayer(n, dtype=dtype, trainable=True),
-        tfp.layers.DistributionLambda(lambda t: tfd.Independent(
-            tfd.Normal(loc=t, scale=1),
-            reinterpreted_batch_ndims=1,
-        ))
-    ])
-
-def posterior_mean_field(kernel_size, bias_size=0, dtype=None):
-    n = kernel_size + bias_size
-    c = tf.math.log(tf.math.expm1(tf.constant(1., dtype=dtype)))
-    return tfk.models.Sequential([
-        tfp.layers.VariableLayer(2 * n, dtype=dtype),
-        tfp.layers.DistributionLambda(lambda t: tfd.Independent(
-            tfd.Normal(
-                loc=t[..., :n],
-                scale=1e-5 + 1. * tf.math.softplus(c + t[..., n:]),
-            ),
-            reinterpreted_batch_ndims=1,
-        ))
-    ])
-klw = 1/(N)
-bnn = tfk.models.Sequential([
-    # tfk.layers.Dense(8, activation="linear"),
-    # tfk.layers.Dense(2, activation="linear"),
-    tfp.layers.DenseVariational(
-        units=40,
-        activation="relu",
-        make_posterior_fn=posterior_mean_field,
-        make_prior_fn=prior_trainable,
-        kl_weight=klw,
-        dtype=dtype,
-    ),
-    tfp.layers.DenseVariational(
-        units=40,
-        activation="relu",
-        make_posterior_fn=posterior_mean_field,
-        make_prior_fn=prior_trainable,
-        kl_weight=klw,
-        dtype=dtype,
-    ),
-    tfp.layers.DenseVariational(
-        units=2 * n_L,
-        activation="linear",
-        make_posterior_fn=posterior_mean_field,
-        make_prior_fn=prior_trainable,
-        kl_weight=klw,
-        dtype=dtype,
-    ),
-    tfp.layers.DistributionLambda(lambda t:
-        tfd.MultivariateNormalDiag(
-            loc=t[..., :n_L],
-            scale_diag=1e-5 + tf.math.softplus(0.01 * t[..., n_L:]),
-        ),
-        # tfd.Normal(
-        #     loc=t,
-        #     scale=1,
-        # ),
-    ),
-])
-lr = 0.01
-# bnn.compile(loss=lambda y, yhat: -tf.reduce_mean(yhat.log_prob(y)),
-#               optimizer=tfk.optimizers.Adam(lr))
-bnn.compile(loss=lambda y, yhat: -tf.reduce_sum(yhat.log_prob(y)),
-              optimizer=tfk.optimizers.Adam(lr))
-epochs = 10000
-freq = 1000
-logger = Logger(epochs, freq)
-X_v_val_n = normalize(X_v_val)
-logger.set_val_err_fn(lambda: {
-    "RE_v": re_s(v_val.T, bnn(X_v_val).mean().numpy().T),
-    "std": tf.reduce_sum(bnn(normalize(X_v_val)).mean().numpy().std(0)),
-    })
-bnn.fit(normalize(X_v_train), v_train, epochs=epochs,
-          verbose=0, callbacks=[LoggerCallback(logger)])
-
-model.regnn = bnn
+model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0], hp["norm"])
+model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"], freq=hp["log_frequency"])
 
 #%%
-def predict_v(X, samples=20):
-    yhat = bnn(normalize(X))
-    v_pred = np.array([yhat.mean().numpy() for _ in range(samples)]).mean(0)
-    return v_pred, np.zeros_like(v_pred)
-def predict(X, samples=20):
-    yhat = bnn(normalize(X))
-    v_pred = np.array([yhat.mean().numpy() for _ in range(samples)]).mean(0)
-    U_pred = model.project_to_U(v_pred)
-    return U_pred, np.zeros_like(U_pred)
-
-v_pred, _ = predict_v(X_v_val)
+v_pred, _ = model.predict_v(X_v_val)
 U_pred = model.project_to_U(v_pred)
 
 err_val = re_s(U_val, U_pred)
@@ -148,7 +55,7 @@ print(f"RE_v: {err_val:4f}")
 err_val = re_s(v_val.T, v_pred.T)
 print(f"RE_v: {err_val:4f}")
 #%%
-yhat = bnn(normalize(X_v_val))
+yhat = model.regnn.predict_dist(X_v_val)
 for i in [0, 1]:
     plt.plot(yhat[i].numpy(), "b-")
     plt.plot(v_val[i], "r--")
@@ -207,7 +114,7 @@ plt.show()
 mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
 X_v_tst, U_tst, _, _ = \
     model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
-U_pred, U_pred_sig = predict(X_v_tst, samples=100)
+U_pred, U_pred_sig = model.predict(X_v_tst, samples=100)
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 U_tst_pod = model.project_to_U(model.project_to_v(U_tst))
@@ -238,7 +145,7 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
     for col, idx_i in enumerate([0, 1, 2]):
         lbl = r"{\scriptscriptstyle\textrm{tst}}" if row == 0 else r"{\scriptscriptstyle\textrm{out}}"
         X_i = X_v_samples[idx_i, :].reshape(1, -1)
-        U_pred_i, U_pred_i_sig = predict(X_i, samples=100)
+        U_pred_i, U_pred_i_sig = model.predict(X_i, samples=100)
         ax = fig.add_subplot(gs[row, col])
         ax.plot(x, U_pred_i, "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
         ax.plot(x, U_samples[:, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
@@ -251,6 +158,3 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
             ax.legend()
 plt.show()
 # savefig("results/graph-samples")
-
-
-# %%
