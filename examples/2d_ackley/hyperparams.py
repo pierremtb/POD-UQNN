@@ -49,3 +49,11 @@ HP["mu_max"] = [+1., +1., +1.]
 
 # np.random.seed(1111)
 # tf.random.set_seed(1111)
+
+def u(X, _, mu):
+    x = X[0]
+    y = X[1]
+    u_0 = - 20*(1+.1*mu[2])*np.exp(-.2*(1+.1*mu[1])*np.sqrt(.5*(x**2+y**2))) \
+          - np.exp(.5*(np.cos(2*np.pi*(1+.1*mu[0])*x) + np.cos(2*np.pi*(1+.1*mu[0])*y))) \
+          + 20 + np.exp(1)
+    return u_0.reshape((1, u_0.shape[0]))

@@ -4,6 +4,11 @@ import tensorflow as tf
 import numpy as np
 from datetime import datetime
 
+class LoggerCallback(tf.keras.callbacks.Callback):
+    def __init__(self, logger):
+        self.logger = logger
+    def on_epoch_end(self, epoch, logs):
+        self.logger.log_train_epoch(epoch, logs["loss"])
 
 class Logger(object):
     def __init__(self, epochs, frequency, silent=False):
@@ -45,7 +50,8 @@ class Logger(object):
 
     def log_train_epoch(self, epoch, loss, custom="", is_iter=False):
         if epoch % self.frequency == 0 and not self.silent:
-            logs = {"L": loss, **self.get_val_err()}
+            params = self.get_val_err() if self.get_val_err is not None else {}
+            logs = {"L": loss, **params}
             if self.logs_keys is None:
                 self.logs_keys = list(logs.keys())
             logs_values = [logs[x] for x in self.logs_keys]

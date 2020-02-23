@@ -20,7 +20,7 @@ HP["x_max"] = 10.
 # Time
 HP["n_t"] = 0
 # Snapshots count
-HP["n_s"] = 5000
+HP["n_s"] = 500
 HP["n_s_tst"] = 300
 # POD stopping param
 HP["eps"] = 1e-10

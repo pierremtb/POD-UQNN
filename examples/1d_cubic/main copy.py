@@ -33,7 +33,7 @@ idx = np.random.choice(x_tst[lb:ub].shape[0], N, replace=False)
 x = x_tst[lb + idx]
 y = y_tst[lb + idx]
 # noise_std = 0.01*u_train.std(0)
-noise_std = 29
+noise_std = 9
 y = y + noise_std*np.random.randn(y.shape[0], y.shape[1])
 
 #%% Model creation
@@ -94,35 +94,44 @@ model = tfk.models.Sequential([
 ])
 lr = 0.01
 model.compile(loss=lambda y, model: -model.log_prob(y), optimizer=tfk.optimizers.Adam(lr))
-epochs = 5000
+epochs = 12000
 model.fit(x, y, epochs=epochs, verbose=0)
 
 # yhat = model(x_tst)
-yhats = [model(x_tst) for _ in range(100)]
+# yhats = [model(x_tst) for _ in range(100)]
 ##%% Predictions and plotting
 
-# y_pred_list = []
-# for i in range(500):
-#     y_pred = model.model(x_tst)
-#     y_pred_list.append(y_pred)
+y_pred_list = []
+y_pred_var_list = []
+for i in range(200):
+    yhat = model(x_tst)
+    y_pred_list.append(yhat.mean().numpy())
+    y_pred_var_list.append(yhat.variance().numpy())
+
+u_pred = np.array(y_pred_list).mean(0)
+u_pred_var = (np.array(y_pred_list)**2 + np.array(y_pred_var_list)).mean(0) - np.array(y_pred_list).mean(0) ** 2
+u_pred_sig = np.sqrt(u_pred_var)
+
 # y_preds = np.concatenate(y_pred_list, axis=1)
 # u_pred = np.mean(y_preds, axis=1)
 # u_pred_sig = np.std(y_preds, axis=1)
 
 # u_pred = yhat.mean().numpy()
 # u_pred_sig = yhat.stddev().numpy()
-# lower = u_pred - 2 * u_pred_sig
-# upper = u_pred + 2 * u_pred_sig
+lower = u_pred - 2 * u_pred_sig
+upper = u_pred + 2 * u_pred_sig
 
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
-# plt.fill_between(x_tst.ravel(), upper.ravel(), lower.ravel(), 
-                    # facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
+plt.fill_between(x_tst.ravel(), upper.ravel(), lower.ravel(), 
+                    facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
 # plt.plot(x_star, u_pred_samples[:, :, 0].numpy().T, 'C0', linewidth=.5)
-# plt.plot(x_tst, u_pred, label=r"$\hat{u}_*(x)$")
+plt.plot(x_tst, u_pred, label=r"$\hat{u}_*(x)$")
 plt.scatter(x, y, c="r", label=r"$u_T(x)$")
 plt.plot(x_tst, y_tst, "r--", label=r"$u_*(x)$")
-for yhat in yhats:
-    plt.plot(x_tst, yhat.mean().numpy(), "b-", alpha=0.5)
+# for yhat in yhats:
+#     plt.plot(x_tst, yhat.mean().numpy(), "b-", alpha=0.5)
+#     plt.plot(x_tst, yhat.mean().numpy() + 2*yhat.stddev().numpy(), "b-", alpha=0.01)
+#     plt.plot(x_tst, yhat.mean().numpy() - 2*yhat.stddev().numpy(), "b-", alpha=0.01)
 plt.legend()
 plt.xlabel("$x$")
 plt.show()
