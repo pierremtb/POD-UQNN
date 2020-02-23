@@ -1,7 +1,7 @@
 """Default hyperparameters for 1D time-dep Burgers Equation."""
 
 import numpy as np
-from podnn.tfpbayesneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
+from podnn.bayesianneuralnetwork import NORM_MINMAX 
 
 HP = {}
 # Dimension of u(x, t, mu)
@@ -16,7 +16,7 @@ HP["t_min"] = 1.
 HP["t_max"] = 5.
 # Snapshots count
 HP["n_s"] = 50
-HP["n_s_tst"] = int(1e3)
+HP["n_s_tst"] = 50
 # POD stopping param
 HP["eps"] = 0
 HP["eps_init"] = None
@@ -25,16 +25,14 @@ HP["x_noise"] = 0.
 # Train/val split
 HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
-HP["h_layers"] = [128, 128, 128]
+HP["h_layers"] = [40, 40]
 # Setting up TF SGD-based optimizer
-HP["n_M"] = 5
 HP["epochs"] = 13000
 HP["lr"] = 0.01
-HP["lambda"] = 0.0
-HP["adv_eps"] = 0.0
-HP["norm"] = NORM_MEANSTD
+HP["soft_0"] = 0.001
+HP["norm"] = NORM_MINMAX
 # Frequency of the logger
-HP["log_frequency"] = 2000
+HP["log_frequency"] = 1000
 # Burgers params
 HP["mu_min"] = [0.001]
 HP["mu_max"] = [0.0100]

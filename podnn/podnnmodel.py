@@ -288,12 +288,13 @@ class PodnnModel:
         """Convert input into a TensorFlow Tensor with the class dtype."""
         return tf.convert_to_tensor(X, dtype=self.dtype)
 
-    def initBNN(self, h_layers, lr, klw, norm=NORM_MEANSTD):
+    def initBNN(self, h_layers, lr, klw, soft_0=0.01, norm=NORM_MEANSTD):
         """Create the neural net model."""
         self.lr = lr
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.model_path = os.path.join(self.resdir, "vnn.h5")
-        self.regnn = BayesianNeuralNetwork(self.layers, lr, klw, norm=norm)
+        self.regnn = BayesianNeuralNetwork(self.layers, lr, klw,
+                                           soft_0=soft_0, norm=norm)
         self.regnn.summary()
 
     def train(self, X_v, v, X_v_val, v_val, epochs, freq=100, silent=False):
@@ -345,22 +346,31 @@ class PodnnModel:
         return (self.n_v,) + tup
 
     def predict_v(self, X, samples=20):
-        yhat = self.regnn.predict_dist(X)
-        v_pred = np.array([yhat.mean().numpy() for _ in range(samples)]).mean(0)
-        return v_pred, np.zeros_like(v_pred)
+        v_pred_samples = np.zeros((samples, X.shape[0], self.n_L))
+        v_pred_sig_samples = np.zeros((samples, X.shape[0], self.n_L))
+
+        for i in range(samples):
+            v_dist = self.regnn.predict_dist(X)
+            v_pred_samples[i], v_pred_sig_samples[i] = v_dist.mean().numpy(), v_dist.stddev().numpy()
+
+        v_pred = v_pred_samples.mean(0)
+        v_pred_var = (v_pred_sig_samples**2 + v_pred_samples ** 2).mean(0) - v_pred ** 2
+        v_pred_sig = np.sqrt(v_pred_var)
+
+        return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
     def predict(self, X, samples=20):
-        U_pred_samples = np.zeros((self.n_h, X.shape[0], samples))
-        U_pred_sig_samples = np.zeros((self.n_h, X.shape[0], samples))
+        U_pred_samples = np.zeros((samples, self.n_h, X.shape[0]))
+        U_pred_sig_samples = np.zeros((samples, self.n_h, X.shape[0]))
 
         for i in range(samples):
             v_dist = self.regnn.predict_dist(X)
             v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
-            U_pred_samples[:, :, i] = self.project_to_U(v_pred)
-            U_pred_sig_samples[:, :, i] = self.project_to_U(np.sqrt(v_pred_var))
+            U_pred_samples[i] = self.project_to_U(v_pred)
+            U_pred_sig_samples[i] = self.project_to_U(np.sqrt(v_pred_var))
 
-        U_pred = U_pred_samples.mean(-1)
-        U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(-1) - U_pred ** 2
+        U_pred = U_pred_samples.mean(0)
+        U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(0) - U_pred ** 2
         U_pred_sig = np.sqrt(U_pred_var)
 
         return U_pred.astype(self.dtype), U_pred_sig.astype(self.dtype)

@@ -23,7 +23,7 @@ tfd = tfp.distributions
 
 
 class BayesianNeuralNetwork:
-    def __init__(self, layers, lr, klw, adv_eps=None, norm=NORM_NONE, model=None, norm_bounds=None):
+    def __init__(self, layers, lr, klw, soft_0=0.01, adv_eps=None, norm=NORM_NONE, model=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float64"
 
@@ -37,6 +37,8 @@ class BayesianNeuralNetwork:
         self.batch_size = 0
         self.norm = norm
         self.adv_eps = adv_eps
+
+        self.soft_0 = soft_0
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
@@ -67,7 +69,7 @@ class BayesianNeuralNetwork:
                 tfp.layers.DistributionLambda(lambda t: tfd.Independent(
                     tfd.Normal(
                         loc=t[..., :n],
-                        scale=1e-5 + 1. * tf.math.softplus(c + t[..., n:]),
+                        scale=1e-5 + tf.math.softplus(c + t[..., n:]),
                     ),
                     reinterpreted_batch_ndims=1,
                 ))
@@ -95,7 +97,7 @@ class BayesianNeuralNetwork:
             tfp.layers.DistributionLambda(lambda t:
                 tfd.MultivariateNormalDiag(
                     loc=t[..., :n_L],
-                    scale_diag=1e-5 + tf.math.softplus(0.01 * t[..., n_L:]),
+                    scale_diag=1e-5 + tf.math.softplus(self.soft_0 * t[..., n_L:]),
                 ),
             ),
         ])

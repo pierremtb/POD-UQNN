@@ -43,7 +43,7 @@ X_v_train, v_train, _, \
                                                 u_noise=hp["u_noise"],
                                                 x_noise=hp["x_noise"])
 #%% Model creation
-model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0], hp["norm"])
+model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0], hp["soft_0"], hp["norm"])
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"], freq=hp["log_frequency"])
 
 #%%
@@ -54,61 +54,13 @@ err_val = re_s(U_val, U_pred)
 print(f"RE_v: {err_val:4f}")
 err_val = re_s(v_val.T, v_pred.T)
 print(f"RE_v: {err_val:4f}")
+
 #%%
 yhat = model.regnn.predict_dist(X_v_val)
 for i in [0, 1]:
     plt.plot(yhat[i].numpy(), "b-")
     plt.plot(v_val[i], "r--")
 plt.show()
-
-#%%
-# y_pred_list = []
-# y_pred_var_list = []
-# for i in range(200):
-#     yhat = model(x_tst)
-#     y_pred_list.append(yhat.mean().numpy())
-#     y_pred_var_list.append(yhat.variance().numpy())
-
-# u_pred = np.array(y_pred_list).mean(0)
-# u_pred_var = (np.array(y_pred_list)**2 + np.array(y_pred_var_list)).mean(0) - np.array(y_pred_list).mean(0) ** 2
-# u_pred_sig = np.sqrt(u_pred_var)
-#%% Train
-# model.initBNN(hp["h_layers"],
-#                 hp["lr"], 1/X_v_train.shape[0],
-#                 hp["norm"])
-# train_res = model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
-#                         freq=hp["log_frequency"],
-#                         silent=False)
-
-#%% Validation metrics
-# U_pred, _ = model.predict(X_v_val, samples=100)
-# err_val = re_s(U_val, U_pred)
-# print(f"RE_v: {err_val:4f}")
-
-# import matplotlib.pyplot as plt
-# v_pred, v_pred_sig = model.predict_v(X_v_val)
-# # print(v_pred)
-# # dist = model.regnn.model(X_v_val)
-# # v_pred, v_pred_sig = dist.mean().numpy(), np.sqrt(dist.variance())
-# print(v_pred.shape)
-# x = np.arange(v_pred.shape[1])
-# plt.plot(x, v_pred[0])
-# plt.plot(x, v_val[0])
-# plt.fill_between(x, v_pred[0] - 2*v_pred_sig[0],
-#                     v_pred[0] + 2*v_pred_sig[0], alpha=0.3)
-# plt.show()
-
-# # U_pred = model.restruct(U_pred)
-# # U_val = model.restruct(U_val)
-# x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
-# # lower = U_pred - 3 * U_pred_sig
-# # upper = U_pred + 3 * U_pred_sig
-# # plt.fill_between(x, lower[:, 0], upper[:, 0], 
-# #                     facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
-# plt.plot(x, U_pred[0], "b-")
-# plt.plot(x, U_val[0], "r--")
-# # plt.plot(x, model.predict(X_v_test)[:, 0])
-# plt.show()
 
 #%% Sample the new model to generate a test prediction
 mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))

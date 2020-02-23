@@ -44,17 +44,19 @@ X_v_train, v_train, _, \
                                                 x_noise=hp["x_noise"])
 
 #%% Model creation
-model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0], hp["norm"])
+model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0], hp["soft_0"], hp["norm"])
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"], freq=hp["log_frequency"])
 
 #%%
-v_pred, _ = model.predict_v(X_v_val)
-U_pred = model.project_to_U(v_pred)
-
-err_val = re_s(U_val, U_pred)
-print(f"RE_v: {err_val:4f}")
+v_pred, v_pred_sig = model.predict_v(X_v_val)
 err_val = re_s(v_val.T, v_pred.T)
 print(f"RE_v: {err_val:4f}")
+
+plt.plot(v_val[0], "r--")
+plt.plot(v_pred[0], "b-")
+plt.plot(v_pred[0] + 2*v_pred_sig[0], "b-", alpha=0.3)
+plt.plot(v_pred[0] - 2*v_pred_sig[0], "b-", alpha=0.3)
+plt.show()
 
 #%%
 yhat = model.regnn.predict_dist(X_v_val)
@@ -67,7 +69,7 @@ plt.show()
 mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
 X_v_tst, U_tst, _, _ = \
     model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
-U_pred, U_pred_sig = model.predict(X_v_tst)
+U_pred, U_pred_sig = model.predict(X_v_tst, samples=10)
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 #%% Samples graph
@@ -123,7 +125,7 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
     for col, idx_i in enumerate(idx):
         lbl = r"{\scriptscriptstyle\textrm{tst}}" if row == 0 else r"{\scriptscriptstyle\textrm{out}}"
         X_i = X_v_samples[idx_i, :].reshape(1, -1)
-        U_pred_i, U_pred_i_sig = model.predict(X_i)
+        U_pred_i, U_pred_i_sig = model.predict(X_i, samples=5)
         U_pred_i = np.reshape(U_pred_i, (hp["n_x"], hp["n_y"], -1))
         U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_x"], hp["n_y"], -1))
         ax = fig.add_subplot(gs[row, col])
@@ -138,3 +140,6 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
 plt.tight_layout()
 plt.show()
 # savefig("results/graph-samples")
+
+
+# %%
