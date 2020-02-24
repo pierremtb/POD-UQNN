@@ -33,6 +33,7 @@ class NeuralNetwork:
         self.batch_size = 0
 
         self.layers = layers
+        self.adv_eps = 1e-2
         self.lr = lr
         self.lam = lam
         self.lb = lb
@@ -46,7 +47,7 @@ class NeuralNetwork:
             X = (X - self.lb) - 0.5*(self.ub - self.lb)
             # X = sknormalize(X, norm="max")
             # X = (X - X.mean(0)) / X.std(0)
-        return X
+        return self.tensor(X)
 
     def regularization(self):
         l2_norms = [tf.nn.l2_loss(v) for v in self.wrap_training_variables()]
@@ -61,8 +62,12 @@ class NeuralNetwork:
     @tf.function
     def grad(self, X, v):
         """Compute the loss and its derivatives w.r.t. the inputs."""
-        with tf.GradientTape() as tape:
+        with tf.GradientTape(persistent=True) as tape:
+            tape.watch(X)
             loss_value = self.loss(v, self.model(X))
+            loss_x = tape.gradient(loss_value, X)
+            X_adv = X + self.adv_eps * tf.math.sign(loss_x)
+            loss_value += self.loss(v, self.model(X_adv))
         grads = tape.gradient(loss_value, self.wrap_training_variables())
         return loss_value, grads
 
