@@ -113,9 +113,9 @@ for j, time in enumerate(times):
             ax = fig.add_subplot(gs[actual_row, j])
             ax.plot(x, U_pred_i[:, time, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
             ax.plot(x, U_samples[:, time, col], "r--", label=r"$u_D(s_{" + lbl + r"})$")
-            lower = U_pred_i[:, time, 0] - 3*U_pred_i_sig[:, time, 0]
-            upper = U_pred_i[:, time, 0] + 3*U_pred_i_sig[:, time, 0]
-            ax.fill_between(x, lower, upper, alpha=0.2, label=r"$3\sigma_D(s_{" + lbl + r"})$")
+            lower = U_pred_i[:, time, 0] - 2*U_pred_i_sig[:, time, 0]
+            upper = U_pred_i[:, time, 0] + 2*U_pred_i_sig[:, time, 0]
+            ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
             ax.set_xlabel(f"$x\ (t={time})$")
             actual_row += 1
             if j == len(times) - 1:

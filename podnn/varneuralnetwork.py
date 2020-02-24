@@ -102,9 +102,10 @@ class VarNeuralNetwork:
         with tf.GradientTape(persistent=True) as tape:
             tape.watch(X)
             loss_value = self.loss(v, self.model(X))
-            # loss_x = tape.gradient(loss_value, X)
-            # X_adv = X + self.adv_eps * tf.math.sign(loss_x)
-            # loss_value += self.loss(v, self.model(X_adv))
+            if self.adv_eps is not None:
+                loss_x = tape.gradient(loss_value, X)
+                X_adv = X + self.adv_eps * tf.math.sign(loss_x)
+                loss_value += self.loss(v, self.model(X_adv))
         grads = tape.gradient(loss_value, self.wrap_training_variables())
         del tape
         return loss_value, grads

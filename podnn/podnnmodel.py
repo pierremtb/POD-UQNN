@@ -104,7 +104,7 @@ class PodnnModel:
     def split_dataset(self, X_v, v, test_size):
         """Randomly splitting the dataset (X_v, v)."""
         indices = np.random.permutation(X_v.shape[0])
-        limit = np.floor(X_v.shape[0] * test_size).astype(int)
+        limit = np.floor(X_v.shape[0] * (1. - test_size)).astype(int)
         train_idx, tst_idx = indices[:limit], indices[limit:]
         return X_v[train_idx], X_v[tst_idx], v[train_idx], v[tst_idx]
 
@@ -364,24 +364,24 @@ class PodnnModel:
         if self.regnn is None or len(self.regnn) == 0:
             raise ValueError("Regression model isn't defined.")
 
-        U_val = self.project_to_U(v_val)
-        U_train = self.project_to_U(v_train)
+        # U_val = self.project_to_U(v_val)
+        # U_train = self.project_to_U(v_train)
 
         logs = []
 
         model = self.regnn[model_id]
         def get_val_err():
-            return {}
+            # return {}
             # v_train_pred, _ = model.predict(X_v_train)
-            # v_val_pred, _ = model.predict(X_v_val)
+            v_val_pred, _ = model.predict(X_v_val)
             # U_val_pred = self.project_to_U(v_val_pred)
             # U_train_pred = self.project_to_U(v_train_pred)
-            # return {
+            return {
             #     "MSE": tf.reduce_mean(tf.square(v_train - v_train_pred)),
             #     "MSE_V": tf.reduce_mean(tf.square(v_val - v_val_pred)),
             #     "RE": re_s(U_train, U_train_pred),
-            #     "RE_V": re_s(U_val, U_val_pred),
-            # }
+                "RE_V": re_s(v_val.T, v_val_pred.T),
+            }
         # Validation, logging, training
         logger = Logger(epochs, freq)
         logger.set_val_err_fn(get_val_err)

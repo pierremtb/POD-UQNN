@@ -34,14 +34,10 @@ print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 #%% Samples graph
 n_samples = 3
-# mu_lhs_in = model.sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
-idx = [[100, 250, 400], [50, 150, 250]]
-mu_lhs_in = model.sample_mu(hp["n_s"], np.array(hp["mu_min"]), np.array(hp["mu_max"]), indices=idx[0])
+mu_lhs_in = model.sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
 
-# mu_lhs_out_min = model.sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
-mu_lhs_out_min = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min_out"]), np.array(hp["mu_min"]), indices=idx[1])
-# mu_lhs_out_max = model.sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
-mu_lhs_out_max = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_max"]), np.array(hp["mu_max_out"]), indices=idx[1])
+mu_lhs_out_min = model.sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
+mu_lhs_out_max = model.sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
 mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
 
 n_plot_x = 2
@@ -62,9 +58,9 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         ax.plot(x, U_samples[:, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
         lower = U_pred_i[:, 0] - 2*U_pred_i_sig[:, 0]
         upper = U_pred_i[:, 0] + 2*U_pred_i_sig[:, 0]
-        ax.fill_between(x, lower, upper, alpha=0.2, label=r"$3\sigma_D(s_{" + lbl + r"})$")
+        ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
         ax.set_xlabel("$x$")
-        if col == len(idx) - 1:
+        if col == 2:
             ax.legend()
 # plt.show()
 savefig("results/graph-samples")
