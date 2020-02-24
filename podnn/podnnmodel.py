@@ -391,6 +391,15 @@ class PodnnModel:
         U_pred = self.V.dot(v_pred.T)
         return U_pred
 
+    def u_mesh_to_U(self, u_mesh, n_s):
+        # Reshaping manually
+        U = np.zeros((self.n_h, n_s))
+        for i in range(n_s):
+            st = self.n_xyz * i
+            en = self.n_xyz * (i + 1)
+            U[:, i] = u_mesh[st:en, :].T.reshape((self.n_h,))
+        return U
+
     def load_train_data(self):
         """Load training data, such as datasets."""
         if not os.path.exists(self.train_data_path):
