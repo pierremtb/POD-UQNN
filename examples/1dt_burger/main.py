@@ -111,7 +111,7 @@ ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
 
 plt.tight_layout()
 #plt.show()
-savefig("cache/graph-means")
+savefig("cache/podnn-burger-graph-means")
 
 #%% Slices
 n_samples = 1
@@ -144,7 +144,7 @@ for j, time in enumerate(times):
                 ax.legend()
 plt.tight_layout()
 # plt.show()
-savefig("cache/graph-samples")
+savefig("cache/podnn-burger-graph-samples")
 
 
 # %%

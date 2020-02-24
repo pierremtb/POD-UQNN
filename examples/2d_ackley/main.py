@@ -97,7 +97,7 @@ ax.set_xlabel("$x$")
 ax.legend()
 ax.set_ylabel("$y$")
 # plt.show()
-savefig("cache/graph-means")
+savefig("cache/podnn-ackley-graph-means")
 
 # Slices
 n_plot_x = 2
@@ -124,4 +124,4 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
             ax.legend()
 plt.tight_layout()
 # plt.show()
-savefig("cache/graph-samples")
+savefig("cache/podnn-ackley-graph-samples")
