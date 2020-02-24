@@ -13,7 +13,7 @@ def write_table(f, errors):
     n_err_col = errors.shape[0]
     f.write(r"\begin{tabular}{|c||" + n_err_col*"c" + r"|} " + "\n")
     f.write(r"\multicolumn{" + str(n_err_col + 1) + \
-            r"}{c}{Relative hifi test errors $(REM_{T,hf}, RES_{T,hf})$} \\" + "\n")
+            r"}{c}{Relative hifi test errors $(RE_{\textrm{val}}, RE_{\textrm{tst}})$} \\" + "\n")
     f.write(r"\hline " + "\n")
     f.write(r"\diagbox{Epochs $N_e$}{Samples $N_s$} & " +
             " & ".join([str(int(n_s)) for n_s in arr_n_s]) +

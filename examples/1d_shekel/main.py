@@ -13,20 +13,7 @@ from podnn.plotting import figsize, savefig
 
 #%% Prepare
 from hyperparams import HP as hp
-
-def u(X, _, mu):
-    """The 1D-Shekel function."""
-    x = X[0]
-    sep = int(mu.shape[0] / 2)
-    bet = mu[:sep]
-    gam = mu[sep:]
-
-    u_sum = np.zeros_like(x)
-    for i in range(len(bet)):
-        i_sum = (x - gam[i])**2
-        u_sum += 1 / (bet[i] + i_sum)
-
-    return u_sum.reshape((1, u_sum.shape[0]))
+from hyperparams import u
 
 # Create linear space mesh
 x_mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"])

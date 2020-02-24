@@ -41,5 +41,19 @@ HP["mu_min_out"] = (mu_mean * (1 - 1.5*np.sqrt(3)/10)).tolist()
 HP["mu_max_out"] = (mu_mean * (1 + 1.5*np.sqrt(3)/10)).tolist()
 
 
-np.random.seed(1111)
-tf.random.set_seed(1111)
+# np.random.seed(1111)
+# tf.random.set_seed(1111)
+
+def u(X, _, mu):
+    """The 1D-Shekel function."""
+    x = X[0]
+    sep = int(mu.shape[0] / 2)
+    bet = mu[:sep]
+    gam = mu[sep:]
+
+    u_sum = np.zeros_like(x)
+    for i in range(len(bet)):
+        i_sum = (x - gam[i])**2
+        u_sum += 1 / (bet[i] + i_sum)
+
+    return u_sum.reshape((1, u_sum.shape[0]))
