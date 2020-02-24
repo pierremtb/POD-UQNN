@@ -184,7 +184,7 @@ class PodnnModel:
         U_train = self.V.dot(v_train.T)
         U_val = self.V.dot(v_val.T)
 
-        self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
+        self.save_train_data(X_v_train, v_train, U_train, X_v_val, U_val)
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
