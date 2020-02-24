@@ -311,7 +311,7 @@ class PodnnModel:
         layers_t = [X_dim+Y_dim, *h_layers_t, 1]
         self.layers = (layers_p, layers_q, layers_t)
 
-        self.regnn = [varneuralnetwork(self.layers, gan_dims,
+        self.regnn = [VarNeuralNetwork(self.layers, gan_dims,
                                       lr, lam, bet, k1, k2, norm)]
 
     def initVNNs(self, n_M, h_layers, lr, lam, adv_eps, norm=NORM_MEANSTD):

@@ -41,6 +41,10 @@ U_tst = model.restruct(U_tst)
 U_pred = model.restruct(U_pred)
 U_pred_sig = model.restruct(U_pred_sig)
 
+print(X_v_val.min(), X_v_val.max())
+print(X_v_tst.min(), X_v_tst.max())
+exit(0)
+
 #%% VTU export
 print("Saving to .vtu")
 # Retrieving the mesh
