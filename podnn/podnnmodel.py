@@ -186,6 +186,7 @@ class PodnnModel:
         # Checking the POD error
         U_pod = self.V.dot(v.T)
         self.pod_sig = np.stack((U, U_pod), axis=-1).std(-1).mean(-1)
+        print(f"Mean pod sig: {self.pod_sig.mean()}")
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_val, v_train, v_val = self.split_dataset(X_v, v, test_size=train_val[1])
@@ -257,6 +258,7 @@ class PodnnModel:
         # Saving the POD error
         U_train_pod = self.V.dot(v_train.T)
         self.pod_sig = np.stack((U_train, U_train_pod), axis=-1).std(-1).mean(-1)
+        print(f"Mean pod sig: {self.pod_sig.mean()}")
 
         # Testing stuff out
         # import matplotlib.pyplot as plt
@@ -451,7 +453,6 @@ class PodnnModel:
 
         if self.pod_sig is not None:
             U_pred_sig += self.pod_sig[:, np.newaxis]
-            print(self.pod_sig)
 
         return U_pred.astype(self.dtype), U_pred_sig.astype(self.dtype)
 
@@ -499,7 +500,8 @@ class PodnnModel:
             self.n_d = data[1]
             self.V = data[2]
             self.pod_sig = data[3]
-            return data[4:]
+        print(f"Mean pod sig: {self.pod_sig.mean()}")
+        return data[4:]
 
     def save_train_data(self, X_v_train, v_train, U_train, X_v_val, v_val, U_val):
         """Save training data, such as datasets."""
