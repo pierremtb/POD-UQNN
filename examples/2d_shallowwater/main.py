@@ -15,6 +15,7 @@ from pyevtk.vtk import VtkTriangle
 
 #%% Prepare
 from hyperparams import HP as hp
+print(hp)
 
 #%% Getting data from the files
 mu_path = os.path.join("data", f"INPUT_{hp['n_s']}_Scenarios.txt")
@@ -38,6 +39,8 @@ X_v_train, v_train, \
 
 #%% Model creation
 model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0], hp["soft_0"], hp["norm"])
+#%%
+# hp["epochs"] = 10000
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"], freq=hp["log_frequency"])
 
 #%%
@@ -52,6 +55,14 @@ for i in [0, 1]:
     plt.plot(yhat.mean().numpy()[i], "b-")
     plt.plot(yhat.mean().numpy()[i] - 2*yhat.stddev().numpy()[i], "b-", alpha=0.2)
     plt.plot(yhat.mean().numpy()[i] + 2*yhat.stddev().numpy()[i], "b-", alpha=0.2)
+    plt.plot(v_val[i], "r--")
+plt.show()
+
+y_pred, y_pred_sig = model.predict_v(X_v_val)
+for i in [0, 1]:
+    plt.plot(y_pred[i], "b-")
+    plt.plot(y_pred[i] - 2*y_pred_sig[i], "b-", alpha=0.2)
+    plt.plot(y_pred[i] + 2*y_pred_sig[i], "b-", alpha=0.2)
     plt.plot(v_val[i], "r--")
 plt.show()
 
