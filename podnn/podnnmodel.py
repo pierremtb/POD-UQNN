@@ -313,7 +313,7 @@ class PodnnModel:
         self.regnn.fit(X_v, v, epochs, logger)
 
         # Saving
-        # self.save_model()
+        self.save_model()
 
         return logger.get_logs()
 
