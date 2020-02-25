@@ -63,4 +63,4 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         if col == 2:
             ax.legend()
 # plt.show()
-savefig("results/graph-samples")
+savefig("results/podensnn-shekel-graph-samples")

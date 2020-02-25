@@ -68,7 +68,7 @@ ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
 ax.set_xlabel("$x$")
 ax.set_ylabel("$y$")
 # plt.show()
-savefig("results/graph-means")
+savefig("results/podensnn-ackley-graph-means")
 
 #%% Slices
 n_plot_x = 2
@@ -99,4 +99,4 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
             ax.legend()
 plt.tight_layout()
 # plt.show()
-savefig("results/graph-samples")
+savefig("results/podensnn-ackley-graph-samples")
