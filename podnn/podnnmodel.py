@@ -395,6 +395,7 @@ class PodnnModel:
         # Reshaping manually
         U = np.zeros((self.n_h, n_s))
         for i in range(n_s):
+            print(i)
             st = self.n_xyz * i
             en = self.n_xyz * (i + 1)
             U[:, i] = u_mesh[st:en, :].T.reshape((self.n_h,))

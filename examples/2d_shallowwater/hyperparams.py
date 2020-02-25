@@ -12,7 +12,7 @@ HP["n_v"] = len(HP["mesh_idx"][2])
 # Time
 HP["n_t"] = 0
 # Snapshots count
-HP["n_s"] = 300
+HP["n_s"] = 500
 HP["n_s_tst"] = 300
 # POD stopping param
 HP["eps"] = 1e-4
@@ -26,7 +26,7 @@ HP["h_layers"] = [40, 40]
 # Setting up TF SGD-based optimizer
 HP["epochs"] = 20000
 HP["lr"] = 0.001
-HP["soft_0"] = 0.01
+HP["soft_0"] = 0.1
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000
