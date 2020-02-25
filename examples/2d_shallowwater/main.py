@@ -64,11 +64,7 @@ x_u_mesh_tst_path = os.path.join("data", f"SOL_FV_{hp['n_s_tst']}_Scenarios.txt"
 x_mesh, u_mesh_tst, X_v_tst = \
     read_space_sol_input_mesh(hp["n_s_tst"], hp["mesh_idx"], x_u_mesh_tst_path, mu_path_tst)
 U_tst = model.u_mesh_to_U(u_mesh_tst, hp["n_s_tst"])
-v_tst = model.project_to_v(U_tst)
-v_pred, v_pred_sig = model.predict_v(X_v_tst)
 U_pred, U_pred_sig = model.predict(X_v_tst)
-
-print(f"RE_tst: {re_s(v_tst, v_pred):4f}")
 
 U_tst = model.restruct(U_tst)
 U_pred = model.restruct(U_pred)
