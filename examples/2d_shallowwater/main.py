@@ -45,16 +45,28 @@ v_pred, v_pred_sig = model.predict_v(X_v_val)
 err_val = re_s(v_val.T, v_pred.T)
 print(f"RE_v: {err_val:4f}")
 
-#%% Sample the new model to generate a test prediction
-mu_path_tst = os.path.join("data", f"INPUT_{hp['n_s_tst']}_Scenarios.txt")
-x_u_mesh_tst_path = os.path.join("data", f"SOL_FV_{hp['n_s_tst']}_Scenarios.txt")
-_, u_mesh_tst, X_v_tst = \
-    read_space_sol_input_mesh(hp["n_s_tst"], hp["mesh_idx"], x_u_mesh_tst_path, mu_path_tst)
-U_tst = model.u_mesh_to_U(u_mesh_tst, hp["n_s_tst"])
-U_pred = model.predict(X_v_tst)
+#%%
+import matplotlib.pyplot as plt
+yhat = model.regnn.predict_dist(X_v_val)
+for i in [0, 1]:
+    plt.plot(yhat.mean().numpy()[i], "b-")
+    plt.plot(yhat.mean().numpy()[i] - 2*yhat.stddev().numpy()[i], "b-", alpha=0.2)
+    plt.plot(yhat.mean().numpy()[i] + 2*yhat.stddev().numpy()[i], "b-", alpha=0.2)
+    plt.plot(v_val[i], "r--")
+plt.show()
 
-print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
+# #%% Sample the new model to generate a test prediction
+# mu_path_tst = os.path.join("data", f"INPUT_{hp['n_s_tst']}_Scenarios.txt")
+# x_u_mesh_tst_path = os.path.join("data", f"SOL_FV_{hp['n_s_tst']}_Scenarios.txt")
+# _, u_mesh_tst, X_v_tst = \
+#     read_space_sol_input_mesh(hp["n_s_tst"], hp["mesh_idx"], x_u_mesh_tst_path, mu_path_tst)
+# U_tst = model.u_mesh_to_U(u_mesh_tst, hp["n_s_tst"])
+# U_pred = model.predict(X_v_tst)
 
+# print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
+
+U_pred = model.predict(X_v_val)
+U_tst = U_val
 U_tst = model.restruct(U_tst)
 U_pred = model.restruct(U_pred)
 
