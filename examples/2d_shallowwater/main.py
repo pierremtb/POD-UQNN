@@ -64,13 +64,23 @@ x_u_mesh_tst_path = os.path.join("data", f"SOL_FV_{hp['n_s_tst']}_Scenarios.txt"
 x_mesh, u_mesh_tst, X_v_tst = \
     read_space_sol_input_mesh(hp["n_s_tst"], hp["mesh_idx"], x_u_mesh_tst_path, mu_path_tst)
 U_tst = model.u_mesh_to_U(u_mesh_tst, hp["n_s_tst"])
-U_pred, U_pred_sig = model.predict(X_v_tst)
+print("got U_tst")
+
+v_pred, v_pred_sig = model.predict_v(X_v_tst, samples=10)
+U_pred = model.project_to_U(v_pred)
+U_pred_up = model.project_to_U(v_pred + 2*v_pred_sig)
+U_pred_sig = 1/2 * (U_pred_up - U_pred)
+print("got U_pred")
 
 U_tst = model.restruct(U_tst)
+print("got U_tsts_")
 U_pred = model.restruct(U_pred)
+print("got U_tsts_")
 U_pred_sig = model.restruct(U_pred_sig)
+print("got U_tstss_")
 
-print(X_v_val.min(), X_v_val.max())
+err_val = re_s(U_tst, U_pred)
+print(f"RE_v: {err_val:4f}")
 
 #%% VTU export
 print("Saving to .vtu")
