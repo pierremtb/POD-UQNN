@@ -1,7 +1,7 @@
 """Default hyperparameters for 1D time-dep Burgers Equation."""
 
 import numpy as np
-from podnn.bayesianneuralnetwork import NORM_MINMAX 
+from podnn.bayesianneuralnetwork import NORM_MINMAX, NORM_MEANSTD 
 
 HP = {}
 # Dimension of u(x, t, mu)
@@ -27,10 +27,10 @@ HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
 HP["h_layers"] = [40, 40]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 13000
+HP["epochs"] = 20000
 HP["lr"] = 0.01
-HP["soft_0"] = 0.001
-HP["norm"] = NORM_MINMAX
+HP["soft_0"] = 0.01
+HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Burgers params
