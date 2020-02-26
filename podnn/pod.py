@@ -1,11 +1,11 @@
 import numpy as np
 import tensorflow as tf
 
-from numba import njit, prange
+from numba import njit
 
 
-@njit(parallel=True)
-def perform_pod(U, eps=0., verbose=True, n_L=0):
+@njit(parallel=False)
+def perform_pod(U, eps=0., n_L=0, verbose=True):
     """POD algorithmm."""
     # Number of DOFs
     n_h = U.shape[0]
@@ -26,7 +26,7 @@ def perform_pod(U, eps=0., verbose=True, n_L=0):
     # Finding n_L
     if n_L == 0:
         sum_lambdas_trunc = 0.
-        for i in prange(n_st):
+        for i in range(n_st):
             sum_lambdas_trunc += lambdas[i]
             n_L += 1
             if sum_lambdas_trunc/sum_lambdas >= (1 - eps):
@@ -41,14 +41,14 @@ def perform_pod(U, eps=0., verbose=True, n_L=0):
     U = np.ascontiguousarray(U)
 
     V = np.zeros((n_h, n_L))
-    for i in prange(n_L):
+    for i in range(n_L):
         Z_i = np.ascontiguousarray(Z[:, i])
         V[:, i] = U.dot(Z_i) / np.sqrt(lambdas_trunc[i])
 
     return np.ascontiguousarray(V)
 
 
-@njit("f8[:, :](f8[:, :, :], f8, f8)", parallel=True)
+@njit(parallel=True)
 def perform_fast_pod(U, eps, eps_init):
     """Two-step version of POD algorithm."""
     print("Performing initial time-trajectory POD")
@@ -63,7 +63,7 @@ def perform_fast_pod(U, eps, eps_init):
     T = np.zeros((n_h, n_L_init, n_s))
     for k in range(n_s):
         U_k = U[:, :, k]
-        T_k = perform_pod(U_k, eps=eps_init, verbose=False, n_L=0)
+        T_k = perform_pod(U_k, eps=eps_init, n_L=0, verbose=False)
         n_L_k = T_k.shape[1]
         if n_L_k < n_L_init:
             n_L_init = n_L_k
@@ -76,4 +76,4 @@ def perform_fast_pod(U, eps, eps_init):
     # Reshaping the 3d-mat into a 2d-mat
     U_f = np.reshape(T, (n_h, n_s*n_L_init))
     print("Performing SVD")
-    return perform_pod(U_f, eps=eps_init, verbose=True, n_L=0)
+    return perform_pod(U_f, eps=eps_init, n_L=0, verbose=True)

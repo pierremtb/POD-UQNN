@@ -148,7 +148,7 @@ class PodnnModel:
         return loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise, x_noise)
 
     def convert_dataset(self, u_mesh, X_v, train_val, eps, eps_init=None,
-                        use_cache=False, save_cache=False):
+                        n_L=0, use_cache=False, save_cache=False):
         """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
         if use_cache and os.path.exists(self.train_data_path):
             return self.load_train_data()
@@ -175,7 +175,7 @@ class PodnnModel:
             self.V = perform_fast_pod(U.reshape((n_h, self.n_t, n_s)),
                                       eps, eps_init)
         else:
-            self.V = perform_pod(U, eps, True)
+            self.V = perform_pod(U, eps, n_L, True)
 
         self.n_L = self.V.shape[1]
 
@@ -245,7 +245,7 @@ class PodnnModel:
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
         if eps_init is None:
-            self.V = perform_pod(U_train, eps=eps, verbose=True, n_L=n_L)
+            self.V = perform_pod(U_train, eps=eps, n_L=n_L, verbose=True)
         else:
             self.V = perform_fast_pod(U_train_struct, eps, eps_init)
 
