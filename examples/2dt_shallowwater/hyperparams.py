@@ -1,9 +1,9 @@
 """Default hyperparameters for 2D inviscid Shallow Water Equations."""
 
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
 
-from podnn.varneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
+# from podnn.varneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
 
 
 HP = {}
@@ -28,9 +28,9 @@ HP["epochs"] = 10000
 HP["lr"] = 0.01
 HP["lambda"] = 0.001
 HP["adv_eps"] = 0.
-HP["norm"] = NORM_MEANSTD
+HP["norm"] = "none"
 # Frequency of the logger
 HP["log_frequency"] = 5000
 
-np.random.seed(1111)
-tf.random.set_seed(1111)
+# np.random.seed(1111)
+# tf.random.set_seed(1111)

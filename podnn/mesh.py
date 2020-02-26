@@ -3,6 +3,8 @@ import sys
 import time
 import pandas as pd
 import numpy as np
+import meshio
+import re
 
 
 def create_linear_mesh(x_min, x_max, n_x,
@@ -37,6 +39,55 @@ def create_linear_mesh(x_min, x_max, n_x,
 
     idx = np.array(range(1, n_xyz + 1)).reshape((n_xyz, 1))
     return np.hstack((idx, x))
+
+
+# From https://stackoverflow.com/a/5967539
+def atoi(text):
+    return int(text) if text.isdigit() else text
+def natural_keys(text):
+    '''
+    alist.sort(key=natural_keys) sorts in human order
+    http://nedbatchelder.com/blog/200712/human_sorting.html
+    (See Toothy's implementation in the comments)
+    '''
+    return [ atoi(c) for c in re.split(r'(\d+)', text) ]
+
+
+def read_multi_space_sol_input_mesh(n_s, idx, x_u_mesh_path, mu_mesh_path):
+    st = time.time()
+
+    for root, dirs, _ in os.walk(x_u_mesh_path):
+        # for name in files:
+        #     print(os.path.join(root, name))
+        for name in sorted(dirs, key=natural_keys):
+            if name.startswith("multi_"):
+                for root, _, files in os.walk(x_u_mesh_path):
+                    picked_files = sorted(files, key=natural_keys)[:50:1]
+                    for file in picked_files:
+                        if file.startswith("0_FV-Paraview"):
+                            print(os.path.join(root, file))
+                    print(len(picked_files))
+    return
+
+
+
+    print("Loading " + mu_mesh_path + "")
+    X_v = np.loadtxt(mu_mesh_path)[:, 0:1]
+
+    print("Loading " + x_u_mesh_path + "")
+    x_u_mesh = pd.read_table(x_u_mesh_path,
+                             header=None,
+                             delim_whitespace=True).to_numpy()
+    print(f"Loaded in {time.time() - st} sec.")
+
+    idx_i = idx[0]
+    idx_x = idx[1]
+    idx_u = idx[2]
+    n_xyz = int(x_u_mesh.shape[0] / n_s)
+    x_mesh = x_u_mesh[:n_xyz, idx_i + idx_x]
+    u_mesh = x_u_mesh[:, idx_u]
+
+    return x_mesh, u_mesh, X_v
 
 
 def read_space_sol_input_mesh(n_s, idx, x_u_mesh_path, mu_mesh_path):
