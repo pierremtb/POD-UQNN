@@ -8,9 +8,8 @@ import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.logger import Logger
-from podnn.tfpbayesneuralnetwork import NORM_NONE, NORM_MEANSTD
-from podnn.tfpbayesneuralnetwork import TFPBayesianNeuralNetwork
-from podnn.vineuralnetwork import VINeuralNetwork
+from podnn.custombnn import NORM_NONE, NORM_MEANSTD
+from podnn.custombnn import BayesianNeuralNetwork
 from podnn.plotting import figsize
 
 #%% Datagen
@@ -36,18 +35,22 @@ u_train = u_train + noise_std*np.random.randn(u_train.shape[0], u_train.shape[1]
 
 #%% Model creation
 layers = [1, 20, 20, D]
-model = VINeuralNetwork(layers, 0.08, klw=1,
-                                 norm=NORM_NONE)
-epochs = 2500
-logger = Logger(epochs, frequency=1000)
+batch_size = N
+num_batches = N / batch_size
+klw = 1.0 / num_batches
+model = BayesianNeuralNetwork(layers, 0.02, klw=klw, soft_0=1.,
+                              adv_eps=None, norm=NORM_NONE)
+epochs = 5000
+logger = Logger(epochs, frequency=100)
 logger.set_val_err_fn(lambda: {})
-model.fit(x_train, u_train, epochs, logger=logger)
+model.fit(x_train, u_train, epochs, logger, batch_size)
 
 #%% Predictions and plotting
 y_pred_list = []
 
-for i in range(500):
-    y_pred = model.model(x_star)
+for i in range(100):
+    y_pred = model.model.predict(x_star)
+    # y_pred = model.predict_dist(x_star)
     y_pred_list.append(y_pred)
     
 y_preds = np.concatenate(y_pred_list, axis=1)
