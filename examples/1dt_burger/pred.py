@@ -84,7 +84,7 @@ ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
 
 plt.tight_layout()
 #plt.show()
-savefig("results/graph-means")
+savefig("results/podensnn-burger-graph-means")
 
 #%% Slices
 n_samples = 1
@@ -116,10 +116,10 @@ for j, time in enumerate(times):
             lower = U_pred_i[:, time, 0] - 2*U_pred_i_sig[:, time, 0]
             upper = U_pred_i[:, time, 0] + 2*U_pred_i_sig[:, time, 0]
             ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
-            ax.set_xlabel(f"$x\ (t={time})$")
+            ax.set_xlabel(f"$x\ (t={X_i[0, 0]})$")
             actual_row += 1
             if j == len(times) - 1:
                 ax.legend()
 plt.tight_layout()
 # plt.show()
-savefig("results/graph-samples")
+savefig("results/podensnn-burger-graph-samples")
