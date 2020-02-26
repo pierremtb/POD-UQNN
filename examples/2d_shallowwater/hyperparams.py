@@ -29,7 +29,7 @@ HP["lr"] = 0.001
 HP["soft_0"] = 0.01
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 1000
+HP["log_frequency"] = 10
 
 np.random.seed(1111)
 tf.random.set_seed(1111)

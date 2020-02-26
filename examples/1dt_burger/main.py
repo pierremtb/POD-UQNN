@@ -118,8 +118,8 @@ ax.set_ylabel("$x$")
 ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
 
 plt.tight_layout()
-plt.show()
-# savefig("results/graph-means")
+# plt.show()
+savefig("results/graph-means")
 
 #%% Slices
 n_samples = 1
@@ -156,5 +156,5 @@ for j, time in enumerate(times):
             if j == len(times) - 1:
                 ax.legend()
 plt.tight_layout()
-plt.show()
-# savefig("results/graph-samples")
+# plt.show()
+savefig("results/graph-samples")

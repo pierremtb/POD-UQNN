@@ -45,12 +45,14 @@ class Logger(object):
     def log_train_start(self):
         if self.silent:
             return
+        self.prev_time = time.time()
         print("\nTraining started")
         print("================")
 
     def log_train_epoch(self, epoch, loss, custom="", is_iter=False):
         if epoch % self.frequency == 0 and not self.silent:
             params = self.get_val_err() if self.get_val_err is not None else {}
+            params["T"] = self.get_epoch_duration()
             logs = {"L": loss, **params}
             if self.logs_keys is None:
                 self.logs_keys = list(logs.keys())
@@ -58,8 +60,10 @@ class Logger(object):
 
             logs_message = ""
             for i, key in enumerate(self.logs_keys):
+                if key == "T":
+                    logs_message += f" {key}: {logs_values[i]}"
                 # if i >= 3:
-                if i >= 1:
+                elif i >= 1:
                     logs_message += f" {key}: {logs_values[i]:.4f}"
                 else:
                     logs_message += f" {key}: {logs_values[i]:.4e}"
