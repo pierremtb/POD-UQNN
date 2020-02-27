@@ -9,7 +9,8 @@ import numba as nb
 
 from .pod import perform_pod, perform_fast_pod
 from .logger import Logger
-from .bayesianneuralnetwork import BayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
+from .custombnn import BayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
+# from .bayesianneuralnetwork import BayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
 from .metrics import re, re_s
 
@@ -288,13 +289,14 @@ class PodnnModel:
         """Convert input into a TensorFlow Tensor with the class dtype."""
         return tf.convert_to_tensor(X, dtype=self.dtype)
 
-    def initBNN(self, h_layers, lr, klw, soft_0=0.01, norm=NORM_MEANSTD):
+    def initBNN(self, h_layers, lr, klw, soft_0=0.01, sigma_alea=0.01, norm=NORM_MEANSTD):
         """Create the neural net model."""
         self.lr = lr
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.model_path = os.path.join(self.resdir, "vnn.h5")
         self.regnn = BayesianNeuralNetwork(self.layers, lr, klw,
-                                           soft_0=soft_0, norm=norm)
+                                           soft_0=soft_0, sigma_alea=sigma_alea,
+                                           norm=norm)
         self.regnn.summary()
 
     def train(self, X_v, v, X_v_val, v_val, epochs, freq=100, silent=False):
@@ -305,15 +307,15 @@ class PodnnModel:
         # Validation and logging
         logger = Logger(epochs, freq, silent=silent)
         logger.set_val_err_fn(lambda: {
-            "RE_v": re_s(v_val.T, self.regnn.predict_dist(X_v_val).mean().numpy().T),
-            "std": tf.reduce_sum(self.regnn.predict_dist(X_v_val).mean().numpy().std(0)),
+            "RE_v": re_s(v_val.T, self.regnn.predict_dist(X_v_val).numpy().T),
+            "std": tf.reduce_sum(self.regnn.predict_dist(X_v_val).numpy().std(0)),
         })
 
         # Training
-        self.regnn.fit(X_v, v, epochs, logger)
+        self.regnn.fit(X_v, v, epochs, logger, batch_size=X_v.shape[0])
 
         # Saving
-        # self.save_model()
+        self.save_model()
 
         return logger.get_logs()
 
@@ -345,33 +347,51 @@ class PodnnModel:
             tup += (self.n_t,)
         return (self.n_v,) + tup
 
+    # def predict_v(self, X, samples=20):
+    #     v_pred_samples = np.zeros((samples, X.shape[0], self.n_L))
+    #     v_pred_sig_samples = np.zeros((samples, X.shape[0], self.n_L))
+
+    #     for i in range(samples):
+    #         v_dist = self.regnn.predict_dist(X)
+    #         v_pred_samples[i], v_pred_sig_samples[i] = v_dist.mean().numpy(), v_dist.stddev().numpy()
+
+    #     v_pred = v_pred_samples.mean(0)
+    #     v_pred_var = (v_pred_sig_samples**2 + v_pred_samples ** 2).mean(0) - v_pred ** 2
+    #     v_pred_sig = np.sqrt(v_pred_var)
+
+    #     return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
+
     def predict_v(self, X, samples=20):
         v_pred_samples = np.zeros((samples, X.shape[0], self.n_L))
-        v_pred_sig_samples = np.zeros((samples, X.shape[0], self.n_L))
+        # v_pred_sig_samples = np.zeros((samples, X.shape[0], self.n_L))
 
         for i in range(samples):
             v_dist = self.regnn.predict_dist(X)
-            v_pred_samples[i], v_pred_sig_samples[i] = v_dist.mean().numpy(), v_dist.stddev().numpy()
+            v_pred_samples[i] = v_dist.numpy()
 
         v_pred = v_pred_samples.mean(0)
-        v_pred_var = (v_pred_sig_samples**2 + v_pred_samples ** 2).mean(0) - v_pred ** 2
-        v_pred_sig = np.sqrt(v_pred_var)
+        v_pred_sig = v_pred_samples.std(0)
+        # v_pred_var = (v_pred_sig_samples**2 + v_pred_samples ** 2).mean(0) - v_pred ** 2
+        # v_pred_sig = np.sqrt(v_pred_var)
 
         return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
     def predict(self, X, samples=20):
         U_pred_samples = np.zeros((samples, self.n_h, X.shape[0]))
-        U_pred_sig_samples = np.zeros((samples, self.n_h, X.shape[0]))
+        # U_pred_sig_samples = np.zeros((samples, self.n_h, X.shape[0]))
 
         for i in range(samples):
             v_dist = self.regnn.predict_dist(X)
-            v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
+            v_pred = v_dist.numpy()
+            # v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
             U_pred_samples[i] = self.project_to_U(v_pred)
-            U_pred_sig_samples[i] = self.project_to_U(np.sqrt(v_pred_var))
+            # U_pred_sig_samples[i] = self.project_to_U(np.sqrt(v_pred_var))
+
+        # U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(0) - U_pred ** 2
+        # U_pred_sig = np.sqrt(U_pred_var)
 
         U_pred = U_pred_samples.mean(0)
-        U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(0) - U_pred ** 2
-        U_pred_sig = np.sqrt(U_pred_var)
+        U_pred_sig = U_pred_samples.std(0)
 
         return U_pred.astype(self.dtype), U_pred_sig.astype(self.dtype)
 

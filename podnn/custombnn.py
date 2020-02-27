@@ -24,6 +24,7 @@ tfd = tfp.distributions
 
 
 class DenseVariational(tfk.layers.Layer):
+    """Bayesian Inference layer adapted from http://krasserm.github.io/2019/03/14/bayesian-neural-networks/"""
     def __init__(self,
                  units,
                  kl_weight,
@@ -43,34 +44,50 @@ class DenseVariational(tfk.layers.Layer):
 
         super().__init__(**kwargs)
 
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'units': self.units,
+            'kl_weight': self.kl_weight,
+            'prior_sigma_1': self.prior_sigma_1,
+            'prior_sigma_2': self.prior_sigma_2,
+            'prior_pi_1': self.prior_pi_1,
+            'prior_pi_2': self.prior_pi_2,
+            'init_sigma': self.init_sigma,
+        })
+        return config
+
     def compute_output_shape(self, input_shape):
         return input_shape[0], self.units
 
     def build(self, input_shape):
         self.kernel_mu = self.add_weight(name='kernel_mu',
                                          shape=(input_shape[1], self.units),
-                                         initializer=tfk.initializers.RandomNormal(stddev=self.init_sigma),
+                                         initializer=tfk.initializers.RandomNormal(stddev=self.tensor(self.init_sigma)),
+                                         dtype=self.dtype,
                                          trainable=True)
         self.bias_mu = self.add_weight(name='bias_mu',
                                        shape=(self.units,),
-                                       initializer=tfk.initializers.RandomNormal(stddev=self.init_sigma),
+                                       initializer=tfk.initializers.RandomNormal(stddev=self.tensor(self.init_sigma)),
+                                       dtype=self.dtype,
                                        trainable=True)
         self.kernel_rho = self.add_weight(name='kernel_rho',
                                           shape=(input_shape[1], self.units),
-                                          initializer=tfk.initializers.constant(0.0),
+                                          initializer=tfk.initializers.Constant(0.),
+                                          dtype=self.dtype,
                                           trainable=True)
         self.bias_rho = self.add_weight(name='bias_rho',
                                         shape=(self.units,),
-                                        initializer=tfk.initializers.constant(0.0),
+                                        initializer=tfk.initializers.Constant(0.),
+                                        dtype=self.dtype,
                                         trainable=True)
         super().build(input_shape)
 
     def call(self, inputs, **kwargs):
         kernel_sigma = 1e-5 + tf.math.softplus(0.1 * self.kernel_rho)
-        kernel = self.kernel_mu + kernel_sigma * tf.random.normal(self.kernel_mu.shape)
-
+        kernel = self.kernel_mu + kernel_sigma * tf.random.normal(self.kernel_mu.shape, dtype=self.dtype)
         bias_sigma = 1e-5 + tf.math.softplus(0.1 * self.bias_rho)
-        bias = self.bias_mu + bias_sigma * tf.random.normal(self.bias_mu.shape)
+        bias = self.bias_mu + bias_sigma * tf.random.normal(self.bias_mu.shape, dtype=self.dtype)
 
         self.add_loss(self.kl_loss(kernel, self.kernel_mu, kernel_sigma) +
                       self.kl_loss(bias, self.bias_mu, bias_sigma))
@@ -82,16 +99,19 @@ class DenseVariational(tfk.layers.Layer):
         return self.kl_weight * K.sum(variational_dist.log_prob(w) - self.log_prior_prob(w))
 
     def log_prior_prob(self, w):
-        comp_1_dist = tfp.distributions.Normal(0.0, self.prior_sigma_1)
-        comp_2_dist = tfp.distributions.Normal(0.0, self.prior_sigma_2)
+        comp_1_dist = tfp.distributions.Normal(0.0, self.tensor(self.prior_sigma_1))
+        comp_2_dist = tfp.distributions.Normal(0.0, self.tensor(self.prior_sigma_2))
         return K.log(self.prior_pi_1 * comp_1_dist.prob(w) +
                      self.prior_pi_2 * comp_2_dist.prob(w))
 
+    def tensor(self, x):
+        return tf.convert_to_tensor(x, dtype=self.dtype)
+
 
 class BayesianNeuralNetwork:
-    def __init__(self, layers, lr, klw, soft_0=0.01, adv_eps=None, norm=NORM_NONE, model=None, norm_bounds=None):
+    def __init__(self, layers, lr, klw, soft_0=0.01, sigma_alea=0.01, adv_eps=None, norm=NORM_NONE, model=None, norm_bounds=None):
         # Making sure the dtype is consistent
-        self.dtype = "float32"
+        self.dtype = "float64"
         tf.keras.backend.set_floatx(self.dtype)
 
         # Setting up optimizer and params
@@ -106,6 +126,7 @@ class BayesianNeuralNetwork:
         self.adv_eps = adv_eps
 
         self.soft_0 = soft_0
+        self.sigma_alea = sigma_alea
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
@@ -125,15 +146,18 @@ class BayesianNeuralNetwork:
                 units=width,
                 activation="relu",
                 kl_weight=self.klw,
+                dtype=self.dtype,
             ) for width in self.layers[1:-1]],
             DenseVariational(
                 units=2 * n_L,
                 activation="linear",
+                dtype=self.dtype,
                 kl_weight=self.klw,
             ),
             DenseVariational(
                 units=n_L,
                 activation="linear",
+                dtype=self.dtype,
                 kl_weight=self.klw,
             ),
             # tfp.layers.DistributionLambda(lambda t:
@@ -143,7 +167,7 @@ class BayesianNeuralNetwork:
             #     ),
             # ),
         ])
-        def neg_log_likelihood(y_obs, y_pred, sigma=5):
+        def neg_log_likelihood(y_obs, y_pred, sigma=self.sigma_alea):
             dist = tfp.distributions.Normal(loc=y_pred, scale=sigma)
         # def neg_log_likelihood(y_obs, dist):
             return K.sum(-dist.log_prob(y_obs))
