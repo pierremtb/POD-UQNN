@@ -52,21 +52,32 @@ def natural_keys(text):
     '''
     return [ atoi(c) for c in re.split(r'(\d+)', text) ]
 
+def read_vtk(filename):
+    vtk = meshio.read(filename, file_format="vtk")
+    U = np.zeros((vtk.points.shape[0], 3))
+    U[:, 0] = vtk.point_data["h"]
+    U[:, 1] = vtk.point_data["velocity"][:, 0]
+    U[:, 2] = vtk.point_data["velocity"][:, 1]
+    return U.T
 
-def read_multi_space_sol_input_mesh(n_s, idx, x_u_mesh_path, mu_mesh_path):
+def read_multi_space_sol_input_mesh(n_s, n_t, idx, x_u_mesh_path, mu_mesh_path):
     st = time.time()
-
+    n_xyz = 122233
+    U = np.zeros((3, n_xyz, n_t, n_s))
     for root, dirs, _ in os.walk(x_u_mesh_path):
         # for name in files:
         #     print(os.path.join(root, name))
-        for name in sorted(dirs, key=natural_keys):
+        picked_dirs = sorted(dirs, key=natural_keys)[:n_s+1]
+        picked_dirs = filter(lambda x: x.startswith("multi_"), picked_dirs) 
+        for i, name in enumerate(picked_dirs):
             if name.startswith("multi_"):
-                for root, _, files in os.walk(x_u_mesh_path):
-                    picked_files = sorted(files, key=natural_keys)[:50:1]
-                    for file in picked_files:
-                        if file.startswith("0_FV-Paraview"):
-                            print(os.path.join(root, file))
-                    print(len(picked_files))
+                for sub_root, _, files in os.walk(os.path.join(root, name)):
+                    picked_files = filter(lambda file: file.startswith("0_FV-Paraview"), files)
+                    picked_files = sorted(picked_files, key=natural_keys)
+                    for j, file in enumerate(picked_files[:n_t]):
+                        U_ij = read_vtk(os.path.join(sub_root, file))
+                        U[:, :, j, i] = U_ij
+    print(U.shape)
     return
 
 
