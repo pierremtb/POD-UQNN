@@ -8,13 +8,15 @@ import numpy as np
 
 HP = {}
 HP["mesh_idx"] = ([0], [1, 2], [4, 6, 7])
+HP["mu_idx"] = [2]
 # Dimension of u(x, t, mu)
 HP["n_v"] = len(HP["mesh_idx"][2])
 # Time
-HP["n_t"] = 0
+HP["n_t"] = 10
+HP["d_t"] = 1
 # Snapshots count
-HP["n_s"] = 500
-HP["n_s_tst"] = 300
+HP["n_s"] = 3
+HP["n_s_tst"] = 3
 # POD stopping param
 HP["eps"] = 0
 HP["n_L"] = 10

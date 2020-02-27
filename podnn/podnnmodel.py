@@ -147,6 +147,55 @@ class PodnnModel:
         # U_no_noise = np.zeros((n_h, n_st))
         return loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise, x_noise)
 
+    def convert_multigpu_data(self, U_struct, X_v, train_val, eps, eps_init=None,
+                              n_L=0, use_cache=False, save_cache=False):
+        """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
+        """U is (n_v, n_xyz, n_t, n_s)."""
+        if use_cache and os.path.exists(self.train_data_path):
+            return self.load_train_data()
+
+        self.n_xyz = self.x_mesh.shape[0]
+        self.n_h = self.n_xyz * self.n_v
+        n_s = X_v.shape[0]
+
+        # Number of input in time (1) + number of params
+        self.n_d = X_v.shape[1]
+
+        # Reshaping manually
+        U = self.destruct(U_struct) 
+
+        # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
+        # u_rb are the reduced coefficients we're looking for
+        if eps_init is not None and self.has_t:
+            # Never tested
+            n_s = int(n_s / self.n_t)
+            self.V = perform_fast_pod(U.reshape((self.n_h, self.n_t, n_s)),
+                                      eps, eps_init)
+        else:
+            self.V = perform_pod(U, eps, n_L, True)
+
+        self.n_L = self.V.shape[1]
+
+        # Projecting
+        v = (self.V.T.dot(U)).T
+        v = self.project_to_v(U)
+        
+        # Checking the POD error
+        U_pod = self.V.dot(v.T)
+        self.pod_sig = np.stack((U, U_pod), axis=-1).std(-1).mean(-1)
+        print(f"Mean pod sig: {self.pod_sig.mean()}")
+
+        # Randomly splitting the dataset (X_v, v)
+        X_v_train, X_v_val, v_train, v_val = self.split_dataset(X_v, v, test_size=train_val[1])
+
+        # Creating the validation snapshots matrix
+        U_train = self.V.dot(v_train.T)
+        U_val = self.V.dot(v_val.T)
+
+        self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
+
+        return X_v_train, v_train, X_v_val, v_val, U_val
+
     def convert_dataset(self, u_mesh, X_v, train_val, eps, eps_init=None,
                         n_L=0, use_cache=False, save_cache=False):
         """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
@@ -406,6 +455,25 @@ class PodnnModel:
                 e = self.n_t * (i + 1)
                 U_struct[:, :, :, i] = U[:, s:e].reshape(self.get_u_tuple())
             return U_struct
+
+        # (n_h, n_s) -> (n_v, n_xyz, n_s)
+        n_s = U.shape[-1]
+        U_struct = np.zeros((self.get_u_tuple() + (n_s,)))
+        for i in range(n_s):
+            U_struct[:, :, i] = U[:, i].reshape(self.get_u_tuple())
+        return U_struct
+
+    def destruct(self, U_struct):
+        """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
+        if self.has_t:
+            # (n_v, n_xyz, n_t, n_s) -> (n_h, n_st)
+            n_s = int(U_struct.shape[-1])
+            U = np.zeros((self.n_h, self.n_t * n_s))
+            for i in range(n_s):
+                s = self.n_t * i
+                e = self.n_t * (i + 1)
+                U[:, s:e] = U_struct[:, :, :, i].reshape((self.n_h, self.n_t))
+            return U
 
         # (n_h, n_s) -> (n_v, n_xyz, n_s)
         n_s = U.shape[-1]

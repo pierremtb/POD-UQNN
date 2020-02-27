@@ -58,27 +58,45 @@ def read_vtk(filename):
     U[:, 0] = vtk.point_data["h"]
     U[:, 1] = vtk.point_data["velocity"][:, 0]
     U[:, 2] = vtk.point_data["velocity"][:, 1]
-    return U.T
+    return U.T, vtk.points
 
-def read_multi_space_sol_input_mesh(n_s, n_t, idx, x_u_mesh_path, mu_mesh_path):
+def read_multi_space_sol_input_mesh(n_s, n_t, d_t, idx, x_u_mesh_path, mu_mesh_path, mu_mesh_idx):
     st = time.time()
-    n_xyz = 122233
-    U = np.zeros((3, n_xyz, n_t, n_s))
+    x_mesh = None
+    U = None
+    X_v = None
+    # Number of parameters, 1+others
+    n_p = 1 + len(mu_mesh_idx)
+    mu = np.loadtxt(mu_mesh_path, skiprows=1)[:, mu_mesh_idx]
+    # Get dirs
     for root, dirs, _ in os.walk(x_u_mesh_path):
-        # for name in files:
-        #     print(os.path.join(root, name))
-        picked_dirs = sorted(dirs, key=natural_keys)[:n_s+1]
+        # Sort them naturally, 0-9, 10-19, ...
+        picked_dirs = sorted(dirs, key=natural_keys)[:n_s]
+        # Pick the ones associated with results
         picked_dirs = filter(lambda x: x.startswith("multi_"), picked_dirs) 
+        # For filtered/sorted dir (each sample)
         for i, name in enumerate(picked_dirs):
-            if name.startswith("multi_"):
-                for sub_root, _, files in os.walk(os.path.join(root, name)):
-                    picked_files = filter(lambda file: file.startswith("0_FV-Paraview"), files)
-                    picked_files = sorted(picked_files, key=natural_keys)
-                    for j, file in enumerate(picked_files[:n_t]):
-                        U_ij = read_vtk(os.path.join(sub_root, file))
-                        U[:, :, j, i] = U_ij
-    print(U.shape)
-    return
+            print(f"Loading sample #{i+1}")
+            # Get files of directories
+            for sub_root, _, files in os.walk(os.path.join(root, name)):
+                t_0 = 0.
+                # Sorting and picking the righ ones
+                picked_files = filter(lambda file: file.startswith("0_FV-Paraview"), files)
+                picked_files = sorted(picked_files, key=natural_keys)
+                # For filtered/sorted files
+                for j, file in enumerate(picked_files[:n_t]):
+                    t_j  = t_0 + j*d_t
+                    # Parse the file
+                    U_ij, points = read_vtk(os.path.join(sub_root, file))
+                    # For the first file, initialize the constant mesh and size
+                    if i == 0:
+                        U = np.zeros((U_ij.shape[0], U_ij.shape[1], n_t, n_s))
+                        x_mesh = points
+                        X_v = np.zeros((n_s*n_t, n_p))
+                    # Append to the fat matrix
+                    U[:, :, j, i] = U_ij
+                    X_v[i*n_t + j, :] = np.array([np.array(t_j), mu[i, 0]]).T
+    return x_mesh, U, X_v
 
 
 
