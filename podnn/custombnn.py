@@ -84,9 +84,9 @@ class DenseVariational(tfk.layers.Layer):
         super().build(input_shape)
 
     def call(self, inputs, **kwargs):
-        kernel_sigma = 1e-5 + tf.math.softplus(0.1 * self.kernel_rho)
+        kernel_sigma = 1e-3 + tf.math.softplus(0.1 * self.kernel_rho)
         kernel = self.kernel_mu + kernel_sigma * tf.random.normal(self.kernel_mu.shape, dtype=self.dtype)
-        bias_sigma = 1e-5 + tf.math.softplus(0.1 * self.bias_rho)
+        bias_sigma = 1e-3 + tf.math.softplus(0.1 * self.bias_rho)
         bias = self.bias_mu + bias_sigma * tf.random.normal(self.bias_mu.shape, dtype=self.dtype)
 
         self.add_loss(self.kl_loss(kernel, self.kernel_mu, kernel_sigma) +
@@ -101,8 +101,9 @@ class DenseVariational(tfk.layers.Layer):
     def log_prior_prob(self, w):
         comp_1_dist = tfp.distributions.Normal(0.0, self.tensor(self.prior_sigma_1))
         comp_2_dist = tfp.distributions.Normal(0.0, self.tensor(self.prior_sigma_2))
-        return K.log(self.prior_pi_1 * comp_1_dist.prob(w) +
-                     self.prior_pi_2 * comp_2_dist.prob(w))
+        c = np.log(np.expm1(1.))
+        return K.log(c + self.prior_pi_1 * comp_1_dist.prob(w) +
+                         self.prior_pi_2 * comp_2_dist.prob(w))
 
     def tensor(self, x):
         return tf.convert_to_tensor(x, dtype=self.dtype)

@@ -38,10 +38,10 @@ X_v_train, v_train, \
                                     hp["train_val"], hp["eps"])
 
 #%% Model creation
-model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0], hp["soft_0"], hp["norm"])
-#%%
-# hp["epochs"] = 10000
-model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"], freq=hp["log_frequency"])
+model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0],
+              hp["soft_0"], hp["sigma_alea"], hp["norm"])
+model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
+            freq=hp["log_frequency"])
 
 #%%
 v_pred, v_pred_sig = model.predict_v(X_v_val)
@@ -49,22 +49,22 @@ err_val = re_s(v_val.T, v_pred.T)
 print(f"RE_v: {err_val:4f}")
 
 #%%
-import matplotlib.pyplot as plt
-yhat = model.regnn.predict_dist(X_v_val)
-for i in [0, 1]:
-    plt.plot(yhat.mean().numpy()[i], "b-")
-    plt.plot(yhat.mean().numpy()[i] - 2*yhat.stddev().numpy()[i], "b-", alpha=0.2)
-    plt.plot(yhat.mean().numpy()[i] + 2*yhat.stddev().numpy()[i], "b-", alpha=0.2)
-    plt.plot(v_val[i], "r--")
-plt.show()
+# import matplotlib.pyplot as plt
+# yhat = model.regnn.predict_dist(X_v_val)
+# for i in [0, 1]:
+#     plt.plot(yhat.mean().numpy()[i], "b-")
+#     plt.plot(yhat.mean().numpy()[i] - 2*yhat.stddev().numpy()[i], "b-", alpha=0.2)
+#     plt.plot(yhat.mean().numpy()[i] + 2*yhat.stddev().numpy()[i], "b-", alpha=0.2)
+#     plt.plot(v_val[i], "r--")
+# plt.show()
 
-y_pred, y_pred_sig = model.predict_v(X_v_val)
-for i in [0, 1]:
-    plt.plot(y_pred[i], "b-")
-    plt.plot(y_pred[i] - 2*y_pred_sig[i], "b-", alpha=0.2)
-    plt.plot(y_pred[i] + 2*y_pred_sig[i], "b-", alpha=0.2)
-    plt.plot(v_val[i], "r--")
-plt.show()
+# y_pred, y_pred_sig = model.predict_v(X_v_val)
+# for i in [0, 1]:
+#     plt.plot(y_pred[i], "b-")
+#     plt.plot(y_pred[i] - 2*y_pred_sig[i], "b-", alpha=0.2)
+#     plt.plot(y_pred[i] + 2*y_pred_sig[i], "b-", alpha=0.2)
+#     plt.plot(v_val[i], "r--")
+# plt.show()
 
 #%% Cleanup
 del x_mesh, u_mesh, X_v, X_v_train, v_train, X_v_val, v_val, U_val, v_pred, v_pred_sig, yhat
@@ -77,18 +77,11 @@ x_mesh, u_mesh_tst, X_v_tst = \
 U_tst = model.u_mesh_to_U(u_mesh_tst, hp["n_s_tst"])
 print("got U_tst")
 
-v_pred, v_pred_sig = model.predict_v(X_v_tst, samples=10)
-U_pred = model.project_to_U(v_pred)
-U_pred_up = model.project_to_U(v_pred + 2*v_pred_sig)
-U_pred_sig = 1/2 * (U_pred_up - U_pred)
-print("got U_pred")
+U_pred, U_pred_sig = model.predict_v(X_v_tst, samples=10)
 
 U_tst = model.restruct(U_tst)
-print("got U_tsts_")
 U_pred = model.restruct(U_pred)
-print("got U_tsts_")
 U_pred_sig = model.restruct(U_pred_sig)
-print("got U_tstss_")
 
 err_val = re_s(U_tst, U_pred)
 print(f"RE_v: {err_val:4f}")
