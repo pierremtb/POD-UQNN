@@ -33,7 +33,7 @@ U_pred, U_pred_sig = model.predict(X_v_tst)
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 #%% Samples graph
-n_samples = 3
+n_samples = 2
 mu_lhs_in = model.sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
 mu_lhs_out_min = model.sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
 mu_lhs_out_max = model.sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
@@ -41,9 +41,9 @@ mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
 
 
 # Contours for demo
-n_plot_x = 1
-n_plot_y = 2
-fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=3.0))
+n_plot_x = 2
+n_plot_y = 3
+fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
 gs = fig.add_gridspec(n_plot_x, n_plot_y)
 x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
 y = np.linspace(hp["y_min"], hp["y_max"], hp["n_y"])
@@ -58,7 +58,7 @@ ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
 ax.axis("equal")
 ax.set_xlabel("$x$")
 ax.set_ylabel("$y$")
-ax = fig.add_subplot(gs[0, 1])
+ax = fig.add_subplot(gs[1, 0])
 U_pred = np.reshape(U_pred, (hp["n_x"], hp["n_y"], -1))
 levels = list(range(2, 15))
 ct = ax.contourf(xx, yy, U_pred.mean(-1), levels=levels, origin="lower")
@@ -68,13 +68,13 @@ ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
 ax.set_xlabel("$x$")
 ax.set_ylabel("$y$")
 # plt.show()
-savefig("results/podensnn-ackley-graph-means")
+# savefig("results/podensnn-ackley-graph-means")
 
-#%% Slices
-n_plot_x = 2
-n_plot_y = n_samples
-fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
-gs = fig.add_gridspec(n_plot_x, n_plot_y)
+# Slices
+# n_plot_x = 2
+# n_plot_y = n_samples
+# fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
+# gs = fig.add_gridspec(n_plot_x, n_plot_y)
 for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
     X_v_samples, U_samples, _, _ = \
         model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
@@ -88,7 +88,7 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         U_pred_i, U_pred_i_sig = model.predict(X_i)
         U_pred_i = np.reshape(U_pred_i, (hp["n_x"], hp["n_y"], -1))
         U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_x"], hp["n_y"], -1))
-        ax = fig.add_subplot(gs[row, col])
+        ax = fig.add_subplot(gs[row, col+1])
         ax.plot(x, U_pred_i[:, 199, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
         ax.plot(x, U_samples[:, 199, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
         lower = U_pred_i[:, 199, 0] - 2*U_pred_i_sig[:, 199, 0]
@@ -99,4 +99,4 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
             ax.legend()
 plt.tight_layout()
 # plt.show()
-savefig("results/podensnn-ackley-graph-samples")
+savefig("results/podensnn-ackley-graph-meansamples")
