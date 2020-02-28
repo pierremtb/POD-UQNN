@@ -26,6 +26,13 @@ if distributed:
 model = PodnnModel.load("cache")
 X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
+import matplotlib.pyplot as plt
+
+plt.plot(v_train[0])
+plt.plot(v_train[1])
+plt.savefig("test.png")
+exit(0)
+
 for i in range(local_num):
     model_id = gpu_id if distributed else i
     model.train_model(model_id, X_v_train, v_train, X_v_val, v_val, hp["epochs"],
