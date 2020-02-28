@@ -177,6 +177,9 @@ class PodnnModel:
         # Checking the POD error
         U_pod = self.V.dot(v.T)
         self.pod_sig = np.stack((U, U_pod), axis=-1).std(-1).mean(-1)
+        print("POD SIG")
+        print(self.pod_sig)
+        print(self.predict_v(U - U_pod))
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_val, v_train, v_val = self.split_dataset(X_v, v, train_val[1])
@@ -415,7 +418,6 @@ class PodnnModel:
         # Reshaping manually
         U = np.zeros((self.n_h, n_s))
         for i in range(n_s):
-            print(i)
             st = self.n_xyz * i
             en = self.n_xyz * (i + 1)
             U[:, i] = u_mesh[st:en, :].T.reshape((self.n_h,))

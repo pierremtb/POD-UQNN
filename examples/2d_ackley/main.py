@@ -86,7 +86,7 @@ mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
 # Contours for demo
 n_plot_x = 2
 n_plot_y = 3
-fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.0))
+fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
 gs = fig.add_gridspec(n_plot_x, n_plot_y)
 x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
 y = np.linspace(hp["y_min"], hp["y_max"], hp["n_y"])
@@ -107,7 +107,7 @@ levels = list(range(2, 15))
 ct = ax.contourf(xx, yy, U_pred.mean(-1), levels=levels, origin="lower")
 plt.colorbar(ct)
 ax.axis("equal")
-ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
+ax.set_title(r"$\hat{u_D}(\bar{s_{\textrm{tst}}})$")
 ax.set_xlabel("$x$")
 ax.set_ylabel("$y$")
 # plt.show()
@@ -138,9 +138,15 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         upper = U_pred_i[:, 199, 0] + 2*U_pred_i_sig[:, 199, 0]
         ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
         ax.set_xlabel("$x\ (y=0)$")
+        label_st = r"$s=[" + f"{X_i[0, 0]:.4f}" + f"{X_i[0, 1]:.4f}" + f"{X_i[0, 2]:.4f}" + r"]^{\intercal} \in "
+        if row == 0:
+            label_st += r"\Omega$"
+        else:
+            label_st += r"\Omega_{\textrm{out}}$"
+        ax.set_title(label_st)
         if col == len(idx) - 1:
             ax.legend()
 plt.tight_layout()
 # plt.show()
-savefig("results/podensnn-ackley-graph-meansamples")
+savefig("results/podbnn-ackley-graph-meansamples")
 
