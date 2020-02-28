@@ -44,10 +44,10 @@ X_v_train, v_train, _, \
                                                 x_noise=hp["x_noise"])
 
 #%% Model creation
-sigma_alea = 1.
 model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0],
-              hp["soft_0"], sigma_alea, hp["norm"])
-model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"], freq=hp["log_frequency"])
+              hp["soft_0"], hp["sigma_alea"], hp["norm"])
+model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
+            freq=hp["log_frequency"])
 
 #%%
 # v_pred, v_pred_sig = model.predict_v(X_v_val)
@@ -120,7 +120,7 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
     for col, idx_i in enumerate(idx):
         lbl = r"{\scriptscriptstyle\textrm{tst}}" if row == 0 else r"{\scriptscriptstyle\textrm{out}}"
         X_i = X_v_samples[idx_i, :].reshape(1, -1)
-        U_pred_i, U_pred_i_sig = model.predict(X_i, samples=20)
+        U_pred_i, U_pred_i_sig = model.predict(X_i, samples=100)
         U_pred_i = np.reshape(U_pred_i, (hp["n_x"], hp["n_y"], -1))
         U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_x"], hp["n_y"], -1))
         ax = fig.add_subplot(gs[row, col])
@@ -133,8 +133,8 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         if col == len(idx) - 1:
             ax.legend()
 plt.tight_layout()
-plt.show()
-# savefig("results/graph-samples")
+# plt.show()
+savefig("results/podbnn-ackley-graph-samples")
 
 
 # %%

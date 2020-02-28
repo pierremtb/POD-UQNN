@@ -44,7 +44,8 @@ X_v_train, v_train, _, \
                                                     x_noise=hp["x_noise"])
 
 #%% Train
-model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0], hp["soft_0"], hp["norm"])
+model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0],
+              hp["soft_0"], hp["sigma_alea"], hp["norm"])
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"], freq=hp["log_frequency"])
 
 #%% Generate the dataset from the mesh and params
@@ -125,6 +126,7 @@ savefig("results/graph-means")
 n_samples = 1
 n_plot_x = 2*n_samples
 times = [25, 50, 75]
+times = [2, 5, 8]
 n_plot_y = len(times)
 fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
 gs = fig.add_gridspec(n_plot_x, n_plot_y)
@@ -156,5 +158,5 @@ for j, time in enumerate(times):
             if j == len(times) - 1:
                 ax.legend()
 plt.tight_layout()
-# plt.show()
-savefig("results/graph-samples")
+plt.show()
+# savefig("results/graph-samples")
