@@ -138,11 +138,12 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         upper = U_pred_i[:, 199, 0] + 2*U_pred_i_sig[:, 199, 0]
         ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
         ax.set_xlabel("$x\ (y=0)$")
-        label_st = r"$s=[" + f"{X_i[0, 0]:.4f}" + f"{X_i[0, 1]:.4f}" + f"{X_i[0, 2]:.4f}" + r"]^{\intercal} \in "
+        label_st = r"$\bm{s}=[" + f"{X_i[0, 0]:.2f}, " + f"{X_i[0, 1]:.2f}, " + f"{X_i[0, 2]:.2f}" + r"] \in "
         if row == 0:
-            label_st += r"\Omega$"
+            label_st = label_st + r"\Omega$"
         else:
-            label_st += r"\Omega_{\textrm{out}}$"
+            label_st = label_st +  r"\Omega_{\textrm{out}}$"
+        print(label_st)
         ax.set_title(label_st)
         if col == len(idx) - 1:
             ax.legend()
