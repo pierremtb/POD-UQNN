@@ -179,7 +179,7 @@ class PodnnModel:
         self.pod_sig = np.stack((U, U_pod), axis=-1).std(-1).mean(-1)
         print("POD SIG")
         print(self.pod_sig)
-        print(self.predict_v(U - U_pod))
+        print(self.project_to_v(U - U_pod))
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_val, v_train, v_val = self.split_dataset(X_v, v, train_val[1])
