@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import re_s
-from podnn.mesh import read_space_sol_input_mesh
+from podnn.mesh import read_multi_space_sol_input_mesh
 from podnn.plotting import figsize, savefig
 from pyevtk.hl import unstructuredGridToVTK
 from pyevtk.vtk import VtkTriangle
@@ -28,11 +28,15 @@ err_val = re_s(U_val, U_pred)
 print(f"RE_v: {err_val:4f}")
 
 #%% Sample the new model to generate a test prediction
-mu_path_tst = os.path.join("data", f"INPUT_{hp['n_s_tst']}_Scenarios.txt")
-x_u_mesh_tst_path = os.path.join("data", f"SOL_FV_{hp['n_s_tst']}_Scenarios.txt")
-_, u_mesh_tst, X_v_tst = \
-    read_space_sol_input_mesh(hp["n_s_tst"], hp["mesh_idx"], x_u_mesh_tst_path, mu_path_tst)
-U_tst = model.u_mesh_to_U(u_mesh_tst, hp["n_s_tst"])
+mu_path = os.path.join("..", "..", "..", "scratch", "multi2swt", "INPUT_MONTE_CARLO.dat")
+x_u_mesh_path = os.path.join("..", "..", "..", "scratch", "multi2swt")
+x_mesh, U_tst, X_v_tst = read_multi_space_sol_input_mesh(hp["n_s"], hp["n_t"], hp["d_t"], hp["mesh_idx"],
+                                                 x_u_mesh_path, mu_path, hp["mu_idx"])
+# mu_path_tst = os.path.join("data", f"INPUT_{hp['n_s_tst']}_Scenarios.txt")
+# x_u_mesh_tst_path = os.path.join("data", f"SOL_FV_{hp['n_s_tst']}_Scenarios.txt")
+# _, u_mesh_tst, X_v_tst = \
+#     read_space_sol_input_mesh(hp["n_s_tst"], hp["mesh_idx"], x_u_mesh_tst_path, mu_path_tst)
+# U_tst = model.u_mesh_to_U(u_mesh_tst, hp["n_s_tst"])
 U_pred, U_pred_sig = model.predict(X_v_tst)
 
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
@@ -43,7 +47,6 @@ U_pred_sig = model.restruct(U_pred_sig)
 
 print(X_v_val.min(), X_v_val.max())
 print(X_v_tst.min(), X_v_tst.max())
-exit(0)
 
 #%% VTU export
 print("Saving to .vtu")
@@ -71,37 +74,36 @@ z = np.ascontiguousarray(np.zeros_like(x))
 idx = np.random.choice(U_pred.shape[-1], 2)
 idx = [50, 250]
 print(f"Samples are {X_v_tst[idx[0]]}, {X_v_tst[idx[1]]}")
-unstructuredGridToVTK(os.path.join("cache", "x_u_tst_pred"),
-                        x, y, z,
-                        connectivity, offsets, cell_types,
-                        cellData=None,
-                        pointData={
-                            "h_mean" : U_tst.mean(-1)[0],
-                            "h_pred_mean" : U_pred.mean(-1)[0],
-                            "U_0": np.ascontiguousarray(np.sqrt(U_tst[1, :, idx[0]]**2 + U_tst[2, :, idx[0]]**2)),
-                            "U_1": np.ascontiguousarray(np.sqrt(U_tst[1, :, idx[1]]**2 + U_tst[2, :, idx[1]]**2)),
-                            "h_0": np.ascontiguousarray(U_tst[0, :, idx[0]]),
-                            "h_0_pred": np.ascontiguousarray(U_pred[0, :, idx[0]]),
-                            "h_0_pred_up": np.ascontiguousarray(U_pred[0, :, idx[0]] + 2*U_pred_sig[0, :, idx[0]]),
-                            "h_0_pred_lo": np.ascontiguousarray(U_pred[0, :, idx[0]] - 2*U_pred_sig[0, :, idx[0]]),
-                            "h_0_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[0]]),
-                            "h_1": np.ascontiguousarray(U_tst[0, :, idx[1]]),
-                            "h_1_pred": np.ascontiguousarray(U_pred[0, :, idx[1]]),
-                            "h_1_pred_up": np.ascontiguousarray(U_pred[0, :, idx[1]] + 2*U_pred_sig[0, :, idx[1]]),
-                            "h_1_pred_lo": np.ascontiguousarray(U_pred[0, :, idx[1]] - 2*U_pred_sig[0, :, idx[1]]),
-                            "h_1_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[1]]),
-                            "hu_0": np.ascontiguousarray(U_tst[1, :, idx[0]]),
-                            "hu_0_pred": np.ascontiguousarray(U_pred[1, :, idx[0]]),
-                            "hu_0_pred_sig": np.ascontiguousarray(U_pred_sig[1, :, idx[0]]),
-                            "hu_1": np.ascontiguousarray(U_tst[1, :, idx[1]]),
-                            "hu_1_pred": np.ascontiguousarray(U_pred[1, :, idx[1]]),
-                            "hu_1_pred_sig": np.ascontiguousarray(U_pred_sig[1, :, idx[1]]),
-                            "hv_0": np.ascontiguousarray(U_tst[2, :, idx[0]]),
-                            "hv_0_pred": np.ascontiguousarray(U_pred[2, :, idx[0]]),
-                            "hv_0_pred_sig": np.ascontiguousarray(U_pred_sig[2, :, idx[0]]),
-                            "hv_1": np.ascontiguousarray(U_tst[2, :, idx[1]]),
-                            "hv_1_pred": np.ascontiguousarray(U_pred[2, :, idx[1]]),
-                            "hv_1_pred_sig": np.ascontiguousarray(U_pred_sig[2, :, idx[1]]),
-                            })
+for i in range(hp["n_T"]):
+    unstructuredGridToVTK(os.path.join("cache", f"x_u_tst_pred_{i}"),
+                            x, y, z,
+                            connectivity, offsets, cell_types,
+                            cellData=None,
+                            pointData={
+                                # "U_0": np.ascontiguousarray(np.sqrt(U_tst[1, :, idx[0]]**2 + U_tst[2, :, idx[0]]**2)),
+                                # "U_1": np.ascontiguousarray(np.sqrt(U_tst[1, :, idx[1]]**2 + U_tst[2, :, idx[1]]**2)),
+                                "h_0": np.ascontiguousarray(U_tst[0, :, i, idx[0]]),
+                                "h_0_pred": np.ascontiguousarray(U_pred[0, :, i, idx[0]]),
+                                "h_0_pred_up": np.ascontiguousarray(U_pred[0, :, i, idx[0]] + 2*U_pred_sig[0, :, i, idx[0]]),
+                                "h_0_pred_lo": np.ascontiguousarray(U_pred[0, :, i, idx[0]] - 2*U_pred_sig[0, :, i, idx[0]]),
+                                # "h_0_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[0]]),
+                                # "h_1": np.ascontiguousarray(U_tst[0, :, idx[1]]),
+                                # "h_1_pred": np.ascontiguousarray(U_pred[0, :, idx[1]]),
+                                # "h_1_pred_up": np.ascontiguousarray(U_pred[0, :, idx[1]] + 2*U_pred_sig[0, :, idx[1]]),
+                                # "h_1_pred_lo": np.ascontiguousarray(U_pred[0, :, idx[1]] - 2*U_pred_sig[0, :, idx[1]]),
+                                # "h_1_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[1]]),
+                                # "hu_0": np.ascontiguousarray(U_tst[1, :, idx[0]]),
+                                # "hu_0_pred": np.ascontiguousarray(U_pred[1, :, idx[0]]),
+                                # "hu_0_pred_sig": np.ascontiguousarray(U_pred_sig[1, :, idx[0]]),
+                                # "hu_1": np.ascontiguousarray(U_tst[1, :, idx[1]]),
+                                # "hu_1_pred": np.ascontiguousarray(U_pred[1, :, idx[1]]),
+                                # "hu_1_pred_sig": np.ascontiguousarray(U_pred_sig[1, :, idx[1]]),
+                                # "hv_0": np.ascontiguousarray(U_tst[2, :, idx[0]]),
+                                # "hv_0_pred": np.ascontiguousarray(U_pred[2, :, idx[0]]),
+                                # "hv_0_pred_sig": np.ascontiguousarray(U_pred_sig[2, :, idx[0]]),
+                                # "hv_1": np.ascontiguousarray(U_tst[2, :, idx[1]]),
+                                # "hv_1_pred": np.ascontiguousarray(U_pred[2, :, idx[1]]),
+                                # "hv_1_pred_sig": np.ascontiguousarray(U_pred_sig[2, :, idx[1]]),
+                                })
 print("Exported. ParaView processing is now needed to create x_u_tst_pred.csv")
 

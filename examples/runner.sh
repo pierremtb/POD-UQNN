@@ -19,6 +19,6 @@ function run_ex() {
 }
 
 # run_ex 1d_shekel
-run_ex 2d_ackley
-# run_ex 1dt_burger
+# run_ex 2d_ackley
+run_ex 1dt_burger
 # run_ex 2d_shallowwater

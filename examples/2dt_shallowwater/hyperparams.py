@@ -18,8 +18,8 @@ HP["d_t"] = 1
 HP["n_s"] = 20
 HP["n_s_tst"] = 3
 # POD stopping param
-HP["eps"] = 0
-HP["n_L"] = 10
+HP["eps"] = 1e-4
+HP["n_L"] = 0
 # Train/val split
 HP["train_val"] = (.8, .2)
 # Deep NN hidden layers topology

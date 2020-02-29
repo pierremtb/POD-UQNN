@@ -11,7 +11,7 @@ NORM_MEANSTD = "meanstd"
 NORM_CENTER = "center"
 
 class VarNeuralNetwork:
-    def __init__(self, layers, lr, lam, adv_eps=0., norm=NORM_NONE, model=None, norm_bounds=None):
+    def __init__(self, layers, lr, lam, adv_eps=None, norm=NORM_NONE, model=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float64"
 
