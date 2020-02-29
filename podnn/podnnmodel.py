@@ -423,8 +423,6 @@ class PodnnModel:
             # return {}
             # v_train_pred, _ = model.predict(X_v_train)
             v_val_pred, _ = model.predict(X_v_val)
-            print(v_val)
-            print(v_val_pred)
             # U_val_pred = self.project_to_U(v_val_pred)
             # U_train_pred = self.project_to_U(v_train_pred)
             return {

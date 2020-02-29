@@ -17,15 +17,15 @@ from hyperparams import HP as hp
 
 #%% Load models
 model = PodnnModel.load("cache")
-X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
+# X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
-#%% Predict and restruct
-U_pred, U_pred_sig = model.predict(X_v_val)
+# #%% Predict and restruct
+# U_pred, U_pred_sig = model.predict(X_v_val)
 
-#%% Validation metrics
-U_pred, _ = model.predict(X_v_val)
-err_val = re_s(U_val, U_pred)
-print(f"RE_v: {err_val:4f}")
+# #%% Validation metrics
+# U_pred, _ = model.predict(X_v_val)
+# err_val = re_s(U_val, U_pred)
+# print(f"RE_v: {err_val:4f}")
 
 #%% Sample the new model to generate a test prediction
 mu_path = os.path.join("..", "..", "..", "scratch", "multi2swt", "INPUT_MONTE_CARLO.dat")
@@ -39,14 +39,14 @@ x_mesh, U_tst, X_v_tst = read_multi_space_sol_input_mesh(hp["n_s"], hp["n_t"], h
 # U_tst = model.u_mesh_to_U(u_mesh_tst, hp["n_s_tst"])
 U_pred, U_pred_sig = model.predict(X_v_tst)
 
-print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 U_tst = model.restruct(U_tst)
 U_pred = model.restruct(U_pred)
 U_pred_sig = model.restruct(U_pred_sig)
 
-print(X_v_val.min(), X_v_val.max())
-print(X_v_tst.min(), X_v_tst.max())
+# print(X_v_val.min(), X_v_val.max())
+# print(X_v_tst.min(), X_v_tst.max())
+# print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 #%% VTU export
 print("Saving to .vtu")
