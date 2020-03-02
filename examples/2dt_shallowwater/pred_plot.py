@@ -16,9 +16,49 @@ from pyevtk.vtk import VtkTriangle
 from hyperparams import HP as hp
 
 # Plotting
-csv_file = os.path.join("cache", "x_u_tst_pred.csv")
+# csv_file = os.path.join("cache", "x_u_tst_pred.csv")
+# print("Reading paraview results")
+# results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
+# x_line = results[:, 21]
+# idx = [(8, 9, 10, 11, 12, 13), (14, 15, 16, 17, 18, 19)]
+# y_axis = ["$(hu)$", "$(hv)$"]
 print("Reading paraview results")
-results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
+U_tst_list = []
+x_prime = None
+idx = [0, 4]
+for i, file in enumerate(idx):
+    csv_file = os.path.join("cache", f"multi2swt_face_{file}.csv")
+    results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
+    print(results.shape)
+    if i == 0:
+        x_prime = results[:, 7]
+        U_tst = np.zeros((results.shape[0], len(idx)))
+    U_tst[:, i] = results[:, 4]
+
+U_pred = U_tst
+
+    
+n_plot_x = 2
+n_plot_y = 2
+fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
+gs = fig.add_gridspec(n_plot_x, n_plot_y)
+for i in range(len(idx)):
+    ax = fig.add_subplot(gs[i, :])
+    ax.plot(x_prime, U_pred[:, i], "b-")
+    ax.plot(x_prime, U_tst[:, i], "r--")
+    if i == 0:
+        ax.set_xlabel("$x'\ (t=0)$")
+    else:
+        ax.set_xlabel("$x'\ (t=4\ s)$")
+    ax.set_ylabel("$\eta$")
+    ax.set_title("$s=27.0\ m$")
+plt.tight_layout()
+plt.savefig("cache/podensnn-swt-samples.pdf")
+# plt.show()
+
+print(U_tst)
+exit(0)
+
 x_line = results[:, 21]
 idx = [(8, 9, 10, 11, 12, 13), (14, 15, 16, 17, 18, 19)]
 y_axis = ["$(hu)$", "$(hv)$"]
