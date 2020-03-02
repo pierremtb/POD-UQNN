@@ -49,17 +49,6 @@ model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0],
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
             freq=hp["log_frequency"])
 
-#%%
-# v_pred, v_pred_sig = model.predict_v(X_v_val)
-# err_val = re_s(v_val.T, v_pred.T)
-# print(f"RE_v: {err_val:4f}")
-
-# plt.plot(v_val[0], "r--")
-# plt.plot(v_pred[0], "b-")
-# plt.plot(v_pred[0] + 2*v_pred_sig[0], "b-", alpha=0.3)
-# plt.plot(v_pred[0] - 2*v_pred_sig[0], "b-", alpha=0.3)
-# plt.show()
-
 #%% Sample the new model to generate a test prediction
 mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
 X_v_tst, U_tst, _, _ = \
@@ -67,13 +56,12 @@ X_v_tst, U_tst, _, _ = \
 U_pred, U_pred_sig = model.predict(X_v_tst, samples=10)
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
-#%% Samples graph
-n_samples = 3
-mu_lhs_in = model.sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
-mu_lhs_out_min = model.sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
-mu_lhs_out_max = model.sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
-mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
-
+#%% Sample the new model to generate a test prediction
+mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
+X_v_tst, U_tst, _, _ = \
+    model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
+U_pred, U_pred_sig = model.predict(X_v_tst)
+print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 #%% Samples graph
 n_samples = 2
@@ -110,22 +98,16 @@ ax.axis("equal")
 ax.set_title(r"$\hat{u_D}(\bar{s_{\textrm{tst}}})$")
 ax.set_xlabel("$x$")
 ax.set_ylabel("$y$")
-# plt.show()
-# savefig("results/podensnn-ackley-graph-means")
 
 # Slices
-# n_plot_x = 2
-# n_plot_y = n_samples
-# fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
-# gs = fig.add_gridspec(n_plot_x, n_plot_y)
-for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
+for col, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
     X_v_samples, U_samples, _, _ = \
         model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
     U_samples = np.reshape(U_samples, (hp["n_x"], hp["n_y"], -1))
                             
     x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
     idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
-    for col, idx_i in enumerate(idx):
+    for row, idx_i in enumerate(idx):
         lbl = r"{\scriptscriptstyle\textrm{tst}}" if row == 0 else r"{\scriptscriptstyle\textrm{out}}"
         X_i = X_v_samples[idx_i, :].reshape(1, -1)
         U_pred_i, U_pred_i_sig = model.predict(X_i)
@@ -138,16 +120,11 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         upper = U_pred_i[:, 199, 0] + 2*U_pred_i_sig[:, 199, 0]
         ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
         ax.set_xlabel("$x\ (y=0)$")
-        label_st = r"$\bm{s}=[" + f"{X_i[0, 0]:.2f}, " + f"{X_i[0, 1]:.2f}, " + f"{X_i[0, 2]:.2f}" + r"] \in "
-        if row == 0:
-            label_st = label_st + r"\Omega$"
-        else:
-            label_st = label_st +  r"\Omega_{\textrm{out}}$"
-        print(label_st)
-        ax.set_title(label_st)
-        if col == len(idx) - 1:
+        title_st = r"$s=[" + f"{X_i[0, 0]:.2f}," + f"{X_i[0, 1]:.2f}," + f"{X_i[0, 2]:.2f}] "
+        title_st += r"\in \Omega_{\textrm{out}}$" if col + 1 == 2 else r"\in \Omega$"
+        ax.set_title(title_st)
+        if col == len(idx) - 1 and row == 0:
             ax.legend()
 plt.tight_layout()
 # plt.show()
 savefig("results/podbnn-ackley-graph-meansamples")
-

@@ -76,14 +76,14 @@ x_mesh, u_mesh_tst, X_v_tst = \
     read_space_sol_input_mesh(hp["n_s_tst"], hp["mesh_idx"], x_u_mesh_tst_path, mu_path_tst)
 U_tst = model.u_mesh_to_U(u_mesh_tst, hp["n_s_tst"])
 
-U_pred, U_pred_sig = model.predict(X_v_tst, samples=10)
+U_pred, U_pred_sig = model.predict(X_v_tst, samples=100)
 
 U_tst = model.restruct(U_tst)
 U_pred = model.restruct(U_pred)
 U_pred_sig = model.restruct(U_pred_sig)
 
-err_val = re_s(U_tst, U_pred)
-print(f"RE_v: {err_val:4f}")
+# err_val = re_s(U_tst, U_pred)
+# print(f"RE_v: {err_val:4f}")
 
 #%% VTU export
 print("Saving to .vtu")
@@ -116,21 +116,17 @@ unstructuredGridToVTK(os.path.join("cache", "x_u_tst_pred"),
                         connectivity, offsets, cell_types,
                         cellData=None,
                         pointData={
-                            "h_mean" : U_tst.mean(-1)[0],
-                            "h_pred_mean" : U_pred.mean(-1)[0],
                             "U_0": np.ascontiguousarray(np.sqrt(U_tst[1, :, idx[0]]**2 + U_tst[2, :, idx[0]]**2)),
                             "U_1": np.ascontiguousarray(np.sqrt(U_tst[1, :, idx[1]]**2 + U_tst[2, :, idx[1]]**2)),
                             "h_0": np.ascontiguousarray(U_tst[0, :, idx[0]]),
                             "h_0_pred": np.ascontiguousarray(U_pred[0, :, idx[0]]),
                             "h_0_pred_up": np.ascontiguousarray(U_pred[0, :, idx[0]] + 2*U_pred_sig[0, :, idx[0]]),
-                            "h_0_pred_up2": np.ascontiguousarray(U_pred[0, :, idx[0]] + 2*U_pred_sig[0, :, idx[0]]),
                             "h_0_pred_lo": np.ascontiguousarray(U_pred[0, :, idx[0]] - 2*U_pred_sig[0, :, idx[0]]),
                             "h_0_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[0]]),
                             "h_1": np.ascontiguousarray(U_tst[0, :, idx[1]]),
                             "h_1_pred": np.ascontiguousarray(U_pred[0, :, idx[1]]),
                             "h_1_pred_up": np.ascontiguousarray(U_pred[0, :, idx[1]] + 2*U_pred_sig[0, :, idx[1]]),
                             "h_1_pred_lo": np.ascontiguousarray(U_pred[0, :, idx[1]] - 2*U_pred_sig[0, :, idx[1]]),
-                            "h_1_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[1]]),
                             "hu_0": np.ascontiguousarray(U_tst[1, :, idx[0]]),
                             "hu_0_pred": np.ascontiguousarray(U_pred[1, :, idx[0]]),
                             "hu_0_pred_sig": np.ascontiguousarray(U_pred_sig[1, :, idx[0]]),

@@ -178,8 +178,8 @@ class PodnnModel:
         U_pod = self.V.dot(v.T)
         self.pod_sig = np.stack((U, U_pod), axis=-1).std(-1).mean(-1)
         print("POD SIG")
-        print(self.pod_sig)
-        print(self.project_to_v(U - U_pod))
+        print(self.pod_sig.mean())
+        print(self.project_to_v(U - U_pod).mean())
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_val, v_train, v_val = self.split_dataset(X_v, v, train_val[1])
@@ -309,10 +309,16 @@ class PodnnModel:
 
         # Validation and logging
         logger = Logger(epochs, freq, silent=silent)
-        logger.set_val_err_fn(lambda: {
-            "RE_v": re_s(v_val.T, self.regnn.predict_dist(X_v_val).numpy().T),
-            "std": tf.reduce_sum(self.regnn.predict_dist(X_v_val).numpy().std(0)),
-        })
+        def err_fn():
+            v_dist = self.regnn.predict_dist(X_v_val)
+            v_pred = v_dist.numpy()
+            # v_pred = v_dist.mean().numpy()
+            return {
+                "RE_v": re_s(v_val.T, v_pred.T),
+                "std": tf.reduce_sum(v_pred),
+                # "std_i": self.predict_v(X_v_val, samples=5)[1].mean(),
+            }
+        logger.set_val_err_fn(err_fn)
 
         # Training
         self.regnn.fit(X_v, v, epochs, logger, batch_size=X_v.shape[0])
@@ -379,24 +385,40 @@ class PodnnModel:
 
         return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
+    # def predict(self, X, samples=20):
+    #     U_pred_sum = np.zeros((self.n_h, X.shape[0]))
+    #     U_pred_sum_sq = np.zeros((self.n_h, X.shape[0]))
+
+    #     for i in range(samples):
+    #         v_dist = self.regnn.predict_dist(X)
+    #         v_pred = v_dist.numpy()
+    #         U_pred_i = self.project_to_U(v_pred)
+    #         U_pred_sum += U_pred_i
+    #         U_pred_sum_sq += U_pred_i ** 2
+
+    #     U_pred = U_pred_sum / samples
+    #     U_pred_sig = np.sqrt((U_pred_sum_sq - U_pred_sum**2)/samples)
+    #     U_pred_sig = np.nan_to_num(U_pred_sig)
+
+    #     return U_pred, U_pred_sig
+
     def predict(self, X, samples=20):
         U_pred_samples = np.zeros((samples, self.n_h, X.shape[0]))
         # U_pred_sig_samples = np.zeros((samples, self.n_h, X.shape[0]))
 
         for i in range(samples):
             v_dist = self.regnn.predict_dist(X)
-            v_pred = v_dist.numpy()
             # v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
+            v_pred = v_dist.numpy()
             U_pred_samples[i] = self.project_to_U(v_pred)
             # U_pred_sig_samples[i] = self.project_to_U(np.sqrt(v_pred_var))
 
         # U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(0) - U_pred ** 2
         # U_pred_sig = np.sqrt(U_pred_var)
-
         U_pred = U_pred_samples.mean(0)
         U_pred_sig = U_pred_samples.std(0)
 
-        return U_pred.astype(self.dtype), U_pred_sig.astype(self.dtype)
+        return U_pred, U_pred_sig
 
     def project_to_U(self, v):
         return self.V.dot(v.T)
