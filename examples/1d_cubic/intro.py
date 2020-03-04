@@ -19,17 +19,17 @@ y_tst = x_tst**3
 # u2_star = np.sin(x_star)
 # u_star = np.column_stack((u1_star[:, 0], u2_star[:, 0]))
 
-N = 200
+N = 20
 lb = int(2/(2*6) * N_tst)
 ub = int((2+2*4)/(2*6) * N_tst)
-idx = np.random.choice(x_tst[lb:ub].shape[0], N, replace=False)
-# idx = np.array([26, 23, 4, 3, 27, 64, 58, 30, 18, 16, 2, 31, 65, 15, 11, 17, 57, 28, 34, 50])
+# idx = np.random.choice(x_tst[lb:ub].shape[0], N, replace=False)
+idx = np.array([ 58, 194, 192,  37,  55, 148,  77, 144, 197, 190,  15,  97, 171,
+        91, 100, 188,   8,  63,  98,  78])
 x = x_tst[lb + idx]
 y = y_tst[lb + idx]
 # noise_std = 0.01*u_train.std(0)
 noise_std = 9
 y = y + noise_std*np.random.randn(y.shape[0], y.shape[1])
-
 
 #%% Datagen plot
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
@@ -38,7 +38,6 @@ plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
 plt.legend()
 # plt.show()
 plt.savefig("review-bishop-toy-data.pdf")
-
 
 #%%
 d = 1
@@ -73,22 +72,6 @@ plt.legend()
 plt.savefig(f"review-bishop-toy-poly-{d}.pdf")
 
 #%%
-d = 5
-w_star = np.polyfit(x.flatten(), y.flatten(), deg=d)
-print(f"Weights w* for d={d}: {w_star}")
-P_star = np.poly1d(w_star)
-y_1_pred = P_star(x_tst)
-
-#%%
-fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
-plt.scatter(x, y, c="r", label=r"$y_i$")
-plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
-plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
-plt.legend()
-# plt.show()
-plt.savefig(f"review-bishop-toy-poly-{d}.pdf")
-
-#%%
 d = 10
 w_star = np.polyfit(x.flatten(), y.flatten(), deg=d)
 print(f"Weights w* for d={d}: {w_star}")
@@ -103,16 +86,16 @@ plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
 plt.legend()
 plt.ylim((y_tst.min(), y_tst.max()))
 # plt.show()
-plt.savefig(f"review-bishop-toy-poly-{d}-N200.pdf")
+plt.savefig(f"review-bishop-toy-poly-{d}.pdf")
 
 #%%
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 d = 10
-reg = make_pipeline(PolynomialFeatures(d), Ridge(1e10))
+lambd = 1e10
+reg = make_pipeline(PolynomialFeatures(d), Ridge(lambd))
 reg.fit(x, y)
-# print(f"Weights w* for d={d}: {reg.coef_}, {reg.intercept_}")
 y_1_pred = reg.predict(x_tst)
 
 #%%
@@ -124,6 +107,95 @@ plt.legend()
 plt.ylim((y_tst.min(), y_tst.max()))
 # plt.show()
 plt.savefig(f"review-bishop-toy-poly-{d}-l2-10e10.pdf")
+
+#%%
+N = 200
+lb = int(2/(2*6) * N_tst)
+ub = int((2+2*4)/(2*6) * N_tst)
+idx = np.random.choice(x_tst[lb:ub].shape[0], N, replace=False)
+# idx = np.array([ 58, 194, 192,  37,  55, 148,  77, 144, 197, 190,  15,  97, 171,
+        # 91, 100, 188,   8,  63,  98,  78])
+x = x_tst[lb + idx]
+y = y_tst[lb + idx]
+# noise_std = 0.01*u_train.std(0)
+noise_std = 9
+y = y + noise_std*np.random.randn(y.shape[0], y.shape[1])
+d = 10
+w_star = np.polyfit(x.flatten(), y.flatten(), deg=d)
+print(f"Weights w* for d={d}: {w_star}")
+P_star = np.poly1d(w_star)
+y_1_pred = P_star(x_tst)
+
+#%%
+fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
+plt.scatter(x, y, c="r", label=r"$y_i$")
+plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
+plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
+plt.legend()
+plt.ylim((y_tst.min(), y_tst.max()))
+# plt.show()
+plt.savefig(f"review-bishop-toy-poly-{d}-N{N}.pdf")
+
+#%%
+d = 10
+beta = 1/noise_std**2
+alpha = 5e-3
+
+# Polynomial basis
+def phi(x_):
+    return np.array([x_**i for i in range(d+1)])
+
+# S matrix
+S_inv = alpha * np.identity(d+1) + \
+        beta * np.array([phi(x_i).dot(phi(x_i).T) for x_i in x]) \
+                 .sum(0)
+S = np.linalg.inv(S_inv)
+
+# Mean for a given x
+def mean(x_):
+    sum_n = np.array([phi(x[i]) * y[i] for i in range(N)]) \
+              .sum(0)
+    return beta * phi(x_).T.dot(S).dot(sum_n)
+
+# Variance for a given x
+def variance(x_):
+    return 1/beta + phi(x_).T.dot(S).dot(phi(x_))
+
+# Predictions
+y_pred = np.zeros_like(x_tst)
+var = np.zeros_like(x_tst)
+for i, x_i in enumerate(x_tst):
+    y_pred[i] = mean(x_i)
+    var[i] = variance(x_i)
+sig = np.sqrt(var)
+
+upper = y_pred + 2 * sig
+lower = y_pred - 2 * sig
+
+fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
+plt.fill_between(x_tst.ravel(), upper.ravel(), lower.ravel(), 
+                    facecolor='C0', alpha=0.3, label=r"$2\sigma_{T}(x)$")
+plt.scatter(x, y, c="r", label=r"$y_i$")
+plt.plot(x_tst, y_pred, "b-", label=r"$y_i$")
+plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
+plt.legend()
+plt.ylim((y_tst.min(), y_tst.max()))
+plt.savefig(f"review-bishop-toy-polybayes-{d}.pdf")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #%%
 import sys
