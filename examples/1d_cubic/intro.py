@@ -3,7 +3,7 @@
 import os
 import sys
 sys.path.append(os.path.join("..", ".."))
-from podnn.plotting import figsize
+from podnn.plotting import figsize, savefig
 
 #%% Imports
 import numpy as np
@@ -37,7 +37,7 @@ plt.scatter(x, y, c="r", label=r"$y_i$")
 plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
 plt.legend()
 # plt.show()
-plt.savefig("review-bishop-toy-data.pdf")
+plt.savefig("review-bishop-toy-data.pdf", bbox_inches='tight', pad_inches=0)
 
 #%%
 d = 1
@@ -53,7 +53,7 @@ plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
 plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
 plt.legend()
 # plt.show()
-plt.savefig(f"review-bishop-toy-poly-{d}.pdf")
+plt.savefig(f"review-bishop-toy-poly-{d}.pdf", bbox_inches='tight', pad_inches=0)
 
 #%%
 d = 3
@@ -69,7 +69,7 @@ plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
 plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
 plt.legend()
 # plt.show()
-plt.savefig(f"review-bishop-toy-poly-{d}.pdf")
+plt.savefig(f"review-bishop-toy-poly-{d}.pdf", bbox_inches='tight', pad_inches=0)
 
 #%%
 d = 10
@@ -86,7 +86,7 @@ plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
 plt.legend()
 plt.ylim((y_tst.min(), y_tst.max()))
 # plt.show()
-plt.savefig(f"review-bishop-toy-poly-{d}.pdf")
+plt.savefig(f"review-bishop-toy-poly-{d}.pdf", bbox_inches='tight', pad_inches=0)
 
 #%%
 from sklearn.linear_model import Ridge
@@ -106,7 +106,7 @@ plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
 plt.legend()
 plt.ylim((y_tst.min(), y_tst.max()))
 # plt.show()
-plt.savefig(f"review-bishop-toy-poly-{d}-l2-10e10.pdf")
+plt.savefig(f"review-bishop-toy-poly-{d}-l2-10e10.pdf", bbox_inches='tight', pad_inches=0)
 
 #%%
 N = 200
@@ -134,8 +134,20 @@ plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
 plt.legend()
 plt.ylim((y_tst.min(), y_tst.max()))
 # plt.show()
-plt.savefig(f"review-bishop-toy-poly-{d}-N{N}.pdf")
+plt.savefig(f"review-bishop-toy-poly-{d}-N{N}.pdf", bbox_inches='tight', pad_inches=0)
 
+#%%
+N = 20
+lb = int(2/(2*6) * N_tst)
+ub = int((2+2*4)/(2*6) * N_tst)
+# idx = np.random.choice(x_tst[lb:ub].shape[0], N, replace=False)
+idx = np.array([ 58, 194, 192,  37,  55, 148,  77, 144, 197, 190,  15,  97, 171,
+        91, 100, 188,   8,  63,  98,  78])
+x = x_tst[lb + idx]
+y = y_tst[lb + idx]
+# noise_std = 0.01*u_train.std(0)
+noise_std = 9
+y = y + noise_std*np.random.randn(y.shape[0], y.shape[1])
 #%%
 d = 10
 beta = 1/noise_std**2
@@ -180,10 +192,29 @@ plt.plot(x_tst, y_pred, "b-", label=r"$y_i$")
 plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
 plt.legend()
 plt.ylim((y_tst.min(), y_tst.max()))
-plt.savefig(f"review-bishop-toy-polybayes-{d}.pdf")
+plt.savefig(f"review-bishop-toy-polybayes-{d}.pdf", bbox_inches='tight', pad_inches=0)
 
+#%%
+import tensorflow as tf
+tfk = tf.keras
 
+model = tfk.Sequential([
+    tfk.layers.Dense(5,
+        activation="relu",
+        kernel_regularizer=tfk.regularizers.l2(0.01)),
+    tfk.layers.Dense(1),
+])
+model.compile(optimizer=tfk.optimizers.Adam(0.1), loss="mse")
+model.fit(x, y, epochs=1000, verbose=0)
+y_pred = model.predict(x_tst)
 
+fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
+plt.scatter(x, y, c="r", label=r"$y_i$")
+plt.plot(x_tst, y_pred, "b-", label=r"$y_i$")
+plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
+plt.legend()
+plt.ylim((y_tst.min(), y_tst.max()))
+plt.savefig(f"review-bishop-toy-nn.pdf", bbox_inches='tight', pad_inches=0)
 
 
 
