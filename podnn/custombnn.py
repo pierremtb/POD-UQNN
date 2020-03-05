@@ -199,11 +199,14 @@ class BayesianNeuralNetwork:
 
         return self.tensor(X)
 
-    def fit(self, X_v, v, epochs, logger, batch_size):
+    def fit(self, X_v, v, epochs, logger=None, batch_size=None):
         """Train the model over a given dataset, and parameters."""
         # Setting up logger
         self.logger = logger
-        self.logger.log_train_start()
+        callbacks = []
+        if self.logger is not None:
+            self.logger.log_train_start()
+            callbacks = [LoggerCallback(logger)]
 
         # Normalizing and preparing inputs
         self.set_normalize_bounds(X_v)
@@ -212,9 +215,10 @@ class BayesianNeuralNetwork:
 
         # Optimizing
         self.model.fit(X_v, v, epochs=epochs, batch_size=batch_size,
-                       verbose=0, callbacks=[LoggerCallback(logger)])
+                       verbose=0, callbacks=callbacks)
 
-        self.logger.log_train_end(epochs, tf.constant(0., dtype=self.dtype))
+        if self.logger is not None:
+            self.logger.log_train_end(epochs, tf.constant(0., dtype=self.dtype))
 
     def predict_dist(self, X):
         """Get the prediction distribution for a new input X."""
@@ -224,9 +228,12 @@ class BayesianNeuralNetwork:
     def predict(self, X, samples=200):
         """Get the prediction for a new input X, sampled many times."""
         X = self.normalize(X)
-        yhat = self.model(X)
-        v_pred = np.array([yhat.mean().numpy() for _ in range(samples)]).mean(0)
-        return v_pred, np.zeros_like(v_pred)
+        y_pred_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
+        for i in range(samples):
+            y_pred_samples[i, ...] = self.model(X).numpy()
+        y_pred = y_pred_samples.mean(0)
+        y_pred_var = y_pred_samples.var(0)
+        return y_pred, y_pred_var
 
     def summary(self):
         """Print a summary of the TensorFlow/Keras model."""
