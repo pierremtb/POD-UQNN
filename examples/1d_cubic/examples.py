@@ -34,7 +34,7 @@ u_pred_samples = np.zeros((M, y_tst.shape[0], y_tst.shape[1]))
 u_pred_var_samples = np.zeros_like(u_pred_samples)
 
 for i in range(5):
-    model = VarNeuralNetwork(layers, lr=0.01, lam=0.01, norm="minmax")
+    model = VarNeuralNetwork(layers, lr=0.01, lam=0.001, norm="minmax")
     model.fit_simple(x, y, epochs=5000)
     u_pred_samples[i], u_pred_var_samples[i] = model.predict(x_tst)
 
