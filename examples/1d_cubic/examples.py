@@ -29,8 +29,8 @@ y = y + noise_std*np.random.randn(y.shape[0], y.shape[1])
 
 #%% Datagen plot
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
-plt.scatter(x, y, c="r", label=r"$y_i$")
-plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
+plt.scatter(x, y, c="r", label=r"$y$")
+plt.plot(x_tst, y_tst, "r--", label=r"$y_\textrm{tst}$")
 plt.legend()
 # plt.show()
 plt.savefig("review-bishop-toy-data.pdf", bbox_inches='tight', pad_inches=0)
@@ -44,9 +44,9 @@ y_1_pred = P_star(x_tst)
 
 #%%
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
-plt.scatter(x, y, c="r", label=r"$y_i$")
-plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
-plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
+plt.scatter(x, y, c="r", label=r"$y$")
+plt.plot(x_tst, y_tst, "r--", label=r"$y_\textrm{tst}$")
+plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}(x_\textrm{tst})$")
 plt.legend()
 # plt.show()
 plt.savefig(f"review-bishop-toy-poly-{d}.pdf", bbox_inches='tight', pad_inches=0)
@@ -60,9 +60,9 @@ y_1_pred = P_star(x_tst)
 
 #%%
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
-plt.scatter(x, y, c="r", label=r"$y_i$")
-plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
-plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
+plt.scatter(x, y, c="r", label=r"$y$")
+plt.plot(x_tst, y_tst, "r--", label=r"$y_\textrm{tst}$")
+plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}(x_\textrm{tst})$")
 plt.legend()
 # plt.show()
 plt.savefig(f"review-bishop-toy-poly-{d}.pdf", bbox_inches='tight', pad_inches=0)
@@ -76,9 +76,9 @@ y_1_pred = P_star(x_tst)
 
 #%%
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
-plt.scatter(x, y, c="r", label=r"$y_i$")
-plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
-plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
+plt.scatter(x, y, c="r", label=r"$y$")
+plt.plot(x_tst, y_tst, "r--", label=r"$y_\textrm{tst}$")
+plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}(x_\textrm{tst})$")
 plt.legend()
 plt.ylim((y_tst.min(), y_tst.max()))
 # plt.show()
@@ -89,16 +89,16 @@ from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 d = 10
-lambd = 1e10
-reg = make_pipeline(PolynomialFeatures(d), Ridge(lambd))
+alpha = 0.45
+reg = make_pipeline(PolynomialFeatures(d), Ridge(alpha=alpha))
 reg.fit(x, y)
 y_1_pred = reg.predict(x_tst)
 
-#%%
+##%%
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
-plt.scatter(x, y, c="r", label=r"$y_i$")
-plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
-plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
+plt.scatter(x, y, c="r", label=r"$y$")
+plt.plot(x_tst, y_tst, "r--", label=r"$y_\textrm{tst}$")
+plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}(x_\textrm{tst})$")
 plt.legend()
 plt.ylim((y_tst.min(), y_tst.max()))
 # plt.show()
@@ -124,9 +124,9 @@ y_1_pred = P_star(x_tst)
 
 #%%
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
-plt.scatter(x, y, c="r", label=r"$y_i$")
-plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
-plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}_1(x)$")
+plt.scatter(x, y, c="r", label=r"$y$")
+plt.plot(x_tst, y_tst, "r--", label=r"$y_\textrm{tst}$")
+plt.plot(x_tst, y_1_pred, "b-", label=r"$\hat{u}(x_\textrm{tst})$")
 plt.legend()
 plt.ylim((y_tst.min(), y_tst.max()))
 # plt.show()
@@ -147,7 +147,8 @@ y = y + noise_std*np.random.randn(y.shape[0], y.shape[1])
 #%%
 d = 3
 beta = 1/noise_std**2
-alpha = 5e-3
+# alpha = 5e-3
+alpha = 0.11
 
 # Polynomial basis
 def phi(x_):
@@ -181,11 +182,11 @@ upper = f_post + 2 * sig
 lower = f_post - 2 * sig
 
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
-plt.fill_between(x_tst.ravel(), upper.ravel(), lower.ravel(), 
-                    facecolor='C0', alpha=0.3, label=r"$2\sigma_{T}(x)$")
-plt.scatter(x, y, c="r", label=r"$y_i$")
-plt.plot(x_tst, f_post, "b-", label=r"$y_i$")
-plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
+plt.fill_between(x_tst.ravel(), upper.ravel(), lower.ravel(),
+                    facecolor='C0', alpha=0.3, label=r"$2\sigma(x_\textrm{tst})$")
+plt.scatter(x, y, c="r", label=r"$y$")
+plt.plot(x_tst, f_post, "b-", label=r"$\hat{u}(x_\textrm{tst})$")
+plt.plot(x_tst, y_tst, "r--", label=r"$y_\textrm{tst}$")
 plt.legend()
 plt.ylim((y_tst.min(), y_tst.max()))
 plt.savefig(f"review-bishop-toy-polybayes-{d}.pdf", bbox_inches='tight', pad_inches=0)
@@ -205,9 +206,9 @@ model.fit(x, y, epochs=1000, verbose=0)
 f_post = model.predict(x_tst)
 
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
-plt.scatter(x, y, c="r", label=r"$y_i$")
-plt.plot(x_tst, f_post, "b-", label=r"$y_i$")
-plt.plot(x_tst, y_tst, "r--", label=r"$u(x)$")
+plt.scatter(x, y, c="r", label=r"$y$")
+plt.plot(x_tst, f_post, "b-", label=r"$\hat{u}(x_\textrm{tst})$")
+plt.plot(x_tst, y_tst, "r--", label=r"$y_\textrm{tst}$")
 plt.legend()
 plt.ylim((y_tst.min(), y_tst.max()))
 plt.savefig(f"review-bishop-toy-nn.pdf", bbox_inches='tight', pad_inches=0)
@@ -297,7 +298,7 @@ layers = [1, 20, 20, 1]
 batch_size = N
 num_batches = N / batch_size
 klw = 1.0 / num_batches
-model = BayesianNeuralNetwork(layers, lr=0.05, klw=klw, soft_0=1.,
+model = BayesianNeuralNetwork(layers, lr=0.05, klw=klw, soft_0=0.1,
                               sigma_alea=noise_std,
                               adv_eps=None, norm="minmax")
 model.fit(x, y, epochs=15000, batch_size=batch_size)
