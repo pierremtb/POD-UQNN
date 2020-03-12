@@ -52,13 +52,14 @@ def natural_keys(text):
     '''
     return [ atoi(c) for c in re.split(r'(\d+)', text) ]
 
-def read_vtk(filename):
+def read_vtk(filename, idx):
     vtk = meshio.read(filename, file_format="vtk")
-    U = np.zeros((vtk.points.shape[0], 3))
-    U[:, 0] = vtk.point_data["h"]
-    U[:, 1] = vtk.point_data["velocity"][:, 0]
-    U[:, 2] = vtk.point_data["velocity"][:, 1]
-    return U.T, vtk.points
+    U = np.zeros((vtk.points.shape[0], len(idx)))
+    for i, key in enumerate(idx):
+        U[:, i] = vtk.point_data[key]
+    # U[:, 1] = vtk.point_data["velocity"][:, 0]
+    # U[:, 2] = vtk.point_data["velocity"][:, 1]
+    return U.T, vtk.points, vtk.cells
 
 def read_multi_space_sol_input_mesh(n_s, n_t, d_t, idx, x_u_mesh_path,
                                     mu_mesh_path, mu_mesh_idx,
@@ -67,6 +68,7 @@ def read_multi_space_sol_input_mesh(n_s, n_t, d_t, idx, x_u_mesh_path,
     x_mesh = None
     U = None
     X_v = None
+    connectivity = None
     # Number of parameters, 1+others
     n_p = 1 + len(mu_mesh_idx)
     mu = np.loadtxt(mu_mesh_path, skiprows=1)[:, mu_mesh_idx]
@@ -89,16 +91,17 @@ def read_multi_space_sol_input_mesh(n_s, n_t, d_t, idx, x_u_mesh_path,
                 for j, file in enumerate(picked_files[:n_t]):
                     t_j  = t_0 + j*d_t
                     # Parse the file
-                    U_ij, points = read_vtk(os.path.join(sub_root, file))
+                    U_ij, points, cells = read_vtk(os.path.join(sub_root, file), idx)
                     # For the first file, initialize the constant mesh and size
                     if i == 0:
                         U = np.zeros((U_ij.shape[0], U_ij.shape[1], n_t, n_s))
                         x_mesh = points
+                        connectivity = cells[0].data
                         X_v = np.zeros((n_s*n_t, n_p))
                     # Append to the fat matrix
                     U[:, :, j, i] = U_ij
                     X_v[i*n_t + j, :] = np.array([np.array(t_j), mu[i, 0]]).T
-    return x_mesh, U, X_v
+    return x_mesh, connectivity, U, X_v
 
 
 

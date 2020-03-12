@@ -149,13 +149,41 @@ class PodnnModel:
 
         self.n_xyz = self.x_mesh.shape[0]
         self.n_h = self.n_xyz * self.n_v
-        n_s = X_v.shape[0]
+        n_st = X_v.shape[0]
+        n_s = U_struct.shape[-1]
+        n_t = self.n_t
 
         # Number of input in time (1) + number of params
         self.n_d = X_v.shape[1]
+        
+        # Getting random indices to manually do the split
+        idx_s = np.random.permutation(n_s)
+        limit = np.floor(n_s * (1. - train_val[1])).astype(int)
+        train_idx, val_idx = idx_s[:limit], idx_s[limit:]
+        print(len(train_idx), len(val_idx))
+
+        # Splitting the struct matrix
+        U_train_s = U_struct[:, :, :, train_idx]
+        U_val_s = U_struct[:, :, :, val_idx]
+
+        # Splitting the n_st-sized inputs
+        X_v_train = np.zeros((len(train_idx)*n_t, X_v.shape[1]))
+        X_v_val = np.zeros((len(val_idx)*n_t, X_v.shape[1]))
+        for i, idx in enumerate(train_idx):
+            print(i*n_t,(i+1)*n_t, idx*n_t,(idx+1)*n_t)
+            X_v_train[i*n_t:(i+1)*n_t] = X_v[idx*n_t:(idx+1)*n_t]
+        for i, idx in enumerate(val_idx):
+            X_v_val[i*n_t:(i+1)*n_t] = X_v[idx*n_t:(idx+1)*n_t]
+        # X_v_train = X_v[train_idx*self.n_t:train_idx*(self.n_t+1)] 
+        # X_v_val = X_v[val_idx*self.n_t:val_idx*(self.n_t+1)] 
+        print(X_v.shape, U_struct.shape)
+        print(X_v_train.shape, U_train_s.shape)
+        print(X_v_val.shape, U_val_s.shape)
 
         # Reshaping manually
-        U = self.destruct(U_struct) 
+        # U = self.destruct(U_struct) 
+        U_train = self.destruct(U_train_s) 
+        U_val = self.destruct(U_val_s) 
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
@@ -165,24 +193,25 @@ class PodnnModel:
             self.V = perform_fast_pod(U.reshape((self.n_h, self.n_t, n_s)),
                                       eps, eps_init)
         else:
-            self.V = perform_pod(U, eps, n_L, True)
+            self.V = perform_pod(U_train, eps, n_L, True)
 
         self.n_L = self.V.shape[1]
 
         # Projecting
-        v = (self.V.T.dot(U)).T
-        v = self.project_to_v(U)
+        # v = (self.V.T.dot(U)).T
+        v_train = self.project_to_v(U_train)
+        v_val = self.project_to_v(U_val)
         
         # Checking the POD error
-        U_pod = self.V.dot(v.T)
-        self.pod_sig = np.stack((U, U_pod), axis=-1).std(-1).mean(-1)
+        U_pod = self.V.dot(v_train.T)
+        self.pod_sig = np.stack((U_train, U_pod), axis=-1).std(-1).mean(-1)
         print(f"Mean pod sig: {self.pod_sig.mean()}")
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_val, v_train, v_val = split_dataset(X_v, v, test_size=train_val[1])
 
         # Creating the validation snapshots matrix
-        U_train = self.V.dot(v_train.T)
+        # U_train = self.V.dot(v_train.T)
         U_val = self.V.dot(v_val.T)
 
         self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
@@ -431,12 +460,13 @@ class PodnnModel:
 
     def restruct(self, U, no_s=False):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
+        print(self.get_u_tuple())
         if no_s:
             return U.reshape(self.get_u_tuple())
         if self.has_t:
             # (n_h, n_st) -> (n_v, n_xyz, n_t, n_s)
             n_s = int(U.shape[-1] / self.n_t)
-            U_struct = np.zeros((self.n_v, U.shape[0], self.n_t, n_s))
+            U_struct = np.zeros((self.n_v, self.n_xyz, self.n_t, n_s))
             for i in range(n_s):
                 s = self.n_t * i
                 e = self.n_t * (i + 1)
