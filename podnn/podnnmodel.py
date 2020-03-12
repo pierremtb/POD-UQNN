@@ -408,7 +408,7 @@ class PodnnModel:
         return logs
 
     def train_model(self, model_id, X_v_train, v_train, X_v_val, v_val,
-                    epochs, freq=100):
+                    epochs, freq=100, div_max=False):
         """Train the POD-NN's regression model, and save it."""
         if self.regnn is None or len(self.regnn) == 0:
             raise ValueError("Regression model isn't defined.")
@@ -420,16 +420,10 @@ class PodnnModel:
 
         model = self.regnn[model_id]
         def get_val_err():
-            # return {}
-            # v_train_pred, _ = model.predict(X_v_train)
             v_val_pred, _ = model.predict(X_v_val)
-            # U_val_pred = self.project_to_U(v_val_pred)
-            # U_train_pred = self.project_to_U(v_train_pred)
             return {
-            #     "MSE": tf.reduce_mean(tf.square(v_train - v_train_pred)),
             #     "MSE_V": tf.reduce_mean(tf.square(v_val - v_val_pred)),
-            #     "RE": re_s(U_train, U_train_pred),
-                "RE_V": re_s(v_val.T, v_val_pred.T),
+                "RE_V": re_s(v_val.T, v_val_pred.T, div_max),
             }
         # Validation, logging, training
         logger = Logger(epochs, freq)

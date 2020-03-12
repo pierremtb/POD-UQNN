@@ -60,7 +60,9 @@ def read_vtk(filename):
     U[:, 2] = vtk.point_data["velocity"][:, 1]
     return U.T, vtk.points
 
-def read_multi_space_sol_input_mesh(n_s, n_t, d_t, idx, x_u_mesh_path, mu_mesh_path, mu_mesh_idx):
+def read_multi_space_sol_input_mesh(n_s, n_t, d_t, idx, x_u_mesh_path,
+                                    mu_mesh_path, mu_mesh_idx,
+                                    n_s_0=0):
     st = time.time()
     x_mesh = None
     U = None
@@ -71,7 +73,7 @@ def read_multi_space_sol_input_mesh(n_s, n_t, d_t, idx, x_u_mesh_path, mu_mesh_p
     # Get dirs
     for root, dirs, _ in os.walk(x_u_mesh_path):
         # Sort them naturally, 0-9, 10-19, ...
-        picked_dirs = sorted(dirs, key=natural_keys)[:n_s]
+        picked_dirs = sorted(dirs, key=natural_keys)[n_s_0:n_s+n_s_0]
         # Pick the ones associated with results
         picked_dirs = filter(lambda x: x.startswith("multi_"), picked_dirs) 
         # For filtered/sorted dir (each sample)

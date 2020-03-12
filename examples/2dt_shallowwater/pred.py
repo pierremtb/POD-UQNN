@@ -17,45 +17,43 @@ from hyperparams import HP as hp
 
 #%% Load models
 model = PodnnModel.load("cache")
-# X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
+X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
-# #%% Predict and restruct
-# U_pred, U_pred_sig = model.predict(X_v_val)
+#%% Predict and restruct
+U_pred, U_pred_sig = model.predict(X_v_val)
 
-# #%% Validation metrics
-# U_pred, _ = model.predict(X_v_val)
-# err_val = re_s(U_val, U_pred)
-# print(f"RE_v: {err_val:4f}")
+#%% Validation metrics
+U_pred, _ = model.predict(X_v_val)
+print(U_pred.shape)
+err_val = re_s(U_val[:, 0:1], U_pred[:, 0:1], div_max=True)
+print(f"RE_v: {err_val:4f}")
 
 #%% Sample the new model to generate a test prediction
 mu_path = os.path.join("..", "..", "..", "scratch", "multi2swt", "INPUT_MONTE_CARLO.dat")
 x_u_mesh_path = os.path.join("..", "..", "..", "scratch", "multi2swt")
-x_mesh, U_tst, X_v_tst = read_multi_space_sol_input_mesh(hp["n_s"], hp["n_t"], hp["d_t"], hp["mesh_idx"],
-                                                 x_u_mesh_path, mu_path, hp["mu_idx"])
-# mu_path_tst = os.path.join("data", f"INPUT_{hp['n_s_tst']}_Scenarios.txt")
-# x_u_mesh_tst_path = os.path.join("data", f"SOL_FV_{hp['n_s_tst']}_Scenarios.txt")
-# _, u_mesh_tst, X_v_tst = \
-#     read_space_sol_input_mesh(hp["n_s_tst"], hp["mesh_idx"], x_u_mesh_tst_path, mu_path_tst)
-# U_tst = model.u_mesh_to_U(u_mesh_tst, hp["n_s_tst"])
-U_pred, U_pred_sig = model.predict(X_v_tst)
+x_mesh, connectivity_raw, _, _ = read_multi_space_sol_input_mesh(hp["n_s_tst"], hp["n_t"], hp["d_t"], hp["mesh_idx"],
+                                                         x_u_mesh_path, mu_path, hp["mu_idx"],
+                                                         n_s_0=0)
+# U_pred, U_pred_sig = model.predict(X_v_tst)
+U_tst = U_val
 
-
-U_tst = model.restruct(U_tst)
+# print("U_pred", U_pred.shape)
 U_pred = model.restruct(U_pred)
+U_tst = model.restruct(U_tst)
 U_pred_sig = model.restruct(U_pred_sig)
+print("U_tst", U_tst.shape)
+print("U_pred", U_pred.shape)
 
-# print(X_v_val.min(), X_v_val.max())
-# print(X_v_tst.min(), X_v_tst.max())
-# print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
+# print("U_pred_s", U_pred.shape)
 
 #%% VTU export
 print("Saving to .vtu")
 # Retrieving the mesh
-connectivity_raw = np.loadtxt(os.path.join("data", "connectivity.txt"))
+# connectivity_raw = np.loadtxt(os.path.join("cache", "connectivity.npy"))
 n_element = connectivity_raw.shape[0]
 
 # 1D list of connections
-connectivity = connectivity_raw[:, 1:4].astype("int64").flatten() - 1
+connectivity = connectivity_raw[:, :3].astype("int64").flatten()
 
 # 1d list of "offsets", ie. the end of each element
 # Since we use triangles, size = 3
@@ -64,17 +62,17 @@ cell_types = np.ones(n_element, dtype="int64") * VtkTriangle.tid
 
 # Space points
 x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-x = x_mesh[:, 1]
-y = x_mesh[:, 2]
+x = x_mesh[:, 0]
+y = x_mesh[:, 1]
 x = np.ascontiguousarray(x)
 y = np.ascontiguousarray(y)
 z = np.ascontiguousarray(np.zeros_like(x))
 
 # Exporting
 idx = np.random.choice(U_pred.shape[-1], 2)
-idx = [50, 250]
-print(f"Samples are {X_v_tst[idx[0]]}, {X_v_tst[idx[1]]}")
-for i in range(hp["n_T"]):
+# idx = [50, 250]
+# print(f"Samples are {X_v_tst[idx[0]]}, {X_v_tst[idx[1]]}")
+for i in range(hp["n_t"]):
     unstructuredGridToVTK(os.path.join("cache", f"x_u_tst_pred_{i}"),
                             x, y, z,
                             connectivity, offsets, cell_types,

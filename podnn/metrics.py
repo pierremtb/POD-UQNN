@@ -16,12 +16,15 @@ def re_max(U, U_pred):
     """Return relative error, inputs should be (n_h,)."""
     return norm(U - U_pred) / max(norm(U), norm(U_pred))
 
-def re_s(U, U_pred):
+def re_s(U, U_pred, div_max=False):
     """Return relative error, inputs should be (n_h,)."""
     n_s = U.shape[1]
     err = 0.
     for i in range(n_s):
-        err += re(U[:, i], U_pred[:, i])
+        if div_max:
+            err += re_max(U[:, i], U_pred[:, i])
+        else:
+            err += re(U[:, i], U_pred[:, i])
     return err / n_s
 
 def re_mean_std(U_s, U_pred_s):
