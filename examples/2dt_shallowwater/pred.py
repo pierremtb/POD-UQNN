@@ -31,11 +31,10 @@ print(f"RE_v: {err_val:4f}")
 #%% Sample the new model to generate a test prediction
 mu_path = os.path.join("..", "..", "..", "scratch", "multi2swt", "INPUT_MONTE_CARLO.dat")
 x_u_mesh_path = os.path.join("..", "..", "..", "scratch", "multi2swt")
-x_mesh, connectivity_raw, _, _ = read_multi_space_sol_input_mesh(hp["n_s_tst"], hp["n_t"], hp["d_t"], hp["mesh_idx"],
+x_mesh, connectivity_raw, X_v_tst, U_tst = read_multi_space_sol_input_mesh(hp["n_s_tst"], hp["n_t"], hp["d_t"], hp["mesh_idx"],
                                                          x_u_mesh_path, mu_path, hp["mu_idx"],
                                                          n_s_0=0)
-# U_pred, U_pred_sig = model.predict(X_v_tst)
-U_tst = U_val
+U_pred, U_pred_sig = model.predict(X_v_tst)
 
 # print("U_pred", U_pred.shape)
 U_pred = model.restruct(U_pred)

@@ -10,7 +10,7 @@ from tqdm import tqdm
 import numba as nb
 
 from .pod import perform_pod, perform_fast_pod
-from .handling import pack_layers
+from .handling import pack_layers, split_dataset
 from .logger import Logger
 from .varneuralnetwork import VarNeuralNetwork, NORM_CENTER, NORM_MEANSTD, NORM_NONE
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
@@ -101,13 +101,6 @@ class PodnnModel:
                 X_v[i, :] = mu_lhs[i]
         return X_v
 
-    def split_dataset(self, X_v, v, test_size):
-        """Randomly splitting the dataset (X_v, v)."""
-        indices = np.random.permutation(X_v.shape[0])
-        limit = np.floor(X_v.shape[0] * (1. - test_size)).astype(int)
-        train_idx, tst_idx = indices[:limit], indices[limit:]
-        return X_v[train_idx], X_v[tst_idx], v[train_idx], v[tst_idx]
-
     def u_mesh_to_U(self, u_mesh, n_s):
         # Reshaping manually
         U = np.zeros((self.n_h, n_s))
@@ -186,7 +179,7 @@ class PodnnModel:
         print(f"Mean pod sig: {self.pod_sig.mean()}")
 
         # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_val, v_train, v_val = self.split_dataset(X_v, v, test_size=train_val[1])
+        X_v_train, X_v_val, v_train, v_val = split_dataset(X_v, v, test_size=train_val[1])
 
         # Creating the validation snapshots matrix
         U_train = self.V.dot(v_train.T)
@@ -238,7 +231,7 @@ class PodnnModel:
         print(f"Mean pod sig: {self.pod_sig.mean()}")
 
         # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_val, v_train, v_val = self.split_dataset(X_v, v, test_size=train_val[1])
+        X_v_train, X_v_val, v_train, v_val = split_dataset(X_v, v, test_size=train_val[1])
 
         # Creating the validation snapshots matrix
         U_train = self.V.dot(v_train.T)
@@ -280,7 +273,7 @@ class PodnnModel:
         fake_x = np.zeros_like(mu_lhs)
 
         _, _, mu_lhs_train, mu_lhs_test = \
-             self.split_dataset(fake_x, mu_lhs, test_size=train_val[1])
+             split_dataset(fake_x, mu_lhs, test_size=train_val[1])
 
         # Creating the snapshots
         print(f"Generating {n_st} corresponding snapshots")

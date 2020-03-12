@@ -2,24 +2,33 @@
 #%% Imports
 import sys
 import os
+import pickle
 import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.mesh import read_multi_space_sol_input_mesh
-from podnn.handling import clean_dir
+from podnn.handling import clean_dir, split_dataset
 
 from hyperparams import HP as hp
 
 resdir = "cache"
 clean_dir(resdir)
 
+# Setting the dataset split in stone
+fake_x = np.zeros(hp["n_s"] + hp["n_s_tst"])
+test_size = hp["n_s_tst"] / (hp["n_s"] + hp["n_s_tst"])
+train_tst_idx = split_dataset(fake_x, fake_x, test_size, idx_only=True)
+with open(os.path.join("cache", "train_tst_idx.pkl"), "wb") as f:
+    pickle.dump(train_tst_idx, f)
+
 # Getting data from the files
 # mu_path = os.path.join("data", f"INPUT_{hp['n_s']}_Scenarios.txt")
 # x_u_mesh_path = os.path.join("data", f"SOL_FV_{hp['n_s']}_Scenarios.txt")
 mu_path = os.path.join("..", "..", "..", "scratch", "multi2swt", "INPUT_MONTE_CARLO.dat")
 x_u_mesh_path = os.path.join("..", "..", "..", "scratch", "multi2swt")
-x_mesh, connectivity, U, X_v = read_multi_space_sol_input_mesh(hp["n_s"], hp["n_t"], hp["d_t"], hp["mesh_idx"],
+x_mesh, connectivity, U, X_v = read_multi_space_sol_input_mesh(hp["n_s"], hp["n_t"], hp["d_t"],
+                                                 hp["mesh_idx"],
                                                  x_u_mesh_path, mu_path, hp["mu_idx"])
 np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
 np.save(os.path.join("cache", "connectivity.npy"), connectivity)

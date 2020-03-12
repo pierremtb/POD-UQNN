@@ -32,8 +32,19 @@ def check_distributed_args():
     args = pa.parse_args()
     return args.distributed, args.models
 
+
 def clean_dir(dirname):
     for root, dirs, files in os.walk(dirname):
         for name in files:
             if not name.endswith(".gitignore"):
                 os.remove(os.path.join(root, name))
+
+
+def split_dataset(X_v, v, test_size, idx_only=False):
+    """Randomly splitting the dataset (X_v, v)."""
+    indices = np.random.permutation(X_v.shape[0])
+    limit = np.floor(X_v.shape[0] * (1. - test_size)).astype(int)
+    if idx_only:
+        return indices[:limit], indices[limit:]
+    train_idx, tst_idx = indices[:limit], indices[limit:]
+    return X_v[train_idx], X_v[tst_idx], v[train_idx], v[tst_idx]
