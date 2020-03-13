@@ -45,6 +45,6 @@ def split_dataset(X_v, v, test_size, idx_only=False):
     indices = np.random.permutation(X_v.shape[0])
     limit = np.floor(X_v.shape[0] * (1. - test_size)).astype(int)
     if idx_only:
-        return indices[:limit], indices[limit:]
+        return indices[:limit].tolist(), indices[limit:].tolist()
     train_idx, tst_idx = indices[:limit], indices[limit:]
     return X_v[train_idx], X_v[tst_idx], v[train_idx], v[tst_idx]

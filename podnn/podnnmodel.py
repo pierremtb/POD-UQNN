@@ -160,7 +160,6 @@ class PodnnModel:
         idx_s = np.random.permutation(n_s)
         limit = np.floor(n_s * (1. - train_val[1])).astype(int)
         train_idx, val_idx = idx_s[:limit], idx_s[limit:]
-        print(len(train_idx), len(val_idx))
 
         # Splitting the struct matrix
         U_train_s = U_struct[:, :, :, train_idx]
@@ -170,18 +169,11 @@ class PodnnModel:
         X_v_train = np.zeros((len(train_idx)*n_t, X_v.shape[1]))
         X_v_val = np.zeros((len(val_idx)*n_t, X_v.shape[1]))
         for i, idx in enumerate(train_idx):
-            print(i*n_t,(i+1)*n_t, idx*n_t,(idx+1)*n_t)
             X_v_train[i*n_t:(i+1)*n_t] = X_v[idx*n_t:(idx+1)*n_t]
         for i, idx in enumerate(val_idx):
             X_v_val[i*n_t:(i+1)*n_t] = X_v[idx*n_t:(idx+1)*n_t]
-        # X_v_train = X_v[train_idx*self.n_t:train_idx*(self.n_t+1)] 
-        # X_v_val = X_v[val_idx*self.n_t:val_idx*(self.n_t+1)] 
-        print(X_v.shape, U_struct.shape)
-        print(X_v_train.shape, U_train_s.shape)
-        print(X_v_val.shape, U_val_s.shape)
 
         # Reshaping manually
-        # U = self.destruct(U_struct) 
         U_train = self.destruct(U_train_s) 
         U_val = self.destruct(U_val_s) 
 
@@ -206,9 +198,6 @@ class PodnnModel:
         U_pod = self.V.dot(v_train.T)
         self.pod_sig = np.stack((U_train, U_pod), axis=-1).std(-1).mean(-1)
         print(f"Mean pod sig: {self.pod_sig.mean()}")
-
-        # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_val, v_train, v_val = split_dataset(X_v, v, test_size=train_val[1])
 
         # Creating the validation snapshots matrix
         # U_train = self.V.dot(v_train.T)
@@ -460,7 +449,6 @@ class PodnnModel:
 
     def restruct(self, U, no_s=False):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
-        print(self.get_u_tuple())
         if no_s:
             return U.reshape(self.get_u_tuple())
         if self.has_t:

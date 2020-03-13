@@ -33,12 +33,12 @@ for i in range(hp["n_t"]):
 
     
 n_plot_x = 3
-n_plot_y = 2
+n_plot_y = 3
 fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
 gs = fig.add_gridspec(n_plot_x, n_plot_y)
 idx = [0, 4, hp["n_t"]]
 for i, t_i in enumerate(idx):
-    ax = fig.add_subplot(gs[i, :])
+    ax = fig.add_subplot(gs[i, 1:])
     lbl = r"{\scriptscriptstyle\textrm{tst},1}"
     ax.plot(x_prime, U_pred[:, i], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
     ax.plot(x_prime, U_tst[:, i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
@@ -49,4 +49,4 @@ for i, t_i in enumerate(idx):
     ax.set_title("$s=27.0\ m$")
 plt.tight_layout()
 savefig("cache/podensnn-swt-samples")
-# plt.show()
+

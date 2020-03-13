@@ -23,11 +23,10 @@ with open(os.path.join("cache", "train_tst_idx.pkl"), "wb") as f:
     pickle.dump(train_tst_idx, f)
 
 # Getting data from the files
-# mu_path = os.path.join("data", f"INPUT_{hp['n_s']}_Scenarios.txt")
-# x_u_mesh_path = os.path.join("data", f"SOL_FV_{hp['n_s']}_Scenarios.txt")
 mu_path = os.path.join("..", "..", "..", "scratch", "multi2swt", "INPUT_MONTE_CARLO.dat")
 x_u_mesh_path = os.path.join("..", "..", "..", "scratch", "multi2swt")
-x_mesh, connectivity, U, X_v = read_multi_space_sol_input_mesh(hp["n_s"], hp["n_t"], hp["d_t"],
+x_mesh, connectivity, X_v, U = read_multi_space_sol_input_mesh(hp["n_s"], hp["n_t"], hp["d_t"],
+                                                 train_tst_idx[0],
                                                  hp["mesh_idx"],
                                                  x_u_mesh_path, mu_path, hp["mu_idx"])
 np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
