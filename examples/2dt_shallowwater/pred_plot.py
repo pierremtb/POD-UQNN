@@ -4,6 +4,7 @@ import sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.image as plti
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.metrics import re_s
@@ -17,8 +18,9 @@ U_pred = None
 U_pred_up = None
 U_pred_lo = None
 x_prime = None
-for i in range(hp["n_t"]):
-    csv_file = os.path.join("cache", f"x_u_tst_pred.{i}.csv")
+idx = [0, 5, 9]
+for i, t_i in enumerate(idx):
+    csv_file = os.path.join("cache", f"x_u_tst_pred.{t_i}.csv")
     results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
     if i == 0:
         x_prime = results[:, 5]
@@ -32,21 +34,30 @@ for i in range(hp["n_t"]):
     U_pred_lo[:, i] = results[:, 3]
 
     
-n_plot_x = 3
-n_plot_y = 3
-fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
+n_plot_x = 2*len(idx)
+n_plot_y = 5
+fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.0))
 gs = fig.add_gridspec(n_plot_x, n_plot_y)
-idx = [0, 4, hp["n_t"]]
 for i, t_i in enumerate(idx):
-    ax = fig.add_subplot(gs[i, 1:])
+    ax = fig.add_subplot(gs[2*i:2*i+2, 0:2])
+    img = plti.imread(f"cache/podensnn-swt-map.{t_i}.png")
+    ax.imshow(img)
+    ax.set_xlabel(f"$x$")
+    ax.set_ylabel(f"$y$")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax = fig.add_subplot(gs[2*i:2*i+2, 2:])
     lbl = r"{\scriptscriptstyle\textrm{tst},1}"
     ax.plot(x_prime, U_pred[:, i], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
     ax.plot(x_prime, U_tst[:, i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
     ax.fill_between(x_prime, U_pred_lo[:, i], U_pred_up[:, i],
                     alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
-    ax.set_xlabel(f"$x'\ (t={t_i})$")
+    ax.set_xlabel(f"$x'$")
     ax.set_ylabel("$\eta$")
-    ax.set_title("$s=27.0\ m$")
+    ax.set_ylim((28.7, 30.7))
+    ax.set_title(f"$s=29.4\ m$, $t={t_i * hp['d_t']}\ s$")
+    if i == len(idx) - 1:
+        ax.legend()
 plt.tight_layout()
 savefig("cache/podensnn-swt-samples")
 
