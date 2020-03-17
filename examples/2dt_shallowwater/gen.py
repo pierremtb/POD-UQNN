@@ -23,12 +23,16 @@ with open(os.path.join("cache", "train_tst_idx.pkl"), "wb") as f:
     pickle.dump(train_tst_idx, f)
 
 # Getting data from the files
-mu_path = os.path.join("..", "..", "..", "scratch", "multi2swt", "INPUT_MONTE_CARLO.dat")
-x_u_mesh_path = os.path.join("..", "..", "..", "scratch", "multi2swt")
+# datadir = os.path.join("..", "..", "..", "scratch", "multi2swt") 
+datadir = "data"
+mu_path = os.path.join(datadir, "INPUT_MONTE_CARLO.dat")
+sel = np.loadtxt('sel.txt', skiprows=6)[:, 1].astype("int")
+x_u_mesh_path = datadir
 x_mesh, connectivity, X_v, U = read_multi_space_sol_input_mesh(hp["n_s"], hp["n_t"], hp["d_t"],
                                                  train_tst_idx[0],
                                                  hp["mesh_idx"],
-                                                 x_u_mesh_path, mu_path, hp["mu_idx"])
+                                                 x_u_mesh_path, mu_path,
+                                                 hp["mu_idx"], sel)
 np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
 np.save(os.path.join("cache", "connectivity.npy"), connectivity)
 # x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
