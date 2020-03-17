@@ -56,13 +56,6 @@ X_v_tst, U_tst, _, _ = \
 U_pred, U_pred_sig = model.predict(X_v_tst, samples=10)
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
-#%% Sample the new model to generate a test prediction
-mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
-X_v_tst, U_tst, _, _ = \
-    model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
-U_pred, U_pred_sig = model.predict(X_v_tst)
-print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
-
 #%% Samples graph
 n_samples = 2
 mu_lhs_in = model.sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
