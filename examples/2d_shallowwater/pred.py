@@ -1,33 +1,23 @@
-""" POD-NN modeling for 2D inviscid Shallow Water Equations."""
-
-#%% Import
+"""POD-NN modeling for 1D Shekel Equation."""
+#%% Imports
 import sys
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.mesh import read_space_sol_input_mesh 
-from podnn.metrics import re_s, re
-from podnn.plotting import savefig, figsize
+from podnn.metrics import re_s
+from podnn.mesh import read_space_sol_input_mesh
+from podnn.plotting import figsize, savefig
 from pyevtk.hl import unstructuredGridToVTK
 from pyevtk.vtk import VtkTriangle
 
-#%% Prepare
 from hyperparams import HP as hp
 
-#%% Getting data from the files
-# mu_path = os.path.join("data", f"INPUT_{hp['n_s']}_Scenarios.txt")
-# x_u_mesh_path = os.path.join("data", f"SOL_FV_{hp['n_s']}_Scenarios.txt")
-# x_mesh, u_mesh, X_v = \
-#     read_space_sol_input_mesh(hp["n_s"], hp["mesh_idx"], x_u_mesh_path, mu_path)
-# np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
-x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-# u_mesh = None
-# X_v = None
-
-#%% Init the model
-model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
+#%% Load models
+model = PodnnModel.load("cache")
+X_v_train, v_train, U_train, X_v_val, U_val = model.load_train_data()
 
 
 mu_path_tst = os.path.join("data", f"INPUT_{hp['n_s_tst']}_Scenarios.txt")

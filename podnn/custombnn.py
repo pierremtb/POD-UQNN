@@ -223,7 +223,7 @@ class BayesianNeuralNetwork:
     def predict_dist(self, X):
         """Get the prediction distribution for a new input X."""
         X = self.normalize(X)
-        return self.model(X)
+        return tfp.distributions.Normal(loc=self.model(X), scale=self.sigma_alea)
 
     def predict(self, X, samples=200):
         """Get the prediction for a new input X, sampled many times."""

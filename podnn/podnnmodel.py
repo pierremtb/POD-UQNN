@@ -17,7 +17,7 @@ from .metrics import re, re_s
 
 SETUP_DATA_NAME = "setup_data.pkl"
 TRAIN_DATA_NAME = "train_data.pkl"
-MODEL_NAME = ("model_p.h5", "model_q.h5", "model_t.h5")
+MODEL_NAME = "model.h5"
 MODEL_PARAMS_NAME = "model_params.pkl"
 
 
@@ -39,9 +39,7 @@ class PodnnModel:
         self.setup_data_path = os.path.join(resdir, SETUP_DATA_NAME)
         self.train_data_path = os.path.join(resdir, TRAIN_DATA_NAME)
         self.model_params_path = os.path.join(resdir, MODEL_PARAMS_NAME)
-        self.model_path = (os.path.join(resdir, MODEL_NAME[0]),
-                           os.path.join(resdir, MODEL_NAME[1]),
-                           os.path.join(resdir, MODEL_NAME[2]))
+        self.model_path = os.path.join(resdir, MODEL_NAME)
 
         self.regnn = None
         self.n_L = None
@@ -296,7 +294,6 @@ class PodnnModel:
         """Create the neural net model."""
         self.lr = lr
         self.layers = [self.n_d, *h_layers, self.n_L]
-        self.model_path = os.path.join(self.resdir, "vnn.h5")
         self.regnn = BayesianNeuralNetwork(self.layers, lr, klw,
                                            soft_0=soft_0, sigma_alea=sigma_alea,
                                            norm=norm)
@@ -311,8 +308,8 @@ class PodnnModel:
         logger = Logger(epochs, freq, silent=silent)
         def err_fn():
             v_dist = self.regnn.predict_dist(X_v_val)
-            v_pred = v_dist.numpy()
-            # v_pred = v_dist.mean().numpy()
+            # v_pred = v_dist.numpy()
+            v_pred = v_dist.mean().numpy()
             return {
                 "RE_v": re_s(v_val.T, v_pred.T),
                 "std": tf.reduce_sum(v_pred),
@@ -372,16 +369,17 @@ class PodnnModel:
 
     def predict_v(self, X, samples=20):
         v_pred_samples = np.zeros((samples, X.shape[0], self.n_L))
-        # v_pred_sig_samples = np.zeros((samples, X.shape[0], self.n_L))
+        v_pred_sig_samples = np.zeros((samples, X.shape[0], self.n_L))
 
         for i in range(samples):
             v_dist = self.regnn.predict_dist(X)
-            v_pred_samples[i] = v_dist.numpy()
+            v_pred_samples[i] = v_dist.mean().numpy()
+            v_pred_sig_samples[i] = v_dist.variance().numpy()
 
         v_pred = v_pred_samples.mean(0)
-        v_pred_sig = v_pred_samples.std(0)
-        # v_pred_var = (v_pred_sig_samples**2 + v_pred_samples ** 2).mean(0) - v_pred ** 2
-        # v_pred_sig = np.sqrt(v_pred_var)
+        # v_pred_sig = v_pred_samples.std(0)
+        v_pred_var = (v_pred_sig_samples**2 + v_pred_samples ** 2).mean(0) - v_pred ** 2
+        v_pred_sig = np.sqrt(v_pred_var)
 
         return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
@@ -404,19 +402,20 @@ class PodnnModel:
 
     def predict(self, X, samples=20):
         U_pred_samples = np.zeros((samples, self.n_h, X.shape[0]))
-        # U_pred_sig_samples = np.zeros((samples, self.n_h, X.shape[0]))
+        U_pred_sig_samples = np.zeros((samples, self.n_h, X.shape[0]))
 
         for i in range(samples):
             v_dist = self.regnn.predict_dist(X)
-            # v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
-            v_pred = v_dist.numpy()
+            v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
+            # v_pred = v_dist.numpy()
             U_pred_samples[i] = self.project_to_U(v_pred)
-            # U_pred_sig_samples[i] = self.project_to_U(np.sqrt(v_pred_var))
+            U_pred_sig_samples[i] = self.project_to_U(np.sqrt(v_pred_var))
 
-        # U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(0) - U_pred ** 2
-        # U_pred_sig = np.sqrt(U_pred_var)
         U_pred = U_pred_samples.mean(0)
-        U_pred_sig = U_pred_samples.std(0)
+        U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(0) \
+                      - U_pred ** 2
+        U_pred_sig = np.sqrt(U_pred_var)
+        # U_pred_sig = U_pred_samples.std(0)
 
         return U_pred, U_pred_sig
 
@@ -468,7 +467,7 @@ class PodnnModel:
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""
 
-        if not os.path.exists(self.model_path[0]) or not os.path.exists(self.model_path[1]) or not os.path.exists(self.model_path[2]):
+        if not os.path.exists(self.model_path):
             raise FileNotFoundError("Can't find cached model.")
         if not os.path.exists(self.model_params_path):
             raise FileNotFoundError("Can't find cached model params.")
