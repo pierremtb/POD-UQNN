@@ -152,6 +152,8 @@ class PodnnModel:
         n_st = X_v.shape[0]
         n_s = U_struct.shape[-1]
         n_t = self.n_t
+        if n_t == 0:
+            n_t = 1
 
         # Number of input in time (1) + number of params
         self.n_d = X_v.shape[1]
@@ -162,8 +164,8 @@ class PodnnModel:
         train_idx, val_idx = idx_s[:limit], idx_s[limit:]
 
         # Splitting the struct matrix
-        U_train_s = U_struct[:, :, :, train_idx]
-        U_val_s = U_struct[:, :, :, val_idx]
+        U_train_s = U_struct[..., train_idx]
+        U_val_s = U_struct[..., val_idx]
 
         # Splitting the n_st-sized inputs
         X_v_train = np.zeros((len(train_idx)*n_t, X_v.shape[1]))
@@ -480,12 +482,12 @@ class PodnnModel:
                 U[:, s:e] = U_struct[:, :, :, i].reshape((self.n_h, self.n_t))
             return U
 
-        # (n_h, n_s) -> (n_v, n_xyz, n_s)
-        n_s = U.shape[-1]
-        U_struct = np.zeros((self.get_u_tuple() + (n_s,)))
+        # (n_v, n_xyz, n_s) -> (n_h, n_s)
+        n_s = U_struct.shape[-1]
+        U = np.zeros((self.n_h, n_s))
         for i in range(n_s):
-            U_struct[:, :, i] = U[:, i].reshape(self.get_u_tuple())
-        return U_struct
+            U[:, i] = U_struct[:, :, i].reshape((self.n_h))
+        return U
 
     def get_u_tuple(self):
         """Return solution shape."""

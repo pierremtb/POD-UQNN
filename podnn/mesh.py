@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import meshio
 import re
+from tqdm import tqdm
 
 
 def create_linear_mesh(x_min, x_max, n_x,
@@ -61,16 +62,21 @@ def read_vtk(filename, idx, sel=None):
         # Keeping only the selected cells
         cells = cells[sel]
 
-    # Getting a unique, sorted list of the associated points
-    points_idx = np.unique(cells.flatten())
-    points = np.zeros((points_idx.shape[0], vtk.points.shape[1]))
-    for i, pt in enumerate(points_idx.tolist()):
-        points[i] = vtk.points[pt]
-        cells[cells == pt] = i
+        # Getting a unique, sorted list of the associated points
+        points_idx = np.unique(cells.flatten())
+        points = np.zeros((points_idx.shape[0], vtk.points.shape[1]))
+        for i, pt in enumerate(points_idx.tolist()):
+            points[i] = vtk.points[pt]
+            cells[cells == pt] = i
 
-    U = np.zeros((points.shape[0], len(idx)))
-    for i, key in enumerate(idx):
-        U[:, i] = vtk.point_data[key][points_idx]
+        U = np.zeros((points.shape[0], len(idx)))
+        for i, key in enumerate(idx):
+            U[:, i] = vtk.point_data[key][points_idx]
+    else:
+        points = vtk.points
+        U = np.zeros((points.shape[0], len(idx)))
+        for i, key in enumerate(idx):
+            U[:, i] = vtk.point_data[key]
     return U.T, points, cells
 
 def read_multi_space_sol_input_mesh(n_s, n_t, d_t, picked_idx, qties, x_u_mesh_path,
@@ -82,7 +88,7 @@ def read_multi_space_sol_input_mesh(n_s, n_t, d_t, picked_idx, qties, x_u_mesh_p
 
     # Number of parameters, 1+others
     n_p = len(mu_mesh_idx)
-    if n_t > 0:
+    if n_t > 1:
         n_p += 1
     mu = np.loadtxt(mu_mesh_path, skiprows=1)
     mu = mu[picked_idx, mu_mesh_idx]
@@ -90,15 +96,18 @@ def read_multi_space_sol_input_mesh(n_s, n_t, d_t, picked_idx, qties, x_u_mesh_p
     tT = t.reshape((n_t, 1))
     X_v = np.zeros((n_s*n_t, n_p))
     # Get dirs
-    for i, mu_i in enumerate(mu):
+    print(f"Loading {n_s} samples...")
+    for i, mu_i in enumerate(tqdm(mu)):
         dirname = os.path.join(x_u_mesh_path, f"multi_{picked_idx[i]+1}")
-        print(f"Loading sample #{picked_idx[i]+1}")
+        # print(f"Loading sample #{picked_idx[i]+1}")
         # Get files of directories
         for sub_root, _, files in os.walk(dirname):
             # Sorting and picking the righ ones
             picked_files = filter(lambda file: file.startswith("0_FV-Paraview"), files)
             # picked_files = filter(lambda file: file.startswith("square_") and file.endswith("vtk"), files)
             picked_files = sorted(picked_files, key=natural_keys)
+            if n_t == 1:
+                picked_files = picked_files[-1:]
             # For filtered/sorted files
             for j, filename in enumerate(picked_files[:n_t]):
                 # Parse the file
@@ -111,7 +120,13 @@ def read_multi_space_sol_input_mesh(n_s, n_t, d_t, picked_idx, qties, x_u_mesh_p
                 # Append to the fat matrix
                 U[:, :, j, i] = U_ij
 
-            X_v[n_t * i:n_t* (i+1)] = np.hstack((tT, np.ones_like(tT)*mu_i))
+            if n_t == 1:
+                X_v[i] = mu_i
+            else:
+                X_v[n_t * i:n_t* (i+1)] = np.hstack((tT, np.ones_like(tT)*mu_i))
+    if n_t == 1:
+        # Flattening the time dimension in steady case
+        U = U[:, :, 0, :]
     return x_mesh, connectivity, X_v, U
 
 
