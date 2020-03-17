@@ -13,6 +13,7 @@ from .custombnn import BayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
 # from .bayesianneuralnetwork import BayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
 from .metrics import re, re_s
+from .handling import pack_layers, split_dataset
 
 
 SETUP_DATA_NAME = "setup_data.pkl"
@@ -135,6 +136,75 @@ class PodnnModel:
 
         # U_no_noise = np.zeros((n_h, n_st))
         return loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise, x_noise)
+
+    def convert_multigpu_data(self, U_struct, X_v, train_val, eps, eps_init=None,
+                              n_L=0, use_cache=False, save_cache=False):
+        """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
+        """U is (n_v, n_xyz, n_t, n_s)."""
+        if use_cache and os.path.exists(self.train_data_path):
+            return self.load_train_data()
+
+        self.n_xyz = self.x_mesh.shape[0]
+        self.n_h = self.n_xyz * self.n_v
+        n_st = X_v.shape[0]
+        n_s = U_struct.shape[-1]
+        n_t = self.n_t
+        if n_t == 0:
+            n_t = 1
+
+        # Number of input in time (1) + number of params
+        self.n_d = X_v.shape[1]
+        
+        # Getting random indices to manually do the split
+        idx_s = np.random.permutation(n_s)
+        limit = np.floor(n_s * (1. - train_val[1])).astype(int)
+        train_idx, val_idx = idx_s[:limit], idx_s[limit:]
+
+        # Splitting the struct matrix
+        U_train_s = U_struct[..., train_idx]
+        U_val_s = U_struct[..., val_idx]
+
+        # Splitting the n_st-sized inputs
+        X_v_train = np.zeros((len(train_idx)*n_t, X_v.shape[1]))
+        X_v_val = np.zeros((len(val_idx)*n_t, X_v.shape[1]))
+        for i, idx in enumerate(train_idx):
+            X_v_train[i*n_t:(i+1)*n_t] = X_v[idx*n_t:(idx+1)*n_t]
+        for i, idx in enumerate(val_idx):
+            X_v_val[i*n_t:(i+1)*n_t] = X_v[idx*n_t:(idx+1)*n_t]
+
+        # Reshaping manually
+        U_train = self.destruct(U_train_s) 
+        U_val = self.destruct(U_val_s) 
+
+        # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
+        # u_rb are the reduced coefficients we're looking for
+        if eps_init is not None and self.has_t:
+            # Never tested
+            n_s = int(n_s / self.n_t)
+            self.V = perform_fast_pod(U.reshape((self.n_h, self.n_t, n_s)),
+                                      eps, eps_init)
+        else:
+            self.V = perform_pod(U_train, eps, n_L, True)
+
+        self.n_L = self.V.shape[1]
+
+        # Projecting
+        # v = (self.V.T.dot(U)).T
+        v_train = self.project_to_v(U_train)
+        v_val = self.project_to_v(U_val)
+        
+        # Checking the POD error
+        U_pod = self.V.dot(v_train.T)
+        self.pod_sig = np.stack((U_train, U_pod), axis=-1).std(-1).mean(-1)
+        print(f"Mean pod sig: {self.pod_sig.mean()}")
+
+        # Creating the validation snapshots matrix
+        # U_train = self.V.dot(v_train.T)
+        U_val = self.V.dot(v_val.T)
+
+        self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
+
+        return X_v_train, v_train, X_v_val, v_val, U_val
 
     def convert_dataset(self, u_mesh, X_v, train_val, eps, eps_init=None, n_L=0,
                         use_cache=False):
@@ -345,6 +415,25 @@ class PodnnModel:
         for i in range(n_s):
             U_struct[:, :, i] = U[:, i].reshape(self.get_u_tuple())
         return U_struct
+
+    def destruct(self, U_struct):
+        """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
+        if self.has_t:
+            # (n_v, n_xyz, n_t, n_s) -> (n_h, n_st)
+            n_s = int(U_struct.shape[-1])
+            U = np.zeros((self.n_h, self.n_t * n_s))
+            for i in range(n_s):
+                s = self.n_t * i
+                e = self.n_t * (i + 1)
+                U[:, s:e] = U_struct[:, :, :, i].reshape((self.n_h, self.n_t))
+            return U
+
+        # (n_v, n_xyz, n_s) -> (n_h, n_s)
+        n_s = U_struct.shape[-1]
+        U = np.zeros((self.n_h, n_s))
+        for i in range(n_s):
+            U[:, i] = U_struct[:, :, i].reshape((self.n_h))
+        return U
 
     def get_u_tuple(self):
         """Return solution shape."""
