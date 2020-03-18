@@ -104,11 +104,6 @@ def read_multi_space_sol_input_mesh(n_s, n_t, d_t, picked_idx, qties, x_u_mesh_p
     tT = t.reshape((n_t, 1))
     X_v = np.zeros((n_s*n_t, n_p))
 
-    # First sample
-    samplename = os.path.join(x_u_mesh_path, f"multi_1", "0_FV-Paraview_0.vtk")
-    x_mesh, connectivity, points_idx = read_vtk_conf(samplename, sel)
-    U = np.zeros((len(qties), x_mesh.shape[0], n_t, n_s))
-
     # Getting data
     print(f"Loading {n_s} samples...")
     for i, mu_i in enumerate(tqdm(mu)):
@@ -122,9 +117,16 @@ def read_multi_space_sol_input_mesh(n_s, n_t, d_t, picked_idx, qties, x_u_mesh_p
                 picked_files = picked_files[-1:]
             # For filtered/sorted files
             for j, filename in enumerate(picked_files[:n_t]):
+                if i == 0 and j == 0:
+                    # First sample
+                    samplename = os.path.join(sub_root, filename)
+                    x_mesh, connectivity, points_idx = read_vtk_conf(samplename, sel)
+                    U = np.zeros((len(qties), x_mesh.shape[0], n_t, n_s))
+
                 # Parse the file and append
                 U_ij = read_vtk_data(os.path.join(sub_root, filename), qties, points_idx)
                 U[:, :, j, i] = U_ij
+
             if n_t == 1:
                 X_v[i] = mu_i
             else:

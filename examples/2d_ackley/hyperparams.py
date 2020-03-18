@@ -22,8 +22,8 @@ HP["n_t"] = 0
 HP["n_s"] = 500
 HP["n_s_tst"] = 300
 # POD stopping param
-HP["eps"] = 0
-HP["n_L"] = 15
+HP["eps"] = 1e-4
+HP["n_L"] = 0
 HP["x_noise"] = 0.
 HP["u_noise"] = 0.
 # Train/val split
