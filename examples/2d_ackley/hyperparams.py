@@ -34,7 +34,7 @@ HP["h_layers"] = [40, 40]
 HP["epochs"] = 45000
 HP["lr"] = 0.005
 HP["soft_0"] = 0.05
-HP["sigma_alea"] = 1.
+HP["sigma_alea"] = 400.
 HP["norm"] = NORM_MINMAX
 # HP["norm"] = NORM_MEANSTD
 # Frequency of the logger

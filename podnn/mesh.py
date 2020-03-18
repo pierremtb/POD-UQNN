@@ -1,10 +1,11 @@
 import os
+import re
 import sys
 import time
-import tqdm
 import meshio
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 
 
 def create_linear_mesh(x_min, x_max, n_x,

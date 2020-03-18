@@ -4,11 +4,13 @@
 import sys
 import os
 import meshio
+import pickle
 import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.mesh import read_multi_space_sol_input_mesh, split_dataset
+from podnn.mesh import read_multi_space_sol_input_mesh
+from podnn.handling import split_dataset
 from podnn.metrics import re_s, re
 from podnn.plotting import savefig, figsize
 
