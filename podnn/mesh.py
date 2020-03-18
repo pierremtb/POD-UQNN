@@ -53,7 +53,8 @@ def natural_keys(text):
     '''
     return [ atoi(c) for c in re.split(r'(\d+)', text) ]
 
-def read_vtk_conf(filename, idx, sel=None):
+
+def read_vtk_conf(filename, sel=None):
     vtk = meshio.read(filename)
     # Getting the cells array
     cells = vtk.cells[0].data
@@ -72,7 +73,8 @@ def read_vtk_conf(filename, idx, sel=None):
 
     return points, cells, None
 
-def read_vtk_data(filename, idx, sel=None, points_idx=None):
+
+def read_vtk_data(filename, idx, points_idx=None):
     vtk = meshio.read(filename)
     points = vtk.points
     if points_idx is not None:
@@ -84,6 +86,7 @@ def read_vtk_data(filename, idx, sel=None, points_idx=None):
             data = data[points_idx]
         U[:, i] = data
     return U.T
+
 
 def read_multi_space_sol_input_mesh(n_s, n_t, d_t, picked_idx, qties, x_u_mesh_path,
                                     mu_mesh_path, mu_mesh_idx,
@@ -104,7 +107,7 @@ def read_multi_space_sol_input_mesh(n_s, n_t, d_t, picked_idx, qties, x_u_mesh_p
 
     # First sample
     samplename = os.path.join(x_u_mesh_path, f"multi_1", "0_FV-Paraview_0.vtk")
-    x_mesh, connectivity, points_idx = read_vtk_conf(samplename, qties, sel)
+    x_mesh, connectivity, points_idx = read_vtk_conf(samplename, sel)
     U = np.zeros((len(qties), x_mesh.shape[0], n_t, n_s))
 
     # Getting data
@@ -115,14 +118,13 @@ def read_multi_space_sol_input_mesh(n_s, n_t, d_t, picked_idx, qties, x_u_mesh_p
         for sub_root, _, files in os.walk(dirname):
             # Sorting and picking the righ ones
             picked_files = filter(lambda file: file.startswith("0_FV-Paraview"), files)
-            # picked_files = filter(lambda file: file.startswith("square_") and file.endswith("vtk"), files)
             picked_files = sorted(picked_files, key=natural_keys)
             if n_t == 1:
                 picked_files = picked_files[-1:]
             # For filtered/sorted files
             for j, filename in enumerate(picked_files[:n_t]):
                 # Parse the file and append
-                U_ij = read_vtk_data(os.path.join(sub_root, filename), qties, sel, points_idx)
+                U_ij = read_vtk_data(os.path.join(sub_root, filename), qties, points_idx)
                 U[:, :, j, i] = U_ij
 
             if n_t == 1:
