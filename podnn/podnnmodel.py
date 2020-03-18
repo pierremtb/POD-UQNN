@@ -10,7 +10,7 @@ from tqdm import tqdm
 import numba as nb
 
 from .pod import perform_pod, perform_fast_pod
-from .handling import pack_layers, split_dataset
+from .handling import pack_layers, split_dataset, clean_models
 from .logger import Logger
 from .varneuralnetwork import VarNeuralNetwork, NORM_CENTER, NORM_MEANSTD, NORM_NONE
 from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
@@ -386,6 +386,7 @@ class PodnnModel:
 
     def initVNNs(self, n_M, h_layers, lr, lam, adv_eps, norm=NORM_MEANSTD):
         """Create the neural net model."""
+        clean_models(self.resdir)
         self.lr = lr
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.regnn = []
@@ -440,8 +441,12 @@ class PodnnModel:
         logs = []
 
         model = self.regnn[model_id]
+        import matplotlib.pyplot as plt
         def get_val_err():
             v_val_pred, _ = model.predict(X_v_val)
+            plt.plot(v_val[0], "r--")
+            plt.plot(v_val_pred[0], "b-")
+            plt.show()
             return {
             #     "MSE_V": tf.reduce_mean(tf.square(v_val - v_val_pred)),
                 "RE_V": re_s(v_val.T, v_val_pred.T, div_max),

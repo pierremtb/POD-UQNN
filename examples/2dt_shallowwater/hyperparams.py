@@ -18,7 +18,7 @@ HP["d_t"] = 3
 HP["n_s"] = 90
 HP["n_s_tst"] = 10
 # POD stopping param
-HP["eps"] = 1e-10
+HP["eps"] = 1e-6
 HP["n_L"] = 0
 # Train/val split
 HP["train_val"] = (.8, .2)
@@ -26,7 +26,7 @@ HP["train_val"] = (.8, .2)
 HP["h_layers"] = [64, 64]
 # Setting up TF SGD-based optimizer
 HP["n_M"] = 1
-HP["epochs"] = 30000
+HP["epochs"] = 13000
 HP["lr"] = 0.001
 HP["lambda"] = 0.01
 HP["adv_eps"] = 0.
