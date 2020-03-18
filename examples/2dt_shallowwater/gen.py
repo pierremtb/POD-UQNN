@@ -26,18 +26,14 @@ with open(os.path.join("cache", "train_tst_idx.pkl"), "wb") as f:
 # datadir = os.path.join("..", "..", "..", "scratch", "multi2swt") 
 datadir = "data"
 mu_path = os.path.join(datadir, "INPUT_MONTE_CARLO.dat")
-sel = np.loadtxt('sel.txt', skiprows=6)[:, 1].astype("int")
+sel = np.loadtxt(os.path.join(datadir, "sel.csv"),
+                 skiprows=1, delimiter=",")[:, 0].astype("int")
 x_u_mesh_path = datadir
 x_mesh, connectivity, X_v, U = read_multi_space_sol_input_mesh(hp["n_s"], hp["n_t"], hp["d_t"],
                                                  train_tst_idx[0],
                                                  hp["mesh_idx"],
                                                  x_u_mesh_path, mu_path,
                                                  hp["mu_idx"], sel)
-np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
-np.save(os.path.join("cache", "connectivity.npy"), connectivity)
-# x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-# u_mesh = None
-# X_v = None
 
 #%% Init the model
 model = PodnnModel(resdir, hp["n_v"], x_mesh, hp["n_t"])

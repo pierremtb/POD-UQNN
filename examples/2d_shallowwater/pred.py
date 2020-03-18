@@ -21,6 +21,7 @@ from hyperparams import HP as hp
 model = PodnnModel.load("cache")
 X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
+
 #%% Predict and restruct
 U_pred, U_pred_sig = model.predict(X_v_val)
 
@@ -59,11 +60,11 @@ for i, idx_i in enumerate(idx):
                             x_mesh,
                             [("triangle", connectivity)],
                             point_data={
+                                "h": U_tst[0, :, idx_i],
+                                "h_pred": U_pred[0, :, idx_i],
+                                "h_pred_up": U_pred[0, :, idx_i] + 2*U_pred_sig[0, :, idx_i],
+                                "h_pred_lo": U_pred[0, :, idx_i] - 2*U_pred_sig[0, :, idx_i],
                                 # "U": np.ascontiguousarray(np.sqrt(U_tst[1, :, idx[0]]**2 + U_tst[2, :, idx[0]]**2)),
-                                "h": np.ascontiguousarray(U_tst[0, :, idx_i]),
-                                "h_pred": np.ascontiguousarray(U_pred[0, :, idx_i]),
-                                "h_pred_up": np.ascontiguousarray(U_pred[0, :, idx_i] + 2*U_pred_sig[0, :, idx_i]),
-                                "h_pred_lo": np.ascontiguousarray(U_pred[0, :, idx_i] - 2*U_pred_sig[0, :, idx_i]),
                                 # "h_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[0]]),
                                 # "hu": np.ascontiguousarray(U_tst[1, :, idx[0]]),
                                 # "hu_pred": np.ascontiguousarray(U_pred[1, :, idx[0]]),

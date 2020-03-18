@@ -198,8 +198,11 @@ class PodnnModel:
         
         # Checking the POD error
         U_pod = self.V.dot(v_train.T)
+        v_train_pod = self.project_to_v(U_pod)
         self.pod_sig = np.stack((U_train, U_pod), axis=-1).std(-1).mean(-1)
+        pod_sig_v = np.stack((v_train, v_train_pod), axis=-1).std(-1).mean(0)
         print(f"Mean pod sig: {self.pod_sig.mean()}")
+        print(f"Mean pod sig v: {pod_sig_v.mean()}")
 
         # Creating the validation snapshots matrix
         # U_train = self.V.dot(v_train.T)
@@ -321,6 +324,11 @@ class PodnnModel:
         U_train_pod = self.V.dot(v_train.T)
         self.pod_sig = np.stack((U_train, U_train_pod), axis=-1).std(-1).mean(-1)
         print(f"Mean pod sig: {self.pod_sig.mean()}")
+
+        # v_test_pod = self.project_to_v(self.project_to_U(v_test))
+        # print(v_test[0], v_test_pod[0])
+        # pod_sig_v = np.stack((v_test, v_test_pod), axis=-1).std(-1).mean(0)
+        # print(f"Mean pod sig v: {pod_sig_v.mean()}")
 
         # Testing stuff out
         # import matplotlib.pyplot as plt

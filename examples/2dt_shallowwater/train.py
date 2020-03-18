@@ -3,6 +3,8 @@
 import sys
 import os
 import tensorflow as tf
+import numpy as np
+import meshio
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
@@ -25,8 +27,6 @@ if distributed:
 #%% Train
 model = PodnnModel.load("cache")
 X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
-
-import matplotlib.pyplot as plt
 
 for i in range(local_num):
     model_id = gpu_id if distributed else i
