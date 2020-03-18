@@ -40,6 +40,13 @@ def clean_dir(dirname):
                 os.remove(os.path.join(root, name))
 
 
+def clean_models(dirname):
+    for root, dirs, files in os.walk(dirname):
+        for name in files:
+            if name.startswith("model-"):
+                os.remove(os.path.join(root, name))
+
+
 def split_dataset(X_v, v, test_size, idx_only=False):
     """Randomly splitting the dataset (X_v, v)."""
     indices = np.random.permutation(X_v.shape[0])

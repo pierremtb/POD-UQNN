@@ -45,3 +45,5 @@ X_v_train, v_train, \
 
 model.initVNNs(hp["n_M"], hp["h_layers"],
                 hp["lr"], hp["lambda"], hp["adv_eps"], hp["norm"])
+
+print(v_train.shape)

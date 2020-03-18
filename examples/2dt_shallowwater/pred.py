@@ -42,14 +42,11 @@ x_mesh, connectivity, X_v_tst, U_tst = \
                                         hp["mesh_idx"],
                                         x_u_mesh_path, mu_path,
                                         hp["mu_idx"], sel)
-print(x_mesh.shape)
-print(connectivity.shape)
-print(X_v_tst.shape)
-print(U_tst.shape)
 U_pred, U_pred_sig = model.predict(X_v_tst)
 err_val = re_s(model.destruct(U_tst), U_pred, div_max=True)
 print(f"RE_v: {err_val:4f}")
 
+U_tst = model.restruct(model.destruct(U_tst))
 U_pred = model.restruct(U_pred)
 U_pred_sig = model.restruct(U_pred_sig)
 
