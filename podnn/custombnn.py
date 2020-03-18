@@ -263,5 +263,6 @@ class BayesianNeuralNetwork:
         with open(params_path, "rb") as f:
             layers, lr, klw, norm, norm_bounds = pickle.load(f)
         print(f"Loading model params from {params_path}")
-        model = tf.keras.models.load_model(model_path)
+        model = tf.keras.models.load_model(model_path,
+                    custom_objects={"DenseVariational": DenseVariational})
         return cls(layers, lr, klw, model=model, norm=norm, norm_bounds=norm_bounds)

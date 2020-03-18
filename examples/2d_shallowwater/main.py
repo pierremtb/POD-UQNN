@@ -99,8 +99,8 @@ U_pred_sig = model.restruct(U_pred_sig)
 
 #%% VTU export
 print("Saving to .vtu")
-idx = [0, 1]
-print(f"Samples are {X_v_tst[idx[0]]}, {X_v_tst[idx[1]]}")
+idx = range(hp["n_s_tst"])
+print("Samples are " + ", ".join([f"{X_v_tst[idx[i]].item()}" for i in idx]))
 for i, idx_i in enumerate(idx):
     meshio.write_points_cells(os.path.join("cache", f"x_u_tst_pred_bnn_{i}.vtu"),
                               x_mesh,
