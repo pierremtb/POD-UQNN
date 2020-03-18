@@ -37,6 +37,7 @@ class DenseVariational(tfk.layers.Layer):
         self.activation = tfk.activations.get(activation)
         self.prior_sigma_1 = prior_sigma_1
         self.prior_sigma_2 = prior_sigma_2
+        self.prior_pi = prior_pi
         self.prior_pi_1 = prior_pi
         self.prior_pi_2 = 1.0 - prior_pi
         self.init_sigma = np.sqrt(self.prior_pi_1 * self.prior_sigma_1 ** 2 +
@@ -49,11 +50,10 @@ class DenseVariational(tfk.layers.Layer):
         config.update({
             'units': self.units,
             'kl_weight': self.kl_weight,
+            'activation': self.activation,
             'prior_sigma_1': self.prior_sigma_1,
             'prior_sigma_2': self.prior_sigma_2,
-            'prior_pi_1': self.prior_pi_1,
-            'prior_pi_2': self.prior_pi_2,
-            'init_sigma': self.init_sigma,
+            'prior_pi': self.prior_pi,
         })
         return config
 

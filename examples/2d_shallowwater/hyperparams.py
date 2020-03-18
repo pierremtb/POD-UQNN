@@ -16,7 +16,7 @@ HP["n_t"] = 0
 HP["n_s"] = 180
 HP["n_s_tst"] = 20
 # POD stopping param
-HP["eps"] = 1e-4
+HP["eps"] = 1e-10
 HP["n_L"] = 0
 HP["x_noise"] = 0.
 HP["u_noise"] = 0.
@@ -28,7 +28,7 @@ HP["h_layers"] = [40, 40]
 HP["epochs"] = 200000
 HP["lr"] = 0.003
 HP["soft_0"] = 1.
-HP["sigma_alea"] = 200
+HP["sigma_alea"] = 1.
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000

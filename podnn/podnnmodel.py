@@ -202,7 +202,7 @@ class PodnnModel:
         # U_train = self.V.dot(v_train.T)
         U_val = self.V.dot(v_val.T)
 
-        self.save_train_data(X_v_train, v_train, U_train, X_v_val, U_val)
+        self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
@@ -256,7 +256,7 @@ class PodnnModel:
         U_train = self.V.dot(v_train.T)
         U_val = self.V.dot(v_val.T)
 
-        self.save_train_data(X_v_train, v_train, U_train, X_v_val, U_val)
+        self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
 
         return X_v_train, v_train, X_v_val, v_val, U_val
 
@@ -352,7 +352,7 @@ class PodnnModel:
         # plt.plot(X_v_train[0], "rx")
         # plt.show()
 
-        self.save_train_data(X_v_train, v_train, U_train, X_v_test, U_test)
+        self.save_train_data(X_v_train, v_train, U_train, X_v_test, v_test, U_test)
 
         return X_v_train, v_train, U_train, X_v_test, v_test, U_test
 
@@ -382,7 +382,7 @@ class PodnnModel:
             v_pred = v_dist.mean().numpy()
             return {
                 "RE_v": re_s(v_val.T, v_pred.T),
-                "std": tf.reduce_sum(v_pred),
+                "std": tf.reduce_sum(v_pred.std(0)),
                 # "std_i": self.predict_v(X_v_val, samples=5)[1].mean(),
             }
         logger.set_val_err_fn(err_fn)
@@ -546,12 +546,12 @@ class PodnnModel:
             self.pod_sig = data[3]
             return data[4:]
 
-    def save_train_data(self, X_v_train, v_train, U_train, X_v_test, U_test):
+    def save_train_data(self, X_v_train, v_train, U_train, X_v_test, v_test, U_test):
         """Save training data, such as datasets."""
 
         with open(self.train_data_path, "wb") as f:
             pickle.dump((self.n_L, self.n_d, self.V, self.pod_sig,
-                         X_v_train, v_train, U_train, X_v_test, U_test), f)
+                         X_v_train, v_train, U_train, X_v_test, v_test, U_test), f)
 
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""
