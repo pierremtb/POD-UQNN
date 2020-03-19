@@ -1,10 +1,9 @@
 tensorflow==2.1.0
 tensorflow-probability==0.9.0
-tensorflow-addons==0.7.1
-matplotlib==3.0.3
-numpy==1.17.4
-numba==0.46.0
-colorama==0.4.1
-pandas==0.25.3
-pyevtk==1.1.1
-PyYAML==5.1.2
+matplotlib
+numpy
+numba
+pandas
+PyYAML
+tqdm
+meshio
