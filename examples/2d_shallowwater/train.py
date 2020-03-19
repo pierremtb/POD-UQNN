@@ -26,6 +26,9 @@ if distributed:
 model = PodnnModel.load("cache")
 X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
+# model.initVNNs(hp["n_M"], hp["h_layers"],
+#                 hp["lr"], hp["lambda"], hp["adv_eps"], hp["norm"])
+
 for i in range(local_num):
     model_id = gpu_id if distributed else i
     model.train_model(model_id, X_v_train, v_train, X_v_val, v_val, hp["epochs"],

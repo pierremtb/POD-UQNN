@@ -11,8 +11,7 @@ sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import re_s
 from podnn.mesh import read_multi_space_sol_input_mesh
-from podnn.plotting import figsize, savefig
-
+from podnn.plotting import figsize, savefig 
 from hyperparams import HP as hp
 
 #%% Load models
@@ -37,6 +36,7 @@ print(f"RE_v: {err_val:4f}")
 #%% Sample the new model to generate a test prediction
 with open(os.path.join("cache", "train_tst_idx.pkl"), "rb") as f:
         train_tst_idx = pickle.load(f)
+print(train_tst_idx)
 # datadir = os.path.join("..", "..", "..", "scratch", "multi2swt") 
 datadir = "data"
 mu_path = os.path.join(datadir, "INPUT_MONTE_CARLO.dat")
@@ -46,22 +46,17 @@ x_mesh, connectivity, X_v_tst, U_tst = \
                                         hp["mesh_idx"],
                                         x_u_mesh_path, mu_path,
                                         hp["mu_idx"])
-U_tst = model.destruct(U_tst)
-# U_pred, U_pred_sig = model.predict(X_v_tst)
-v_pred, v_pred_sig = model.predict_v(X_v_tst)
-U_pred = model.project_to_U(v_pred)
-U_pred_sig = model.project_to_U(v_pred_sig)
 
-print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
+U_pred, U_pred_sig = model.predict(X_v_tst)
+print(f"RE_tst: {re_s(model.destruct(U_tst), U_pred):4f}")
 
-U_tst = model.restruct(U_tst)
 U_pred = model.restruct(U_pred)
 U_pred_sig = model.restruct(U_pred_sig)
 
 #%% VTU export
 print("Saving to .vtu")
-idx = [0, 1]
-print(f"Samples are {X_v_tst[idx[0]]}, {X_v_tst[idx[1]]}")
+idx = range(hp["n_s_tst"])
+print("Samples are " + ", ".join([f"{X_v_tst[idx[i]].item()}" for i in idx]))
 for i, idx_i in enumerate(idx):
     meshio.write_points_cells(os.path.join("cache", f"x_u_tst_pred_{i}.vtu"),
                             x_mesh,
