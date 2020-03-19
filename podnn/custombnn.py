@@ -149,12 +149,12 @@ class BayesianNeuralNetwork:
                 kl_weight=self.klw,
                 dtype=self.dtype,
             ) for width in self.layers[1:-1]],
-            DenseVariational(
-                units=2 * n_L,
-                activation="linear",
-                dtype=self.dtype,
-                kl_weight=self.klw,
-            ),
+            # DenseVariational(
+            #     units=2 * n_L,
+            #     activation="linear",
+            #     dtype=self.dtype,
+            #     kl_weight=self.klw,
+            # ),
             DenseVariational(
                 units=n_L,
                 activation="linear",
