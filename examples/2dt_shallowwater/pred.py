@@ -5,15 +5,11 @@ import os
 import pickle
 import meshio
 import numpy as np
-import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import re_s
 from podnn.mesh import read_multi_space_sol_input_mesh
-from podnn.plotting import figsize, savefig
-from pyevtk.hl import unstructuredGridToVTK
-from pyevtk.vtk import VtkTriangle
 
 from hyperparams import HP as hp
 
@@ -42,18 +38,19 @@ x_mesh, connectivity, X_v_tst, U_tst = \
                                         hp["mesh_idx"],
                                         x_u_mesh_path, mu_path,
                                         hp["mu_idx"], sel)
+print("Elements count: ", connectivity.shape[0])
+print("Nodes count: ", x_mesh.shape[0])
 U_pred, U_pred_sig = model.predict(X_v_tst)
 err_val = re_s(model.destruct(U_tst), U_pred, div_max=True)
-print(f"RE_v: {err_val:4f}")
+print(f"RE_tst: {err_val:4f}")
 
-U_tst = model.restruct(model.destruct(U_tst))
 U_pred = model.restruct(U_pred)
 U_pred_sig = model.restruct(U_pred_sig)
 
-#%% VTU export
+# %% VTU export
 print("Saving to .vtu")
 for s in [0, 1, 2]:
-    print(f"Sample is {X_v_tst[s*hp['n_t']][1]}")
+    print(f"Sample is {30.0 - X_v_tst[s*hp['n_t']][1]}")
     for i in range(hp["n_t"]):
         meshio.write_points_cells(os.path.join("cache", f"x_u_tst_pred_{s}.{i}.vtu"),
                                 x_mesh,
@@ -64,6 +61,3 @@ for s in [0, 1, 2]:
                                         "eta_pred_up": U_pred[0, :, i, s] + 2*U_pred_sig[0, :, i, s],
                                         "eta_pred_lo": U_pred[0, :, i, s] - 2*U_pred_sig[0, :, i, s],
                                 })
-
-
-# %%

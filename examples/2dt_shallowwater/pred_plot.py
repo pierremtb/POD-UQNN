@@ -40,7 +40,7 @@ fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=1.0))
 gs = fig.add_gridspec(n_plot_x, n_plot_y)
 for i, t_i in enumerate(idx):
     ax = fig.add_subplot(gs[2*i:2*i+2, 0:2])
-    img = plti.imread(f"cache/podensnn-swt-map.{t_i}.png")
+    img = plti.imread(f"cache/x_u_tst_pred.{t_i}.png")
     ax.imshow(img)
     ax.set_xlabel(f"$x$")
     ax.set_ylabel(f"$y$")
@@ -54,10 +54,10 @@ for i, t_i in enumerate(idx):
                     alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
     ax.set_xlabel(f"$x'$")
     ax.set_ylabel("$\eta$")
-    ax.set_ylim((28.7, 30.7))
-    ax.set_title(f"$s=29.4\ m$, $t={t_i * hp['d_t']}\ s$")
+    ax.set_ylim((U_pred_lo[:, i].min() - 1., U_pred_up[:, i].max() + 1.))
+    ax.set_title(f"$s=1.20\ m$, $t={t_i * hp['d_t']}\ s$")
     if i == len(idx) - 1:
         ax.legend()
 plt.tight_layout()
-savefig("cache/podensnn-swt-samples")
+savefig("results/podensnn-swt-samples")
 

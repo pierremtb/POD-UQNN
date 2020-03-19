@@ -435,20 +435,12 @@ class PodnnModel:
         if self.regnn is None or len(self.regnn) == 0:
             raise ValueError("Regression model isn't defined.")
 
-        # U_val = self.project_to_U(v_val)
-        # U_train = self.project_to_U(v_train)
-
         logs = []
 
         model = self.regnn[model_id]
-        import matplotlib.pyplot as plt
         def get_val_err():
             v_val_pred, _ = model.predict(X_v_val)
-            plt.plot(v_val[0], "r--")
-            plt.plot(v_val_pred[0], "b-")
-            plt.show()
             return {
-            #     "MSE_V": tf.reduce_mean(tf.square(v_val - v_val_pred)),
                 "RE_V": re_s(v_val.T, v_val_pred.T, div_max),
             }
         # Validation, logging, training
@@ -456,11 +448,6 @@ class PodnnModel:
         logger.set_val_err_fn(get_val_err)
         model.fit(X_v_train, v_train, epochs, logger)
         logs.append(logger.get_logs())
-
-        # # Saving
-        # self.save_model()
-
-        # return logs
 
     def restruct(self, U, no_s=False):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
