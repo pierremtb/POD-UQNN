@@ -1,17 +1,57 @@
-# POD-NN
+# Uncertainty Quantification in the POD-NN framework
 
-## Running
-Dependencies are in the file `requirements.txt`, and are installable via `pip`.
+Source code from _Non-intrusive reduced-order modeling using uncertainty-aware Deep Neural Networks and Proper Orthogonal Decomposition: application to Flood Modeling_.
 
-Run examples from their, eg.
+Requires Python 3.6+.
+Dependencies are in the file `requirements.txt` on any branch, and are installable via `pip` (or `pip3` if Python 3 isn’t the default one):
 ```console
-$ cd examples/1d_shekel
-$ python3 genhifi.py
-$ python3 main.py
+$ pip3 install -r requirements.txt
 ```
 
+## Running our POD-NN implementation (Wang et al., 2019)
+Run examples from their directories, eg.
+```console
+$ git checkout POD-NN
+$ cd examples/1d_shekel
+$ python3 main.py
+```
+Available experiments in `examples`:
+- `1d_shekel`, the 1D [Shekel](https://en.wikipedia.org/wiki/Shekel_function) function
+- `2d_ackley`, the 2D [Ackley](https://en.wikipedia.org/wiki/Ackley_function) function
+- `1dt_burger`, a solution of the 1D, unsteady [Burger’s Equation](https://en.wikipedia.org/wiki/Burgers%27_equation)
+- `2d_shallowwater`, Flood Modeling on simulations results from CuteFlow, solving 2D [Shallow Water Equations](https://en.wikipedia.org/wiki/Shallow_water_equations)
+
+## Running the POD-EnsNN model (Uncertaintiy Quantification via Deep Ensembles)
+```console
+$ git checkout POD-EnsNN
+$ cd examples/1d_shekel
+$ python3 gen.py && python3 train.py --models=5 && python3 pred.py
+```
+Or to distribute on a machine with 5 GPUs
+```console
+$ python3 gen.py && horovodrun -np 5 -H localhost:5 python3 train.py --distribute && python3 pred.py
+```
+Available experiments in `examples`:
+- `1d_shekel`, the 1D [Shekel](https://en.wikipedia.org/wiki/Shekel_function) function
+- `2d_ackley`, the 2D [Ackley](https://en.wikipedia.org/wiki/Ackley_function) function
+- `1dt_burger`, a solution of the 1D, unsteady [Burger’s Equation](https://en.wikipedia.org/wiki/Burgers%27_equation)
+- `2d_shallowwater`, Flood Modeling on simulations results from CuteFlow, solving 2D [Shallow Water Equations](https://en.wikipedia.org/wiki/Shallow_water_equations)
+- `2dt_shallowwater`, Dam Break simulations results from CuteFlow, solving 2D, unsteady [Shallow Water Equations](https://en.wikipedia.org/wiki/Shallow_water_equations)
+
+## Running the POD-BNN model (Uncertainty Quantification via Bayesian NN)
+```console
+$ git checkout POD-BNN
+$ cd examples/1d_shekel
+$ python3 main.py
+```
+Available experiments in `examples`:
+- `1d_shekel`, the 1D [Shekel](https://en.wikipedia.org/wiki/Shekel_function) function
+- `2d_ackley`, the 2D [Ackley](https://en.wikipedia.org/wiki/Ackley_function) function
+- `1dt_burger`, a solution of the 1D, unsteady [Burger’s Equation](https://en.wikipedia.org/wiki/Burgers%27_equation)
+- `2d_shallowwater`: Flood Modeling on simulations results from CuteFlow, solving 2D [Shallow Water Equations](https://en.wikipedia.org/wiki/Shallow_water_equations)
+
 ## Citation
-This work is using techniques from _Wang et al._
+This work is building on techniques from _Wang et al._
 ```
 @article{Wang2019,
 author = {Wang, Qian and Hesthaven, Jan S. and Ray, Deep},
