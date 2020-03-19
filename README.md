@@ -21,7 +21,7 @@ Available experiments in `examples`:
 - `1dt_burger`, a solution of the 1D, unsteady [Burger’s Equation](https://en.wikipedia.org/wiki/Burgers%27_equation)
 - `2d_shallowwater`, Flood Modeling on simulations results from CuteFlow, solving 2D [Shallow Water Equations](https://en.wikipedia.org/wiki/Shallow_water_equations)
 
-## Running the POD-EnsNN model (Uncertaintiy Quantification via Deep Ensembles)
+## Running the POD-EnsNN model (Uncertainty Quantification via Deep Ensembles)
 ```console
 $ git checkout POD-EnsNN
 $ cd examples/1d_shekel
