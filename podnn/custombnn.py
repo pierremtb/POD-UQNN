@@ -116,7 +116,7 @@ class BayesianNeuralNetwork:
         tf.keras.backend.set_floatx(self.dtype)
 
         # Setting up optimizer and params
-        self.tf_optimizer = tf.optimizers.Adam(learning_rate=lr)
+        self.optimizer = tf.optimizers.Adam(learning_rate=lr)
         self.layers = layers
         self.lr = lr
         self.klw = klw
@@ -149,12 +149,6 @@ class BayesianNeuralNetwork:
                 kl_weight=self.klw,
                 dtype=self.dtype,
             ) for width in self.layers[1:-1]],
-            # DenseVariational(
-            #     units=2 * n_L,
-            #     activation="linear",
-            #     dtype=self.dtype,
-            #     kl_weight=self.klw,
-            # ),
             DenseVariational(
                 units=n_L,
                 activation="linear",
@@ -168,13 +162,25 @@ class BayesianNeuralNetwork:
             #     ),
             # ),
         ])
-        def neg_log_likelihood(y_obs, y_pred, sigma=self.sigma_alea):
-            dist = tfp.distributions.Normal(loc=y_pred, scale=sigma)
-        # def neg_log_likelihood(y_obs, dist):
-            return K.sum(-dist.log_prob(y_obs))
-        model.compile(loss=neg_log_likelihood, optimizer=tfk.optimizers.Adam(self.lr))
 
         return model
+
+    @tf.function
+    def loss(self, y_obs, y_pred):
+        """Negative Log-Likelihood."""
+        dist = tfp.distributions.Normal(loc=y_pred, scale=self.sigma_alea)
+        return K.sum(-dist.log_prob(y_obs))
+
+    @tf.function
+    def grad(self, X, v):
+        """Compute the loss and its derivatives w.r.t. the inputs."""
+        with tf.GradientTape() as tape:
+            loss_value = self.loss(v, self.model(X))
+        grads = tape.gradient(loss_value, self.wrap_training_variables())
+        return loss_value, grads
+
+    def wrap_training_variables(self):
+        return self.model.trainable_variables
 
     def set_normalize_bounds(self, X):
         if self.norm == NORM_CENTER or self.norm == NORM_MINMAX:
@@ -206,7 +212,6 @@ class BayesianNeuralNetwork:
         callbacks = []
         if self.logger is not None:
             self.logger.log_train_start()
-            callbacks = [LoggerCallback(logger)]
 
         # Normalizing and preparing inputs
         self.set_normalize_bounds(X_v)
@@ -214,8 +219,12 @@ class BayesianNeuralNetwork:
         v = self.tensor(v)
 
         # Optimizing
-        self.model.fit(X_v, v, epochs=epochs, batch_size=batch_size,
-                       verbose=0, callbacks=callbacks)
+        for e in range(epochs):
+            loss_value, grads = self.grad(X_v, v)
+            self.optimizer.apply_gradients(
+                    zip(grads, self.wrap_training_variables()))
+            if self.logger is not None:
+                self.logger.log_train_epoch(e, loss_value)
 
         if self.logger is not None:
             self.logger.log_train_end(epochs, tf.constant(0., dtype=self.dtype))
