@@ -2,7 +2,7 @@
 import os
 import sys
 sys.path.append(os.path.join("..", ".."))
-from lib.plotting import figsize, savefig
+from poduqnn.plotting import figsize, savefig
 
 #%% Imports
 import numpy as np
@@ -26,7 +26,7 @@ noise_std = 9
 y = y + noise_std*np.random.randn(y.shape[0], y.shape[1])
 
 #%%
-from lib.varneuralnetwork import VarNeuralNetwork
+from poduqnn.varneuralnetwork import VarNeuralNetwork
 
 layers = [1, 20, 20, 1]
 M = 5

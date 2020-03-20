@@ -7,9 +7,9 @@ import meshio
 import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
-from lib.podnnmodel import PodnnModel
-from lib.metrics import re_s
-from lib.mesh import read_multi_space_sol_input_mesh
+from poduqnn.podnnmodel import PodnnModel
+from poduqnn.metrics import re_s
+from poduqnn.mesh import read_multi_space_sol_input_mesh
 from hyperparams import HP as hp
 
 #%% Load models

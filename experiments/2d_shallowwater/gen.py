@@ -6,9 +6,9 @@ import pickle
 import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
-from lib.podnnmodel import PodnnModel
-from lib.mesh import read_multi_space_sol_input_mesh
-from lib.handling import clean_dir, split_dataset
+from poduqnn.podnnmodel import PodnnModel
+from poduqnn.mesh import read_multi_space_sol_input_mesh
+from poduqnn.handling import clean_dir, split_dataset
 
 from hyperparams import HP as hp
 

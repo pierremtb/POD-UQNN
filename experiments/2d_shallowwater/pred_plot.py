@@ -7,10 +7,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
-from lib.podnnmodel import PodnnModel
-from lib.metrics import re_s
-from lib.mesh import read_space_sol_input_mesh
-from lib.plotting import figsize, savefig
+from poduqnn.podnnmodel import PodnnModel
+from poduqnn.metrics import re_s
+from poduqnn.mesh import read_space_sol_input_mesh
+from poduqnn.plotting import figsize, savefig
 from pyevtk.hl import unstructuredGridToVTK
 from pyevtk.vtk import VtkTriangle
 

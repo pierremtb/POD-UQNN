@@ -5,8 +5,8 @@ import os
 import tensorflow as tf
 
 sys.path.append(os.path.join("..", ".."))
-from lib.podnnmodel import PodnnModel
-from lib.handling import check_distributed_args
+from poduqnn.podnnmodel import PodnnModel
+from poduqnn.handling import check_distributed_args
 
 from hyperparams import HP as hp
 

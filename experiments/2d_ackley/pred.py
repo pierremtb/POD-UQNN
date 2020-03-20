@@ -6,10 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
-from lib.podnnmodel import PodnnModel
-from lib.metrics import re_s
-from lib.handling import sample_mu
-from lib.plotting import figsize, savefig
+from poduqnn.podnnmodel import PodnnModel
+from poduqnn.metrics import re_s
+from poduqnn.handling import sample_mu
+from poduqnn.plotting import figsize, savefig
 
 from hyperparams import HP as hp
 from hyperparams import u
