@@ -10,9 +10,9 @@ from pyevtk.hl import unstructuredGridToVTK
 from pyevtk.vtk import VtkTriangle
 
 sys.path.append(os.path.join("..", ".."))
-from lib.podnnmodel import PodnnModel
-from lib.metrics import re, re_mean_std
-from lib.plotting import figsize, saveresultdir
+from poduqnn.podnnmodel import PodnnModel
+from poduqnn.metrics import re, re_mean_std
+from poduqnn.plotting import figsize, saveresultdir
 
 
 def plot_plot(fig, pos, x, y, z, z_min, z_max, title):

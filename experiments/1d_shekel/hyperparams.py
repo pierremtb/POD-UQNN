@@ -5,7 +5,7 @@ import os
 import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
-from lib.custombnn import NORM_MEANSTD
+from poduqnn.custombnn import NORM_MEANSTD
 
 
 HP = {}

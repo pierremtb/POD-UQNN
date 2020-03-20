@@ -1,7 +1,7 @@
 """Default hyperparameters for 1D time-dep Burgers Equation."""
 
 import numpy as np
-from lib.custombnn import NORM_MEANSTD
+from poduqnn.custombnn import NORM_MEANSTD
 
 HP = {}
 # Dimension of u(x, t, mu)

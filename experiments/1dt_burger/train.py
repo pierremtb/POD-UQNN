@@ -5,12 +5,12 @@ import os
 import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
-from lib.podnnmodel import PodnnModel
-from lib.mesh import create_linear_mesh
-from lib.logger import Logger, LoggerCallback
-from lib.metrics import re_s
-from lib.plotting import savefig, figsize
-from lib.handling import sample_mu
+from poduqnn.podnnmodel import PodnnModel
+from poduqnn.mesh import create_linear_mesh
+from poduqnn.logger import Logger, LoggerCallback
+from poduqnn.metrics import re_s
+from poduqnn.plotting import savefig, figsize
+from poduqnn.handling import sample_mu
 
 #%% Prepare
 from hyperparams import HP as hp

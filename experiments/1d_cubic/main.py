@@ -7,10 +7,10 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
-from lib.logger import Logger
-from lib.custombnn import NORM_NONE, NORM_MEANSTD
-from lib.custombnn import BayesianNeuralNetwork
-from lib.plotting import figsize
+from poduqnn.logger import Logger
+from poduqnn.custombnn import NORM_NONE, NORM_MEANSTD
+from poduqnn.custombnn import BayesianNeuralNetwork
+from poduqnn.plotting import figsize
 
 #%% Datagen
 N_star = 100

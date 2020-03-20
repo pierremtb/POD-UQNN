@@ -5,11 +5,11 @@ import os
 import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
-from lib.podnnmodel import PodnnModel
-from lib.mesh import create_linear_mesh
-from lib.metrics import re_s
-from lib.plotting import savefig, figsize
-from lib.handling import sample_mu
+from poduqnn.podnnmodel import PodnnModel
+from poduqnn.mesh import create_linear_mesh
+from poduqnn.metrics import re_s
+from poduqnn.plotting import savefig, figsize
+from poduqnn.handling import sample_mu
 
 #%%
 import tensorflow as tf

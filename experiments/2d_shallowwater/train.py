@@ -8,11 +8,11 @@ import pickle
 import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
-from lib.podnnmodel import PodnnModel
-from lib.mesh import read_multi_space_sol_input_mesh
-from lib.handling import split_dataset
-from lib.metrics import re_s, re
-from lib.plotting import savefig, figsize
+from poduqnn.podnnmodel import PodnnModel
+from poduqnn.mesh import read_multi_space_sol_input_mesh
+from poduqnn.handling import split_dataset
+from poduqnn.metrics import re_s, re
+from poduqnn.plotting import savefig, figsize
 
 #%% Prepare
 from hyperparams import HP as hp
