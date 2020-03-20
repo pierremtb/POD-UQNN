@@ -10,10 +10,10 @@ from pyevtk.hl import unstructuredGridToVTK
 from pyevtk.vtk import VtkTriangle
 
 sys.path.append(os.path.join("..", ".."))
-from podnn.podnnmodel import PodnnModel
-from podnn.plotting import figsize, saveresultdir
-from podnn.metrics import re_mean_std, re
-from podnn.mesh import read_space_sol_input_mesh
+from lib.podnnmodel import PodnnModel
+from lib.plotting import figsize, saveresultdir
+from lib.metrics import re_mean_std, re
+from lib.mesh import read_space_sol_input_mesh
 
 
 def plot_plot(fig, pos, x, y, z, z_min, z_max, title):

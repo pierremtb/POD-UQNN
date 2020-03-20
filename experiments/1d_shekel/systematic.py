@@ -6,10 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
-from podnn.podnnmodel import PodnnModel
-from podnn.metrics import re_s
-from podnn.mesh import create_linear_mesh
-from podnn.plotting import figsize, savefig
+from lib.podnnmodel import PodnnModel
+from lib.metrics import re_s
+from lib.mesh import create_linear_mesh
+from lib.plotting import figsize, savefig
 
 #%% Prepare
 from hyperparams import HP as hp
