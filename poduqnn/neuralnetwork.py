@@ -4,7 +4,6 @@
 import os
 import pickle
 import tensorflow as tf
-from sklearn.preprocessing import normalize as sknormalize
 import numpy as np
 from tqdm import tqdm
 
@@ -45,8 +44,6 @@ class NeuralNetwork:
         """Apply a kind of normalization to the inputs X."""
         if self.lb is not None and self.ub is not None:
             X = (X - self.lb) - 0.5*(self.ub - self.lb)
-            # X = sknormalize(X, norm="max")
-            # X = (X - X.mean(0)) / X.std(0)
         return self.tensor(X)
 
     def regularization(self):
