@@ -9,12 +9,10 @@ import numba as nb
 
 from .pod import perform_pod, perform_fast_pod
 from .logger import Logger
-from .custombnn import BayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
-# from .bayesianneuralnetwork import BayesianNeuralNetwork, NORM_MEANSTD, NORM_NONE
-from .acceleration import loop_vdot, loop_vdot_t, loop_u, loop_u_t, lhs
-from .metrics import re, re_s
-from .handling import pack_layers, split_dataset
-
+from .custombnn import BayesianNeuralNetwork, NORM_MEANSTD
+from .acceleration import loop_u, loop_u_t
+from .metrics import re_s
+from .handling import split_dataset, sample_mu
 
 SETUP_DATA_NAME = "setup_data.pkl"
 TRAIN_DATA_NAME = "train_data.pkl"
@@ -23,6 +21,7 @@ MODEL_PARAMS_NAME = "model_params.pkl"
 
 
 class PodnnModel:
+    """Wrapper class to handle POD projections and regression model."""
     def __init__(self, resdir, n_v, x_mesh, n_t):
         # Dimension of the function output
         self.n_v = n_v
@@ -47,33 +46,18 @@ class PodnnModel:
         self.n_d = None
         self.V = None
         self.layers = None
-
         self.pod_sig = None
-
-        self.save_setup_data()
 
         self.dtype = "float64"
         tf.keras.backend.set_floatx(self.dtype)
-
-    def u(self, X, t, mu):
-        """Return the function output, it needs to be extended."""
-        raise NotImplementedError
-
-    def sample_mu(self, n_s, mu_min, mu_max, indices=None):
-        """Return a LHS sampling between mu_min and mu_max of size n_s."""
-        if indices is not None:
-            mu = np.linspace(mu_min, mu_max, n_s)[indices]
-            return mu
-        X_lhs = lhs(n_s, mu_min.shape[0]).T
-        mu_lhs = mu_min + (mu_max - mu_min)*X_lhs
-        return mu_lhs
+        self.save_setup_data()
 
     def generate_hifi_inputs(self, n_s, mu_min, mu_max, t_min=0, t_max=0):
         """Return large inputs to be used in a HiFi prediction task."""
         if self.has_t:
             t_min, t_max = np.array(t_min), np.array(t_max)
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
-        mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
+        mu_lhs = sample_mu(n_s, mu_min, mu_max)
 
         n_st = n_s
         n_d = mu_min.shape[0]
@@ -87,12 +71,10 @@ class PodnnModel:
             # Creating the time steps
             t = np.linspace(t_min, t_max, self.n_t)
             tT = t.reshape((self.n_t, 1))
-
             for i in tqdm(range(n_s)):
                 # Getting the snapshot times indices
                 s = self.n_t * i
                 e = self.n_t * (i + 1)
-
                 # Setting the regression inputs (t, mu)
                 X_v[s:e, :] = np.hstack((tT, np.ones_like(tT)*mu_lhs[i]))
         else:
@@ -112,13 +94,12 @@ class PodnnModel:
         """Create a generated snapshots matrix and inputs for benchmarks."""
         n_s = mu_lhs.shape[0]
         n_xyz = self.x_mesh.shape[0]
-
-        # Numba-ifying the function
-        u = nb.njit(u)
-
         n_st = n_s
         if self.has_t:
             n_st *= self.n_t
+
+        # Numba-ifying the function
+        u = nb.njit(u)
 
         # Getting the nodes coordinates
         X = self.x_mesh[:, 1:].T
@@ -127,6 +108,7 @@ class PodnnModel:
         X_v = np.zeros((n_st, n_d))
         U = np.zeros((n_h, n_st))
 
+        # Computing
         U_no_noise = np.zeros((n_h, n_st))
         if self.has_t:
             U_struct = np.zeros((n_h, self.n_t, n_s))
@@ -134,26 +116,19 @@ class PodnnModel:
                             X_v, U, U_no_noise, U_struct, X, mu_lhs, t_min, t_max,
                             u_noise, x_noise)
 
-        # U_no_noise = np.zeros((n_h, n_st))
         return loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise, x_noise)
 
-    def convert_multigpu_data(self, U_struct, X_v, train_val, eps, eps_init=None,
-                              n_L=0, use_cache=False, save_cache=False):
-        """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
-        """U is (n_v, n_xyz, n_t, n_s)."""
-        if use_cache and os.path.exists(self.train_data_path):
-            return self.load_train_data()
-
+    def convert_multigpu_data(self, U_struct, X_v, train_val, eps,
+                              eps_init=None, n_L=0):
+        """Convert spatial mesh/solution to usable inputs/snapshot matrix.
+           U is (n_v, n_xyz, n_t, n_s)."""
+        self.n_d = X_v.shape[1]
         self.n_xyz = self.x_mesh.shape[0]
         self.n_h = self.n_xyz * self.n_v
-        n_st = X_v.shape[0]
         n_s = U_struct.shape[-1]
         n_t = self.n_t
         if n_t == 0:
             n_t = 1
-
-        # Number of input in time (1) + number of params
-        self.n_d = X_v.shape[1]
         
         # Getting random indices to manually do the split
         idx_s = np.random.permutation(n_s)
@@ -181,15 +156,13 @@ class PodnnModel:
         if eps_init is not None and self.has_t:
             # Never tested
             n_s = int(n_s / self.n_t)
-            self.V = perform_fast_pod(U.reshape((self.n_h, self.n_t, n_s)),
+            self.V = perform_fast_pod(U_train.reshape((self.n_h, self.n_t, n_s)),
                                       eps, eps_init)
         else:
             self.V = perform_pod(U_train, eps, n_L, True)
-
         self.n_L = self.V.shape[1]
 
         # Projecting
-        # v = (self.V.T.dot(U)).T
         v_train = self.project_to_v(U_train)
         v_val = self.project_to_v(U_val)
         
@@ -198,78 +171,13 @@ class PodnnModel:
         self.pod_sig = np.stack((U_train, U_pod), axis=-1).std(-1).mean(-1)
         print(f"Mean pod sig: {self.pod_sig.mean()}")
 
-        # Creating the validation snapshots matrix
-        # U_train = self.V.dot(v_train.T)
-        U_val = self.V.dot(v_val.T)
-
         self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
-
-        return X_v_train, v_train, X_v_val, v_val, U_val
-
-    def convert_dataset(self, u_mesh, X_v, train_val, eps, eps_init=None, n_L=0,
-                        use_cache=False):
-        """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
-        if use_cache and os.path.exists(self.train_data_path):
-            return self.load_train_data()
-
-        self.n_xyz = self.x_mesh.shape[0]
-        n_h = self.n_xyz * self.n_v
-        n_s = X_v.shape[0]
-
-        # Number of input in time (1) + number of params
-        self.n_d = X_v.shape[1]
-
-        # Reshaping manually
-        U = np.zeros((n_h, n_s))
-        for i in range(n_s):
-            st = self.n_xyz * i
-            en = self.n_xyz * (i + 1)
-            U[:, i] = u_mesh[st:en, :].T.reshape((n_h,))
-
-        # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
-        # u_rb are the reduced coefficients we're looking for
-        if eps_init is not None and self.has_t:
-            # Never tested
-            n_s = int(n_s / self.n_t)
-            self.V = perform_fast_pod(U.reshape((n_h, self.n_t, n_s)),
-                                      eps, eps_init)
-        else:
-            self.V = perform_pod(U, eps, n_L, False)
-
-        self.n_L = self.V.shape[1]
-
-        # Projecting
-        v = (self.V.T.dot(U)).T
-        v = self.project_to_v(U)
-
-        # Checking the POD error
-        U_pod = self.V.dot(v.T)
-        self.pod_sig = np.stack((U, U_pod), axis=-1).std(-1).mean(-1)
-        print("POD SIG")
-        print(self.pod_sig.mean())
-        print(self.project_to_v(U - U_pod).mean())
-
-        # Randomly splitting the dataset (X_v, v)
-        X_v_train, X_v_val, v_train, v_val = self.split_dataset(X_v, v, train_val[1])
-
-        # Creating the validation snapshots matrix
-        U_train = self.V.dot(v_train.T)
-        U_val = self.V.dot(v_val.T)
-
-        self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
-
         return X_v_train, v_train, X_v_val, v_val, U_val
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
                          train_val, eps=0., eps_init=None, n_L=0,
-                         t_min=0, t_max=0, u_noise=0., x_noise=0.,
-                         use_cache=False):
+                         t_min=0, t_max=0, u_noise=0., x_noise=0.):
         """Generate a training dataset for benchmark problems."""
-        if use_cache:
-            return self.load_train_data()
-
-        # if self.has_t:
-        #     t_min, t_max = np.array(t_min), np.array(t_max)
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
 
         # Total number of snapshots
@@ -288,7 +196,7 @@ class PodnnModel:
 
         # LHS sampling (first uniform, then perturbated)
         print("Doing the LHS sampling on the non-spatial params...")
-        mu_lhs = self.sample_mu(n_s, mu_min, mu_max)
+        mu_lhs = sample_mu(n_s, mu_min, mu_max)
         fake_x = np.zeros_like(mu_lhs)
 
         _, _, mu_lhs_train, mu_lhs_test = \
@@ -309,7 +217,6 @@ class PodnnModel:
             self.V = perform_pod(U_train, eps, n_L, False)
         else:
             self.V = perform_fast_pod(U_train_struct, eps, eps_init)
-
         self.n_L = self.V.shape[1]
 
         # Projecting
@@ -320,49 +227,11 @@ class PodnnModel:
         U_train_pod = self.V.dot(v_train.T)
         self.pod_sig = np.stack((U_train, U_train_pod), axis=-1).std(-1).mean(-1)
 
-        # Testing stuff out
-        # import matplotlib.pyplot as plt
-        # print("n_L: ", self.n_L)
-        # x = np.linspace(0, 1.5, 256)
-        # U_train_mean = U_train.mean(-1)
-        # U_train_pod_mean = U_train_pod.mean(-1)
-        # plt.plot(x, U_train_mean, "r--")
-        # plt.plot(x, U_train_pod_mean, "b-")
-        # lower = U_train_pod_mean - 2 * self.pod_sig
-        # upper = U_train_pod_mean + 2 * self.pod_sig
-        # plt.fill_between(x, lower, upper, 
-        #                  facecolor='orange', alpha=0.5, label=r"$2\textrm{std}(\hat{u}_T(x))$")
-        # plt.show()
-        # exit(0)
-        # import matplotlib.pyplot as plt
-        # print("n_L: ", self.n_L)
-        # x = np.linspace(-5, 5, 400)
-        # u_shape = (1, 400, 400)
-        # U_train_pod = self.V.dot(v_train.T)
-        # plt.plot(x, U_train[:, 0].reshape(u_shape)[0, :, 199], "b--")
-        # plt.plot(x, U_train_pod[:, 0].reshape(u_shape)[0, :, 199], "k,")
-        # plt.plot(x, U_train[:, 0].reshape(u_shape)[0, :, 0], "b--")
-        # plt.plot(x, U_train_pod[:, 0].reshape(u_shape)[0, :, 0], "k,")
-        # # plt.plot(x,U_no_noise[:, 0].reshape(u_shape)[0, :, 199], "r--")
-        # plt.show()
-        # plt.plot(x, U_train[:, 0].reshape(u_shape)[0, :, 299], "b-")
-        # plt.plot(x,U_no_noise[:, 0].reshape(u_shape)[0, :, 299], "r--")
-        # plt.show()
-        # plt.plot(mu_lhs_train[0], "bx")
-        # plt.plot(X_v_train[0], "rx")
-        # plt.show()
-
         self.save_train_data(X_v_train, v_train, U_train, X_v_test, v_test, U_test)
-
         return X_v_train, v_train, U_train, X_v_test, v_test, U_test
 
-    def tensor(self, X):
-        """Convert input into a TensorFlow Tensor with the class dtype."""
-        return tf.convert_to_tensor(X, dtype=self.dtype)
-
     def initBNN(self, h_layers, lr, klw, soft_0=0.01, sigma_alea=0.01, norm=NORM_MEANSTD):
-        """Create the neural net model."""
-        self.lr = lr
+        """Init the Bayesian Neural Network regression model."""
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.regnn = BayesianNeuralNetwork(self.layers, lr, klw,
                                            soft_0=soft_0, sigma_alea=sigma_alea,
@@ -378,22 +247,53 @@ class PodnnModel:
         logger = Logger(epochs, freq, silent=silent)
         def err_fn():
             v_dist = self.regnn.predict_dist(X_v_val)
-            # v_pred = v_dist.numpy()
             v_pred = v_dist.mean().numpy()
             return {
                 "RE_v": re_s(v_val.T, v_pred.T),
                 "std": tf.reduce_sum(v_pred.std(0)),
-                # "std_i": self.predict_v(X_v_val, samples=5)[1].mean(),
             }
         logger.set_val_err_fn(err_fn)
 
         # Training
-        self.regnn.fit(X_v, v, epochs, logger, batch_size=X_v.shape[0])
+        self.regnn.fit(X_v, v, epochs, logger)
 
         # Saving
         self.save_model()
-
         return logger.get_logs()
+
+    def predict_v(self, X, samples=20):
+        """Predict the projection coefficients (regression outputs)."""
+        v_pred_samples = np.zeros((samples, X.shape[0], self.n_L))
+        v_pred_sig_samples = np.zeros((samples, X.shape[0], self.n_L))
+
+        for i in range(samples):
+            v_dist = self.regnn.predict_dist(X)
+            v_pred_samples[i] = v_dist.mean().numpy()
+            v_pred_sig_samples[i] = v_dist.variance().numpy()
+
+        # Approximate the mixture in a single Gaussian distribution
+        v_pred = v_pred_samples.mean(0)
+        v_pred_var = (v_pred_sig_samples**2 + v_pred_samples ** 2).mean(0) - v_pred ** 2
+        v_pred_sig = np.sqrt(v_pred_var)
+        return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
+
+    def predict(self, X, samples=20):
+        """Predict the expanded solution."""
+        U_pred_samples = np.zeros((samples, self.n_h, X.shape[0]))
+        U_pred_sig_samples = np.zeros((samples, self.n_h, X.shape[0]))
+
+        for i in range(samples):
+            v_dist = self.regnn.predict_dist(X)
+            v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
+            U_pred_samples[i] = self.project_to_U(v_pred)
+            U_pred_sig_samples[i] = self.project_to_U(np.sqrt(v_pred_var))
+
+        # Approximate the mixture in a single Gaussian distribution
+        U_pred = U_pred_samples.mean(0)
+        U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(0) \
+                      - U_pred ** 2
+        U_pred_sig = np.sqrt(U_pred_var)
+        return U_pred, U_pred_sig
 
     def restruct(self, U, no_s=False):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
@@ -417,7 +317,7 @@ class PodnnModel:
         return U_struct
 
     def destruct(self, U_struct):
-        """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
+        """Destruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
         if self.has_t:
             # (n_v, n_xyz, n_t, n_s) -> (n_h, n_st)
             n_s = int(U_struct.shape[-1])
@@ -436,105 +336,26 @@ class PodnnModel:
         return U
 
     def get_u_tuple(self):
-        """Return solution shape."""
+        """Construct solution shape."""
         tup = (self.n_xyz,)
         if self.has_t:
             tup += (self.n_t,)
         return (self.n_v,) + tup
 
-    # def predict_v(self, X, samples=20):
-    #     v_pred_samples = np.zeros((samples, X.shape[0], self.n_L))
-    #     v_pred_sig_samples = np.zeros((samples, X.shape[0], self.n_L))
-
-    #     for i in range(samples):
-    #         v_dist = self.regnn.predict_dist(X)
-    #         v_pred_samples[i], v_pred_sig_samples[i] = v_dist.mean().numpy(), v_dist.stddev().numpy()
-
-    #     v_pred = v_pred_samples.mean(0)
-    #     v_pred_var = (v_pred_sig_samples**2 + v_pred_samples ** 2).mean(0) - v_pred ** 2
-    #     v_pred_sig = np.sqrt(v_pred_var)
-
-    #     return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
-
-    def predict_v(self, X, samples=20):
-        v_pred_samples = np.zeros((samples, X.shape[0], self.n_L))
-        v_pred_sig_samples = np.zeros((samples, X.shape[0], self.n_L))
-
-        for i in range(samples):
-            v_dist = self.regnn.predict_dist(X)
-            v_pred_samples[i] = v_dist.mean().numpy()
-            v_pred_sig_samples[i] = v_dist.variance().numpy()
-
-        v_pred = v_pred_samples.mean(0)
-        # v_pred_sig = v_pred_samples.std(0)
-        v_pred_var = (v_pred_sig_samples**2 + v_pred_samples ** 2).mean(0) - v_pred ** 2
-        v_pred_sig = np.sqrt(v_pred_var)
-
-        return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
-
-    # def predict(self, X, samples=20):
-    #     U_pred_sum = np.zeros((self.n_h, X.shape[0]))
-    #     U_pred_sum_sq = np.zeros((self.n_h, X.shape[0]))
-
-    #     for i in range(samples):
-    #         v_dist = self.regnn.predict_dist(X)
-    #         v_pred = v_dist.numpy()
-    #         U_pred_i = self.project_to_U(v_pred)
-    #         U_pred_sum += U_pred_i
-    #         U_pred_sum_sq += U_pred_i ** 2
-
-    #     U_pred = U_pred_sum / samples
-    #     U_pred_sig = np.sqrt((U_pred_sum_sq - U_pred_sum**2)/samples)
-    #     U_pred_sig = np.nan_to_num(U_pred_sig)
-
-    #     return U_pred, U_pred_sig
-
-    def predict(self, X, samples=20):
-        U_pred_samples = np.zeros((samples, self.n_h, X.shape[0]))
-        U_pred_sig_samples = np.zeros((samples, self.n_h, X.shape[0]))
-
-        for i in range(samples):
-            v_dist = self.regnn.predict_dist(X)
-            v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
-            # v_pred = v_dist.numpy()
-            U_pred_samples[i] = self.project_to_U(v_pred)
-            U_pred_sig_samples[i] = self.project_to_U(np.sqrt(v_pred_var))
-
-        U_pred = U_pred_samples.mean(0)
-        U_pred_var = (U_pred_sig_samples**2 + U_pred_samples ** 2).mean(0) \
-                      - U_pred ** 2
-        U_pred_sig = np.sqrt(U_pred_var)
-        # U_pred_sig = U_pred_samples.std(0)
-
-        return U_pred, U_pred_sig
-
     def project_to_U(self, v):
+        """Helper to expand from the projection coeffictients to the solution."""
         return self.V.dot(v.T)
 
     def project_to_v(self, U):
+        """Helper to compress the solution to the projection coeffictients."""
         return (self.V.T.dot(U)).T
 
-    def predict_sample(self, X_v):
-        """Returns the predicted solutions, via proj coefficients."""
-        # v_pred, v_pred_mean = self.predict_v(X_v)
-        # v_pred = self.regnn.predict_sample(X_v)
-        v_pred = self.regnn.model(X_v).mean().numpy()
-
-        # Retrieving the function with the predicted coefficients
-        U_pred = self.V.dot(v_pred.T)
-        return U_pred
-
-    def u_mesh_to_U(self, u_mesh, n_s):
-        # Reshaping manually
-        U = np.zeros((self.n_h, n_s))
-        for i in range(n_s):
-            st = self.n_xyz * i
-            en = self.n_xyz * (i + 1)
-            U[:, i] = u_mesh[st:en, :].T.reshape((self.n_h,))
-        return U
+    def tensor(self, X):
+        """Helper to make sure quantities are tensor of dtype."""
+        return tf.convert_to_tensor(X, dtype=self.dtype)
 
     def load_train_data(self):
-        """Load training data, such as datasets."""
+        """Load training data, such as datasets, in cache/."""
         if not os.path.exists(self.train_data_path):
             raise FileNotFoundError("Can't find train data.")
         with open(self.train_data_path, "rb") as f:
@@ -547,20 +368,17 @@ class PodnnModel:
             return data[4:]
 
     def save_train_data(self, X_v_train, v_train, U_train, X_v_test, v_test, U_test):
-        """Save training data, such as datasets."""
-
+        """Save training data, such as datasets, in cache/."""
         with open(self.train_data_path, "wb") as f:
             pickle.dump((self.n_L, self.n_d, self.V, self.pod_sig,
                          X_v_train, v_train, U_train, X_v_test, v_test, U_test), f)
 
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""
-
         if not os.path.exists(self.model_path):
             raise FileNotFoundError("Can't find cached model.")
         if not os.path.exists(self.model_params_path):
             raise FileNotFoundError("Can't find cached model params.")
-
         self.regnn = BayesianNeuralNetwork.load_from(self.model_path, self.model_params_path)
 
     def save_model(self):

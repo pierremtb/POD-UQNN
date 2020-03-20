@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 
-from podnn.bayesianneuralnetwork import NORM_MINMAX, NORM_MEANSTD
+from podnn.bayesianneuralnetwork import NORM_MEANSTD
 
 HP = {}
 HP["mesh_idx"] = ["h"]
@@ -33,5 +33,5 @@ HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000
 
-np.random.seed(1111)
-tf.random.set_seed(1111)
+# np.random.seed(1111)
+# tf.random.set_seed(1111)
