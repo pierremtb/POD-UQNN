@@ -1,9 +1,6 @@
 """Default hyperparameters for 2D inviscid Shallow Water Equations."""
 
-import numpy as np
-import tensorflow as tf
-
-from podnn.bayesianneuralnetwork import NORM_MEANSTD
+from podnn.custombnn import NORM_MEANSTD
 
 HP = {}
 HP["mesh_idx"] = ["h"]
@@ -32,6 +29,3 @@ HP["sigma_alea"] = 0.23
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000
-
-# np.random.seed(1111)
-# tf.random.set_seed(1111)

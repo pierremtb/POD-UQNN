@@ -1,4 +1,4 @@
-"""Module with a class defining an Artificial Neural Network."""
+"""Module with a class defining a Bayesian Neural Network."""
 
 import os
 import pickle
@@ -264,8 +264,7 @@ class BayesianNeuralNetwork:
 
     def tensor(self, X):
         """Convert input into a TensorFlow Tensor with the class dtype."""
-        return X.astype("float64")
-        # return tf.convert_to_tensor(X, dtype=self.dtype)
+        return tf.convert_to_tensor(X, dtype=self.dtype)
 
     def save_to(self, model_path, params_path):
         """Save the (trained) model and params for later use."""

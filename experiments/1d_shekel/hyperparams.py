@@ -5,7 +5,7 @@ import os
 import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
-from podnn.bayesianneuralnetwork import NORM_MINMAX
+from podnn.custombnn import NORM_MEANSTD
 
 
 HP = {}
@@ -28,12 +28,13 @@ HP["u_noise"] = 0.
 # Train/val split
 HP["train_val"] = (.8, .2)
 # DeepNN Topology
-HP["h_layers"] = [40, 40, 40, 40]
+HP["h_layers"] = [40, 40]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 13000
-HP["lr"] = 0.01
-HP["soft_0"] = 0.001
-HP["norm"] = NORM_MINMAX
+HP["epochs"] = 65000
+HP["lr"] = 0.005
+HP["soft_0"] = 0.05
+HP["sigma_alea"] = 5.
+HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Non-spatial params
@@ -47,9 +48,6 @@ HP["mu_max"] = (mu_mean * (1 + np.sqrt(3)/10)).tolist()
 HP["mu_min_out"] = (mu_mean * (1 - 1.5*np.sqrt(3)/10)).tolist()
 HP["mu_max_out"] = (mu_mean * (1 + 1.5*np.sqrt(3)/10)).tolist()
 
-
-# np.random.seed(1111)
-# tf.random.set_seed(1111)
 
 def u(X, _, mu):
     """The 1D-Shekel function."""

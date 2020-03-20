@@ -57,27 +57,6 @@ v_pred, v_pred_sig = model.predict_v(X_v_val)
 # err_val = re_s(v_val.T, v_pred.T)
 # print(f"RE_v: {err_val:4f}")
 
-#%%
-# import matplotlib.pyplot as plt
-# yhat = model.regnn.predict_dist(X_v_val)
-# for i in [0, 1]:
-#     plt.plot(yhat.mean().numpy()[i], "b-")
-#     plt.plot(yhat.mean().numpy()[i] - 2*yhat.stddev().numpy()[i], "b-", alpha=0.2)
-#     plt.plot(yhat.mean().numpy()[i] + 2*yhat.stddev().numpy()[i], "b-", alpha=0.2)
-#     plt.plot(v_val[i], "r--")
-# plt.show()
-
-# y_pred, y_pred_sig = model.predict_v(X_v_val)
-# for i in [0, 1]:
-#     plt.plot(y_pred[i], "b-")
-#     plt.plot(y_pred[i] - 2*y_pred_sig[i], "b-", alpha=0.2)
-#     plt.plot(y_pred[i] + 2*y_pred_sig[i], "b-", alpha=0.2)
-#     plt.plot(v_val[i], "r--")
-# plt.show()
-
-#%% Cleanup
-# del x_mesh, u_mesh, X_v, X_v_train, v_train, X_v_val, v_val, U_val, v_pred, v_pred_sig
-
 #%% Sample the new model to generate a test prediction
 with open(os.path.join("cache", "train_tst_idx.pkl"), "rb") as f:
         train_tst_idx = pickle.load(f)
@@ -110,15 +89,4 @@ for i, idx_i in enumerate(idx):
                                 "h_pred": U_pred[0, :, idx_i],
                                 "h_pred_up": U_pred[0, :, idx_i] + 2*U_pred_sig[0, :, idx_i],
                                 "h_pred_lo": U_pred[0, :, idx_i] - 2*U_pred_sig[0, :, idx_i],
-                                # "U": np.ascontiguousarray(np.sqrt(U_tst[1, :, idx[i]]**2 + U_tst[2, :, idx[i]]**2)),
-                                # "h_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[i]]),
-                                # "hu": np.ascontiguousarray(U_tst[1, :, idx[i]]),
-                                # "hu_pred": np.ascontiguousarray(U_pred[1, :, idx[i]]),
-                                # "hu_pred_sig": np.ascontiguousarray(U_pred_sig[1, :, idx[i]]),
-                                # "hv": np.ascontiguousarray(U_tst[2, :, idx[i]]),
-                                # "hv_pred": np.ascontiguousarray(U_pred[2, :, idx[i]]),
-                                # "hv_pred_sig": np.ascontiguousarray(U_pred_sig[2, :, idx[i]]),
                                 })
-
-
-# %%

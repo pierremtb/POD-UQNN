@@ -1,66 +1,50 @@
 """POD-NN modeling for 2D Ackley Equation."""
-#%% Import
+#%% Imports
 import sys
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
-from podnn.mesh import create_linear_mesh
 from podnn.metrics import re_s
-from podnn.plotting import savefig, figsize
+from podnn.handling import sample_mu
+from podnn.plotting import figsize, savefig
 
-#%%
-import tensorflow as tf
-import tensorflow_probability as tfp
-import matplotlib.pyplot as plt
-
-tfd = tfp.distributions
-tfk = tf.keras
-dtype = "float64"
-tf.keras.backend.set_floatx(dtype)
-
-#%% Prepare
 from hyperparams import HP as hp
 from hyperparams import u
-print(hp)
 
-resdir = "cache"
-x_mesh = create_linear_mesh(hp["x_min"], hp["x_max"], hp["n_x"],
-                            hp["y_min"], hp["y_max"], hp["n_y"])
-np.save(os.path.join(resdir, "x_mesh.npy"), x_mesh)
-# x_mesh = np.load(os.path.join(resdir, "x_mesh.npy"))
+#%% Load models
+model = PodnnModel.load("cache")
+X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
+v_pred_mean, sig_alea = model.predict_v(X_v_train)
+_, sig_alea_val = model.predict_v(X_v_val)
+print(sig_alea.mean(), sig_alea.min(), sig_alea.max())
+print(sig_alea_val.mean(), sig_alea_val.min(), sig_alea_val.max())
 
-#%% Init the model
-model = PodnnModel(resdir, hp["n_v"], x_mesh, hp["n_t"])
+pod_sig_v = np.stack((v_train, v_pred_mean), axis=-1).std(-1).mean(0)
+print(pod_sig_v.mean(), pod_sig_v.min(), pod_sig_v.max())
 
-#%% Generate the dataset from the mesh and params
-X_v_train, v_train, _, \
-    X_v_val, v_val, U_val = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
-                                                hp["n_s"],
-                                                hp["train_val"],
-                                                eps=hp["eps"], n_L=hp["n_L"],
-                                                u_noise=hp["u_noise"],
-                                                x_noise=hp["x_noise"])
+#%% Predict and restruct
+U_pred, U_pred_sig = model.predict(X_v_val)
 
-#%% Model creation
-model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0],
-              hp["soft_0"], hp["sigma_alea"], hp["norm"])
-model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
-            freq=hp["log_frequency"])
+#%% Validation metrics
+U_pred, _ = model.predict(X_v_val)
+err_val = re_s(U_val, U_pred)
+print(f"RE_v: {err_val:4f}")
 
 #%% Sample the new model to generate a test prediction
-mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
+mu_lhs = sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
 X_v_tst, U_tst, _, _ = \
     model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
-U_pred, U_pred_sig = model.predict(X_v_tst, samples=10)
+U_pred, U_pred_sig = model.predict(X_v_tst)
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 #%% Samples graph
 n_samples = 2
-mu_lhs_in = model.sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
-mu_lhs_out_min = model.sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
-mu_lhs_out_max = model.sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
+mu_lhs_in = sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
+mu_lhs_out_min = sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
+mu_lhs_out_max = sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
 mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
 
 
@@ -120,4 +104,4 @@ for col, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
             ax.legend()
 plt.tight_layout()
 # plt.show()
-savefig("results/podbnn-ackley-graph-meansamples")
+savefig("results/podensnn-ackley-graph-meansamples")

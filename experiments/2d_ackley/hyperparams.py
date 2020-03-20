@@ -1,9 +1,8 @@
 """Default hyperparameters for 2D Ackley Equation."""
 
 import numpy as np
-import tensorflow as tf
 
-from podnn.bayesianneuralnetwork import NORM_MINMAX, NORM_MEANSTD
+from podnn.custombnn import NORM_MINMAX
 
 
 HP = {}
@@ -29,14 +28,13 @@ HP["u_noise"] = 0.
 # Train/val split
 HP["train_val"] = (.8, .2)
 # DeepNN Topology
-HP["h_layers"] = [40, 40]
+HP["h_layers"] = [140, 140]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 45000
+HP["epochs"] = 145000
 HP["lr"] = 0.005
 HP["soft_0"] = 0.05
 HP["sigma_alea"] = 2.76
 HP["norm"] = NORM_MINMAX
-# HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Non-spatial params
@@ -46,10 +44,8 @@ HP["mu_min_out"] = [-2., -2., -2.]
 HP["mu_max_out"] = [+2., +2., +2.]
 
 
-# np.random.seed(1111)
-# tf.random.set_seed(1111)
-
 def u(X, _, mu):
+    """The stochastic 2D Ackley Function."""
     x = X[0]
     y = X[1]
     u_0 = - 20*(1+.1*mu[2])*np.exp(-.2*(1+.1*mu[1])*np.sqrt(.5*(x**2+y**2))) \
