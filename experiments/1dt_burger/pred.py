@@ -8,10 +8,10 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import griddata
 
 sys.path.append(os.path.join("..", ".."))
-from podnn.podnnmodel import PodnnModel
-from podnn.metrics import re_s
-from podnn.plotting import figsize, savefig
-from podnn.handling import sample_mu
+from lib.podnnmodel import PodnnModel
+from lib.metrics import re_s
+from lib.plotting import figsize, savefig
+from lib.handling import sample_mu
 
 from hyperparams import HP as hp
 from hyperparams import u

@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.image as plti
 
 sys.path.append(os.path.join("..", ".."))
-from podnn.metrics import re_s
-from podnn.plotting import figsize, savefig
+from lib.metrics import re_s
+from lib.plotting import figsize, savefig
 
 from hyperparams import HP as hp
 

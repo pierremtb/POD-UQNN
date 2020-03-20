@@ -7,8 +7,8 @@ import numpy as np
 import meshio
 
 sys.path.append(os.path.join("..", ".."))
-from podnn.podnnmodel import PodnnModel
-from podnn.handling import check_distributed_args
+from lib.podnnmodel import PodnnModel
+from lib.handling import check_distributed_args
 
 from hyperparams import HP as hp
 
@@ -46,7 +46,7 @@ U_val = model.restruct(U_val)
 datadir = "data"
 mu_path = os.path.join(datadir, "INPUT_MONTE_CARLO.dat")
 x_u_mesh_path = datadir
-from podnn.mesh import read_multi_space_sol_input_mesh
+from lib.mesh import read_multi_space_sol_input_mesh
 sel = np.loadtxt(os.path.join(datadir, "sel.csv"), skiprows=1, delimiter=",")[:, 0].astype("int64")
 x_mesh, connectivity, _, _ = \
         read_multi_space_sol_input_mesh(1, hp["n_t"], hp["d_t"], [1],

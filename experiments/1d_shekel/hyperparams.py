@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 from collections import OrderedDict
-from podnn.varneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
+from lib.varneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
 
 
 HP = {}

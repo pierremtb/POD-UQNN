@@ -1,7 +1,7 @@
 """Default hyperparameters for 1D time-dep Burgers Equation."""
 
 import numpy as np
-from podnn.varneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
+from lib.varneuralnetwork import NORM_MEANSTD, NORM_CENTER, NORM_NONE
 
 HP = {}
 # Dimension of u(x, t, mu)

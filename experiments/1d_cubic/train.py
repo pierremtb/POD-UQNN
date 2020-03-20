@@ -13,17 +13,17 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 sys.path.append(os.path.join("..", ".."))
-from podnn.podnnmodel import PodnnModel
-from podnn.mesh import create_linear_mesh
-from podnn.plotting import genresultdir
+from lib.podnnmodel import PodnnModel
+from lib.mesh import create_linear_mesh
+from lib.plotting import genresultdir
 
-from podnn.varneuralnetwork import VarNeuralNetwork
-from podnn.metrics import re_mean_std, re_max
-from podnn.mesh import create_linear_mesh
-from podnn.logger import Logger
-from podnn.varneuralnetwork import NORM_MEANSTD, NORM_NONE
-from podnn.plotting import figsize
-from podnn.handling import check_distributed_args
+from lib.varneuralnetwork import VarNeuralNetwork
+from lib.metrics import re_mean_std, re_max
+from lib.mesh import create_linear_mesh
+from lib.logger import Logger
+from lib.varneuralnetwork import NORM_MEANSTD, NORM_NONE
+from lib.plotting import figsize
+from lib.handling import check_distributed_args
 
 distributed, local_num = check_distributed_args()
 print(f"Distributed: {distributed}, Local models: {local_num}")
