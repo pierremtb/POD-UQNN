@@ -8,10 +8,11 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import re_s
+from podnn.handling import sample_mu
+from podnn.plotting import figsize, savefig
 
 from hyperparams import HP as hp
 from hyperparams import u
-from podnn.plotting import figsize, savefig
 
 #%% Load models
 model = PodnnModel.load("cache")
@@ -33,7 +34,7 @@ err_val = re_s(U_val, U_pred)
 print(f"RE_v: {err_val:4f}")
 
 #%% Sample the new model to generate a test prediction
-mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
+mu_lhs = sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
 X_v_tst, U_tst, _, _ = \
     model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
 U_pred, U_pred_sig = model.predict(X_v_tst)
@@ -41,9 +42,9 @@ print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 #%% Samples graph
 n_samples = 2
-mu_lhs_in = model.sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
-mu_lhs_out_min = model.sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
-mu_lhs_out_max = model.sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
+mu_lhs_in = sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
+mu_lhs_out_min = sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
+mu_lhs_out_max = sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
 mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
 
 
@@ -74,14 +75,8 @@ ax.axis("equal")
 ax.set_title(r"$\hat{u_D}(\bar{s_{\textrm{tst}}})$")
 ax.set_xlabel("$x$")
 ax.set_ylabel("$y$")
-# plt.show()
-# savefig("results/podensnn-ackley-graph-means")
 
 # Slices
-# n_plot_x = 2
-# n_plot_y = n_samples
-# fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
-# gs = fig.add_gridspec(n_plot_x, n_plot_y)
 for col, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
     X_v_samples, U_samples, _, _ = \
         model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)

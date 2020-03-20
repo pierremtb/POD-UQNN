@@ -18,7 +18,6 @@ if distributed:
     import horovod.tensorflow as hvd
     hvd.init()
     gpu_id = hvd.local_rank()
-    # tf.config.experimental.set_memory_growth(gpu, True)
     phys_devices = tf.config.experimental.get_visible_devices('GPU')
     tf.config.experimental.set_visible_devices(phys_devices[gpu_id], 'GPU')
 

@@ -50,6 +50,10 @@ Available experiments in `examples`:
 - `1dt_burger`, a solution of the 1D, unsteady [Burger’s Equation](https://en.wikipedia.org/wiki/Burgers%27_equation)
 - `2d_shallowwater`: Flood Modeling on simulations results from CuteFlow, solving 2D [Shallow Water Equations](https://en.wikipedia.org/wiki/Shallow_water_equations)
 
+## Runner files for Compute Canada clusters
+For each branch, we provide `examples/runner.sh` to run all simulations. It is meant to be used on Compute Canada clusters, such as Beluga, located at ÉTS.
+A Python 3.6+ environment at `~/env` needs to contain the packages required in `requirements.txt`, plus `horovod`.
+
 ## Citation
 This work is building on techniques from _Wang et al._
 ```

@@ -1,4 +1,5 @@
 """POD-NN modeling for 1D Shekel Equation."""
+"""OLD FILE NOT CURRENTLY USED."""
 #%% Imports
 import sys
 import os
