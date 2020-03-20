@@ -1,7 +1,5 @@
 **/.DS_Store
-**/log*
 **/nohup.out
-#**/runner*
 .vscode/
 # Byte-compiled / optimized / DLL files
 __pycache__/
