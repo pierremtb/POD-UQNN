@@ -1,5 +1,5 @@
 
-"""Module with a class defining an Artificial Neural Network."""
+"""Module with a class defining a mean/variance Neural Network."""
 
 import os
 import pickle
@@ -10,7 +10,9 @@ NORM_NONE = "none"
 NORM_MEANSTD = "meanstd"
 NORM_CENTER = "center"
 
+
 class VarNeuralNetwork:
+    """Custom class defining a mean/variance Neural Network model."""
     def __init__(self, layers, lr, lam, adv_eps=None, norm=NORM_NONE, model=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float64"
@@ -34,10 +36,8 @@ class VarNeuralNetwork:
             self.model = model
 
     def build_model(self):
-        """Descriptive Keras model."""
-
+        """Functional Keras model."""
         inputs = tf.keras.Input(shape=(self.layers[0],), name="x", dtype=self.dtype)
-
         x = inputs
         for width in self.layers[1:-1]:
             x = tf.keras.layers.Dense(
@@ -55,12 +55,11 @@ class VarNeuralNetwork:
             return [mean, var]
         
         outputs = tf.keras.layers.Lambda(split_mean_var)(x)
-
         model = tf.keras.Model(inputs=inputs, outputs=outputs, name="varnn")
-
         return model
 
     def set_normalize_bounds(self, X):
+        """Setting the normalization bounds, according to the chosen method."""
         if self.norm == NORM_CENTER:
             lb = np.amin(X, axis=0)
             ub = np.amax(X, axis=0)
@@ -71,9 +70,9 @@ class VarNeuralNetwork:
             self.norm_bounds = (lb, ub)
 
     def normalize(self, X):
+        """Perform the normalization on the inputs."""
         if self.norm_bounds is None:
             return self.tensor(X)
-
         if self.norm == NORM_CENTER:
             lb, ub = self.norm_bounds
             X = (X - lb) - 0.5 * (ub - lb)
@@ -84,13 +83,14 @@ class VarNeuralNetwork:
         return self.tensor(X)
 
     def regularization(self):
-        l2_norms = [tf.nn.l2_loss(v) for v in self.wrap_training_variables()]
+        """L2 regularization contribution to the loss."""
+        l2_norms = [tf.nn.l2_loss(v) for v in self.wrap_trainable_variables()]
         l2_norm = tf.reduce_sum(l2_norms)
         return self.lam * l2_norm
         
     @tf.function
     def loss(self, y, y_pred):
-        """Return the Gaussian NLL loss function between the pred and val."""
+        """Gaussian NLL loss function between the pred and true value."""
         y_pred_mean, y_pred_var = y_pred
         return tf.reduce_mean(tf.math.log(y_pred_var) / 2) + \
                tf.reduce_mean(tf.divide(tf.square(y -  y_pred_mean), 2*y_pred_var)) + \
@@ -106,14 +106,13 @@ class VarNeuralNetwork:
                 loss_x = tape.gradient(loss_value, X)
                 X_adv = X + self.adv_eps * tf.math.sign(loss_x)
                 loss_value += self.loss(v, self.model(X_adv))
-        grads = tape.gradient(loss_value, self.wrap_training_variables())
+        grads = tape.gradient(loss_value, self.wrap_trainable_variables())
         del tape
         return loss_value, grads
 
-    def wrap_training_variables(self):
-        """Convenience method. Should be extended if needed."""
-        var = self.model.trainable_variables
-        return var
+    def wrap_trainable_variables(self):
+        """Wrapper of all trainable variables."""
+        return self.model.trainable_variables
 
     def tf_optimization(self, X_v, v, tf_epochs, nolog=False):
         """Run the training loop."""
@@ -128,7 +127,7 @@ class VarNeuralNetwork:
         """For each epoch, get loss+grad and backpropagate it."""
         loss_value, grads = self.grad(X_v, v)
         self.tf_optimizer.apply_gradients(
-            zip(grads, self.wrap_training_variables()))
+            zip(grads, self.wrap_trainable_variables()))
         return loss_value
 
     def fit(self, X_v, v, epochs, logger):
@@ -148,22 +147,12 @@ class VarNeuralNetwork:
         self.logger.log_train_end(epochs, last_loss)
 
     def fit_simple(self, X_v, v, epochs):
-        """Train the model over a given dataset, and parameters."""
+        """Train the model over a given dataset, and parameters (simpler version)."""
         self.set_normalize_bounds(X_v)
         X_v = self.normalize(X_v)
         v = self.tensor(v)
         # Optimizing
         self.tf_optimization(X_v, v, epochs, nolog=True)
-
-    def fetch_minibatch(self, X_v, v):
-        """Return a subset of the training set, for lower memory training."""
-        if self.batch_size < 1:
-            return self.tensor(X_v), self.tensor(v)
-        N_v = X_v.shape[0]
-        idx_v = np.random.choice(N_v, self.batch_size, replace=False)
-        X_v_batch = self.tensor(X_v[idx_v, :])
-        v_batch = self.tensor(v[idx_v, :])
-        return X_v_batch, v_batch
 
     def predict(self, X):
         """Get the prediction for a new input X."""
