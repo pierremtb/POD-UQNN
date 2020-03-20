@@ -5,13 +5,11 @@ import os
 import pickle
 import meshio
 import numpy as np
-import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
 from podnn.podnnmodel import PodnnModel
 from podnn.metrics import re_s
 from podnn.mesh import read_multi_space_sol_input_mesh
-from podnn.plotting import figsize, savefig 
 from hyperparams import HP as hp
 
 #%% Load models
@@ -59,21 +57,12 @@ idx = range(hp["n_s_tst"])
 print("Samples are " + ", ".join([f"{X_v_tst[idx[i]].item()}" for i in idx]))
 for i, idx_i in enumerate(idx):
     meshio.write_points_cells(os.path.join("cache", f"x_u_tst_pred_{i}.vtu"),
-                            x_mesh,
-                            [("triangle", connectivity)],
-                            point_data={
-                                "h": U_tst[0, :, idx_i],
-                                "h_pred": U_pred[0, :, idx_i],
-                                "h_pred_up": U_pred[0, :, idx_i] + 2*U_pred_sig[0, :, idx_i],
-                                "h_pred_lo": U_pred[0, :, idx_i] - 2*U_pred_sig[0, :, idx_i],
-                                # "U": np.ascontiguousarray(np.sqrt(U_tst[1, :, idx[0]]**2 + U_tst[2, :, idx[0]]**2)),
-                                # "h_pred_sig": np.ascontiguousarray(U_pred_sig[0, :, idx[0]]),
-                                # "hu": np.ascontiguousarray(U_tst[1, :, idx[0]]),
-                                # "hu_pred": np.ascontiguousarray(U_pred[1, :, idx[0]]),
-                                # "hu_pred_sig": np.ascontiguousarray(U_pred_sig[1, :, idx[0]]),
-                                # "hv": np.ascontiguousarray(U_tst[2, :, idx[0]]),
-                                # "hv_pred": np.ascontiguousarray(U_pred[2, :, idx[0]]),
-                                # "hv_pred_sig": np.ascontiguousarray(U_pred_sig[2, :, idx[0]]),
+                              x_mesh,
+                              [("triangle", connectivity)],
+                              point_data={
+                                  "h": U_tst[0, :, idx_i],
+                                  "h_pred": U_pred[0, :, idx_i],
+                                  "h_pred_up": U_pred[0, :, idx_i] + 2*U_pred_sig[0, :, idx_i],
+                                  "h_pred_lo": U_pred[0, :, idx_i] - 2*U_pred_sig[0, :, idx_i],
                                 })
 print("Exported. ParaView processing is now needed to create x_u_tst_pred.csv")
-

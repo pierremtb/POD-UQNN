@@ -9,13 +9,13 @@ $ pip3 install -r requirements.txt
 ```
 
 ## Running our POD-NN implementation (Wang et al., 2019)
-Run examples from their directories, eg.
+Run experiments from their directories, eg.
 ```console
 $ git checkout POD-NN
-$ cd examples/1d_shekel
+$ cd experiments/1d_shekel
 $ python3 main.py
 ```
-Available experiments in `examples`:
+Available experiments in `experiments`:
 - `1d_shekel`, the 1D [Shekel](https://en.wikipedia.org/wiki/Shekel_function) function
 - `2d_ackley`, the 2D [Ackley](https://en.wikipedia.org/wiki/Ackley_function) function
 - `1dt_burger`, a solution of the 1D, unsteady [Burger’s Equation](https://en.wikipedia.org/wiki/Burgers%27_equation)
@@ -24,14 +24,14 @@ Available experiments in `examples`:
 ## Running the POD-EnsNN model (Uncertainty Quantification via Deep Ensembles)
 ```console
 $ git checkout POD-EnsNN
-$ cd examples/1d_shekel
+$ cd experiments/1d_shekel
 $ python3 gen.py && python3 train.py --models=5 && python3 pred.py
 ```
 Or to distribute on a machine with 5 GPUs
 ```console
 $ python3 gen.py && horovodrun -np 5 -H localhost:5 python3 train.py --distribute && python3 pred.py
 ```
-Available experiments in `examples`:
+Available experiments in `experiments`:
 - `1d_shekel`, the 1D [Shekel](https://en.wikipedia.org/wiki/Shekel_function) function
 - `2d_ackley`, the 2D [Ackley](https://en.wikipedia.org/wiki/Ackley_function) function
 - `1dt_burger`, a solution of the 1D, unsteady [Burger’s Equation](https://en.wikipedia.org/wiki/Burgers%27_equation)
@@ -41,17 +41,17 @@ Available experiments in `examples`:
 ## Running the POD-BNN model (Uncertainty Quantification via Bayesian NN)
 ```console
 $ git checkout POD-BNN
-$ cd examples/1d_shekel
+$ cd experiments/1d_shekel
 $ python3 main.py
 ```
-Available experiments in `examples`:
+Available experiments in `experiments`:
 - `1d_shekel`, the 1D [Shekel](https://en.wikipedia.org/wiki/Shekel_function) function
 - `2d_ackley`, the 2D [Ackley](https://en.wikipedia.org/wiki/Ackley_function) function
 - `1dt_burger`, a solution of the 1D, unsteady [Burger’s Equation](https://en.wikipedia.org/wiki/Burgers%27_equation)
 - `2d_shallowwater`: Flood Modeling on simulations results from CuteFlow, solving 2D [Shallow Water Equations](https://en.wikipedia.org/wiki/Shallow_water_equations)
 
 ## Runner files for Compute Canada clusters
-For each branch, we provide `examples/runner.sh` to run all simulations. It is meant to be used on Compute Canada clusters, such as Beluga, located at ÉTS.
+For each branch, we provide `experiments/runner.sh` to run all simulations. It is meant to be used on Compute Canada clusters, such as Beluga, located at ÉTS.
 A Python 3.6+ environment at `~/env` needs to contain the packages required in `requirements.txt`, plus `horovod`.
 
 ## Citation

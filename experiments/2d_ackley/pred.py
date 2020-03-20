@@ -1,4 +1,4 @@
-"""POD-NN modeling for 2D Shekel Equation."""
+"""POD-NN modeling for 2D Ackley Equation."""
 #%% Imports
 import sys
 import os
