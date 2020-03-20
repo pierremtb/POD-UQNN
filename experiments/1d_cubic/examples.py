@@ -3,7 +3,7 @@
 import os
 import sys
 sys.path.append(os.path.join("..", ".."))
-from podnn.plotting import figsize, savefig
+from lib.plotting import figsize, savefig
 
 #%% Imports
 import numpy as np
@@ -293,7 +293,7 @@ noise_std = 9
 y = y + noise_std*np.random.randn(y.shape[0], y.shape[1])
 
 #%%
-from podnn.custombnn import BayesianNeuralNetwork
+from lib.custombnn import BayesianNeuralNetwork
 layers = [1, 20, 20, 1]
 batch_size = N
 num_batches = N / batch_size
@@ -333,7 +333,7 @@ plt.savefig(f"uq-toy-bnn.pdf", bbox_inches='tight', pad_inches=0)
 # tf.keras.backend.set_floatx(dtype)
 
 # sys.path.append(os.path.join("..", ".."))
-# from podnn.plotting import figsize
+# from lib.plotting import figsize
 # #%% Model creation
 # def prior_trainable(kernel_size, bias_size=0, dtype=None):
 #     n = kernel_size + bias_size

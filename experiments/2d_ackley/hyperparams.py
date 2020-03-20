@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from podnn.custombnn import NORM_MINMAX
+from lib.custombnn import NORM_MINMAX
 
 
 HP = {}

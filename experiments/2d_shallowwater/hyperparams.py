@@ -1,6 +1,6 @@
 """Default hyperparameters for 2D inviscid Shallow Water Equations."""
 
-from podnn.custombnn import NORM_MEANSTD
+from lib.custombnn import NORM_MEANSTD
 
 HP = {}
 HP["mesh_idx"] = ["h"]

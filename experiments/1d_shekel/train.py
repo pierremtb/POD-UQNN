@@ -5,9 +5,9 @@ import os
 import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
-from podnn.podnnmodel import PodnnModel
-from podnn.mesh import create_linear_mesh
-from podnn.metrics import re_s
+from lib.podnnmodel import PodnnModel
+from lib.mesh import create_linear_mesh
+from lib.metrics import re_s
 
 #%% Prepare
 from hyperparams import HP as hp
