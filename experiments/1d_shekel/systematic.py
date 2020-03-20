@@ -3,13 +3,12 @@
 import sys
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("..", ".."))
 from lib.podnnmodel import PodnnModel
 from lib.metrics import re_s
 from lib.mesh import create_linear_mesh
-from lib.plotting import figsize, savefig
+from lib.handling import sample_mu
 
 #%% Prepare
 from hyperparams import HP as hp
@@ -57,7 +56,7 @@ for i, n_s in enumerate(list_samples):
         errors_val[i, j] = err_val
 
         #%% Sample the new model to generate a test prediction
-        mu_lhs = model.sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
+        mu_lhs = sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
         X_v_tst, U_tst, _ = \
             model.create_snapshots(mu_lhs.shape[0], mu_lhs.shape[0], model.n_d, model.n_h, u, mu_lhs)
         U_pred = model.predict(X_v_tst)
