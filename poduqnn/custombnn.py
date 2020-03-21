@@ -250,13 +250,17 @@ class BayesianNeuralNetwork:
 
     def predict(self, X, samples=200):
         """Get the prediction for a new input X, sampled many times."""
-        X = self.normalize(X)
         y_pred_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
+        y_pred_sig_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
         for i in range(samples):
-            y_pred_samples[i, ...] = self.model(X).numpy()
+            y_dist = self.predict_dist(X)
+            y_pred_samples[i, ...] = y_dist.mean().numpy()
+            y_pred_sig_samples[i, ...] = y_dist.stddev().numpy()
+
         y_pred = y_pred_samples.mean(0)
-        y_pred_var = y_pred_samples.var(0)
-        return y_pred, y_pred_var
+        y_pred_var = (y_pred_sig_samples**2 + y_pred_samples ** 2).mean(0) - y_pred ** 2
+        y_pred_sig = np.sqrt(y_pred_var)
+        return y_pred.astype(self.dtype), y_pred_sig.astype(self.dtype)
 
     def summary(self):
         """Print a summary of the TensorFlow/Keras model."""

@@ -298,14 +298,13 @@ layers = [1, 20, 20, 1]
 batch_size = N
 num_batches = N / batch_size
 klw = 1.0 / num_batches
-model = BayesianNeuralNetwork(layers, lr=0.05, klw=klw, soft_0=0.1,
+model = BayesianNeuralNetwork(layers, lr=0.02, klw=klw, soft_0=1.,
                               sigma_alea=noise_std,
                               adv_eps=None, norm="minmax")
-model.fit(x, y, epochs=15000, batch_size=batch_size)
-u_pred, u_pred_var = model.predict(x_tst) 
-u_pred_sig = np.sqrt(u_pred_var)
+model.fit(x, y, epochs=5000)
 
 #%% Predictions and plotting
+u_pred, u_pred_sig = model.predict(x_tst, samples=100)
 lower = u_pred - 2 * u_pred_sig
 upper = u_pred + 2 * u_pred_sig
 
@@ -321,6 +320,27 @@ plt.xlabel("$x$")
 plt.legend()
 plt.tight_layout()
 plt.savefig(f"uq-toy-bnn.pdf", bbox_inches='tight', pad_inches=0)
+
+#%% Predictions and plotting
+fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
+plt.plot(x_tst, y_tst, "r--", label=r"$u_*(x)$")
+plt.scatter(x, y, c="r", label=r"$u_T(x)$")
+for i in range(3):
+    u_dist = model.predict_dist(x_tst)
+    u_pred = u_dist.mean().numpy()
+    u_pred_sig = u_dist.stddev().numpy()
+    lower = u_pred - 2 * u_pred_sig
+    upper = u_pred + 2 * u_pred_sig
+
+    # plt.fill_between(x_tst.ravel(), upper.ravel(), lower.ravel(), 
+    #                 facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
+    plt.plot(x_tst, upper, "C0-", alpha=0.3, label=r"$\hat{u}_*(x)\pm 2\sigma_T(x)$")
+    plt.plot(x_tst, lower, "C0-", alpha=0.3)
+    plt.plot(x_tst, u_pred, "C0-", label=r"$\hat{u}_*(x)$")
+    plt.xlabel("$x$")
+    if i == 0:
+        plt.legend()
+plt.savefig(f"uq-toy-bnn-3samp.pdf", bbox_inches='tight', pad_inches=0)
 #%%
 # import sys
 # import os
