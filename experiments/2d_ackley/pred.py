@@ -98,7 +98,7 @@ for col, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
         ax.set_xlabel("$x\ (y=0)$")
         title_st = r"$s=[" + f"{X_i[0, 0]:.2f}," + f"{X_i[0, 1]:.2f}," + f"{X_i[0, 2]:.2f}] "
-        title_st += r"\in \Omega_{\textrm{out}}$" if col + 1 == 2 else r"\in \Omega$"
+        title_st += r"\in \Omega{\footnotesize\textrm{out}}$" if col + 1 == 2 else r"\in \Omega$"
         ax.set_title(title_st)
         if col == len(idx) - 1 and row == 0:
             ax.legend()

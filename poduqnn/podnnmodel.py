@@ -242,6 +242,7 @@ class PodnnModel:
         for i in range(n_M):
             self.regnn.append(VarNeuralNetwork(self.layers, lr, lam, adv_eps, norm))
             self.model_path.append(os.path.join(self.resdir, f"model-{i}.{time.time()}.h5"))
+        self.regnn[0].summary()
         self.save_model()
 
     def train_model(self, model_id, X_v_train, v_train, X_v_val, v_val,
