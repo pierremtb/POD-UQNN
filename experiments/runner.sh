@@ -18,8 +18,9 @@ function run_ex() {
         cd ..
 }
 
-run_ex 1d_shekel
+# run_ex 1d_shekel
 run_ex 2d_ackley
 run_ex 1dt_burger
-run_ex 2d_shallowwater
-run_ex 2dt_shallowwater
+# run_ex 2d_shallowwater
+# run_ex 2dt_shallowwater
+run_ex 1dt_shallowwater
