@@ -99,7 +99,7 @@ class PodnnModel:
             n_st *= self.n_t
 
         # Numba-ifying the function
-        # u = nb.njit(u)
+        u = nb.njit(u)
 
         # Getting the nodes coordinates
         X = self.x_mesh[:, 1:].T

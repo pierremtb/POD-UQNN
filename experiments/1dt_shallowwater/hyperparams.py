@@ -19,22 +19,22 @@ HP["t_max"] = 0.5
 HP["n_s"] = 51
 HP["n_s_tst"] = 3
 # POD stopping param
-HP["eps"] = 0
+HP["eps"] = 1e-10
 HP["eps_init"] = None
-HP["n_L"] = 20
+HP["n_L"] = 0
 HP["x_noise"] = 0.
 # Train/val split
 HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
 HP["h_layers"] = [40, 40]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 30000
-HP["lr"] = 0.001
+HP["epochs"] = 60000
+HP["lr"] = 0.002
 HP["soft_0"] = 0.01
 HP["sigma_alea"] = 1.
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 10000
+HP["log_frequency"] = 2000
 # Burgers params
 HP["mu_min"] = [2.]
 HP["mu_max"] = [20.]
@@ -42,7 +42,8 @@ HP["mu_min_out"] = [10]
 HP["mu_max_out"] = [12]
 
 def u(X, t, mu, h0=1.):
-    """1D Shallow Water solution."""
+    """1D Shallow Water analytical solution."""
+    """Adapted from https://github.com/python-hydro/pyro2/blob/master/analysis/dam_compare.py."""
     x = X[0]
     h1 = mu[0]
     xmin = x.min()

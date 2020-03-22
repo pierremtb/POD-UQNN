@@ -112,7 +112,7 @@ for j, time in enumerate(times):
             if row == 0:
                 ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega$")
             else:
-                ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega_{\textrm{out}}$")
+                ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega{\footnotesize\textrm{out}}$")
             actual_row += 1
             if j == 0 and actual_row == 0:
                 ax.legend()

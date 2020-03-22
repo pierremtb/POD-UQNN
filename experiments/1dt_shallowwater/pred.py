@@ -84,14 +84,15 @@ ax.set_title(r"$\hat{u_D}(\bar{s_{\textrm{tst}}})$")
 
 # Slices
 n_samples = 1
-times = [0, 40]
+times = [0, -1]
 for j, time in enumerate(times):
     actual_row = 0
     for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         X_v_samples, _, U_samples, _ = \
             model.create_snapshots(model.n_d, model.n_h, u, mu_lhs,
                                 t_min=hp["t_min"], t_max=hp["t_max"])
-        U_samples = np.reshape(U_samples, (hp["n_x"], hp["n_t"], -1))
+        U_samples = np.reshape(U_samples, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
+        U_samples = U_samples[0]
         # U_samples = model.restruct(U_samples)
         x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
         idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
@@ -101,8 +102,10 @@ for j, time in enumerate(times):
             en = hp["n_t"] * (col + 1)
             X_i = X_v_samples[st:en, :]
             U_pred_i, U_pred_i_sig = model.predict(X_i)
-            U_pred_i = np.reshape(U_pred_i, (hp["n_x"], hp["n_t"], -1))
-            U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_x"], hp["n_t"], -1))
+            U_pred_i = np.reshape(U_pred_i, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
+            U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
+            U_pred_i = U_pred_i[0]
+            U_pred_i_sig = U_pred_i_sig[0]
             ax = fig.add_subplot(gs[j, actual_row + 1])
             ax.plot(x, U_pred_i[:, time, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
             ax.plot(x, U_samples[:, time, col], "r--", label=r"$u_D(s_{" + lbl + r"})$")
@@ -113,10 +116,9 @@ for j, time in enumerate(times):
             if row == 0:
                 ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega$")
             else:
-                ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega_{\textrm{out}}$")
+                ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega{\footnotesize\textrm{out}}$")
             actual_row += 1
             if j == 0 and actual_row == 0:
                 ax.legend()
 plt.tight_layout()
-plt.show()
-# savefig("results/podensnn-burger-graph-meansamples")
+savefig("results/podensnn-burger-graph-meansamples")
