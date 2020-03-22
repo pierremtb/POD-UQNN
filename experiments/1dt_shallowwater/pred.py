@@ -47,7 +47,7 @@ U_pred = model.restruct(U_pred)[0]
 # mu_lhs_out_min = sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
 # mu_lhs_out_max = sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
 # mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
-mu_lhs_in = np.array([4]).reshape(-1, 1)
+mu_lhs_in = np.array([12]).reshape(-1, 1)
 mu_lhs_out = np.array([25]).reshape(-1, 1)
 
 #%% Contours for demo
@@ -60,31 +60,6 @@ t = np.linspace(hp["t_min"], hp["t_max"], hp["n_t"])
 xxT, ttT = np.meshgrid(x, t)
 xx, tt = xxT.T, ttT.T
 XT = np.hstack((xx.flatten()[:, None], tt.flatten()[:, None]))
-
-
-# ax = fig.add_subplot(gs[0, 0])
-# U_tst_grid = griddata(XT, U_tst.mean(-1).flatten(), (xx, tt), method='cubic')
-# h = ax.imshow(U_tst_grid.T, interpolation='nearest', cmap='rainbow', 
-#                 extent=[x.min(), x.max(), t.min(), t.max()], 
-#                 origin='lower', aspect='auto')
-# divider = make_axes_locatable(ax)
-# cax = divider.append_axes("right", size="5%", pad=0.05)
-# fig.colorbar(h, cax=cax)
-# ax.set_xlabel(r"$x\ [\textrm{m}]$")
-# ax.set_ylabel(r"$t\ [\textrm{s}]$")
-# ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
-
-# ax = fig.add_subplot(gs[1, 0])
-# U_pred_grid = griddata(XT, U_pred.mean(-1).flatten(), (xx, tt), method='cubic')
-# h = ax.imshow(U_pred_grid.T, interpolation='nearest', cmap='rainbow', 
-#                 extent=[x.min(), x.max(), t.min(), t.max()], 
-#                 origin='lower', aspect='auto')
-# divider = make_axes_locatable(ax)
-# cax = divider.append_axes("right", size="5%", pad=0.05)
-# fig.colorbar(h, cax=cax)
-# ax.set_xlabel(r"$x\ [\textrm{m}]$")
-# ax.set_ylabel(r"$t\ [\textrm{s}]$")
-# ax.set_title(r"$\hat{u_D}(\bar{s_{\textrm{tst}}})$")
 
 # Slices
 n_samples = 1
@@ -125,7 +100,7 @@ for j, time in enumerate(times):
                                 origin='lower', aspect='auto')
                 divider = make_axes_locatable(ax)
                 cax = divider.append_axes("right", size="5%", pad=0.05)
-                ax.axhline(X_i[times[0], 0], color="k", ls="-.")
+                ax.axhline(X_i[times[0], 0] + 0.02, color="w", ls="-.")
                 fig.colorbar(h, cax=cax)
                 ax.set_xlabel(r"$x\ [\textrm{m}]$")
                 ax.set_ylabel(r"$t\ [\textrm{s}]$")
@@ -139,7 +114,7 @@ for j, time in enumerate(times):
                                 origin='lower', aspect='auto')
                 divider = make_axes_locatable(ax)
                 cax = divider.append_axes("right", size="5%", pad=0.05)
-                ax.axhline(X_i[times[1], 0], color="k", ls="-.")
+                ax.axhline(X_i[times[1], 0], color="w", ls="-.")
                 fig.colorbar(h, cax=cax)
                 ax.set_xlabel(r"$x\ [\textrm{m}]$")
                 ax.set_ylabel(r"$t\ [\textrm{s}]$")
@@ -164,9 +139,11 @@ for j, time in enumerate(times):
 
             ax.set_xlabel(r"$x\ [\textrm{m}]$")
             if row == 0:
-                ax.set_title(r"$s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega, " + f"t={X_i[time, 0]:.2f}" + r"\ \textrm{s}$")
+                ax.set_title(r"$\Delta\eta=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega"
+                             + f",\ t={X_i[time, 0]:.2f}" + r"\ \textrm{s}$")
             else:
-                ax.set_title(r"$s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega{\footnotesize\textrm{out}}$")
+                ax.set_title(r"$\Delta\eta=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega{\footnotesize\textrm{out}}"
+                             + f",\ t={X_i[time, 0]:.2f}" + r"\ \textrm{s}$")
             actual_row += 1
             if j == 1:
                 ax.legend()
