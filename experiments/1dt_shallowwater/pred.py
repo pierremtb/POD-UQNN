@@ -76,7 +76,6 @@ for j, time in enumerate(times):
         X_v_samples, U_samples, _, _ = \
             model.create_snapshots(model.n_d, model.n_h, u, mu_lhs,
                                 t_min=hp["t_min"], t_max=hp["t_max"])
-        U_samples = model.project_to_U(model.project_to_v(U_samples))
         U_samples = np.reshape(U_samples, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
         U_samples = U_samples[0]
         x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
@@ -138,6 +137,7 @@ for j, time in enumerate(times):
             ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
 
             ax.set_xlabel(r"$x\ [\textrm{m}]$")
+            ax.set_ylabel(r"$h\ [\textrm{m}]$")
             if row == 0:
                 ax.set_title(r"$\Delta\eta=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega"
                              + f",\ t={X_i[time, 0]:.2f}" + r"\ \textrm{s}$")
@@ -148,4 +148,90 @@ for j, time in enumerate(times):
             if j == 1:
                 ax.legend()
 plt.tight_layout()
-savefig("results/podensnn-1dswt-graph-meansamples")
+savefig("results/podensnn-1dswt-graph-meansamples-h")
+
+#%% Velocity plots
+n_plot_x = 2
+n_plot_y = 3
+fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
+gs = fig.add_gridspec(n_plot_x, n_plot_y)
+times = [15, 40]
+for j, time in enumerate(times):
+    actual_row = 0
+    for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
+        X_v_samples, U_samples, _, _ = \
+            model.create_snapshots(model.n_d, model.n_h, u, mu_lhs,
+                                t_min=hp["t_min"], t_max=hp["t_max"])
+        U_samples = np.reshape(U_samples, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
+        U_samples = U_samples[1]
+        x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+        idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
+        for col, idx_i in enumerate(idx):
+            lbl = r"{\scriptscriptstyle\textrm{tst}}" if row == 0 else r"{\scriptscriptstyle\textrm{out}}"
+            st = hp["n_t"] * col
+            en = hp["n_t"] * (col + 1)
+            X_i = X_v_samples[st:en, :]
+            U_pred_i, U_pred_i_sig = model.predict(X_i)
+            U_pred_i = np.reshape(U_pred_i, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
+            U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
+            U_pred_i = U_pred_i[1]
+            U_pred_i_sig = U_pred_i_sig[1]
+
+            if row == 0 and j == 0:
+                ax = fig.add_subplot(gs[j, actual_row])
+                U_grid = griddata(XT, U_pred_i.flatten(), (xx, tt), method='cubic')
+                h = ax.imshow(U_grid.T, interpolation='nearest', cmap='rainbow', 
+                                extent=[x.min(), x.max(), t.min(), t.max()], 
+                                origin='lower', aspect='auto')
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                ax.axhline(X_i[times[0], 0] + 0.02, color="w", ls="-.")
+                fig.colorbar(h, cax=cax)
+                ax.set_xlabel(r"$x\ [\textrm{m}]$")
+                ax.set_ylabel(r"$t\ [\textrm{s}]$")
+                # ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
+                ax.set_title(r"$\hat{u}{\scriptsize \textrm{D}}(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
+
+                ax = fig.add_subplot(gs[j+1, actual_row])
+                U_grid = griddata(XT, U_samples[:, :, col].flatten(), (xx, tt), method='cubic')
+                h = ax.imshow(U_grid.T, interpolation='nearest', cmap='rainbow', 
+                                extent=[x.min(), x.max(), t.min(), t.max()], 
+                                origin='lower', aspect='auto')
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                ax.axhline(X_i[times[1], 0], color="w", ls="-.")
+                fig.colorbar(h, cax=cax)
+                ax.set_xlabel(r"$x\ [\textrm{m}]$")
+                ax.set_ylabel(r"$t\ [\textrm{s}]$")
+                # ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
+                ax.set_title(r"$u{\scriptsize \textrm{D}}(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
+
+            ax = fig.add_subplot(gs[j, actual_row + 1])
+
+            if has_sim_data:
+                vtkfilename = os.path.join("data", f"cas1_{int(X_i[0, 1])}m", f"0_FV-Paraview_{time}.vtk")
+                if os.path.exists(vtkfilename):
+                    vtk = meshio.read(vtkfilename)
+                    x_sim = vtk.points[sel, 1]
+                    u_sim = vtk.point_data["velocity"][sel, 1]
+                    ax.plot(x_sim, u_sim, "k:", label=r"$u_\textrm{sim}(s_{" + lbl + r"})$")
+
+            ax.plot(x, U_pred_i[:, time, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+            ax.plot(x, U_samples[:, time, col], "r--", label=r"$u_D(s_{" + lbl + r"})$")
+            lower = U_pred_i[:, time, 0] - 2*U_pred_i_sig[:, time, 0]
+            upper = U_pred_i[:, time, 0] + 2*U_pred_i_sig[:, time, 0]
+            ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
+
+            ax.set_xlabel(r"$x\ [\textrm{m}]$")
+            ax.set_ylabel(r"$u\ [\textrm{m/s}]$")
+            if row == 0:
+                ax.set_title(r"$\Delta\eta=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega"
+                             + f",\ t={X_i[time, 0]:.2f}" + r"\ \textrm{s}$")
+            else:
+                ax.set_title(r"$\Delta\eta=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega{\footnotesize\textrm{out}}"
+                             + f",\ t={X_i[time, 0]:.2f}" + r"\ \textrm{s}$")
+            actual_row += 1
+            if j == 1:
+                ax.legend()
+plt.tight_layout()
+savefig("results/podensnn-1dswt-graph-meansamples-u")
