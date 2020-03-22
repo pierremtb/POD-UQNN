@@ -3,6 +3,7 @@
 import sys
 import os
 import numpy as np
+import meshio
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import griddata
@@ -41,11 +42,13 @@ U_pred = model.restruct(U_pred)[0]
 #%% Samples graph
 # hp["mu_min_out"] = [0.0005]
 # hp["mu_max_out"] = [0.0105]
-n_samples = 3
-mu_lhs_in = sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
-mu_lhs_out_min = sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
-mu_lhs_out_max = sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
-mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
+# n_samples = 3
+# mu_lhs_in = sample_mu(n_samples, np.array(hp["mu_min"]), np.array(hp["mu_max"]))
+# mu_lhs_out_min = sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
+# mu_lhs_out_max = sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
+# mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
+mu_lhs_in = np.array([4]).reshape(-1, 1)
+mu_lhs_out = np.array([16]).reshape(-1, 1)
 
 #%% Contours for demo
 n_plot_x = 2
@@ -84,7 +87,13 @@ ax.set_title(r"$\hat{u_D}(\bar{s_{\textrm{tst}}})$")
 
 # Slices
 n_samples = 1
-times = [0, -1]
+times = [0, 20]
+
+has_sim_data = False
+if os.path.exists(os.path.join("data", "sel.csv")):
+    has_sim_data = True
+    sel = np.loadtxt(os.path.join("data", "sel.csv"), skiprows=1, delimiter=",")[:, 6].astype("int")
+
 for j, time in enumerate(times):
     actual_row = 0
     for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
@@ -93,7 +102,6 @@ for j, time in enumerate(times):
                                 t_min=hp["t_min"], t_max=hp["t_max"])
         U_samples = np.reshape(U_samples, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
         U_samples = U_samples[0]
-        # U_samples = model.restruct(U_samples)
         x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
         idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
         for col, idx_i in enumerate(idx):
@@ -112,6 +120,14 @@ for j, time in enumerate(times):
             lower = U_pred_i[:, time, 0] - 2*U_pred_i_sig[:, time, 0]
             upper = U_pred_i[:, time, 0] + 2*U_pred_i_sig[:, time, 0]
             ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
+
+            if has_sim_data:
+                vtkfilename = os.path.join("data", f"cas1_{int(X_i[0, 1])}m", f"0_FV-Paraview_{time}.vtk")
+                vtk = meshio.read(vtkfilename)
+                x_sim = vtk.points[sel, 1]
+                h_sim = vtk.point_data["h"][sel]
+                ax.plot(x_sim, h_sim, "k--", label=r"$u_\textrm{sim}(s_{" + lbl + r"})$")
+
             ax.set_xlabel(f"$x\ (t={X_i[time, 0]:.2f})$")
             if row == 0:
                 ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega$")
@@ -121,4 +137,4 @@ for j, time in enumerate(times):
             if j == 0 and actual_row == 0:
                 ax.legend()
 plt.tight_layout()
-savefig("results/podensnn-burger-graph-meansamples")
+savefig("results/podensnn-1dswt-graph-meansamples")

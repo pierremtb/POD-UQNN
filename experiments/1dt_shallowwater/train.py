@@ -33,6 +33,19 @@ X_v_train, v_train, _, \
                                                     t_min=hp["t_min"], t_max=hp["t_max"],
                                                     x_noise=hp["x_noise"])
 
+# import matplotlib.pyplot as plt
+# import meshio
+# U_val = model.restruct(U_val)
+# mu = int(X_v_val[0, 1])
+# vtk = meshio.read(f"data/cas1_{mu}m/0_FV-Paraview_50.vtk")
+# sel = np.loadtxt(os.path.join("data", "sel.csv"), skiprows=1, delimiter=",")[:, 6].astype("int")
+# x_sim = vtk.points[sel, 1]
+# h_sim = vtk.point_data["h"][sel]
+# x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
+# plt.plot(x, U_val[0, :, 50, 0], "r--")
+# plt.plot(x_sim, h_sim, "k--")
+# plt.show()
+# exit(0)
 #%% Train
 model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0],
               hp["soft_0"], hp["sigma_alea"], hp["norm"])

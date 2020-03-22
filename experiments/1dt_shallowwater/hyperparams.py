@@ -12,11 +12,11 @@ HP["n_x"] = 132
 HP["x_min"] = 0.
 HP["x_max"] = 100.
 # Time
-HP["n_t"] = 50
+HP["n_t"] = 51
 HP["t_min"] = 0.
-HP["t_max"] = 0.5
+HP["t_max"] = 5.
 # Snapshots count
-HP["n_s"] = 51
+HP["n_s"] = 40
 HP["n_s_tst"] = 3
 # POD stopping param
 HP["eps"] = 1e-10
@@ -46,6 +46,7 @@ def u(X, t, mu, h0=1.):
     """Adapted from https://github.com/python-hydro/pyro2/blob/master/analysis/dam_compare.py."""
     x = X[0]
     h1 = mu[0]
+
     xmin = x.min()
     xmax = x.max()
 
