@@ -1,0 +1,92 @@
+"""Default hyperparameters for 1D time-dep Burgers Equation."""
+
+import numpy as np
+from poduqnn.custombnn import NORM_MEANSTD
+from scipy.optimize import brentq
+
+HP = {}
+# Dimension of u(x, t, mu)
+HP["n_v"] = 2
+# Space
+HP["n_x"] = 132
+HP["x_min"] = 0.
+HP["x_max"] = 100.
+# Time
+HP["n_t"] = 50
+HP["t_min"] = 0.
+HP["t_max"] = 0.5
+# Snapshots count
+HP["n_s"] = 51
+HP["n_s_tst"] = 3
+# POD stopping param
+HP["eps"] = 0
+HP["eps_init"] = None
+HP["n_L"] = 20
+HP["x_noise"] = 0.
+# Train/val split
+HP["train_val"] = (4/5, 1/5)
+# Deep NN hidden layers topology
+HP["h_layers"] = [40, 40]
+# Setting up TF SGD-based optimizer
+HP["epochs"] = 30000
+HP["lr"] = 0.001
+HP["soft_0"] = 0.01
+HP["sigma_alea"] = 1.
+HP["norm"] = NORM_MEANSTD
+# Frequency of the logger
+HP["log_frequency"] = 10000
+# Burgers params
+HP["mu_min"] = [2.]
+HP["mu_max"] = [20.]
+HP["mu_min_out"] = [10]
+HP["mu_max_out"] = [12]
+
+def u(X, t, mu, h0=1.):
+    """1D Shallow Water solution."""
+    x = X[0]
+    h1 = mu[0]
+    xmin = x.min()
+    xmax = x.max()
+
+    # optimization
+    def find_h2(h2):
+        return (h2/h1)**3 - 9*(h2/h1)**2*(h0/h1) + \
+            16*(h2/h1)**1.5*(h0/h1) - (h2/h1)*(h0/h1)*(h0/h1+8) + \
+            (h0/h1)**3
+    h2 = brentq(find_h2, min(h0, h1), max(h0, h1))
+
+    # calculate sound speeds
+    g = 9.81
+    c0 = np.sqrt(g*h0)
+    c1 = np.sqrt(g*h1)
+    c2 = np.sqrt(g*h2)
+    u2 = 2 * (c1 - c2)
+
+    # shock speed
+    xi = c0 * np.sqrt(1/8 * ((2*(c2/c0)**2 + 1)**2 - 1))
+    xctr = 0.5*(xmin + xmax)
+
+    h_exact = np.zeros_like(x)
+    u_exact = np.zeros_like(x)
+    # h0
+    idx = x >= xctr + xi*t
+    h_exact[idx] = h0
+    u_exact[idx] = 0
+
+    # h1
+    idx = x <= xctr - c1*t
+    h_exact[idx] = h1
+    u_exact[idx] = 0
+
+    # h2
+    idx = ((x >= xctr + (u2-c2)*t) & (x < xctr + xi*t))
+    h_exact[idx] = h2
+    u_exact[idx] = u2
+
+    # h3
+    idx = ((x >= xctr - c1*t) & (x < xctr + (u2-c2)*t))
+    c3 = 1/3 * (2*c1 - (x-xctr)/t)
+    h_exact[idx] = c3[idx]**2 / g
+    u_exact[idx] = 2 * (c1-c3[idx])
+
+    return np.vstack((h_exact, u_exact))

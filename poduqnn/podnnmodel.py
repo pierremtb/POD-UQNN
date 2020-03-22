@@ -99,7 +99,7 @@ class PodnnModel:
             n_st *= self.n_t
 
         # Numba-ifying the function
-        u = nb.njit(u)
+        # u = nb.njit(u)
 
         # Getting the nodes coordinates
         X = self.x_mesh[:, 1:].T
@@ -302,7 +302,7 @@ class PodnnModel:
         if self.has_t:
             # (n_h, n_st) -> (n_v, n_xyz, n_t, n_s)
             n_s = int(U.shape[-1] / self.n_t)
-            U_struct = np.zeros((self.n_v, U.shape[0], self.n_t, n_s))
+            U_struct = np.zeros((self.n_v, self.n_xyz, self.n_t, n_s))
             for i in range(n_s):
                 s = self.n_t * i
                 e = self.n_t * (i + 1)
