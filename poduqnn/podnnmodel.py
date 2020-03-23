@@ -164,7 +164,7 @@ class PodnnModel:
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_test, v_train, v_test = \
-            self.split_dataset(X_v, v, train_val[-1])
+            split_dataset(X_v, v, train_val[-1])
 
         # Creating the validation snapshots matrix
         U_test = self.V.dot(v_test.T)
@@ -172,22 +172,6 @@ class PodnnModel:
         self.save_train_data(X_v, X_v_train, v_train, X_v_test, v_test, U_test)
 
         return X_v_train, v_train, X_v_test, v_test, U_test
-
-    def sample_mu(self, n_s, mu_min, mu_max):
-        """Return a LHS sampling between mu_min and mu_max of size n_s."""
-        X_lhs = lhs(n_s, mu_min.shape[0]).T
-        mu_lhs = mu_min + (mu_max - mu_min)*X_lhs
-        return mu_lhs
-
-    def split_dataset(self, X_v, v, test_size):
-        if not self.has_t:
-            # Randomly splitting the dataset (X_v, v)
-            return train_test_split(X_v, v, test_size=test_size)
-
-        n_st_train = int((1. - test_size) * X_v.shape[0])
-        X_v_train, v_train = X_v[:n_st_train, :], v[:n_st_train, :]
-        X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
-        return X_v_train, X_v_val, v_train, v_val
 
     def initNN(self, h_layers, lr, lam, norm):
         """Create the neural net model."""

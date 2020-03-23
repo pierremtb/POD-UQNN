@@ -4,7 +4,7 @@ from numba import njit
 
 
 @njit(parallel=False)
-def perform_pod(U, eps=0., n_L=0, verbose=True):
+def perform_pod(U, eps, verbose=True):
     """POD algorithmm."""
     # Number of DOFs
     n_h = U.shape[0]
@@ -23,13 +23,13 @@ def perform_pod(U, eps=0., n_L=0, verbose=True):
     sum_lambdas = np.sum(lambdas)
   
     # Finding n_L
-    if n_L == 0:
-        sum_lambdas_trunc = 0.
-        for i in range(n_st):
-            sum_lambdas_trunc += lambdas[i]
-            n_L += 1
-            if sum_lambdas_trunc/sum_lambdas >= (1 - eps):
-                break
+    n_L = 0
+    sum_lambdas_trunc = 0.
+    for i in range(n_st):
+        sum_lambdas_trunc += lambdas[i]
+        n_L += 1
+        if sum_lambdas_trunc/sum_lambdas >= (1 - eps):
+            break
  
     # Truncating according to n_L
     lambdas_trunc = lambdas[0:n_L]
@@ -43,7 +43,7 @@ def perform_pod(U, eps=0., n_L=0, verbose=True):
     for i in range(n_L):
         Z_i = np.ascontiguousarray(Z[:, i])
         V[:, i] = U.dot(Z_i) / np.sqrt(lambdas_trunc[i])
-
+    
     return np.ascontiguousarray(V)
 
 
@@ -62,7 +62,7 @@ def perform_fast_pod(U, eps, eps_init):
     T = np.zeros((n_h, n_L_init, n_s))
     for k in range(n_s):
         U_k = U[:, :, k]
-        T_k = perform_pod(U_k, eps=eps_init, n_L=0, verbose=False)
+        T_k = perform_pod(U_k, eps_init, False)
         n_L_k = T_k.shape[1]
         if n_L_k < n_L_init:
             n_L_init = n_L_k
@@ -75,4 +75,4 @@ def perform_fast_pod(U, eps, eps_init):
     # Reshaping the 3d-mat into a 2d-mat
     U_f = np.reshape(T, (n_h, n_s*n_L_init))
     print("Performing SVD")
-    return perform_pod(U_f, eps=eps, n_L=0, verbose=True)
+    return perform_pod(U_f, eps, True)
