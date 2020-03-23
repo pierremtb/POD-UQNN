@@ -58,30 +58,6 @@ xxT, ttT = np.meshgrid(x, t)
 xx, tt = xxT.T, ttT.T
 XT = np.hstack((xx.flatten()[:, None], tt.flatten()[:, None]))
 
-ax = fig.add_subplot(gs[0, 0])
-U_tst_grid = griddata(XT, U_tst.mean(-1).flatten(), (xx, tt), method='cubic')
-h = ax.imshow(U_tst_grid, interpolation='nearest', cmap='rainbow', 
-                extent=[t.min(), t.max(), x.min(), x.max()], 
-                origin='lower', aspect='auto')
-divider = make_axes_locatable(ax)
-cax = divider.append_axes("right", size="5%", pad=0.05)
-fig.colorbar(h, cax=cax)
-ax.set_xlabel("$t$")
-ax.set_ylabel("$x$")
-ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
-
-ax = fig.add_subplot(gs[1, 0])
-U_pred_grid = griddata(XT, U_pred.mean(-1).flatten(), (xx, tt), method='cubic')
-h = ax.imshow(U_pred_grid, interpolation='nearest', cmap='rainbow', 
-                extent=[t.min(), t.max(), x.min(), x.max()], 
-                origin='lower', aspect='auto')
-divider = make_axes_locatable(ax)
-cax = divider.append_axes("right", size="5%", pad=0.05)
-fig.colorbar(h, cax=cax)
-ax.set_xlabel("$t$")
-ax.set_ylabel("$x$")
-ax.set_title(r"$\hat{u_D}(\bar{s_{\textrm{tst}}})$")
-
 # Slices
 n_samples = 1
 times = [25, 75]
@@ -102,17 +78,47 @@ for j, time in enumerate(times):
             U_pred_i, U_pred_i_sig = model.predict(X_i)
             U_pred_i = np.reshape(U_pred_i, (hp["n_x"], hp["n_t"], -1))
             U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_x"], hp["n_t"], -1))
+
+            if col == 0 and row == 0:
+                ax = fig.add_subplot(gs[0, 0])
+                U_tst_grid = griddata(XT, U_samples[:, :, col].flatten(), (xx, tt), method='cubic')
+                h = ax.imshow(U_tst_grid, interpolation='nearest', cmap='rainbow', 
+                                extent=[t.min(), t.max(), x.min(), x.max()], 
+                                origin='lower', aspect='auto')
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                fig.colorbar(h, cax=cax)
+                ax.set_xlabel("$t$")
+                ax.set_ylabel("$x$")
+                ax.axvline(X_i[times[0], 0], color="w", ls="-.")
+                ax.set_title(r"$u{\scriptsize\textrm{D}}(s=" + f"{X_i[0, 1]:.4f}" + ")$")
+
+                ax = fig.add_subplot(gs[1, 0])
+                U_pred_grid = griddata(XT, U_pred_i[:, :, 0].flatten(), (xx, tt), method='cubic')
+                h = ax.imshow(U_pred_grid, interpolation='nearest', cmap='rainbow', 
+                                extent=[t.min(), t.max(), x.min(), x.max()], 
+                                origin='lower', aspect='auto')
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                fig.colorbar(h, cax=cax)
+                ax.set_xlabel("$t$")
+                ax.set_ylabel("$x$")
+                ax.axvline(X_i[times[1], 0], color="w", ls="-.")
+                ax.set_title(r"$\hat{u}{\scriptsize\textrm{D}}(s=" + f"{X_i[0, 1]:.4f}" + ")$")
+
             ax = fig.add_subplot(gs[j, actual_row + 1])
             ax.plot(x, U_pred_i[:, time, 0], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
             ax.plot(x, U_samples[:, time, col], "r--", label=r"$u_D(s_{" + lbl + r"})$")
             lower = U_pred_i[:, time, 0] - 2*U_pred_i_sig[:, time, 0]
             upper = U_pred_i[:, time, 0] + 2*U_pred_i_sig[:, time, 0]
             ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
-            ax.set_xlabel(f"$x\ (t={X_i[time, 0]:.2f})$")
+            ax.set_xlabel(f"$x$")
             if row == 0:
-                ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega$")
+                ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega,\ "
+                             + f"t={X_i[time, 0]:.2f}$")
             else:
-                ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega{\footnotesize\textrm{out}}$")
+                ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega{\footnotesize\textrm{out}},\ "
+                             + f"t={X_i[time, 0]:.2f}$")
             actual_row += 1
             if j == 0 and actual_row == 0:
                 ax.legend()
