@@ -44,11 +44,17 @@ X_v_train, v_train, _, \
                                                 u_noise=hp["u_noise"],
                                                 x_noise=hp["x_noise"])
 
+n_samples = 2
+mu_lhs_out_min = sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
+mu_lhs_out_max = sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
+mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
+X_v_samples, U_samples, _, _ = \
+    model.create_snapshots(model.n_d, model.n_h, u, mu_lhs_out)
 #%% Model creation
 model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0],
               hp["soft_0"], hp["sigma_alea"], hp["norm"])
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
-            freq=hp["log_frequency"])
+            freq=hp["log_frequency"], X_out=X_v_samples)
 
 #%% Sample the new model to generate a test prediction
 mu_lhs = sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
@@ -108,7 +114,7 @@ for col, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         U_pred_i = np.reshape(U_pred_i, (hp["n_x"], hp["n_y"], -1))
         U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_x"], hp["n_y"], -1))
         ax = fig.add_subplot(gs[row, col+1])
-        ax.plot(x, U_pred_i[:, 199, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+        ax.plot(x, U_pred_i[:, 199, 0], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
         ax.plot(x, U_samples[:, 199, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
         lower = U_pred_i[:, 199, 0] - 2*U_pred_i_sig[:, 199, 0]
         upper = U_pred_i[:, 199, 0] + 2*U_pred_i_sig[:, 199, 0]

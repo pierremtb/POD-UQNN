@@ -30,10 +30,10 @@ HP["train_val"] = (.8, .2)
 # DeepNN Topology
 HP["h_layers"] = [140, 140]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 145000
-HP["lr"] = 0.005
-HP["soft_0"] = 0.05
-HP["sigma_alea"] = 2.76
+HP["epochs"] = 48000
+HP["lr"] = 0.003
+HP["soft_0"] = 0.01
+HP["sigma_alea"] = 0.1
 HP["norm"] = NORM_MINMAX
 # Frequency of the logger
 HP["log_frequency"] = 1000

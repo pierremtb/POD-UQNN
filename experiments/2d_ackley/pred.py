@@ -47,7 +47,6 @@ mu_lhs_out_min = sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["m
 mu_lhs_out_max = sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
 mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
 
-
 # Contours for demo
 n_plot_x = 2
 n_plot_y = 3
@@ -57,24 +56,6 @@ x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
 y = np.linspace(hp["y_min"], hp["y_max"], hp["n_y"])
 xxT, yyT = np.meshgrid(x, y)
 xx, yy = xxT.T, yyT.T
-ax = fig.add_subplot(gs[0, 0])
-U_tst = np.reshape(U_tst, (hp["n_x"], hp["n_y"], -1))
-levels = list(range(2, 15))
-ct = ax.contourf(xx, yy, U_tst.mean(-1), levels=levels, origin="lower")
-plt.colorbar(ct)
-ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
-ax.axis("equal")
-ax.set_xlabel("$x$")
-ax.set_ylabel("$y$")
-ax = fig.add_subplot(gs[1, 0])
-U_pred = np.reshape(U_pred, (hp["n_x"], hp["n_y"], -1))
-levels = list(range(2, 15))
-ct = ax.contourf(xx, yy, U_pred.mean(-1), levels=levels, origin="lower")
-plt.colorbar(ct)
-ax.axis("equal")
-ax.set_title(r"$\hat{u_D}(\bar{s_{\textrm{tst}}})$")
-ax.set_xlabel("$x$")
-ax.set_ylabel("$y$")
 
 # Slices
 for col, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
@@ -85,13 +66,34 @@ for col, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
     x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
     idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
     for row, idx_i in enumerate(idx):
-        lbl = r"{\scriptscriptstyle\textrm{tst}}" if row == 0 else r"{\scriptscriptstyle\textrm{out}}"
+        lbl = r"{\scriptscriptstyle\textrm{tst}}" if col == 0 else r"{\scriptscriptstyle\textrm{out}}"
         X_i = X_v_samples[idx_i, :].reshape(1, -1)
         U_pred_i, U_pred_i_sig = model.predict(X_i)
         U_pred_i = np.reshape(U_pred_i, (hp["n_x"], hp["n_y"], -1))
         U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_x"], hp["n_y"], -1))
+
+        if row == 0 and col == 0:
+            ax = fig.add_subplot(gs[0, 0])
+            levels = list(range(2, 15))
+            ct = ax.contourf(yy, xx, U_samples[:, :, idx_i].T, levels=levels, origin="lower")
+            plt.colorbar(ct)
+            ax.set_title(r"$u{\scriptsize\textrm{D}}([" + f"{X_i[0, 0]:.2f}," + f"{X_i[0, 1]:.2f}," + f"{X_i[0, 2]:.2f}] )$")
+            ax.axis("equal")
+            ax.set_xlabel("$y$")
+            ax.set_ylabel("$x$")
+            ax.axvline(0., color="w", ls="-.")
+            ax = fig.add_subplot(gs[1, 0])
+            levels = list(range(2, 15))
+            ct = ax.contourf(yy, xx, U_pred_i[:, :, 0].T, levels=levels, origin="lower")
+            plt.colorbar(ct)
+            ax.axis("equal")
+            ax.set_title(r"$\hat{u}{\scriptsize\textrm{D}}([" + f"{X_i[0, 0]:.2f}," + f"{X_i[0, 1]:.2f}," + f"{X_i[0, 2]:.2f}] )$")
+            ax.set_xlabel("$y$")
+            ax.set_ylabel("$x$")
+            ax.axvline(0., color="w", ls="-.")
+
         ax = fig.add_subplot(gs[row, col+1])
-        ax.plot(x, U_pred_i[:, 199, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+        ax.plot(x, U_pred_i[:, 199, 0], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
         ax.plot(x, U_samples[:, 199, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
         lower = U_pred_i[:, 199, 0] - 2*U_pred_i_sig[:, 199, 0]
         upper = U_pred_i[:, 199, 0] + 2*U_pred_i_sig[:, 199, 0]
@@ -100,8 +102,7 @@ for col, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         title_st = r"$s=[" + f"{X_i[0, 0]:.2f}," + f"{X_i[0, 1]:.2f}," + f"{X_i[0, 2]:.2f}] "
         title_st += r"\in \Omega{\footnotesize\textrm{out}}$" if col + 1 == 2 else r"\in \Omega$"
         ax.set_title(title_st)
-        if col == len(idx) - 1 and row == 0:
+        if row == 0: 
             ax.legend()
 plt.tight_layout()
-# plt.show()
-savefig("results/podensnn-ackley-graph-meansamples")
+savefig(os.path.join("results", "podbnn-ackley-graph-meansamples"))

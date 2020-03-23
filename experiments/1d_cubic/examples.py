@@ -334,9 +334,9 @@ for i in range(3):
 
     # plt.fill_between(x_tst.ravel(), upper.ravel(), lower.ravel(), 
     #                 facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
-    plt.plot(x_tst, upper, "C0-", alpha=0.3, label=r"$\hat{u}_*(x)\pm 2\sigma_T(x)$")
-    plt.plot(x_tst, lower, "C0-", alpha=0.3)
-    plt.plot(x_tst, u_pred, "C0-", label=r"$\hat{u}_*(x)$")
+    plt.plot(x_tst, upper, "b-", alpha=0.3, label=r"$\hat{u}_*(x)\pm 2\sigma_T(x)$")
+    plt.plot(x_tst, lower, "b-", alpha=0.3)
+    plt.plot(x_tst, u_pred, "b-", label=r"$\hat{u}_*(x)$")
     plt.xlabel("$x$")
     if i == 0:
         plt.legend()
