@@ -3,6 +3,8 @@
 import numpy as np
 import tensorflow as tf
 
+from poduqnn.neuralnetwork import NORM_MEANSTD
+
 
 HP = {}
 # Dimension of u(x, t, mu)
@@ -29,6 +31,7 @@ HP["h_layers"] = [64, 64]
 HP["epochs"] = 30000
 HP["lr"] = 0.005
 HP["lambda"] = 1e-8
+HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Burgers params
