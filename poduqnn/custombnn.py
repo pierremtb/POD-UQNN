@@ -91,10 +91,10 @@ class DenseVariational(tfk.layers.Layer):
 
     def call(self, inputs, **kwargs):
         """Overriden method defining the forward pass."""
-        kernel_sigma = 1e-3 + tf.math.softplus(0.01 * self.kernel_rho)
+        kernel_sigma = 1e-3 + tf.math.softplus(0.1 * self.kernel_rho)
         kernel = self.kernel_mu + kernel_sigma \
                  * tf.random.normal(self.kernel_mu.shape, dtype=self.dtype)
-        bias_sigma = 1e-3 + tf.math.softplus(0.01 * self.bias_rho)
+        bias_sigma = 1e-3 + tf.math.softplus(0.1 * self.bias_rho)
         bias = self.bias_mu + bias_sigma * tf.random.normal(self.bias_mu.shape, dtype=self.dtype)
 
         self.add_loss(self.kl_loss(kernel, self.kernel_mu, kernel_sigma) +
@@ -166,7 +166,7 @@ class BayesianNeuralNetwork:
         def split_mean_var(data):
             mean, out_var = tf.split(data, num_or_size_splits=2, axis=1)
             # var = tf.math.log(1.0 + tf.exp(out_var)) + 1e-6
-            var = tf.math.softplus(0.1 * out_var) + 1e-6
+            var = tf.math.softplus(0.01 * out_var) + 1e-6
             return [mean, var]
         
         outputs = tf.keras.layers.Lambda(split_mean_var)(x)

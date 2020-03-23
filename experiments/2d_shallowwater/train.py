@@ -49,8 +49,9 @@ X_v_train, v_train, \
 #%% Model creation
 model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0],
               hp["soft_0"], hp["sigma_alea"], hp["norm"])
+X_out = np.linspace(500, 1500, 300).reshape(-1, 1)
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
-            freq=hp["log_frequency"])
+            freq=hp["log_frequency"], X_out=X_out)
 
 #%%
 v_pred, v_pred_sig = model.predict_v(X_v_val)
