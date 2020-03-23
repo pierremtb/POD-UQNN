@@ -312,7 +312,7 @@ fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
 plt.fill_between(x_tst.ravel(), upper.ravel(), lower.ravel(), 
                     facecolor='C0', alpha=0.3, label=r"$2\sigma_{T}(x)$")
 # plt.plot(x_star, u_pred_samples[:, :, 0].numpy().T, 'C0', linewidth=.5)
-plt.plot(x_tst, u_pred, label=r"$\hat{u}_*(x)$")
+plt.plot(x_tst, u_pred, "b-", label=r"$\hat{u}_*(x)$")
 plt.scatter(x, y, c="r", label=r"$u_T(x)$")
 plt.plot(x_tst, y_tst, "r--", label=r"$u_*(x)$")
 plt.ylim((y_tst.min(), y_tst.max()))
@@ -334,9 +334,9 @@ for i in range(3):
 
     # plt.fill_between(x_tst.ravel(), upper.ravel(), lower.ravel(), 
     #                 facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
-    plt.plot(x_tst, upper, "C0-", alpha=0.3, label=r"$\hat{u}_*(x)\pm 2\sigma_T(x)$")
-    plt.plot(x_tst, lower, "C0-", alpha=0.3)
-    plt.plot(x_tst, u_pred, "C0-", label=r"$\hat{u}_*(x)$")
+    plt.plot(x_tst, upper, "b-", alpha=0.3, label=r"$\hat{u}_*(x)\pm 2\sigma_T(x)$")
+    plt.plot(x_tst, lower, "b-", alpha=0.3)
+    plt.plot(x_tst, u_pred, "b-", label=r"$\hat{u}_*(x)$")
     plt.xlabel("$x$")
     if i == 0:
         plt.legend()

@@ -137,7 +137,7 @@ print(f"RE_v: {err_val:4f}")
 #             U_pred_i = np.reshape(U_pred_i, (hp["n_x"], hp["n_t"], -1))
 #             U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_x"], hp["n_t"], -1))
 #             ax = fig.add_subplot(gs[actual_row, j])
-#             ax.plot(x, U_pred_i[:, time, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+#             ax.plot(x, U_pred_i[:, time, 0], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
 #             ax.plot(x, U_samples[:, time, col], "r--", label=r"$u_D(s_{" + lbl + r"})$")
 #             lower = U_pred_i[:, time, 0] - 3*U_pred_i_sig[:, time, 0]
 #             upper = U_pred_i[:, time, 0] + 3*U_pred_i_sig[:, time, 0]

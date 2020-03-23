@@ -115,7 +115,7 @@ for j, time in enumerate(times):
             U_pred_i = U_pred_i[0]
             U_pred_i_sig = U_pred_i_sig[0]
             ax = fig.add_subplot(gs[j, actual_row + 1])
-            ax.plot(x, U_pred_i[:, time, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+            ax.plot(x, U_pred_i[:, time, 0], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
             ax.plot(x, U_samples[:, time, col], "r--", label=r"$u_D(s_{" + lbl + r"})$")
             lower = U_pred_i[:, time, 0] - 2*U_pred_i_sig[:, time, 0]
             upper = U_pred_i[:, time, 0] + 2*U_pred_i_sig[:, time, 0]
