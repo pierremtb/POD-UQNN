@@ -48,7 +48,7 @@ for i, t_i in enumerate(idx):
     ax.set_yticks([])
     ax = fig.add_subplot(gs[2*i:2*i+2, 2:])
     lbl = r"{\scriptscriptstyle\textrm{tst},1}"
-    ax.plot(x_prime, U_pred[:, i], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+    ax.plot(x_prime, U_pred[:, i], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
     ax.plot(x_prime, U_tst[:, i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
     ax.fill_between(x_prime, U_pred_lo[:, i], U_pred_up[:, i],
                     alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")

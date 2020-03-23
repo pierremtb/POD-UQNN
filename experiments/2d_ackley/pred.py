@@ -94,7 +94,7 @@ for col, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
             ax.set_ylabel("$y$")
 
         ax = fig.add_subplot(gs[row, col+1])
-        ax.plot(x, U_pred_i[:, 199, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+        ax.plot(x, U_pred_i[:, 199, 0], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
         ax.plot(x, U_samples[:, 199, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
         lower = U_pred_i[:, 199, 0] - 2*U_pred_i_sig[:, 199, 0]
         upper = U_pred_i[:, 199, 0] + 2*U_pred_i_sig[:, 199, 0]

@@ -34,7 +34,7 @@ gs = fig.add_gridspec(n_plot_x, n_plot_y)
 for col, idx_i in enumerate(idx):
     lbl = r"{\scriptscriptstyle\textrm{tst},1}"
     ax = fig.add_subplot(gs[0, col])
-    ax.plot(x_line, results[:, idx[col][1]], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+    ax.plot(x_line, results[:, idx[col][1]], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
     ax.plot(x_line, results[:, idx[col][0]], "r--", label=r"$u_D(s_{" + lbl + r"})$")
     lower = results[:, idx[col][1]] - 2*results[:, idx[col][2]]
     upper = results[:, idx[col][1]] + 2*results[:, idx[col][2]]
@@ -46,7 +46,7 @@ for col, idx_i in enumerate(idx):
 
     lbl = r"{\scriptscriptstyle\textrm{tst},2}"
     ax = fig.add_subplot(gs[1, col])
-    ax.plot(x_line, results[:, idx[col][4]], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+    ax.plot(x_line, results[:, idx[col][4]], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
     ax.plot(x_line, results[:, idx[col][3]], "r--", label=r"$u_D(s_{" + lbl + r"})$")
     lower = results[:, idx[col][4]] - 2*results[:, idx[col][5]]
     upper = results[:, idx[col][4]] + 2*results[:, idx[col][5]]
