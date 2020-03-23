@@ -3,6 +3,8 @@
 import numpy as np
 import tensorflow as tf
 
+from poduqnn.neuralnetwork import NORM_MEANSTD
+
 
 HP = {}
 # Dimension of u(x, t, mu)
@@ -26,9 +28,10 @@ HP["train_val"] = (0.8, 0.2)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 30000
+HP["epochs"] = 50000
 HP["lr"] = 0.003
-HP["lambda"] = 1e-2
+HP["lambda"] = 1e-4
+HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Non-spatial params
@@ -36,7 +39,3 @@ HP["mu_min"] = [-1., -1., -1.]
 HP["mu_max"] = [+1., +1., +1.]
 HP["mu_min_out"] = [-2., -2., -2.]
 HP["mu_max_out"] = [+2., +2., +2.]
-
-
-np.random.seed(1111)
-tf.random.set_seed(1111)

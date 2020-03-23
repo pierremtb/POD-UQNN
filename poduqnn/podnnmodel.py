@@ -6,12 +6,13 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 import numba as nb
+from sklearn.model_selection import train_test_split
 
 from .pod import perform_pod, perform_fast_pod
 from .handling import pack_layers
 from .logger import Logger
 from .neuralnetwork import NeuralNetwork
-from .acceleration import loop_u, loop_u_t
+from .acceleration import loop_u, loop_u_t, lhs
 from .metrics import re_s
 from .handling import sample_mu, split_dataset
 
@@ -47,8 +48,6 @@ class PodnnModel:
         self.n_L = None
         self.n_d = None
         self.V = None
-        self.ub = None
-        self.lb = None
         self.layers = None
 
         self.save_setup_data()
@@ -165,7 +164,7 @@ class PodnnModel:
 
         # Randomly splitting the dataset (X_v, v)
         X_v_train, X_v_test, v_train, v_test = \
-            split_dataset(X_v, v, train_val[-1])
+            self.split_dataset(X_v, v, train_val[-1])
 
         # Creating the validation snapshots matrix
         U_test = self.V.dot(v_test.T)
@@ -174,10 +173,26 @@ class PodnnModel:
 
         return X_v_train, v_train, X_v_test, v_test, U_test
 
-    def initNN(self, h_layers, lr, lam):
+    def sample_mu(self, n_s, mu_min, mu_max):
+        """Return a LHS sampling between mu_min and mu_max of size n_s."""
+        X_lhs = lhs(n_s, mu_min.shape[0]).T
+        mu_lhs = mu_min + (mu_max - mu_min)*X_lhs
+        return mu_lhs
+
+    def split_dataset(self, X_v, v, test_size):
+        if not self.has_t:
+            # Randomly splitting the dataset (X_v, v)
+            return train_test_split(X_v, v, test_size=test_size)
+
+        n_st_train = int((1. - test_size) * X_v.shape[0])
+        X_v_train, v_train = X_v[:n_st_train, :], v[:n_st_train, :]
+        X_v_val, v_val = X_v[n_st_train:, :], v[n_st_train:, :]
+        return X_v_train, X_v_val, v_train, v_val
+
+    def initNN(self, h_layers, lr, lam, norm):
         """Create the neural net model."""
         self.layers = pack_layers(self.n_d, h_layers, self.n_L)
-        self.regnn = NeuralNetwork(self.layers, lr, lam, lb=self.lb, ub=self.ub)
+        self.regnn = NeuralNetwork(self.layers, lr, lam, norm)
 
     def train(self, X_v, v, X_v_val, v_val, epochs, freq=100):
         """Train the POD-NN's regression model, and save it."""
@@ -256,20 +271,16 @@ class PodnnModel:
             self.n_L = data[0]
             self.n_d = data[1]
             self.V = data[2]
-            self.ub = data[3]
-            self.lb = data[4]
-            return data[5:]
+            return data[3:]
 
     def save_train_data(self, X_v, X_v_train, v_train, X_v_test, v_test, U_test):
         """Save training data, such as datasets."""
         # Set dataset dependent params
         self.n_L = self.V.shape[1]
         self.n_d = X_v.shape[1]
-        self.lb = np.amin(X_v, axis=0)
-        self.ub = np.amax(X_v, axis=0)
 
         with open(self.train_data_path, "wb") as f:
-            pickle.dump((self.n_L, self.n_d, self.V, self.ub, self.lb,
+            pickle.dump((self.n_L, self.n_d, self.V,
                          X_v_train, v_train, X_v_test, v_test, U_test), f)
 
     def load_model(self):

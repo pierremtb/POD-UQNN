@@ -3,6 +3,8 @@
 import numpy as np
 import tensorflow as tf
 
+from poduqnn.neuralnetwork import NORM_CENTER
+
 
 HP = {}
 # Dimension of u(x, t, mu)
@@ -27,6 +29,7 @@ HP["epochs"] = 50000
 HP["lr"] = 0.001
 HP["decay"] = 0.
 HP["lambda"] = 1e-4
+HP["norm"] = NORM_CENTER
 # Frequency of the logger
 HP["log_frequency"] = 1000
 # Non-spatial params
