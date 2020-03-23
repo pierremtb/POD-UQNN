@@ -1,5 +1,9 @@
 """Default hyperparameters for 1D Shekel Equation."""
 
+#:  24000  L: 4.0854e+07 RE_v: 0.0841 std: 721.5140 ino: 251.8651 T: 06.8
+#:  25000  L: 9.5321e+07 RE_v: 0.0709 std: 525.1096 ino: 252.8229 T: 06.8
+#:  26000  L: 5.3885e+07 RE_v: 0.0924 std: 694.0737 ino: 280.3062 T: 06.8
+
 import numpy as np
 import tensorflow as tf
 
@@ -25,7 +29,7 @@ HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 50000
+HP["epochs"] = 15000
 HP["lr"] = 0.001
 HP["decay"] = 0.
 HP["lambda"] = 1e-4

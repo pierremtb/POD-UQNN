@@ -28,7 +28,7 @@ HP["train_val"] = (0.8, 0.2)
 # Deep NN hidden layers topology
 HP["h_layers"] = [64, 64]
 # Setting up _structthe TF SGD-based optimizer
-HP["epochs"] = 10000
+HP["epochs"] = 30000
 HP["lr"] = 0.005
 HP["lambda"] = 1e-8
 HP["norm"] = NORM_MEANSTD

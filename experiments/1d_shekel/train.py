@@ -33,7 +33,7 @@ X_v_train, v_train, \
                                     hp["eps"])
 
 #%% Train
-model.initNN(hp["h_layers"], hp["lr"], hp["lambda"])
+model.initNN(hp["h_layers"], hp["lr"], hp["lambda"], hp["norm"])
 train_res = model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
                         hp["log_frequency"])
 
@@ -71,10 +71,9 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         X_i = X_v_samples[idx_i, :].reshape(1, -1)
         U_pred_i = model.predict(X_i)
         ax = fig.add_subplot(gs[row, col])
-        ax.plot(x, U_pred_i, "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+        ax.plot(x, U_pred_i, "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
         ax.plot(x, U_samples[:, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
         ax.set_xlabel("$x$")
         if col == len(idx) - 1:
             ax.legend()
-# plt.show()
-savefig("results/podnn-sw-graph-samples")
+savefig(os.path.join("results", "podnn-shekel-graph"))

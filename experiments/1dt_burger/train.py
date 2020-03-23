@@ -223,7 +223,7 @@ savefig(os.path.join("results", "podnn-burger-graph-meansamples"))
 #             X_i = X_v_samples[st:en, :]
 #             U_pred_i = model.restruct(model.predict(X_i))[0]
 #             ax = fig.add_subplot(gs[actual_row, j])
-#             ax.plot(x, U_pred_i[:, time, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+#             ax.plot(x, U_pred_i[:, time, 0], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
 #             ax.plot(x, U_samples[:, time, col], "r--", label=r"$u_D(s_{" + lbl + r"})$")
 #             ax.set_xlabel(f"$x\ (t={time})$")
 #             actual_row += 1
