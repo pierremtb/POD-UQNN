@@ -48,7 +48,7 @@ X_v_train, v_train, \
                                    t_min=hp["t_min"], t_max=hp["t_max"])
 
 #%% Train
-model.initNN(hp["h_layers"], hp["lr"], hp["lambda"])
+model.initNN(hp["h_layers"], hp["lr"], hp["lambda"], hp["norm"])
 train_res = model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
                         hp["log_frequency"])
 
@@ -93,10 +93,11 @@ times = [25, 75]
 for j, time in enumerate(times):
     actual_row = 0
     for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
-        X_v_samples, U_samples, _ = \
+        X_v_samples, _, U_samples = \
             model.create_snapshots(mu_lhs.shape[0], mu_lhs.shape[0]*hp["n_t"], model.n_d, model.n_h, u, mu_lhs,
                                 t_min=hp["t_min"], t_max=hp["t_max"])
         # U_samples = np.reshape(U_samples, (hp["n_x"], hp["n_t"], -1))
+        # U_samples = model.restruct(U_samples)
         x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
         idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
         for col, idx_i in enumerate(idx):
@@ -135,7 +136,7 @@ for j, time in enumerate(times):
                 ax.set_title(r"$\hat{u}{\scriptsize\textrm{D}}(s=" + f"{X_i[0, 1]:.4f}" + ")$")
 
             ax = fig.add_subplot(gs[j, actual_row + 1])
-            ax.plot(x, U_pred_i[:, time, 0], "C0-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+            ax.plot(x, U_pred_i[:, time, 0], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
             ax.plot(x, U_samples[:, time, col], "r--", label=r"$u_D(s_{" + lbl + r"})$")
             ax.set_xlabel(f"$x$")
             if row == 0:
@@ -145,10 +146,10 @@ for j, time in enumerate(times):
                 ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega{\footnotesize\textrm{out}},\ "
                              + f"t={X_i[time, 0]:.2f}$")
             actual_row += 1
-            if j == 0 and actual_row == 0:
+            if j == 0:
                 ax.legend()
 plt.tight_layout()
-savefig(os.path.join("results", "podensnn-burger-graph-meansamples"))
+savefig(os.path.join("results", "podnn-burger-graph-meansamples"))
 
 # #%% Samples graph
 # from mpl_toolkits.axes_grid1 import make_axes_locatable
