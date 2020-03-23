@@ -151,38 +151,64 @@ class BayesianNeuralNetwork:
             self.model = model
 
     def build_model(self):
-        """Descriptive Keras model."""
-        n_L = self.layers[-1]
-        model = tfk.models.Sequential([
-            tfk.layers.InputLayer(self.layers[0]),
-            *[
-                DenseVariational(
-                    units=width,
-                    activation="relu",
-                    kl_weight=self.klw,
-                    dtype=self.dtype,
-                ) for width in self.layers[1:-1]
-            ],
-            DenseVariational(
-                units=n_L,
-                activation="linear",
-                dtype=self.dtype,
-                kl_weight=self.klw,
-            ),
-            # The dual output mean-variance one could use
-            # tfp.layers.DistributionLambda(lambda t:
-            #     tfd.MultivariateNormalDiag(
-            #         loc=t[..., :n_L],
-            #         scale_diag=1e-5 + tf.math.softplus(self.soft_0 * t[..., n_L:]),
-            #     ),
-            # ),
-        ])
+        """Functional Keras model."""
+        inputs = tf.keras.Input(shape=(self.layers[0],), name="x", dtype=self.dtype)
+        x = inputs
+        for width in self.layers[1:-1]:
+            x = DenseVariational(
+                    width, activation=tf.nn.relu, dtype=self.dtype,
+                    kl_weight=self.klw)(x)
+        x = DenseVariational(
+                2 * self.layers[-1], activation=None, dtype=self.dtype,
+                kl_weight=self.klw)(x)
+
+        # Output processing function
+        def split_mean_var(data):
+            mean, out_var = tf.split(data, num_or_size_splits=2, axis=1)
+            # var = tf.math.log(1.0 + tf.exp(out_var)) + 1e-6
+            var = tf.math.softplus(self.soft_0 * out_var) + 1e-6
+            return [mean, var]
+        
+        outputs = tf.keras.layers.Lambda(split_mean_var)(x)
+        model = tf.keras.Model(inputs=inputs, outputs=outputs, name="varnn")
         return model
+
+    # def build_model(self):
+    #     """Descriptive Keras model."""
+    #     n_L = self.layers[-1]
+    #     model = tfk.models.Sequential([
+    #         tfk.layers.InputLayer(self.layers[0]),
+    #         *[
+    #             DenseVariational(
+    #                 units=width,
+    #                 activation="relu",
+    #                 kl_weight=self.klw,
+    #                 dtype=self.dtype,
+    #             ) for width in self.layers[1:-1]
+    #         ],
+    #         DenseVariational(
+    #             units=2*n_L,
+    #             activation="linear",
+    #             dtype=self.dtype,
+    #             kl_weight=self.klw,
+    #         ),
+    #         # The dual output mean-variance one could use
+    #         tfp.layers.DistributionLambda(lambda t:
+    #             tfd.MultivariateNormalDiag(
+    #                 loc=t[..., :n_L],
+    #                 scale_diag=1e-5 + tf.math.softplus(self.soft_0 * t[..., n_L:]),
+    #             ),
+    #         ),
+    #     ])
+    #     return model
 
     @tf.function
     def loss(self, y_obs, y_pred):
         """Negative Log-Likelihood loss function."""
-        dist = tfp.distributions.Normal(loc=y_pred, scale=self.sigma_alea)
+        y_pred_mean, y_pred_var = y_pred
+        # dist = tfp.distributions.Normal(loc=y_pred, scale=self.sigma_alea)
+        dist = tfp.distributions.Normal(loc=y_pred_mean, scale=tf.math.sqrt(y_pred_var))
+        # dist = y_pred
         return K.sum(-dist.log_prob(y_obs))
 
     @tf.function
@@ -246,21 +272,30 @@ class BayesianNeuralNetwork:
     def predict_dist(self, X):
         """Get the prediction distribution for a new input X."""
         X = self.normalize(X)
-        return tfp.distributions.Normal(loc=self.model(X), scale=self.sigma_alea)
+        y_pred_mean, y_pred_var = self.model(X)
+        dist = tfp.distributions.Normal(loc=y_pred_mean, scale=tf.math.sqrt(y_pred_var))
+        return dist
+        # return tfp.distributions.Normal(loc=self.model(X), scale=self.sigma_alea)
 
-    def predict(self, X, samples=200):
-        """Get the prediction for a new input X, sampled many times."""
-        y_pred_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
-        y_pred_sig_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
-        for i in range(samples):
-            y_dist = self.predict_dist(X)
-            y_pred_samples[i, ...] = y_dist.mean().numpy()
-            y_pred_sig_samples[i, ...] = y_dist.stddev().numpy()
+    # def predict(self, X, samples=200):
+    #     """Get the prediction for a new input X, sampled many times."""
+    #     y_pred_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
+    #     y_pred_sig_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
+    #     for i in range(samples):
+    #         y_dist = self.predict_dist(X)
+    #         y_pred_samples[i, ...] = y_dist.mean().numpy()
+    #         y_pred_sig_samples[i, ...] = y_dist.stddev().numpy()
 
-        y_pred = y_pred_samples.mean(0)
-        y_pred_var = (y_pred_sig_samples**2 + y_pred_samples ** 2).mean(0) - y_pred ** 2
-        y_pred_sig = np.sqrt(y_pred_var)
-        return y_pred.astype(self.dtype), y_pred_sig.astype(self.dtype)
+    #     y_pred = y_pred_samples.mean(0)
+    #     y_pred_var = (y_pred_sig_samples**2 + y_pred_samples ** 2).mean(0) - y_pred ** 2
+    #     y_pred_sig = np.sqrt(y_pred_var)
+    #     return y_pred.astype(self.dtype), y_pred_sig.astype(self.dtype)
+
+    def predict(self, X):
+        """Get the prediction for a new input X."""
+        X = self.normalize(X)
+        y_pred_mean, y_pred_var = self.model(X)
+        return y_pred_mean.numpy(), y_pred_var.numpy()
 
     def summary(self):
         """Print a summary of the TensorFlow/Keras model."""

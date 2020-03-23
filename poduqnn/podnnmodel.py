@@ -248,7 +248,7 @@ class PodnnModel:
         logger = Logger(epochs, freq, silent=silent)
         def err_fn():
             v_pred, v_pred_sig = self.predict_v(X_v_val)
-            v_dist = self.regnn.predict_dist(X_v_val)
+            # v_dist = self.regnn.predict_dist(X_v_val)
             # v_pred = v_dist.mean().numpy()
             _, sig_out = self.predict_v(X_out)
             return {
