@@ -13,7 +13,7 @@ from poduqnn.custombnn import BayesianNeuralNetwork
 from poduqnn.plotting import figsize
 
 #%% Datagen
-N_star = 100
+N_star = 300
 x_star = np.linspace(-6, 6, N_star).reshape(-1, 1)
 D = 1
 u_star = x_star**3
@@ -35,51 +35,47 @@ layers = [1, 20, 20, D]
 batch_size = N
 num_batches = N / batch_size
 klw = 1.0 / num_batches
-model = BayesianNeuralNetwork(layers, 0.02, klw=klw, soft_0=1., sigma_alea=noise_std,
+model = BayesianNeuralNetwork(layers, 0.05, klw=klw,
+                              pi_1=2., pi_2=0.1,
                               adv_eps=None, norm=NORM_NONE)
-epochs = 5000
+epochs = 7000
 logger = Logger(epochs, frequency=100)
 logger.set_val_err_fn(lambda: {})
 model.fit(x_train, u_train, epochs, logger)
 
 #%% Predictions and plotting
 y_pred_list = []
-
-for i in range(100):
-    y_pred = model.model.predict(x_star)
-    y_pred_list.append(y_pred)
-    
-y_preds = np.concatenate(y_pred_list, axis=1)
-
-u_pred = np.mean(y_preds, axis=1)
-u_pred_sig = np.std(y_preds, axis=1)
+u_pred, u_pred_var = model.predict(x_star, samples=100)
+u_pred_sig = np.sqrt(u_pred_var)
 lower = u_pred - 2 * u_pred_sig
 upper = u_pred + 2 * u_pred_sig
 
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
-plt.fill_between(x_star.ravel(), upper, lower, 
+plt.fill_between(x_star.ravel(), upper.ravel(), lower.ravel(), 
                  facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
-plt.plot(x_star, u_pred, label=r"$\hat{u}_*(x)$")
+plt.plot(x_star, u_pred, "b-", label=r"$\hat{u}_*(x)$")
 plt.scatter(x_train, u_train, c="r", label=r"$u_T(x)$")
 plt.plot(x_star, u_star, "r--", label=r"$u_*(x)$")
 plt.xlabel("$x$")
-plt.show()
+# plt.show()
+savefig(os.path.join("results", ""))
+
 
 #%% Predictions and plotting
-fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
-plt.plot(x_star, u_star, "r--", label=r"$u_*(x)$")
-plt.scatter(x_train, u_train, c="r", label=r"$u_T(x)$")
-for i in range(3):
-    u_dist = model.predict_dist(x_star)
-    u_pred = u_dist.mean().numpy()
-    u_pred_sig = u_dist.stddev().numpy()
-    lower = u_pred - 2 * u_pred_sig
-    upper = u_pred + 2 * u_pred_sig
+# fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
+# plt.plot(x_star, u_star, "r--", label=r"$u_*(x)$")
+# plt.scatter(x_train, u_train, c="r", label=r"$u_T(x)$")
+# for i in range(3):
+#     u_dist = model.predict_dist(x_star)
+#     u_pred = u_dist.mean().numpy()
+#     u_pred_sig = u_dist.stddev().numpy()
+#     lower = u_pred - 2 * u_pred_sig
+#     upper = u_pred + 2 * u_pred_sig
 
-    # plt.fill_between(x_star.ravel(), upper.ravel(), lower.ravel(), 
-                    # facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
-    plt.plot(x_star, upper, "g-", label=r"$\hat{u}_*(x)$")
-    plt.plot(x_star, lower, "g-", label=r"$\hat{u}_*(x)$")
-    plt.plot(x_star, u_pred, "b-", label=r"$\hat{u}_*(x)$")
-    plt.xlabel("$x$")
-plt.show()
+#     # plt.fill_between(x_star.ravel(), upper.ravel(), lower.ravel(), 
+#                     # facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
+#     plt.plot(x_star, upper, "g-", label=r"$\hat{u}_*(x)$")
+#     plt.plot(x_star, lower, "g-", label=r"$\hat{u}_*(x)$")
+#     plt.plot(x_star, u_pred, "b-", label=r"$\hat{u}_*(x)$")
+#     plt.xlabel("$x$")
+# plt.show()
