@@ -26,12 +26,12 @@ HP["x_noise"] = 0.
 # Train/val split
 HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
-HP["h_layers"] = [128, 128, 128]
+HP["h_layers"] = [256, 256, 256]
 # Setting up TF SGD-based optimizer
 HP["n_M"] = 5
 HP["epochs"] = 30000
 HP["lr"] = 0.01
-HP["adv_eps"] = 0.1
+HP["adv_eps"] = 0.001
 HP["lambda"] = 0.0001
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger

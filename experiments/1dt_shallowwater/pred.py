@@ -37,7 +37,7 @@ X_v_tst, U_tst, _, _ = \
 U_pred, U_pred_sig = model.predict(X_v_tst)
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 U_tst = model.restruct(U_tst)[0]
-U_pred = model.restruct(U_pred)[0]
+U_pred = model.restruct(U_pred, n_t=hp["n_t"] - 1)[0]
 
 #%% Samples graph
 # hp["mu_min_out"] = [0.0005]
@@ -85,11 +85,15 @@ for j, time in enumerate(times):
             st = hp["n_t"] * col
             en = hp["n_t"] * (col + 1)
             X_i = X_v_samples[st:en, :]
-            U_pred_i, U_pred_i_sig = model.predict(X_i)
-            U_pred_i = np.reshape(U_pred_i, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
-            U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
-            U_pred_i = U_pred_i[0]
-            U_pred_i_sig = U_pred_i_sig[0]
+            if j > 0:
+                U_pred_i, U_pred_i_sig = model.predict(X_i)
+                U_pred_i = np.reshape(U_pred_i, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
+                U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
+                U_pred_i = U_pred_i[0]
+                U_pred_i_sig = U_pred_i_sig[0]
+            else:
+                U_pred_i = U_samples
+                U_pred_i_sig = np.zeros_like(U_samples)
 
             if row == 0 and j == 0:
                 ax = fig.add_subplot(gs[j, actual_row])
@@ -171,11 +175,15 @@ for j, time in enumerate(times):
             st = hp["n_t"] * col
             en = hp["n_t"] * (col + 1)
             X_i = X_v_samples[st:en, :]
-            U_pred_i, U_pred_i_sig = model.predict(X_i)
-            U_pred_i = np.reshape(U_pred_i, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
-            U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
-            U_pred_i = U_pred_i[1]
-            U_pred_i_sig = U_pred_i_sig[1]
+            if j > 0:
+                U_pred_i, U_pred_i_sig = model.predict(X_i)
+                U_pred_i = np.reshape(U_pred_i, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
+                U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
+                U_pred_i = U_pred_i[1]
+                U_pred_i_sig = U_pred_i_sig[1]
+            else:
+                U_pred_i = U_samples
+                U_pred_i_sig = np.zeros_like(U_samples)
 
             if row == 0 and j == 0:
                 ax = fig.add_subplot(gs[j, actual_row])

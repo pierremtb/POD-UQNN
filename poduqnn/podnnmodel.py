@@ -177,7 +177,6 @@ class PodnnModel:
         # Removing the initial condition from the training set
         if self.n_t > 0:
             idx = np.arange(limit) * self.n_t
-            print(idx)
             X_v_train_0 = X_v_train[idx]
             X_v_train = np.delete(X_v_train, idx, axis=0)
             v_train_0 = v_train[idx]
@@ -198,7 +197,8 @@ class PodnnModel:
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
                          train_val, eps=0., eps_init=None, n_L=0,
-                         t_min=0, t_max=0, u_noise=0., x_noise=0.):
+                         t_min=0, t_max=0, u_noise=0., x_noise=0.,
+                         rm_init=False):
         """Generate a training dataset for benchmark problems."""
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
 
@@ -221,7 +221,7 @@ class PodnnModel:
         mu_lhs = sample_mu(n_s, mu_min, mu_max)
         fake_x = np.zeros_like(mu_lhs)
 
-        _, _, mu_lhs_train, mu_lhs_test = \
+        _, _, mu_lhs_train, mu_lhs_val = \
              split_dataset(fake_x, mu_lhs, test_size=train_val[1])
 
         # Creating the snapshots
@@ -229,8 +229,8 @@ class PodnnModel:
         X_v_train, U_train, U_train_struct, U_no_noise = \
             self.create_snapshots(n_d, n_h, u, mu_lhs_train,
                                   t_min, t_max, u_noise, x_noise)
-        X_v_test, U_test, U_test_struct, _ = \
-            self.create_snapshots(n_d, n_h, u, mu_lhs_test,
+        X_v_val, U_val, U_val_struct, _ = \
+            self.create_snapshots(n_d, n_h, u, mu_lhs_val,
                                   t_min, t_max)
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
@@ -244,15 +244,34 @@ class PodnnModel:
 
         # Projecting
         v_train = (self.V.T.dot(U_train)).T
-        v_test = (self.V.T.dot(U_test)).T
+        v_val = (self.V.T.dot(U_val)).T
 
         # Saving the POD error
         U_train_pod = self.V.dot(v_train.T)
         self.pod_sig = np.stack((U_train, U_train_pod), axis=-1).std(-1).mean(-1)
         print(f"Mean pod sig: {self.pod_sig.mean()}")
 
-        self.save_train_data(X_v_train, v_train, U_train, X_v_test, v_test, U_test)
-        return X_v_train, v_train, U_train, X_v_test, v_test, U_test
+        # Removing the initial condition from the training set
+        if self.n_t > 0 and rm_init:
+            idx = np.arange(mu_lhs_train.shape[0]) * self.n_t
+            X_v_train_0 = X_v_train[idx]
+            X_v_train = np.delete(X_v_train, idx, axis=0)
+            v_train_0 = v_train[idx]
+            v_train = np.delete(v_train, idx, axis=0)
+            U_train_0 = U_train[:, idx]
+            U_train = np.delete(U_train, idx, axis=1)
+
+            idx = np.arange(mu_lhs_val.shape[0]) * self.n_t
+            X_v_val_0 = X_v_val[idx]
+            X_v_val = np.delete(X_v_val, idx, axis=0)
+            v_val_0 = v_val[idx]
+            v_val = np.delete(v_val, idx, axis=0)
+            U_val_0 = U_val[:, idx]
+            U_val = np.delete(U_val, idx, axis=1)
+            self.save_init_data(X_v_train_0, v_train_0, U_train_0, X_v_val_0, v_val_0, U_val_0)
+
+        self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
+        return X_v_train, v_train, U_train, X_v_val, v_val, U_val
 
     def initVNNs(self, n_M, h_layers, lr, lam, adv_eps, norm=NORM_MEANSTD):
         """Create the ensemble of dual-output Neural Networks."""
@@ -325,18 +344,19 @@ class PodnnModel:
 
         return U_pred.astype(self.dtype), U_pred_sig.astype(self.dtype)
 
-    def restruct(self, U, no_s=False):
+    def restruct(self, U, no_s=False, n_t=None):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
         if no_s:
             return U.reshape(self.get_u_tuple())
         if self.has_t:
+            n_t = self.n_t if n_t is None else n_t
             # (n_h, n_st) -> (n_v, n_xyz, n_t, n_s)
-            n_s = int(U.shape[-1] / self.n_t)
-            U_struct = np.zeros((self.n_v, self.n_xyz, self.n_t, n_s))
+            n_s = int(U.shape[-1] / n_t)
+            U_struct = np.zeros((self.n_v, self.n_xyz, n_t, n_s))
             for i in range(n_s):
-                s = self.n_t * i
-                e = self.n_t * (i + 1)
-                U_struct[:, :, :, i] = U[:, s:e].reshape(self.get_u_tuple())
+                s = n_t * i
+                e = n_t * (i + 1)
+                U_struct[:, :, :, i] = U[:, s:e].reshape(self.get_u_tuple(n_t))
             return U_struct
 
         # (n_h, n_s) -> (n_v, n_xyz, n_s)
@@ -365,11 +385,12 @@ class PodnnModel:
             U[:, i] = U_struct[:, :, i].reshape((self.n_h))
         return U
 
-    def get_u_tuple(self):
+    def get_u_tuple(self, n_t=None):
         """Construct solution shape."""
+        n_t = self.n_t if n_t is None else n_t
         tup = (self.n_xyz,)
         if self.has_t:
-            tup += (self.n_t,)
+            tup += (n_t,)
         return (self.n_v,) + tup
 
     def project_to_U(self, v):

@@ -9,12 +9,12 @@ HP["mu_idx"] = [2]
 # Dimension of u(x, t, mu)
 HP["n_v"] = len(HP["mesh_idx"])
 # Time
-HP["n_t"] = 10
+HP["n_t"] = 2
 HP["d_t"] = 3
 HP["t_min"] = 0.
 HP["t_max"] = 9.
 # Snapshots count
-HP["n_s"] = 90
+HP["n_s"] = 3
 HP["n_s_tst"] = 10
 # POD stopping param
 HP["eps"] = 1e-8
