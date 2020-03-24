@@ -17,6 +17,7 @@ from .metrics import re_s
 
 SETUP_DATA_NAME = "setup_data.pkl"
 TRAIN_DATA_NAME = "train_data.pkl"
+INIT_DATA_NAME = "init_data.pkl"
 MODEL_PARAMS_NAME = "model_params.pkl"
 
 
@@ -38,6 +39,7 @@ class PodnnModel:
         self.resdir = resdir
         self.setup_data_path = os.path.join(resdir, SETUP_DATA_NAME)
         self.train_data_path = os.path.join(resdir, TRAIN_DATA_NAME)
+        self.init_data_path = os.path.join(resdir, INIT_DATA_NAME)
         self.model_params_path = os.path.join(resdir, MODEL_PARAMS_NAME)
         self.model_path = []
 
@@ -171,6 +173,25 @@ class PodnnModel:
         v_train_pod = self.project_to_v(U_pod)
         self.pod_sig = np.stack((U_train, U_pod), axis=-1).std(-1).mean(-1)
         print(f"Mean pod sig: {self.pod_sig.mean()}")
+
+        # Removing the initial condition from the training set
+        if self.n_t > 0:
+            idx = np.arange(limit) * self.n_t
+            print(idx)
+            X_v_train_0 = X_v_train[idx]
+            X_v_train = np.delete(X_v_train, idx, axis=0)
+            v_train_0 = v_train[idx]
+            v_train = np.delete(v_train, idx, axis=0)
+            U_train_0 = U_train[:, idx]
+            U_train = np.delete(U_train, idx, axis=1)
+            idx = np.arange(n_s - limit) * self.n_t
+            X_v_val_0 = X_v_val[idx]
+            X_v_val = np.delete(X_v_val, idx, axis=0)
+            v_val_0 = X_v_val[idx]
+            v_val = np.delete(v_val, idx, axis=0)
+            U_val_0 = U_train[:, idx]
+            U_val = np.delete(U_val, idx, axis=1)
+            self.save_init_data(X_v_train_0, v_train_0, U_train_0, X_v_val_0, v_val_0, U_val_0)
 
         self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
         return X_v_train, v_train, X_v_val, v_val, U_val
@@ -377,12 +398,26 @@ class PodnnModel:
         print(f"Mean pod sig: {self.pod_sig.mean()}")
         return data[4:]
 
+    def load_init_data(self):
+        """Load training data, such as datasets."""
+        if not os.path.exists(self.init_data_path):
+            raise FileNotFoundError("Can't find train data.")
+        with open(self.init_data_path, "rb") as f:
+            print("Loading train data")
+            return pickle.load(f)
+
     def save_train_data(self, X_v_train, v_train, U_train, X_v_val, v_val, U_val):
         """Save training data, such as datasets."""
 
         with open(self.train_data_path, "wb") as f:
             pickle.dump((self.n_L, self.n_d, self.V, self.pod_sig,
                          X_v_train, v_train, U_train, X_v_val, v_val, U_val), f)
+
+    def save_init_data(self, X_v_train, v_train, U_train, X_v_val, v_val, U_val):
+        """Save training data, such as datasets."""
+
+        with open(self.init_data_path, "wb") as f:
+            pickle.dump((X_v_train, v_train, U_train, X_v_val, v_val, U_val), f)
 
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""
