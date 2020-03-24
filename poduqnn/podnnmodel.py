@@ -184,7 +184,7 @@ class PodnnModel:
             v_train = np.delete(v_train, idx, axis=0)
             U_train_0 = U_train[:, idx]
             U_train = np.delete(U_train, idx, axis=1)
-            idx = np.arange(n_s - limit) * self.n_t
+            idx = np.arange(n_s - limit - 1) * self.n_t
             X_v_val_0 = X_v_val[idx]
             X_v_val = np.delete(X_v_val, idx, axis=0)
             v_val_0 = X_v_val[idx]

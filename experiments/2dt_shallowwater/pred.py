@@ -65,8 +65,8 @@ for s in [0, 1, 2]:
                                       "eta_pred_up": U_pred_0[0, :, 0, s],
                                       "eta_pred_lo": U_pred_0[0, :, 0, s],
                               })
-    for i in range(hp["n_t"]):
-        meshio.write_points_cells(os.path.join("cache", f"x_u_tst_pred_{s}.{i+1}.vtu"),
+    for i in range(1, hp["n_t"] - 1):
+        meshio.write_points_cells(os.path.join("cache", f"x_u_tst_pred_{s}.{i}.vtu"),
                                 x_mesh,
                                 [("triangle", connectivity)],
                                 point_data={
