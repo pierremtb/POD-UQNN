@@ -27,8 +27,8 @@ class DenseVariational(tfk.layers.Layer):
                  units,
                  kl_weight,
                  activation=None,
-                 prior_sigma_1=1.5,
-                 prior_sigma_2=0.1,
+                 prior_sigma_1=2.5,
+                 prior_sigma_2=0.01,
                  prior_pi=0.5, **kwargs):
         self.units = units
         self.kl_weight = kl_weight
@@ -44,6 +44,7 @@ class DenseVariational(tfk.layers.Layer):
         self.bias_mu = None
         self.kernel_rho = None
         self.bias_rho = None
+        self.prior_mu = None
         super().__init__(**kwargs)
 
     def get_config(self):
@@ -87,6 +88,11 @@ class DenseVariational(tfk.layers.Layer):
                                         initializer=tfk.initializers.Constant(0.),
                                         dtype=self.dtype,
                                         trainable=True)
+        self.prior_mu = self.add_weight(name='prior_mu',
+                                        shape=(self.units,),
+                                        initializer=tfk.initializers.Constant(0.),
+                                        dtype=self.dtype,
+                                        trainable=True)
         super().build(input_shape)
 
     def call(self, inputs, **kwargs):
@@ -97,23 +103,29 @@ class DenseVariational(tfk.layers.Layer):
         bias_sigma = 1e-3 + tf.math.softplus(0.1 * self.bias_rho)
         bias = self.bias_mu + bias_sigma * tf.random.normal(self.bias_mu.shape, dtype=self.dtype)
 
-        self.add_loss(self.kl_loss(kernel, self.kernel_mu, kernel_sigma) +
-                      self.kl_loss(bias, self.bias_mu, bias_sigma))
+        self.add_loss(self.kl_loss(kernel, self.kernel_mu, kernel_sigma, self.prior_mu) +
+                      self.kl_loss(bias, self.bias_mu, bias_sigma, self.prior_mu))
 
         return self.activation(K.dot(inputs, kernel) + bias)
 
-    def kl_loss(self, w, mu, sigma):
+    def kl_loss(self, w, mu, sigma, prior_mu):
         """Kullback-Leibler loss to minimize."""
         variational_dist = tfp.distributions.Normal(mu, sigma)
-        return self.kl_weight * K.sum(variational_dist.log_prob(w) - self.log_prior_prob(w))
+        return self.kl_weight * K.sum(variational_dist.log_prob(w) - self.log_prior_prob(w, prior_mu))
 
-    def log_prior_prob(self, w):
+    # def log_prior_prob(self, w):
+    #     """Prior on the weights, as a log."""
+    #     comp_1_dist = tfp.distributions.Normal(0.0, self.tensor(self.prior_sigma_1))
+    #     comp_2_dist = tfp.distributions.Normal(0.0, self.tensor(self.prior_sigma_2))
+    #     c = np.log(np.expm1(1.))
+    #     return K.log(c + self.prior_pi_1 * comp_1_dist.prob(w)
+    #                  + self.prior_pi_2 * comp_2_dist.prob(w))
+
+    def log_prior_prob(self, w, prior_mu):
         """Prior on the weights, as a log."""
-        comp_1_dist = tfp.distributions.Normal(0.0, self.tensor(self.prior_sigma_1))
-        comp_2_dist = tfp.distributions.Normal(0.0, self.tensor(self.prior_sigma_2))
+        train_dist = tfp.distributions.Normal(loc=prior_mu, scale=1.)
         c = np.log(np.expm1(1.))
-        return K.log(c + self.prior_pi_1 * comp_1_dist.prob(w)
-                     + self.prior_pi_2 * comp_2_dist.prob(w))
+        return K.log(c + train_dist.prob(w))
 
     def tensor(self, x):
         """Helper to make sure quantities are tensor of dtype."""
