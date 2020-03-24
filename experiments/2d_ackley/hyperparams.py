@@ -21,17 +21,17 @@ HP["n_t"] = 0
 HP["n_s"] = 500
 HP["n_s_tst"] = 300
 # POD stopping param
-HP["eps"] = 1e-4
+HP["eps"] = 1e-10
 HP["n_L"] = 0
 HP["x_noise"] = 0.
 HP["u_noise"] = 0.
 # Train/val split
 HP["train_val"] = (.8, .2)
 # DeepNN Topology
-HP["h_layers"] = [140, 140, 140]
+HP["h_layers"] = [40, 40]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 100000
-HP["lr"] = 0.003
+HP["epochs"] = 30000
+HP["lr"] = 0.01
 HP["soft_0"] = 0.01
 HP["sigma_alea"] = 0.1
 HP["norm"] = NORM_MEANSTD
