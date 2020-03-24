@@ -293,7 +293,7 @@ noise_std = 9
 y = y + noise_std*np.random.randn(y.shape[0], y.shape[1])
 
 #%%
-from poduqnn.custombnn import BayesianNeuralNetwork
+from poduqnn.custombnn import BayesianNeuralNetwork, NORM_NONE
 layers = [1, 20, 20, 1]
 batch_size = N
 num_batches = N / batch_size
@@ -304,7 +304,8 @@ model = BayesianNeuralNetwork(layers, 0.05, klw=klw,
 model.fit(x, y, epochs=7000)
 
 #%% Predictions and plotting
-u_pred, u_pred_sig = model.predict(x_tst, samples=100)
+u_pred, u_pred_var = model.predict(x_tst, samples=100)
+u_pred_sig = np.sqrt(u_pred_var)
 lower = u_pred - 2 * u_pred_sig
 upper = u_pred + 2 * u_pred_sig
 
