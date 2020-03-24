@@ -27,7 +27,7 @@ class DenseVariational(tfk.layers.Layer):
                  units,
                  kl_weight,
                  activation=None,
-                 prior_sigma_1=5.,
+                 prior_sigma_1=1.0,
                  prior_sigma_2=0.1,
                  prior_pi=0.5, **kwargs):
         self.units = units
@@ -88,11 +88,6 @@ class DenseVariational(tfk.layers.Layer):
                                         initializer=tfk.initializers.Constant(0.),
                                         dtype=self.dtype,
                                         trainable=True)
-        # self.prior_mu = self.add_weight(name='prior_mu',
-        #                                 shape=(self.units,),
-        #                                 initializer=tfk.initializers.Constant(0.),
-        #                                 dtype=self.dtype,
-        #                                 trainable=True)
         super().build(input_shape)
 
     def call(self, inputs, **kwargs):
@@ -104,22 +99,13 @@ class DenseVariational(tfk.layers.Layer):
         bias = self.bias_mu + bias_sigma \
                  * tf.random.normal(self.bias_mu.shape, dtype=self.dtype)
 
-        # prior_mu = self.prior_mu + 1.0 \
-        #          * tf.random.normal(self.prior_mu.shape, dtype=self.dtype)
-    
-        # self.add_loss(self.kl_loss(kernel, self.kernel_mu, kernel_sigma, prior_mu) +
-                    #   self.kl_loss(bias, self.bias_mu, bias_sigma, prior_mu))
         self.add_loss(self.kl_loss(kernel, self.kernel_mu, kernel_sigma) +
                       self.kl_loss(bias, self.bias_mu, bias_sigma))
-
         return self.activation(K.dot(inputs, kernel) + bias)
 
     def kl_loss(self, w, mu, sigma):
         """Kullback-Leibler loss to minimize."""
         variational_dist = tfp.distributions.Normal(mu, sigma)
-        # train_dist = tfp.distributions.Normal(prior_mu, 1.)
-
-        # return self.kl_weight * K.sum(variational_dist.log_prob(w) - train_dist.log_prob(w))
         return self.kl_weight * K.sum(variational_dist.log_prob(w) - self.log_prior_prob(w))
 
     def log_prior_prob(self, w):
@@ -130,12 +116,6 @@ class DenseVariational(tfk.layers.Layer):
         return K.log(c + self.prior_pi_1 * comp_1_dist.prob(w)
                      + self.prior_pi_2 * comp_2_dist.prob(w))
 
-    # def log_prior_prob(self, w, prior_mu):
-    #     """Prior on the weights, as a log."""
-    #     train_dist = tfp.distributions.Normal(loc=prior_mu, scale=1.)
-    #     c = np.log(np.expm1(1.))
-    #     return K.log(c + train_dist.prob(w))
-
     def tensor(self, x):
         """Helper to make sure quantities are tensor of dtype."""
         return tf.convert_to_tensor(x, dtype=self.dtype)
@@ -144,7 +124,8 @@ class DenseVariational(tfk.layers.Layer):
 class BayesianNeuralNetwork:
     """Custom class defining a Bayesian Neural Network model."""
     def __init__(self, layers, lr, klw,
-                 soft_0=0.01, sigma_alea=0.01, adv_eps=None,
+                 soft_0=0.01, adv_eps=None,
+                 pi_1=1.0, pi_2=0.1,
                  norm=NORM_NONE, model=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float64"
@@ -161,8 +142,8 @@ class BayesianNeuralNetwork:
         self.norm = norm
         self.adv_eps = adv_eps
 
-        self.soft_0 = soft_0
-        self.sigma_alea = sigma_alea
+        self.pi_1 = pi_1
+        self.pi_2 = pi_2
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
@@ -178,6 +159,7 @@ class BayesianNeuralNetwork:
         for width in self.layers[1:-1]:
             x = DenseVariational(
                     width, activation=tf.nn.relu, dtype=self.dtype,
+                    prior_sigma_1=self.pi_1, prior_sigma_2=self.pi_2,
                     kl_weight=self.klw)(x)
         x = DenseVariational(
                 2 * self.layers[-1], activation=None, dtype=self.dtype,
@@ -194,42 +176,11 @@ class BayesianNeuralNetwork:
         model = tf.keras.Model(inputs=inputs, outputs=outputs, name="bnn")
         return model
 
-    # def build_model(self):
-    #     """Descriptive Keras model."""
-    #     n_L = self.layers[-1]
-    #     model = tfk.models.Sequential([
-    #         tfk.layers.InputLayer(self.layers[0]),
-    #         *[
-    #             DenseVariational(
-    #                 units=width,
-    #                 activation="relu",
-    #                 kl_weight=self.klw,
-    #                 dtype=self.dtype,
-    #             ) for width in self.layers[1:-1]
-    #         ],
-    #         DenseVariational(
-    #             units=2*n_L,
-    #             activation="linear",
-    #             dtype=self.dtype,
-    #             kl_weight=self.klw,
-    #         ),
-    #         # The dual output mean-variance one could use
-    #         tfp.layers.DistributionLambda(lambda t:
-    #             tfd.MultivariateNormalDiag(
-    #                 loc=t[..., :n_L],
-    #                 scale_diag=1e-5 + tf.math.softplus(self.soft_0 * t[..., n_L:]),
-    #             ),
-    #         ),
-    #     ])
-    #     return model
-
     @tf.function
     def loss(self, y_obs, y_pred):
         """Negative Log-Likelihood loss function."""
         y_pred_mean, y_pred_var = y_pred
-        # dist = tfp.distributions.Normal(loc=y_pred, scale=self.sigma_alea)
         dist = tfp.distributions.Normal(loc=y_pred_mean, scale=tf.math.sqrt(y_pred_var))
-        # dist = y_pred
         return K.sum(-dist.log_prob(y_obs))
 
     @tf.function
@@ -296,21 +247,6 @@ class BayesianNeuralNetwork:
         y_pred_mean, y_pred_var = self.model(X)
         dist = tfp.distributions.Normal(loc=y_pred_mean, scale=tf.math.sqrt(y_pred_var))
         return dist
-        # return tfp.distributions.Normal(loc=self.model(X), scale=self.sigma_alea)
-
-    # def predict(self, X, samples=200):
-    #     """Get the prediction for a new input X, sampled many times."""
-    #     y_pred_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
-    #     y_pred_sig_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
-    #     for i in range(samples):
-    #         y_dist = self.predict_dist(X)
-    #         y_pred_samples[i, ...] = y_dist.mean().numpy()
-    #         y_pred_sig_samples[i, ...] = y_dist.stddev().numpy()
-
-    #     y_pred = y_pred_samples.mean(0)
-    #     y_pred_var = (y_pred_sig_samples**2 + y_pred_samples ** 2).mean(0) - y_pred ** 2
-    #     y_pred_sig = np.sqrt(y_pred_var)
-    #     return y_pred.astype(self.dtype), y_pred_sig.astype(self.dtype)
 
     def predict(self, X):
         """Get the prediction for a new input X."""
