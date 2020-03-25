@@ -22,7 +22,7 @@ from poduqnn.metrics import re_mean_std, re_max
 from poduqnn.mesh import create_linear_mesh
 from poduqnn.logger import Logger
 from poduqnn.varneuralnetwork import NORM_MEANSTD, NORM_NONE
-from poduqnn.plotting import figsize
+from poduqnn.plotting import figsize, savefig
 
 # Loading data
 with open(os.path.join("cache", "xu_star.pkl"), "rb") as f:
@@ -55,19 +55,19 @@ for model_path in models_paths:
 # Plotting
 u_pred = np.array(u_pred_samples).mean(0)
 u_pred_var = (np.array(u_pred_var_samples) + np.array(u_pred_samples) ** 2).mean(0) - u_pred ** 2
-lower = u_pred - 3 * np.sqrt(u_pred_var)
-upper = u_pred + 3 * np.sqrt(u_pred_var)
+lower = u_pred - 2 * np.sqrt(u_pred_var)
+upper = u_pred + 2 * np.sqrt(u_pred_var)
 
 print(u_pred.shape, u_pred_var.shape)
 print(u_star.shape)
 
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
 plt.fill_between(x_star[:, 0], lower[:, 0], upper[:, 0], 
-                    facecolor='C0', alpha=0.3, label=r"$3\sigma_{T}(x)$")
+                    facecolor='C0', alpha=0.3, label=r"$2\sigma_{T}(x)$")
 # plt.plot(x_star, u_pred_samples[:, :, 0].numpy().T, 'C0', linewidth=.5)
 plt.scatter(x_train, u_train[:, 0], c="r", label=r"$u_T(x)$")
 plt.plot(x_star, u_star[:, 0], "r--", label=r"$u_*(x)$")
-plt.plot(x_star, u_pred[:, 0], label=r"$\hat{u}_*(x)$")
+plt.plot(x_star, u_pred[:, 0], "b-", label=r"$\hat{u}_*(x)$")
 plt.legend()
 plt.xlabel("$x$")
-plt.savefig("results/ens.pdf")
+savefig(os.path.join("results", "uq-toy-ensnn"))

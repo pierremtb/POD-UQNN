@@ -35,7 +35,7 @@ with open(os.path.join("cache", "xu_train.pkl"), "rb") as f:
     x_train, u_train = pickle.load(f)
 
 #%% Prep GPUs
-tf.config.set_soft_device_placement(True)
+# tf.config.set_soft_device_placement(True)
 if distributed:
     import horovod.tensorflow as hvd
     hvd.init()
@@ -53,14 +53,14 @@ tf.keras.backend.set_floatx(dtype)
 
 #%% Training
 for i in range(local_num):
-    with tf.device("/GPU:0"):
-        X = tf.convert_to_tensor(x_train, dtype="float64")
-        y = tf.convert_to_tensor(u_train, dtype="float64")
+    # with tf.device("/GPU:0"):
+    X = tf.convert_to_tensor(x_train, dtype="float64")
+    y = tf.convert_to_tensor(u_train, dtype="float64")
 
-        model = VarNeuralNetwork(layers, lr, 1e-10)
-        logger = Logger(epochs, 5000)
-        logger.set_val_err_fn(lambda: {})
-        model.fit(X, y, epochs, logger)
+    model = VarNeuralNetwork(layers, lr, 1e-10, adv_eps=0.001)
+    logger = Logger(epochs, 5000)
+    logger.set_val_err_fn(lambda: {})
+    model.fit(X, y, epochs, logger)
 
     # Saving
     gpu_id = time.time()

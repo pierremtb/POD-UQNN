@@ -4,6 +4,7 @@
 import os
 import pickle
 import tensorflow as tf
+import tensorflow_probability as tfp
 import numpy as np
 
 NORM_NONE = "none"
@@ -159,6 +160,12 @@ class VarNeuralNetwork:
         X = self.normalize(X)
         y_pred_mean, y_pred_var = self.model(X)
         return y_pred_mean.numpy(), y_pred_var.numpy()
+
+    def predict_dist(self, X):
+        """Get the prediction for a new input X."""
+        X = self.normalize(X)
+        y_pred, y_pred_var = self.model(X)
+        return tfp.distributions.Normal(y_pred, np.sqrt(y_pred_var))
 
     def summary(self):
         """Print a summary of the TensorFlow/Keras model."""
