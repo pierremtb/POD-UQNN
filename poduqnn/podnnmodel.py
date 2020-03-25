@@ -345,7 +345,7 @@ class PodnnModel:
         U_pred_sig_samples = np.zeros((self.n_h, X_v.shape[0], n_M))
 
         print(f"Ensembling {n_M} predictions...")
-        for i in tqdm(range(len(self.regnn)))):
+        for i in tqdm(range(len(self.regnn))):
             U_pred, U_pred_sig = self.predict_dist(X_v, i)
             U_pred_samples[:, :, i] = U_pred
             U_pred_sig_samples[:, :, i] = U_pred_sig
