@@ -267,12 +267,27 @@ class PodnnModel:
         self.save_model()
         return logger.get_logs()
 
-    def predict_v(self, X, samples=20):
+    def predict_dist(self, X, samples=100):
+        """Approximate the distribution on U from the one on v."""
+        v_dist = self.regnn.predict_dist(X)
+        U_sum = np.zeros((self.n_h, X.shape[0]))
+        U_sum_sq = np.zeros_like(U_sum)
+        for i in range(samples):
+            U_i = self.project_to_U(v_dist.sample().numpy())
+            U_sum += U_i
+            U_sum_sq += U_i**2
+        U_pred = U_sum / samples
+        U_pred_sig = np.sqrt((samples * U_sum_sq - U_sum**2) \
+                     / (samples * (samples - 1)))
+        return U_pred, U_pred_sig
+
+    def predict_v(self, X, samples=5):
         """Predict the projection coefficients (regression outputs)."""
         v_pred_samples = np.zeros((samples, X.shape[0], self.n_L))
         v_pred_sig_samples = np.zeros((samples, X.shape[0], self.n_L))
 
         for i in range(samples):
+            # v_pred_samples[i], v_pred_sig_samples[i] = self.predict_dist(X)
             v_dist = self.regnn.predict_dist(X)
             v_pred_samples[i] = v_dist.mean().numpy()
             v_pred_sig_samples[i] = v_dist.variance().numpy()
@@ -283,16 +298,18 @@ class PodnnModel:
         v_pred_sig = np.sqrt(v_pred_var)
         return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
-    def predict(self, X, samples=20):
+    def predict(self, X, samples=5):
         """Predict the expanded solution."""
         U_pred_samples = np.zeros((samples, self.n_h, X.shape[0]))
         U_pred_sig_samples = np.zeros((samples, self.n_h, X.shape[0]))
 
-        for i in range(samples):
-            v_dist = self.regnn.predict_dist(X)
-            v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
-            U_pred_samples[i] = self.project_to_U(v_pred)
-            U_pred_sig_samples[i] = self.project_to_U(np.sqrt(v_pred_var))
+        print(f"Averaging {samples} model configurations...")
+        for i in tqdm(range(samples)):
+            # v_dist = self.regnn.predict_dist(X)
+            # v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
+            U_pred_samples[i], U_pred_sig_samples[i] = self.predict_dist(X)
+            # U_pred_samples[i] = self.project_to_U(v_pred)
+            # U_pred_sig_samples[i] = self.project_to_U(np.sqrt(v_pred_var))
 
         # Approximate the mixture in a single Gaussian distribution
         U_pred = U_pred_samples.mean(0)
