@@ -4,6 +4,7 @@ import os
 import time
 import pickle
 import tensorflow as tf
+import tensorflow_probability as tfp
 import numpy as np
 from tqdm import tqdm
 import numba as nb
@@ -323,6 +324,17 @@ class PodnnModel:
 
         return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
+    def predict_dist(self, X_v, model_i, samples=100):
+        v_pred, v_pred_var = self.regnn[model_i].predict(X_v)
+        v_dist = tfp.distributions.Normal(v_pred, np.sqrt(v_pred_var))
+        # v_dist = .predict_dist(X_v)
+        U = np.zeros((samples, self.n_h, X_v.shape[0]))
+        for i in range(samples):
+            U[i] = self.project_to_U(v_dist.sample().numpy())
+            print(i)
+        return U.mean(0), U.std(0)
+
+
     def predict(self, X_v):
         """Predict the expanded solution."""
         n_M = len(self.regnn)
@@ -330,9 +342,17 @@ class PodnnModel:
         U_pred_sig_samples = np.zeros((self.n_h, X_v.shape[0], n_M))
 
         for i, model in enumerate(self.regnn):
-            v_pred, v_pred_var = model.predict(X_v)
-            U_pred_samples[:, :, i] = self.project_to_U(v_pred)
-            U_pred_sig_samples[:, :, i] = self.project_to_U(np.sqrt(v_pred_var))
+            # v_pred, v_pred_var = model.predict(X_v)
+            # U_pred_samples[:, :, i] = self.project_to_U(v_pred)
+            # U_pred_top = self.project_to_U(v_pred + np.sqrt(v_pred_var))
+            # U_pred_sig = np.abs(U_pred_top - U_pred_samples[:, :, i])
+            # U_pred_sig_alt = self.project_to_U(np.sqrt(v_pred_var))
+            # print(np.abs(U_pred_sig - U_pred_sig_alt).mean())
+            
+            U_pred, U_pred_sig = self.predict_dist(X_v, i)
+            U_pred_samples[:, :, i] = U_pred
+            U_pred_sig_samples[:, :, i] = U_pred_sig
+            # U_pred_sig_samples[:, :, i] = self.project_to_U(np.sqrt(v_pred_var))
 
         # Approximate the mixture in a single Gaussian distribution
         U_pred = U_pred_samples.mean(-1)

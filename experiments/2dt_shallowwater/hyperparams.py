@@ -14,8 +14,8 @@ HP["d_t"] = 0.1
 HP["t_min"] = 0.
 HP["t_max"] = 99.
 # Snapshots count
-HP["n_s"] = 90
-HP["n_s_tst"] = 10
+HP["n_s"] = 20
+HP["n_s_tst"] = 1
 # POD stopping param
 HP["eps"] = 1e-8
 HP["n_L"] = 0
@@ -26,9 +26,9 @@ HP["h_layers"] = [128, 128, 128]
 # Setting up TF SGD-based optimizer
 HP["n_M"] = 1
 HP["epochs"] = 50000
-HP["lr"] = 0.005
-HP["lambda"] = 0.01
-HP["adv_eps"] = 0.01
+HP["lr"] = 0.001
+HP["lambda"] = 0.0001
+HP["adv_eps"] = 0.
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000

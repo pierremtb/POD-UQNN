@@ -54,7 +54,8 @@ U_pred_0 = model.restruct(U_pred_0)
 
 # %% VTU export
 print("Saving to .vtu")
-for s in [0, 1, 2]:
+for s in [0]:
+# for s in [0, 1, 2]:
     print(f"Sample is {30.0 - X_v_tst[s*hp['n_t']][1]}")
     meshio.write_points_cells(os.path.join("cache", f"x_u_tst_pred_{s}.{0}.vtu"),
                               x_mesh,
