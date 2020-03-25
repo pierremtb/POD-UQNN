@@ -159,7 +159,7 @@ n_plot_x = 2
 n_plot_y = 3
 fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
 gs = fig.add_gridspec(n_plot_x, n_plot_y)
-times = [15, 40]
+times = [0, 25]
 for j, time in enumerate(times):
     actual_row = 0
     for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
@@ -239,7 +239,7 @@ for j, time in enumerate(times):
                 ax.set_title(r"$\Delta\eta=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega{\footnotesize\textrm{out}}"
                              + f",\ t={X_i[time, 0]:.2f}" + r"\ \textrm{s}$")
             actual_row += 1
-            if j == 1:
+            if j == 0:
                 ax.legend()
 plt.tight_layout()
 savefig("results/podensnn-1dswt-graph-meansamples-u")
