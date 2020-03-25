@@ -248,11 +248,21 @@ class BayesianNeuralNetwork:
         dist = tfp.distributions.Normal(loc=y_pred_mean, scale=tf.math.sqrt(y_pred_var))
         return dist
 
-    def predict(self, X):
+    def predict(self, X, samples=100):
         """Get the prediction for a new input X."""
         X = self.normalize(X)
-        y_pred_mean, y_pred_var = self.model(X)
-        return y_pred_mean.numpy(), y_pred_var.numpy()
+        v_pred_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
+        v_pred_var_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
+
+        for i in range(samples):
+            v_pred, v_pred_var = self.model(X)
+            v_pred_samples[i] = v_pred.numpy()
+            v_pred_var_samples[i] = v_pred_var.numpy()
+
+        # Approximate the mixture in a single Gaussian distribution
+        v_pred = v_pred_samples.mean(0)
+        v_pred_var = (v_pred_var_samples + v_pred_samples ** 2).mean(0) - v_pred ** 2
+        return v_pred, v_pred_var
 
     def summary(self):
         """Print a summary of the TensorFlow/Keras model."""
