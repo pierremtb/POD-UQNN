@@ -4,6 +4,7 @@ import pickle
 import yaml
 import numpy as np
 import tensorflow as tf
+from tqdm import tqdm
 
 tf.get_logger().setLevel('WARNING')
 tf.autograph.set_verbosity(1)

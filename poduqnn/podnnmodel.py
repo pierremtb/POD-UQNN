@@ -325,15 +325,18 @@ class PodnnModel:
         return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
     def predict_dist(self, X_v, model_i, samples=100):
-        v_pred, v_pred_var = self.regnn[model_i].predict(X_v)
-        v_dist = tfp.distributions.Normal(v_pred, np.sqrt(v_pred_var))
-        # v_dist = .predict_dist(X_v)
-        U = np.zeros((samples, self.n_h, X_v.shape[0]))
+        """Approximate the distribution on U from the one on v."""
+        v_dist = self.regnn[model_i].predict_dist(X_v)
+        U_sum = np.zeros((self.n_h, X_v.shape[0]))
+        U_sum_sq = np.zeros((self.n_h, X_v.shape[0]))
         for i in range(samples):
-            U[i] = self.project_to_U(v_dist.sample().numpy())
-            print(i)
-        return U.mean(0), U.std(0)
-
+            U_i = self.project_to_U(v_dist.sample().numpy())
+            U_sum += U_i
+            U_sum_sq += U_i**2
+        U_pred = U_sum / samples
+        U_pred_sig = np.sqrt((samples * U_sum_sq - U_sum**2) \
+                     / (samples * (samples - 1)))
+        return U_pred, U_pred_sig
 
     def predict(self, X_v):
         """Predict the expanded solution."""
@@ -341,18 +344,11 @@ class PodnnModel:
         U_pred_samples = np.zeros((self.n_h, X_v.shape[0], n_M))
         U_pred_sig_samples = np.zeros((self.n_h, X_v.shape[0], n_M))
 
-        for i, model in enumerate(self.regnn):
-            # v_pred, v_pred_var = model.predict(X_v)
-            # U_pred_samples[:, :, i] = self.project_to_U(v_pred)
-            # U_pred_top = self.project_to_U(v_pred + np.sqrt(v_pred_var))
-            # U_pred_sig = np.abs(U_pred_top - U_pred_samples[:, :, i])
-            # U_pred_sig_alt = self.project_to_U(np.sqrt(v_pred_var))
-            # print(np.abs(U_pred_sig - U_pred_sig_alt).mean())
-            
+        print(f"Ensembling {n_M} predictions...")
+        for i in tqdm(range(len(self.regnn)))):
             U_pred, U_pred_sig = self.predict_dist(X_v, i)
             U_pred_samples[:, :, i] = U_pred
             U_pred_sig_samples[:, :, i] = U_pred_sig
-            # U_pred_sig_samples[:, :, i] = self.project_to_U(np.sqrt(v_pred_var))
 
         # Approximate the mixture in a single Gaussian distribution
         U_pred = U_pred_samples.mean(-1)
