@@ -14,22 +14,22 @@ from hyperparams import HP as hp
 
 #%% Load models
 model = PodnnModel.load("cache")
-X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
+#X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
-v_pred_mean, sig_alea = model.predict_v(X_v_train)
-_, sig_alea_val = model.predict_v(X_v_val)
-print(sig_alea.mean(), sig_alea.min(), sig_alea.max())
-print(sig_alea_val.mean(), sig_alea_val.min(), sig_alea_val.max())
-pod_sig_v = np.stack((v_train, v_pred_mean), axis=-1).std(-1).mean(0)
-print(pod_sig_v.mean(), pod_sig_v.min(), pod_sig_v.max())
+#v_pred_mean, sig_alea = model.predict_v(X_v_train)
+#_, sig_alea_val = model.predict_v(X_v_val)
+#print(sig_alea.mean(), sig_alea.min(), sig_alea.max())
+#print(sig_alea_val.mean(), sig_alea_val.min(), sig_alea_val.max())
+#pod_sig_v = np.stack((v_train, v_pred_mean), axis=-1).std(-1).mean(0)
+#print(pod_sig_v.mean(), pod_sig_v.min(), pod_sig_v.max())
 
-#%% Predict and restruct
-U_pred, U_pred_sig = model.predict(X_v_val)
+##%% Predict and restruct
+#U_pred, U_pred_sig = model.predict(X_v_val)
 
-#%% Validation metrics
-U_pred, _ = model.predict(X_v_val)
-err_val = re_s(U_val, U_pred)
-print(f"RE_v: {err_val:4f}")
+##%% Validation metrics
+#U_pred, _ = model.predict(X_v_val)
+#err_val = re_s(U_val, U_pred)
+#print(f"RE_v: {err_val:4f}")
 
 #%% Sample the new model to generate a test prediction
 with open(os.path.join("cache", "train_tst_idx.pkl"), "rb") as f:
@@ -56,7 +56,7 @@ print("Saving to .vtu")
 idx = range(hp["n_s_tst"])
 print("Samples are " + ", ".join([f"{X_v_tst[idx[i]].item()}" for i in idx]))
 for i, idx_i in enumerate(idx):
-    meshio.write_points_cells(os.path.join("cache", f"x_u_tst_pred_{i}.vtu"),
+    meshio.write_points_cells(os.path.join("cache", f"x_u_tst_pred_bnn_{i}.vtu"),
                               x_mesh,
                               [("triangle", connectivity)],
                               point_data={

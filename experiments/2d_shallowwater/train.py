@@ -54,40 +54,40 @@ model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
             freq=hp["log_frequency"], X_out=X_out)
 
 #%%
-v_pred, v_pred_sig = model.predict_v(X_v_val)
-# err_val = re_s(v_val.T, v_pred.T)
-# print(f"RE_v: {err_val:4f}")
+#v_pred, v_pred_sig = model.predict_v(X_v_val)
+## err_val = re_s(v_val.T, v_pred.T)
+## print(f"RE_v: {err_val:4f}")
 
-#%% Sample the new model to generate a test prediction
-with open(os.path.join("cache", "train_tst_idx.pkl"), "rb") as f:
-        train_tst_idx = pickle.load(f)
-# datadir = os.path.join("..", "..", "..", "scratch", "multi2swt") 
-datadir = "data"
-mu_path = os.path.join(datadir, "INPUT_MONTE_CARLO.dat")
-x_u_mesh_path = datadir
-x_mesh, connectivity, X_v_tst, U_tst = \
-        read_multi_space_sol_input_mesh(hp["n_s_tst"], 1, 1, train_tst_idx[1],
-                                        hp["mesh_idx"],
-                                        x_u_mesh_path, mu_path,
-                                        hp["mu_idx"])
+##%% Sample the new model to generate a test prediction
+#with open(os.path.join("cache", "train_tst_idx.pkl"), "rb") as f:
+#        train_tst_idx = pickle.load(f)
+## datadir = os.path.join("..", "..", "..", "scratch", "multi2swt") 
+#datadir = "data"
+#mu_path = os.path.join(datadir, "INPUT_MONTE_CARLO.dat")
+#x_u_mesh_path = datadir
+#x_mesh, connectivity, X_v_tst, U_tst = \
+#        read_multi_space_sol_input_mesh(hp["n_s_tst"], 1, 1, train_tst_idx[1],
+#                                        hp["mesh_idx"],
+#                                        x_u_mesh_path, mu_path,
+#                                        hp["mu_idx"])
 
-U_pred, U_pred_sig = model.predict(X_v_tst)
-print(f"RE_tst: {re_s(model.destruct(U_tst), U_pred):4f}")
+#U_pred, U_pred_sig = model.predict(X_v_tst)
+#print(f"RE_tst: {re_s(model.destruct(U_tst), U_pred):4f}")
 
-U_pred = model.restruct(U_pred)
-U_pred_sig = model.restruct(U_pred_sig)
+#U_pred = model.restruct(U_pred)
+#U_pred_sig = model.restruct(U_pred_sig)
 
-#%% VTU export
-print("Saving to .vtu")
-idx = range(hp["n_s_tst"])
-print("Samples are " + ", ".join([f"{X_v_tst[idx[i]].item()}" for i in idx]))
-for i, idx_i in enumerate(idx):
-    meshio.write_points_cells(os.path.join("cache", f"x_u_tst_pred_bnn_{i}.vtu"),
-                              x_mesh,
-                              [("triangle", connectivity)],
-                            point_data={
-                                "h": U_tst[0, :, idx_i],
-                                "h_pred": U_pred[0, :, idx_i],
-                                "h_pred_up": U_pred[0, :, idx_i] + 2*U_pred_sig[0, :, idx_i],
-                                "h_pred_lo": U_pred[0, :, idx_i] - 2*U_pred_sig[0, :, idx_i],
-                                })
+##%% VTU export
+#print("Saving to .vtu")
+#idx = range(hp["n_s_tst"])
+#print("Samples are " + ", ".join([f"{X_v_tst[idx[i]].item()}" for i in idx]))
+#for i, idx_i in enumerate(idx):
+#    meshio.write_points_cells(os.path.join("cache", f"x_u_tst_pred_bnn_{i}.vtu"),
+#                              x_mesh,
+#                              [("triangle", connectivity)],
+#                            point_data={
+#                                "h": U_tst[0, :, idx_i],
+#                                "h_pred": U_pred[0, :, idx_i],
+#                                "h_pred_up": U_pred[0, :, idx_i] + 2*U_pred_sig[0, :, idx_i],
+#                                "h_pred_lo": U_pred[0, :, idx_i] - 2*U_pred_sig[0, :, idx_i],
+#                                })
