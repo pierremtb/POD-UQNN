@@ -75,4 +75,4 @@ year = {2019}
 ## License
 MIT License
 
-Copyright (c) 2019 Pierre Jacquier
+Copyright (c) 2020 Pierre Jacquier
