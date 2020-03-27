@@ -18,7 +18,7 @@ U_pred = None
 U_pred_up = None
 U_pred_lo = None
 x_prime = None
-idx = [0, 2, 6]
+idx = [0, 20, 70]
 for i, t_i in enumerate(idx):
     csv_file = os.path.join("cache", f"x_u_tst_pred.{t_i}.csv")
     results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
@@ -55,7 +55,7 @@ for i, t_i in enumerate(idx):
     ax.set_xlabel(f"$x'$")
     ax.set_ylabel("$\eta$")
     ax.set_ylim((U_pred_lo[:, i].min() - 1., U_pred_up[:, i].max() + 1.))
-    ax.set_title(f"$s=1.20\ m$, $t={t_i * hp['d_t']}\ s$")
+    ax.set_title(f"$s=0.42\ m$, $t={t_i * hp['d_t']}\ s$")
     if i == 0:
         ax.legend()
 plt.tight_layout()
