@@ -54,24 +54,6 @@ Available experiments in `experiments`:
 For each branch, we provide `experiments/runner.sh` to run all simulations. It is meant to be used on Compute Canada clusters, such as Beluga, located at ÉTS.
 A Python 3.6+ environment at `~/env` needs to contain the packages required in `requirements.txt`, plus `horovod`.
 
-## Citation
-This work is building on techniques from _Wang et al._
-```
-@article{Wang2019,
-author = {Wang, Qian and Hesthaven, Jan S. and Ray, Deep},
-doi = {10.1016/J.JCP.2019.01.031},
-issn = {0021-9991},
-journal = {Journal of Computational Physics},
-month = {may},
-pages = {289--307},
-publisher = {Academic Press},
-title = {{Non-intrusive reduced order modeling of unsteady flows using artificial neural networks with application to a combustion problem}},
-url = {https://www.sciencedirect.com/science/article/pii/S0021999119300828},
-volume = {384},
-year = {2019}
-}
-```
-
 ## License
 MIT License
 
