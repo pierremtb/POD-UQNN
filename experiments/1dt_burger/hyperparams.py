@@ -11,26 +11,26 @@ HP["n_x"] = 256
 HP["x_min"] = 0.
 HP["x_max"] = 1.5
 # Time
-HP["n_t"] = 10
+HP["n_t"] = 100
 HP["t_min"] = 1.
 HP["t_max"] = 5.
 # Snapshots count
-HP["n_s"] = 100
-HP["n_s_tst"] = 100
+HP["n_s"] = 50
+HP["n_s_tst"] = 1000
 # POD stopping param
-HP["eps"] = 0
+HP["eps"] = 1e-10
 HP["eps_init"] = None
-HP["n_L"] = 20
+HP["n_L"] = 0
 HP["x_noise"] = 0.
 # Train/val split
 HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
-HP["h_layers"] = [40, 40]
+HP["h_layers"] = [140, 140]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 30000
+HP["epochs"] = 130000
 HP["lr"] = 0.001
-HP["soft_0"] = 0.01
-HP["sigma_alea"] = 1.
+HP["pi_1"] = 1.5
+HP["pi_2"] = 0.1
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 10000

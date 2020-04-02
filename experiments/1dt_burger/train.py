@@ -36,7 +36,7 @@ X_v_train, v_train, _, \
 
 #%% Train
 model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0],
-              hp["soft_0"], hp["sigma_alea"], hp["norm"])
+              hp["pi_1"], hp["pi_2"], hp["norm"])
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"], freq=hp["log_frequency"])
 
 #%% Generate the dataset from the mesh and params

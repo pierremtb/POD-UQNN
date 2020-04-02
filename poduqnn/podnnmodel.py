@@ -249,15 +249,15 @@ class PodnnModel:
         logger = Logger(epochs, freq, silent=silent)
         def err_fn():
             v_pred, v_pred_sig = self.predict_v(X_v_val)
-            # v_dist = self.regnn.predict_dist(X_v_val)
-            # v_pred = v_dist.mean().numpy()
-            _, sig_out = self.predict_v(X_out)
-            return {
+            log = {
                 "RE_v": re_s(v_val.T, v_pred.T),
                 "std": tf.reduce_sum(v_pred.std(0)),
-                "ino": tf.reduce_mean(sig_out),
                 "in": tf.reduce_mean(v_pred_sig)
             }
+            if X_out is not None:
+                _, sig_out = self.predict_v(X_out)
+                log["ino"] = tf.reduce_mean(sig_out),
+            return log
         logger.set_val_err_fn(err_fn)
 
         # Training
