@@ -18,7 +18,7 @@ U_pred = None
 U_pred_up = None
 U_pred_lo = None
 x_prime = None
-idx = [0, 20, 70]
+idx = [0, 5, 20]
 for i, t_i in enumerate(idx):
     csv_file = os.path.join("cache", f"x_u_tst_pred.{t_i}.csv")
     results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
