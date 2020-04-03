@@ -36,5 +36,5 @@ model.initVNNs(hp["n_M"], hp["h_layers"],
 for i in range(local_num):
     model_id = gpu_id if distributed else i
     model.train_model(model_id, X_v_train, v_train, X_v_val, v_val, hp["epochs"],
-                     freq=hp["log_frequency"])
+                     freq=hp["log_frequency"], div_max=False)
     model.save_model(model_id)

@@ -297,9 +297,10 @@ class PodnnModel:
         logs = []
         # Validation, logging, training
         def get_val_err():
-            v_val_pred, _ = model.predict(X_v_val)
+            v_val_pred, sig = model.predict(X_v_val)
             return {
                 "RE_V": re_s(v_val.T, v_val_pred.T, div_max),
+                "sig": tf.reduce_mean(sig),
             }
         logger = Logger(epochs, freq)
         logger.set_val_err_fn(get_val_err)
