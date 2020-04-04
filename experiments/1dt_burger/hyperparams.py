@@ -34,7 +34,7 @@ HP["lambda"] = 0.
 HP["adv_eps"] = 1.
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 2000
+HP["log_frequency"] = 5000
 # Burgers params
 HP["mu_min"] = [0.001]
 HP["mu_max"] = [0.0100]
