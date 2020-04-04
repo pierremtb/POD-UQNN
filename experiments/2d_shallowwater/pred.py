@@ -105,7 +105,7 @@ for i, s in enumerate([idx[2], idx[4]]):
         ax.set_ylim((y_zoom.min(), y_zoom.max()))
         plt.tight_layout()
         # plt.show()
-        savefig(f"podbnn-sw-zooms-{s}")
+        savefig(os.path.join("results", f"podbnn-sw-zooms-{s}"))
 
 #%% VTU export
 print("Saving to .vtu")
