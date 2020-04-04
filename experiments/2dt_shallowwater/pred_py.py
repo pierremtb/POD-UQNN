@@ -7,6 +7,7 @@ import meshio
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
+import scipy.ndimage
 
 sys.path.append(os.path.join("..", ".."))
 from poduqnn.podnnmodel import PodnnModel
@@ -58,7 +59,11 @@ U_pred_0 = model.restruct(U_pred_0)
 #%% Interp and plot
 x = x_mesh[:, 0]
 y = x_mesh[:, 1]
-X, Y = np.mgrid[int(x.min()):int(x.max()), int(y.min()):int(y.max())]
+# X, Y = np.mgrid[int(x.min()):int(x.max()), int(y.min()):int(y.max())]
+xint = np.linspace(x.min(), x.max(), 2000)
+yint = np.linspace(y.min(), y.max(), 2000)
+X, Y = np.meshgrid(xint, yint)
+# X, Y = np.mgrid[0:1000, 0:1000]
 
 dist_pts = [([277182.62, 277179.72], [5048838.87, 5048840.58]),
             ([277206.94, 277211.94], [5048835.51, 5048831.72])]
@@ -77,7 +82,25 @@ for s in [0]:
         H_pred_lo = griddata((x, y), h_pred_lo, (X, Y), method=method)
         H = griddata((x, y), h, (X, Y), method=method)
         plt.imshow(H_pred)
-        plt.show()
+        # plt.contourf(X, Y, H_pred)
+
+        # Convert the line to pixel/index coordinates
+        x_world = np.array([0, 1000])
+        y_world = np.array([1000, 1000])
+        col = H_pred.shape[1] * (x_world - X.min()) / X.ptp()
+        row = H_pred.shape[0] * (y_world - Y.min()) / Y.ptp()
+
+        # Interpolate the line at "num" points...
+        num = 1000
+        row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
+
+        # Extract the values along the line, using cubic interpolation
+        zi = scipy.ndimage.map_coordinates(H_pred, np.vstack((row, col)))
+        plt.plot(x_world, y_world, 'ro-')
+        savefig("test")
+        plt.plot(zi)
+        savefig("test2")
+        
 
 exit(0)
 # %% VTU export
