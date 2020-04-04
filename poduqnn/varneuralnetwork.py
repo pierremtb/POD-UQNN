@@ -14,7 +14,8 @@ NORM_CENTER = "center"
 
 class VarNeuralNetwork:
     """Custom class defining a mean/variance Neural Network model."""
-    def __init__(self, layers, lr, lam, adv_eps=None, norm=NORM_NONE, model=None, norm_bounds=None):
+    def __init__(self, layers, lr, lam, adv_eps=None, soft_0=0.01,
+                 norm=NORM_NONE, model=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float64"
 
@@ -28,6 +29,7 @@ class VarNeuralNetwork:
         self.batch_size = 0
         self.norm = norm
         self.adv_eps = adv_eps
+        self.soft_0 = soft_0
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
@@ -52,7 +54,7 @@ class VarNeuralNetwork:
         def split_mean_var(data):
             mean, out_var = tf.split(data, num_or_size_splits=2, axis=1)
             # var = tf.math.log(1.0 + tf.exp(out_var)) + 1e-6
-            var = tf.math.softplus(out_var) + 1e-6
+            var = tf.math.softplus(self.soft_0 * out_var) + 1e-6
             return [mean, var]
         
         outputs = tf.keras.layers.Lambda(split_mean_var)(x)
