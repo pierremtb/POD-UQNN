@@ -33,6 +33,7 @@ model = PodnnModel.load("cache")
 #%% Sample the new model to generate a test prediction
 with open(os.path.join("cache", "train_tst_idx.pkl"), "rb") as f:
         train_tst_idx = pickle.load(f)
+print(train_tst_idx)
 # datadir = os.path.join("..", "..", "..", "scratch", "multi2swt") 
 datadir = "data"
 mu_path = os.path.join(datadir, "INPUT_MONTE_CARLO.dat")
@@ -85,10 +86,14 @@ for s in [0]:
         # plt.contourf(X, Y, H_pred)
 
         # Convert the line to pixel/index coordinates
-        x_world = np.array([0, 1000])
-        y_world = np.array([1000, 1000])
-        col = H_pred.shape[1] * (x_world - X.min()) / X.ptp()
-        row = H_pred.shape[0] * (y_world - Y.min()) / Y.ptp()
+        x_world = np.array([274962.05, 274805.82])
+        y_world = np.array([5043752.94, 5043861.34]) 
+        # x_world = np.array([0, 1000])
+        # y_world = np.array([0, 1000])
+        col = x_world
+        row = y_world
+        # col = H_pred.shape[1] * (x_world - X.min()) / X.ptp()
+        # row = H_pred.shape[0] * (y_world - Y.min()) / Y.ptp()
 
         # Interpolate the line at "num" points...
         num = 1000
@@ -104,6 +109,7 @@ for s in [0]:
 
 exit(0)
 # %% VTU export
+A
 print("Saving to .vtu")
 for s in [0]:
 # for s in [0, 1, 2]:
