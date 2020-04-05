@@ -77,13 +77,13 @@ for i, s in enumerate([idx[2], idx[4]]):
                         levels=[h_0], alpha=0.3, colors=["C0"])
                 cs = ax.contour(X, Y, H_pred_up,
                 levels=[h_0], alpha=0.3, colors=["C0"])
-                cs.collections[0].set_label(r"$\pm 2\sigma_D(x, y)$")
+                cs.collections[0].set_label(r"$\pm 2\hat{u}^\sigma_D$")
                 cs = ax.contour(X, Y, H_pred,
                         levels=[h_0], colors=["b"])
-                cs.collections[0].set_label(r"$\hat{u}_D(x, y)$")
+                cs.collections[0].set_label(r"$\hat{u}^\mu_D$")
                 cs = ax.contour(X, Y, H,
                         levels=[h_0], colors=["r"], linestyles="dashed")
-                cs.collections[0].set_label(r"$u_D(x, y)$")
+                cs.collections[0].set_label(r"$u_D$")
                 ax.set_aspect('equal', 'box')
                 ax.set_xlabel(r"$x\ [\textrm{m}]$")
                 ax.set_ylabel(r"$y\ [\textrm{m}]$")
@@ -93,7 +93,7 @@ for i, s in enumerate([idx[2], idx[4]]):
         ax = fig.add_subplot(gs[0, 0])
         plot_ax(ax)
         ax = fig.add_subplot(gs[0, 1])
-        ax.plot(dist_pts[i][0], dist_pts[i][1], "k:")
+        ax.plot(dist_pts[i][0], dist_pts[i][1], "k:", label="$d_{2\sigma}$")
         dist_i = np.sqrt((dist_pts[i][0][0] - dist_pts[i][0][1])**2 +
                            (dist_pts[i][1][0] - dist_pts[i][1][1])**2)
         ax.text(dist_pts[i][0][1] - 16, dist_pts[i][1][1] + 4.5,
