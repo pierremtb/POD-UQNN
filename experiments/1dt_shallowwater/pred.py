@@ -51,10 +51,6 @@ mu_lhs_in = np.array([12]).reshape(-1, 1)
 mu_lhs_out = np.array([25]).reshape(-1, 1)
 
 #%% Contours for demo
-n_plot_x = 2
-n_plot_y = 3
-fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
-gs = fig.add_gridspec(n_plot_x, n_plot_y)
 x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
 t = np.linspace(hp["t_min"], hp["t_max"], hp["n_t"])
 xxT, ttT = np.meshgrid(x, t)
@@ -64,6 +60,7 @@ XT = np.hstack((xx.flatten()[:, None], tt.flatten()[:, None]))
 # Slices
 n_samples = 1
 times = [0, 25]
+ylim = [[(-1, 26), (-1, 26)], [(-1, 26), (-1, 26)]]
 
 has_sim_data = False
 if os.path.exists(os.path.join("data", "sel.csv")):
@@ -71,6 +68,10 @@ if os.path.exists(os.path.join("data", "sel.csv")):
     sel = np.loadtxt(os.path.join("data", "sel.csv"), skiprows=1, delimiter=",")[:, 6].astype("int")
 
 for j, time in enumerate(times):
+    n_plot_x = 1
+    n_plot_y = 3
+    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
+    gs = fig.add_gridspec(n_plot_x, n_plot_y)
     actual_row = 0
     for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         X_v_samples, U_samples, _, _ = \
@@ -96,7 +97,7 @@ for j, time in enumerate(times):
                 U_pred_i_sig = np.zeros_like(U_samples)
 
             if row == 0 and j == 0:
-                ax = fig.add_subplot(gs[j, actual_row])
+                ax = fig.add_subplot(gs[0, actual_row])
                 U_grid = griddata(XT, U_pred_i.flatten(), (xx, tt), method='cubic')
                 h = ax.imshow(U_grid.T, interpolation='nearest', cmap='rainbow', 
                                 extent=[x.min(), x.max(), t.min(), t.max()], 
@@ -110,7 +111,8 @@ for j, time in enumerate(times):
                 # ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
                 ax.set_title(r"$\hat{u}{\scriptsize \textrm{D}}(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
 
-                ax = fig.add_subplot(gs[j+1, actual_row])
+            if row == 0 and j == 1:
+                ax = fig.add_subplot(gs[0, actual_row])
                 U_grid = griddata(XT, U_samples[:, :, col].flatten(), (xx, tt), method='cubic')
                 h = ax.imshow(U_grid.T, interpolation='nearest', cmap='rainbow', 
                                 extent=[x.min(), x.max(), t.min(), t.max()], 
@@ -124,7 +126,7 @@ for j, time in enumerate(times):
                 # ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
                 ax.set_title(r"$u{\scriptsize \textrm{D}}(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
 
-            ax = fig.add_subplot(gs[j, actual_row + 1])
+            ax = fig.add_subplot(gs[0, actual_row + 1])
 
             if has_sim_data:
                 vtkfilename = os.path.join("data", f"cas1_{int(X_i[0, 1])}m", f"0_FV-Paraview_{time}.vtk")
@@ -139,9 +141,11 @@ for j, time in enumerate(times):
             lower = U_pred_i[:, time, 0] - 2*U_pred_i_sig[:, time, 0]
             upper = U_pred_i[:, time, 0] + 2*U_pred_i_sig[:, time, 0]
             ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
-
+            if row == 0 and j == 1:
+                ax.text(0, 2,  "POD-EnsNN")
             ax.set_xlabel(r"$x\ [\textrm{m}]$")
             ax.set_ylabel(r"$h\ [\textrm{m}]$")
+            ax.set_ylim(ylim[j][row])
             if row == 0:
                 ax.set_title(r"$\Delta\eta=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega"
                              + f",\ t={X_i[time, 0]:.2f}" + r"\ \textrm{s}$")
@@ -151,16 +155,18 @@ for j, time in enumerate(times):
             actual_row += 1
             if j == 1:
                 ax.legend()
-plt.tight_layout()
-savefig("results/podensnn-1dswt-graph-meansamples-h")
+    plt.tight_layout()
+    savefig(os.path.join("results", f"podensnn-1dswt-graph-meansamples-h-{j}"))
 
 #%% Velocity plots
-n_plot_x = 2
-n_plot_y = 3
-fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
-gs = fig.add_gridspec(n_plot_x, n_plot_y)
 times = [0, 25]
+# ylim = [(-1, 1), (-1, 10)]
+ylim = [[(-1, 15), (-1, 15)], [(-1, 15), (-1, 15)]]
 for j, time in enumerate(times):
+    n_plot_x = 1
+    n_plot_y = 3
+    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
+    gs = fig.add_gridspec(n_plot_x, n_plot_y)
     actual_row = 0
     for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         X_v_samples, U_samples, _, _ = \
@@ -186,7 +192,7 @@ for j, time in enumerate(times):
                 U_pred_i_sig = np.zeros_like(U_samples)
 
             if row == 0 and j == 0:
-                ax = fig.add_subplot(gs[j, actual_row])
+                ax = fig.add_subplot(gs[0, actual_row])
                 U_grid = griddata(XT, U_pred_i.flatten(), (xx, tt), method='cubic')
                 h = ax.imshow(U_grid.T, interpolation='nearest', cmap='rainbow', 
                                 extent=[x.min(), x.max(), t.min(), t.max()], 
@@ -200,7 +206,8 @@ for j, time in enumerate(times):
                 # ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
                 ax.set_title(r"$\hat{u}{\scriptsize \textrm{D}}(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
 
-                ax = fig.add_subplot(gs[j+1, actual_row])
+            if row == 0 and j == 1:
+                ax = fig.add_subplot(gs[0, actual_row])
                 U_grid = griddata(XT, U_samples[:, :, col].flatten(), (xx, tt), method='cubic')
                 h = ax.imshow(U_grid.T, interpolation='nearest', cmap='rainbow', 
                                 extent=[x.min(), x.max(), t.min(), t.max()], 
@@ -214,7 +221,7 @@ for j, time in enumerate(times):
                 # ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
                 ax.set_title(r"$u{\scriptsize \textrm{D}}(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
 
-            ax = fig.add_subplot(gs[j, actual_row + 1])
+            ax = fig.add_subplot(gs[0, actual_row + 1])
 
             if has_sim_data:
                 vtkfilename = os.path.join("data", f"cas1_{int(X_i[0, 1])}m", f"0_FV-Paraview_{time}.vtk")
@@ -229,9 +236,11 @@ for j, time in enumerate(times):
             lower = U_pred_i[:, time, 0] - 2*U_pred_i_sig[:, time, 0]
             upper = U_pred_i[:, time, 0] + 2*U_pred_i_sig[:, time, 0]
             ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
-
+            if row == 0 and j == 1:
+                ax.text(0, 13, "POD-EnsNN")
             ax.set_xlabel(r"$x\ [\textrm{m}]$")
             ax.set_ylabel(r"$u\ [\textrm{m/s}]$")
+            ax.set_ylim(ylim[j][row])
             if row == 0:
                 ax.set_title(r"$\Delta\eta=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega"
                              + f",\ t={X_i[time, 0]:.2f}" + r"\ \textrm{s}$")
@@ -241,5 +250,5 @@ for j, time in enumerate(times):
             actual_row += 1
             if j == 0:
                 ax.legend()
-plt.tight_layout()
-savefig("results/podensnn-1dswt-graph-meansamples-u")
+    plt.tight_layout()
+    savefig(os.path.join("results", f"podensnn-1dswt-graph-meansamples-u-{j}"))
