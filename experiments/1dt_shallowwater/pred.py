@@ -96,7 +96,7 @@ for j, time in enumerate(times):
                 U_pred_i = U_samples
                 U_pred_i_sig = np.zeros_like(U_samples)
 
-            if row == 0 and j == 0:
+            if row == 0 and j == 1:
                 ax = fig.add_subplot(gs[0, actual_row])
                 U_grid = griddata(XT, U_pred_i.flatten(), (xx, tt), method='cubic')
                 h = ax.imshow(U_grid.T, interpolation='nearest', cmap='rainbow', 
@@ -104,14 +104,14 @@ for j, time in enumerate(times):
                                 origin='lower', aspect='auto')
                 divider = make_axes_locatable(ax)
                 cax = divider.append_axes("right", size="5%", pad=0.05)
-                ax.axhline(X_i[times[0], 0] + 0.02, color="w", ls="-.")
+                ax.axhline(X_i[25, 0], color="w", ls="-.")
                 fig.colorbar(h, cax=cax)
                 ax.set_xlabel(r"$x\ [\textrm{m}]$")
                 ax.set_ylabel(r"$t\ [\textrm{s}]$")
                 # ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
-                ax.set_title(r"$\hat{u}{\scriptsize \textrm{D}}(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
+                ax.set_title(r"$\hat{u}^\mu_D(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
 
-            if row == 0 and j == 1:
+            if row == 0 and j == 0:
                 ax = fig.add_subplot(gs[0, actual_row])
                 U_grid = griddata(XT, U_samples[:, :, col].flatten(), (xx, tt), method='cubic')
                 h = ax.imshow(U_grid.T, interpolation='nearest', cmap='rainbow', 
@@ -119,12 +119,12 @@ for j, time in enumerate(times):
                                 origin='lower', aspect='auto')
                 divider = make_axes_locatable(ax)
                 cax = divider.append_axes("right", size="5%", pad=0.05)
-                ax.axhline(X_i[times[1], 0], color="w", ls="-.")
+                ax.axhline(0.02, color="w", ls="-.")
                 fig.colorbar(h, cax=cax)
                 ax.set_xlabel(r"$x\ [\textrm{m}]$")
                 ax.set_ylabel(r"$t\ [\textrm{s}]$")
                 # ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
-                ax.set_title(r"$u{\scriptsize \textrm{D}}(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
+                ax.set_title(r"$u_D(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
 
             ax = fig.add_subplot(gs[0, actual_row + 1])
 
@@ -136,13 +136,13 @@ for j, time in enumerate(times):
                     h_sim = vtk.point_data["h"][sel]
                     ax.plot(x_sim, h_sim, "k:", label=r"$u_\textrm{sim}(s_{" + lbl + r"})$")
 
-            ax.plot(x, U_pred_i[:, time, 0], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+            ax.plot(x, U_pred_i[:, time, 0], "b-", label=r"$\hat{u}^\mu_D(s_{" + lbl + r"})$")
             ax.plot(x, U_samples[:, time, col], "r--", label=r"$u_D(s_{" + lbl + r"})$")
             lower = U_pred_i[:, time, 0] - 2*U_pred_i_sig[:, time, 0]
             upper = U_pred_i[:, time, 0] + 2*U_pred_i_sig[:, time, 0]
-            ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
+            ax.fill_between(x, lower, upper, alpha=0.2, label=r"$\pm2\hat{u}^\sigma_D(s_{" + lbl + r"})$")
             if row == 0 and j == 1:
-                ax.text(0, 2,  "POD-EnsNN")
+                ax.text(0, 23,  "POD-EnsNN")
             ax.set_xlabel(r"$x\ [\textrm{m}]$")
             ax.set_ylabel(r"$h\ [\textrm{m}]$")
             ax.set_ylim(ylim[j][row])
@@ -153,10 +153,10 @@ for j, time in enumerate(times):
                 ax.set_title(r"$\Delta\eta=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega{\footnotesize\textrm{out}}"
                              + f",\ t={X_i[time, 0]:.2f}" + r"\ \textrm{s}$")
             actual_row += 1
-            if j == 1:
+            if j == 0:
                 ax.legend()
     plt.tight_layout()
-    savefig(os.path.join("results", f"podensnn-1dswt-graph-meansamples-h-{j}"))
+    savefig(os.path.join("results", f"podensnn-1dswt-graph-meansamples-h-{j}"), False)
 
 #%% Velocity plots
 times = [0, 25]
@@ -191,7 +191,7 @@ for j, time in enumerate(times):
                 U_pred_i = U_samples
                 U_pred_i_sig = np.zeros_like(U_samples)
 
-            if row == 0 and j == 0:
+            if row == 0 and j == 1:
                 ax = fig.add_subplot(gs[0, actual_row])
                 U_grid = griddata(XT, U_pred_i.flatten(), (xx, tt), method='cubic')
                 h = ax.imshow(U_grid.T, interpolation='nearest', cmap='rainbow', 
@@ -199,14 +199,14 @@ for j, time in enumerate(times):
                                 origin='lower', aspect='auto')
                 divider = make_axes_locatable(ax)
                 cax = divider.append_axes("right", size="5%", pad=0.05)
-                ax.axhline(X_i[times[0], 0] + 0.02, color="w", ls="-.")
+                ax.axhline(X_i[25, 0], color="w", ls="-.")
                 fig.colorbar(h, cax=cax)
                 ax.set_xlabel(r"$x\ [\textrm{m}]$")
                 ax.set_ylabel(r"$t\ [\textrm{s}]$")
                 # ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
-                ax.set_title(r"$\hat{u}{\scriptsize \textrm{D}}(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
+                ax.set_title(r"$\hat{u}_D^\mu(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
 
-            if row == 0 and j == 1:
+            if row == 0 and j == 0:
                 ax = fig.add_subplot(gs[0, actual_row])
                 U_grid = griddata(XT, U_samples[:, :, col].flatten(), (xx, tt), method='cubic')
                 h = ax.imshow(U_grid.T, interpolation='nearest', cmap='rainbow', 
@@ -214,12 +214,12 @@ for j, time in enumerate(times):
                                 origin='lower', aspect='auto')
                 divider = make_axes_locatable(ax)
                 cax = divider.append_axes("right", size="5%", pad=0.05)
-                ax.axhline(X_i[times[1], 0], color="w", ls="-.")
+                ax.axhline(0.02, color="w", ls="-.")
                 fig.colorbar(h, cax=cax)
                 ax.set_xlabel(r"$x\ [\textrm{m}]$")
                 ax.set_ylabel(r"$t\ [\textrm{s}]$")
                 # ax.set_title(r"$u_D(\bar{s_{\textrm{tst}}})$")
-                ax.set_title(r"$u{\scriptsize \textrm{D}}(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
+                ax.set_title(r"$u_D(s=" + f"{X_i[0, 1]:.1f}" + r"\textrm{ m}\in \Omega)$")
 
             ax = fig.add_subplot(gs[0, actual_row + 1])
 
@@ -251,4 +251,5 @@ for j, time in enumerate(times):
             if j == 0:
                 ax.legend()
     plt.tight_layout()
-    savefig(os.path.join("results", f"podensnn-1dswt-graph-meansamples-u-{j}"))
+    savefig(os.path.join("results", f"podensnn-1dswt-graph-meansamples-u-{j}"), False)
+
