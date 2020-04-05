@@ -20,7 +20,7 @@ from hyperparams import HP as hp
 model = PodnnModel.load("cache")
 # X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
-X_v_up = np.linspace(800, 1200, 1000).reshape(-1, 1)
+X_v_up = np.linspace(800, 1200, 100).reshape(-1, 1)
 U_pred_up, U_pred_sig_up = model.predict(X_v_up)
 
 U_up_mean = U_pred_up.mean(-1)
@@ -125,4 +125,4 @@ for i, sel in enumerate([sel1, sel2]):
 
 plt.tight_layout()
 # plt.show()
-savefig(os.path.join("results", f"podensnn-sw-zooms-up"))
+savefig(os.path.join("results", f"podensnn-sw-zooms-up"), tight_box=True)
