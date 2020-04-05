@@ -10,36 +10,6 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 @jit(nopython=True, parallel=True)
-def loop_vdot(n_s, U_tot, U_tot_sq, V, v_pred_hifi):
-    """Return mean, std from parallelized dot product between V an v"""
-    # pylint: disable=not-an-iterable
-    for i in range(n_s):
-        # Computing one snapshot
-        U = V.dot(v_pred_hifi[i])
-        # Building the sum and the sum of squaes
-        U_tot += U
-        U_tot_sq += U**2
-    return U_tot, U_tot_sq
-
-
-@jit(nopython=True, parallel=True)
-def loop_vdot_t(n_s, n_t, U_tot, U_tot_sq, V, v_pred_hifi):
-    """Return mean, std from parallelized dot product between V an v (w/ t)."""
-    # pylint: disable=not-an-iterable
-    v_pred_hifi = np.ascontiguousarray(v_pred_hifi)
-    for i in range(n_s):
-        # Computing one snapshot
-        s = n_t * i
-        e = n_t * (i + 1)
-        v_pred_hifi_i = np.ascontiguousarray(v_pred_hifi[s:e].T)
-        U = V.dot(v_pred_hifi_i)
-        # Building the sum and the sum of squaes
-        U_tot += U
-        U_tot_sq += U**2
-    return U_tot, U_tot_sq
-
-
-@jit(nopython=True, parallel=True)
 def loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise=0., x_noise=0.):
     """Return the inputs/snapshots matrices from parallel computation."""
     # pylint: disable=not-an-iterable
@@ -60,7 +30,7 @@ def loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise=0., x_noise=0.):
     return X_v, U, U_struct, U_no_noise
 
 
-# @jit(nopython=True, parallel=True)
+@jit(nopython=True, parallel=True)
 def loop_u_t(u, n_t, n_v, n_xyz, n_h,
              X_v, U, U_no_noise, U_struct, X, mu_lhs, t_min, t_max, u_noise=0., x_noise=0.):
     """Return the inputs/snapshots matrices from parallel computation (w/ t)."""

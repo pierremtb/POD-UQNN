@@ -123,4 +123,4 @@ for j, time in enumerate(times):
             if j == 0 and actual_row == 0:
                 ax.legend()
 plt.tight_layout()
-savefig("results/podensnn-burger-graph-meansamples")
+savefig("results/podbnn-burger-graph-meansamples")

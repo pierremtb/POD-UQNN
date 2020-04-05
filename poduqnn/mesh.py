@@ -1,10 +1,10 @@
 import os
-import re
 import sys
 import time
-import meshio
 import pandas as pd
 import numpy as np
+import meshio
+import re
 from tqdm import tqdm
 
 
@@ -40,6 +40,7 @@ def create_linear_mesh(x_min, x_max, n_x,
 
     idx = np.array(range(1, n_xyz + 1)).reshape((n_xyz, 1))
     return np.hstack((idx, x))
+
 
 # From https://stackoverflow.com/a/5967539
 def atoi(text):
@@ -146,7 +147,6 @@ def read_space_sol_input_mesh(n_s, idx, x_u_mesh_path, mu_mesh_path):
     x_u_mesh = pd.read_table(x_u_mesh_path,
                              header=None,
                              delim_whitespace=True).to_numpy()
-    # x_u_mesh = np.loadtxt(x_u_mesh_path)
     print(f"Loaded in {time.time() - st} sec.")
 
     idx_i = idx[0]

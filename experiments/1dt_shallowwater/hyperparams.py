@@ -19,7 +19,7 @@ HP["t_max"] = 5.
 HP["n_s"] = 40
 HP["n_s_tst"] = 3
 # POD stopping param
-HP["eps"] = 1e-4
+HP["eps"] = 1e-5
 HP["eps_init"] = None
 HP["n_L"] = 0
 HP["x_noise"] = 0.

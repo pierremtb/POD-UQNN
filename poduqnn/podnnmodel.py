@@ -16,6 +16,7 @@ from .handling import split_dataset, sample_mu
 
 SETUP_DATA_NAME = "setup_data.pkl"
 TRAIN_DATA_NAME = "train_data.pkl"
+INIT_DATA_NAME = "init_data.pkl"
 MODEL_NAME = "model.h5"
 MODEL_PARAMS_NAME = "model_params.pkl"
 
@@ -54,8 +55,6 @@ class PodnnModel:
 
     def generate_hifi_inputs(self, n_s, mu_min, mu_max, t_min=0, t_max=0):
         """Return large inputs to be used in a HiFi prediction task."""
-        if self.has_t:
-            t_min, t_max = np.array(t_min), np.array(t_max)
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
         mu_lhs = sample_mu(n_s, mu_min, mu_max)
 
@@ -71,6 +70,7 @@ class PodnnModel:
             # Creating the time steps
             t = np.linspace(t_min, t_max, self.n_t)
             tT = t.reshape((self.n_t, 1))
+
             for i in tqdm(range(n_s)):
                 # Getting the snapshot times indices
                 s = self.n_t * i
@@ -81,13 +81,6 @@ class PodnnModel:
             for i in tqdm(range(n_s)):
                 X_v[i, :] = mu_lhs[i]
         return X_v
-
-    def split_dataset(self, X_v, v, test_size):
-        """Randomly splitting the dataset (X_v, v)."""
-        indices = np.random.permutation(X_v.shape[0])
-        limit = np.floor(X_v.shape[0] * (1 - test_size)).astype(int)
-        train_idx, tst_idx = indices[:limit], indices[limit:]
-        return X_v[train_idx], X_v[tst_idx], v[train_idx], v[tst_idx]
 
     def create_snapshots(self, n_d, n_h, u, mu_lhs,
                          t_min=0, t_max=0, u_noise=0., x_noise=0.):
@@ -118,17 +111,23 @@ class PodnnModel:
 
         return loop_u(u, n_h, X_v, U, U_no_noise, X, mu_lhs, u_noise, x_noise)
 
-    def convert_multigpu_data(self, U_struct, X_v, train_val, eps,
-                              eps_init=None, n_L=0):
-        """Convert spatial mesh/solution to usable inputs/snapshot matrix.
-           U is (n_v, n_xyz, n_t, n_s)."""
-        self.n_d = X_v.shape[1]
+    def convert_multigpu_data(self, U_struct, X_v, train_val, eps, eps_init=None,
+                              n_L=0, use_cache=False, save_cache=False):
+        """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
+        """U is (n_v, n_xyz, n_t, n_s)."""
+        if use_cache and os.path.exists(self.train_data_path):
+            return self.load_train_data()
+
         self.n_xyz = self.x_mesh.shape[0]
         self.n_h = self.n_xyz * self.n_v
+        n_st = X_v.shape[0]
         n_s = U_struct.shape[-1]
         n_t = self.n_t
         if n_t == 0:
             n_t = 1
+
+        # Number of input in time (1) + number of params
+        self.n_d = X_v.shape[1]
         
         # Getting random indices to manually do the split
         idx_s = np.random.permutation(n_s)
@@ -160,23 +159,45 @@ class PodnnModel:
                                       eps, eps_init)
         else:
             self.V = perform_pod(U_train, eps, n_L, True)
+
         self.n_L = self.V.shape[1]
 
         # Projecting
+        # v = (self.V.T.dot(U)).T
         v_train = self.project_to_v(U_train)
         v_val = self.project_to_v(U_val)
         
         # Checking the POD error
         U_pod = self.V.dot(v_train.T)
+        v_train_pod = self.project_to_v(U_pod)
         self.pod_sig = np.stack((U_train, U_pod), axis=-1).std(-1).mean(-1)
         print(f"Mean pod sig: {self.pod_sig.mean()}")
+
+        # Removing the initial condition from the training set
+        if self.n_t > 0:
+            idx = np.arange(limit) * self.n_t
+            X_v_train_0 = X_v_train[idx]
+            X_v_train = np.delete(X_v_train, idx, axis=0)
+            v_train_0 = v_train[idx]
+            v_train = np.delete(v_train, idx, axis=0)
+            U_train_0 = U_train[:, idx]
+            U_train = np.delete(U_train, idx, axis=1)
+            idx = np.arange(n_s - limit - 1) * self.n_t
+            X_v_val_0 = X_v_val[idx]
+            X_v_val = np.delete(X_v_val, idx, axis=0)
+            v_val_0 = X_v_val[idx]
+            v_val = np.delete(v_val, idx, axis=0)
+            U_val_0 = U_train[:, idx]
+            U_val = np.delete(U_val, idx, axis=1)
+            self.save_init_data(X_v_train_0, v_train_0, U_train_0, X_v_val_0, v_val_0, U_val_0)
 
         self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
         return X_v_train, v_train, X_v_val, v_val, U_val
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
                          train_val, eps=0., eps_init=None, n_L=0,
-                         t_min=0, t_max=0, u_noise=0., x_noise=0.):
+                         t_min=0, t_max=0, u_noise=0., x_noise=0.,
+                         rm_init=False):
         """Generate a training dataset for benchmark problems."""
         mu_min, mu_max = np.array(mu_min), np.array(mu_max)
 
@@ -199,36 +220,57 @@ class PodnnModel:
         mu_lhs = sample_mu(n_s, mu_min, mu_max)
         fake_x = np.zeros_like(mu_lhs)
 
-        _, _, mu_lhs_train, mu_lhs_test = \
-             self.split_dataset(fake_x, mu_lhs, train_val[1])
+        _, _, mu_lhs_train, mu_lhs_val = \
+             split_dataset(fake_x, mu_lhs, test_size=train_val[1])
 
         # Creating the snapshots
         print(f"Generating {n_st} corresponding snapshots")
         X_v_train, U_train, U_train_struct, U_no_noise = \
             self.create_snapshots(n_d, n_h, u, mu_lhs_train,
                                   t_min, t_max, u_noise, x_noise)
-        X_v_test, U_test, U_test_struct, _ = \
-            self.create_snapshots(n_d, n_h, u, mu_lhs_test,
+        X_v_val, U_val, U_val_struct, _ = \
+            self.create_snapshots(n_d, n_h, u, mu_lhs_val,
                                   t_min, t_max)
 
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
         if eps_init is None:
-            self.V = perform_pod(U_train, eps, n_L, False)
+            self.V = perform_pod(U_train, eps=eps, n_L=n_L, verbose=True)
         else:
             self.V = perform_fast_pod(U_train_struct, eps, eps_init)
+
         self.n_L = self.V.shape[1]
 
         # Projecting
         v_train = (self.V.T.dot(U_train)).T
-        v_test = (self.V.T.dot(U_test)).T
+        v_val = (self.V.T.dot(U_val)).T
 
         # Saving the POD error
         U_train_pod = self.V.dot(v_train.T)
         self.pod_sig = np.stack((U_train, U_train_pod), axis=-1).std(-1).mean(-1)
+        print(f"Mean pod sig: {self.pod_sig.mean()}")
 
-        self.save_train_data(X_v_train, v_train, U_train, X_v_test, v_test, U_test)
-        return X_v_train, v_train, U_train, X_v_test, v_test, U_test
+        # Removing the initial condition from the training set
+        if self.n_t > 0 and rm_init:
+            idx = np.arange(mu_lhs_train.shape[0]) * self.n_t
+            X_v_train_0 = X_v_train[idx]
+            X_v_train = np.delete(X_v_train, idx, axis=0)
+            v_train_0 = v_train[idx]
+            v_train = np.delete(v_train, idx, axis=0)
+            U_train_0 = U_train[:, idx]
+            U_train = np.delete(U_train, idx, axis=1)
+
+            idx = np.arange(mu_lhs_val.shape[0]) * self.n_t
+            X_v_val_0 = X_v_val[idx]
+            X_v_val = np.delete(X_v_val, idx, axis=0)
+            v_val_0 = v_val[idx]
+            v_val = np.delete(v_val, idx, axis=0)
+            U_val_0 = U_val[:, idx]
+            U_val = np.delete(U_val, idx, axis=1)
+            self.save_init_data(X_v_train_0, v_train_0, U_train_0, X_v_val_0, v_val_0, U_val_0)
+
+        self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
+        return X_v_train, v_train, U_train, X_v_val, v_val, U_val
 
     def initBNN(self, h_layers, lr, klw, 
                 pi_1=1., pi_2=0.1, norm=NORM_MEANSTD):
@@ -248,11 +290,11 @@ class PodnnModel:
         # Validation and logging
         logger = Logger(epochs, freq, silent=silent)
         def err_fn():
-            v_pred, v_pred_sig = self.predict_v(X_v_val)
+            v_pred, sig = self.regnn.predict(X_v_val)
             log = {
                 "RE_v": re_s(v_val.T, v_pred.T),
                 "std": tf.reduce_sum(v_pred.std(0)),
-                "in": tf.reduce_mean(v_pred_sig)
+                "in": tf.reduce_mean(sig)
             }
             if X_out is not None:
                 _, sig_out = self.predict_v(X_out)
@@ -267,10 +309,10 @@ class PodnnModel:
         self.save_model()
         return logger.get_logs()
 
-    def predict_dist(self, X, samples=100):
+    def predict_dist(self, X_v, samples=100):
         """Approximate the distribution on U from the one on v."""
-        v_dist = self.regnn.predict_dist(X)
-        U_sum = np.zeros((self.n_h, X.shape[0]))
+        v_dist = self.regnn.predict_dist(X_v)
+        U_sum = np.zeros((self.n_h, X_v.shape[0]))
         U_sum_sq = np.zeros_like(U_sum)
         for i in range(samples):
             U_i = self.project_to_U(v_dist.sample().numpy())
@@ -281,14 +323,13 @@ class PodnnModel:
                      / (samples * (samples - 1)))
         return U_pred, U_pred_sig
 
-    def predict_v(self, X, samples=5):
+    def predict_v(self, X_v, samples=5):
         """Predict the projection coefficients (regression outputs)."""
-        v_pred_samples = np.zeros((samples, X.shape[0], self.n_L))
-        v_pred_sig_samples = np.zeros((samples, X.shape[0], self.n_L))
+        v_pred_samples = np.zeros((samples, X_v.shape[0], self.n_L))
+        v_pred_sig_samples = np.zeros_like(v_pred_samples)
 
         for i in range(samples):
-            # v_pred_samples[i], v_pred_sig_samples[i] = self.predict_dist(X)
-            v_dist = self.regnn.predict_dist(X)
+            v_dist = self.regnn.predict_dist(X_v)
             v_pred_samples[i] = v_dist.mean().numpy()
             v_pred_sig_samples[i] = v_dist.variance().numpy()
 
@@ -298,18 +339,14 @@ class PodnnModel:
         v_pred_sig = np.sqrt(v_pred_var)
         return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
-    def predict(self, X, samples=5):
+    def predict(self, X_v, samples=5):
         """Predict the expanded solution."""
-        U_pred_samples = np.zeros((samples, self.n_h, X.shape[0]))
-        U_pred_sig_samples = np.zeros((samples, self.n_h, X.shape[0]))
+        U_pred_samples = np.zeros((samples, self.n_h, X_v.shape[0]))
+        U_pred_sig_samples = np.zeros_like(U_pred_samples)
 
         print(f"Averaging {samples} model configurations...")
         for i in tqdm(range(samples)):
-            # v_dist = self.regnn.predict_dist(X)
-            # v_pred, v_pred_var = v_dist.mean().numpy(), v_dist.variance().numpy()
-            U_pred_samples[i], U_pred_sig_samples[i] = self.predict_dist(X)
-            # U_pred_samples[i] = self.project_to_U(v_pred)
-            # U_pred_sig_samples[i] = self.project_to_U(np.sqrt(v_pred_var))
+            U_pred_samples[i], U_pred_sig_samples[i] = self.predict_dist(X_v)
 
         # Approximate the mixture in a single Gaussian distribution
         U_pred = U_pred_samples.mean(0)
@@ -318,18 +355,19 @@ class PodnnModel:
         U_pred_sig = np.sqrt(U_pred_var)
         return U_pred, U_pred_sig
 
-    def restruct(self, U, no_s=False):
+    def restruct(self, U, no_s=False, n_t=None):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
         if no_s:
             return U.reshape(self.get_u_tuple())
         if self.has_t:
+            n_t = self.n_t if n_t is None else n_t
             # (n_h, n_st) -> (n_v, n_xyz, n_t, n_s)
-            n_s = int(U.shape[-1] / self.n_t)
-            U_struct = np.zeros((self.n_v, self.n_xyz, self.n_t, n_s))
+            n_s = int(U.shape[-1] / n_t)
+            U_struct = np.zeros((self.n_v, self.n_xyz, n_t, n_s))
             for i in range(n_s):
-                s = self.n_t * i
-                e = self.n_t * (i + 1)
-                U_struct[:, :, :, i] = U[:, s:e].reshape(self.get_u_tuple())
+                s = n_t * i
+                e = n_t * (i + 1)
+                U_struct[:, :, :, i] = U[:, s:e].reshape(self.get_u_tuple(n_t))
             return U_struct
 
         # (n_h, n_s) -> (n_v, n_xyz, n_s)
@@ -358,11 +396,12 @@ class PodnnModel:
             U[:, i] = U_struct[:, :, i].reshape((self.n_h))
         return U
 
-    def get_u_tuple(self):
+    def get_u_tuple(self, n_t=None):
         """Construct solution shape."""
+        n_t = self.n_t if n_t is None else n_t
         tup = (self.n_xyz,)
         if self.has_t:
-            tup += (self.n_t,)
+            tup += (n_t,)
         return (self.n_v,) + tup
 
     def project_to_U(self, v):
@@ -378,7 +417,7 @@ class PodnnModel:
         return tf.convert_to_tensor(X, dtype=self.dtype)
 
     def load_train_data(self):
-        """Load training data, such as datasets, in cache/."""
+        """Load training data, such as datasets."""
         if not os.path.exists(self.train_data_path):
             raise FileNotFoundError("Can't find train data.")
         with open(self.train_data_path, "rb") as f:
@@ -388,14 +427,29 @@ class PodnnModel:
             self.n_d = data[1]
             self.V = data[2]
             self.pod_sig = data[3]
+            print(f"Mean pod sig: {self.pod_sig.mean()}")
             return data[4:]
 
-    def save_train_data(self, X_v_train, v_train, U_train, X_v_test, v_test, U_test):
-        """Save training data, such as datasets, in cache/."""
+    def load_init_data(self):
+        """Load training data, such as datasets."""
+        if not os.path.exists(self.init_data_path):
+            raise FileNotFoundError("Can't find train data.")
+        with open(self.init_data_path, "rb") as f:
+            print("Loading train data")
+            return pickle.load(f)
+
+    def save_train_data(self, X_v_train, v_train, U_train, X_v_val, v_val, U_val):
+        """Save training data, such as datasets."""
+
         with open(self.train_data_path, "wb") as f:
             pickle.dump((self.n_L, self.n_d, self.V, self.pod_sig,
-                         X_v_train, v_train, U_train, X_v_test, v_test, U_test), f)
+                         X_v_train, v_train, U_train, X_v_val, v_val, U_val), f)
 
+    def save_init_data(self, X_v_train, v_train, U_train, X_v_val, v_val, U_val):
+        """Save training data, such as datasets."""
+        with open(self.init_data_path, "wb") as f:
+            pickle.dump((X_v_train, v_train, U_train, X_v_val, v_val, U_val), f)
+            
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""
         if not os.path.exists(self.model_path):
