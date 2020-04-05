@@ -67,7 +67,7 @@ for col, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
     x = np.linspace(hp["x_min"], hp["x_max"], hp["n_x"])
     idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
     for row, idx_i in enumerate(idx):
-        lbl = r"{\scriptscriptstyle\textrm{tst}}" if row == 0 else r"{\scriptscriptstyle\textrm{out}}"
+        lbl = r"{\scriptscriptstyle\textrm{tst}}" if col == 0 else r"{\scriptscriptstyle\textrm{out}}"
         X_i = X_v_samples[idx_i, :].reshape(1, -1)
         U_pred_i, U_pred_i_sig = model.predict(X_i)
         U_pred_i = np.reshape(U_pred_i, (hp["n_x"], hp["n_y"], -1))
@@ -88,22 +88,23 @@ for col, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
             ct = ax.contourf(xx, yy, U_pred_i[:, :, 0], levels=levels, origin="lower")
             plt.colorbar(ct)
             ax.axis("equal")
-            ax.set_title(r"$\hat{u}{\scriptsize\textrm{D}}([" + f"{X_i[0, 0]:.2f}," + f"{X_i[0, 1]:.2f}," + f"{X_i[0, 2]:.2f}] )$")
+            ax.set_title(r"$\hat{u}^\mu_D([" + f"{X_i[0, 0]:.2f}," + f"{X_i[0, 1]:.2f}," + f"{X_i[0, 2]:.2f}] )$")
             ax.set_xlabel("$x$")
             ax.axhline(0., color="w", ls="-.")
             ax.set_ylabel("$y$")
 
         ax = fig.add_subplot(gs[row, col+1])
-        ax.plot(x, U_pred_i[:, 199, 0], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+        ax.plot(x, U_pred_i[:, 199, 0], "b-", label=r"$\hat{u}^\mu_D(s_{" + lbl + r"})$")
         ax.plot(x, U_samples[:, 199, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
         lower = U_pred_i[:, 199, 0] - 2*U_pred_i_sig[:, 199, 0]
         upper = U_pred_i[:, 199, 0] + 2*U_pred_i_sig[:, 199, 0]
-        ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
+        ax.fill_between(x, lower, upper, alpha=0.2, label=r"$\pm 2\hat{u}^\sigma_D(s_{" + lbl + r"})$")
         ax.set_xlabel("$x\ (y=0)$")
         title_st = r"$s=[" + f"{X_i[0, 0]:.2f}," + f"{X_i[0, 1]:.2f}," + f"{X_i[0, 2]:.2f}] "
         title_st += r"\in \Omega{\footnotesize\textrm{out}}$" if col + 1 == 2 else r"\in \Omega$"
         ax.set_title(title_st)
-        if col == len(idx) - 1 and row == 0:
+        # if col == len(idx) - 1 and row == 0:
+        if row == 0:
             ax.legend()
 plt.tight_layout()
 # plt.show()

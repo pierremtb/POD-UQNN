@@ -34,4 +34,5 @@ X_v_train, v_train, _, \
                                                     x_noise=hp["x_noise"])
 
 model.initVNNs(hp["n_M"], hp["h_layers"],
-                hp["lr"], hp["lambda"], hp["adv_eps"], hp["norm"])
+               hp["lr"], hp["lambda"], hp["adv_eps"],
+               hp["soft_0"], hp["norm"])
