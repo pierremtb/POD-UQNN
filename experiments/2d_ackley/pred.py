@@ -47,6 +47,7 @@ mu_lhs_out_min = sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["m
 mu_lhs_out_max = sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
 mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
 
+
 # Contours for demo
 n_plot_x = 2
 n_plot_y = 3
@@ -75,34 +76,36 @@ for col, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         if row == 0 and col == 0:
             ax = fig.add_subplot(gs[0, 0])
             levels = list(range(2, 15))
-            ct = ax.contourf(yy, xx, U_samples[:, :, idx_i].T, levels=levels, origin="lower")
+            ct = ax.contourf(xx, yy, U_samples[:, :, idx_i], levels=levels, origin="lower")
             plt.colorbar(ct)
             ax.set_title(r"$u{\scriptsize\textrm{D}}([" + f"{X_i[0, 0]:.2f}," + f"{X_i[0, 1]:.2f}," + f"{X_i[0, 2]:.2f}] )$")
             ax.axis("equal")
-            ax.set_xlabel("$y$")
-            ax.set_ylabel("$x$")
-            ax.axvline(0., color="w", ls="-.")
+            ax.set_xlabel("$x$")
+            ax.set_ylabel("$y$")
+            ax.axhline(0., color="w", ls="-.")
             ax = fig.add_subplot(gs[1, 0])
             levels = list(range(2, 15))
-            ct = ax.contourf(yy, xx, U_pred_i[:, :, 0].T, levels=levels, origin="lower")
+            ct = ax.contourf(xx, yy, U_pred_i[:, :, 0], levels=levels, origin="lower")
             plt.colorbar(ct)
             ax.axis("equal")
-            ax.set_title(r"$\hat{u}{\scriptsize\textrm{D}}([" + f"{X_i[0, 0]:.2f}," + f"{X_i[0, 1]:.2f}," + f"{X_i[0, 2]:.2f}] )$")
-            ax.set_xlabel("$y$")
-            ax.set_ylabel("$x$")
-            ax.axvline(0., color="w", ls="-.")
+            ax.set_title(r"$\hat{u}^\mu_D([" + f"{X_i[0, 0]:.2f}," + f"{X_i[0, 1]:.2f}," + f"{X_i[0, 2]:.2f}] )$")
+            ax.set_xlabel("$x$")
+            ax.axhline(0., color="w", ls="-.")
+            ax.set_ylabel("$y$")
 
         ax = fig.add_subplot(gs[row, col+1])
-        ax.plot(x, U_pred_i[:, 199, 0], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+        ax.plot(x, U_pred_i[:, 199, 0], "b-", label=r"$\hat{u}^\mu_D(s_{" + lbl + r"})$")
         ax.plot(x, U_samples[:, 199, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
         lower = U_pred_i[:, 199, 0] - 2*U_pred_i_sig[:, 199, 0]
         upper = U_pred_i[:, 199, 0] + 2*U_pred_i_sig[:, 199, 0]
-        ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
+        ax.fill_between(x, lower, upper, alpha=0.2, label=r"$\pm 2\hat{u}^\sigma_D(s_{" + lbl + r"})$")
         ax.set_xlabel("$x\ (y=0)$")
         title_st = r"$s=[" + f"{X_i[0, 0]:.2f}," + f"{X_i[0, 1]:.2f}," + f"{X_i[0, 2]:.2f}] "
         title_st += r"\in \Omega{\footnotesize\textrm{out}}$" if col + 1 == 2 else r"\in \Omega$"
         ax.set_title(title_st)
-        if row == 0: 
+        # if col == len(idx) - 1 and row == 0:
+        if row == 0:
             ax.legend()
 plt.tight_layout()
+# plt.show()
 savefig(os.path.join("results", "podbnn-ackley-graph-meansamples"))
