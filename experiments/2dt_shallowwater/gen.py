@@ -1,4 +1,4 @@
-"""POD-NN modeling for 1D, unsteady Burger Equation."""
+"""POD-NN modeling of a dam break, with 2D, unsteady Shallow Water Equation."""
 #%% Imports
 import sys
 import os
