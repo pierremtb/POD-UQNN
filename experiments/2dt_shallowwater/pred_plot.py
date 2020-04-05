@@ -18,7 +18,7 @@ U_pred = None
 U_pred_up = None
 U_pred_lo = None
 x_prime = None
-idx = [0, 5, 20]
+idx = [0, 5, 50]
 for i, t_i in enumerate(idx):
     csv_file = os.path.join("cache", f"x_u_tst_pred.{t_i}.csv")
     results = np.loadtxt(csv_file, delimiter=',', skiprows=1)
@@ -33,6 +33,9 @@ for i, t_i in enumerate(idx):
     U_pred_up[:, i] = results[:, 2]
     U_pred_lo[:, i] = results[:, 3]
 
+# Load bathymetry
+b = np.loadtxt(os.path.join("cache", "b.csv"), delimiter=',', skiprows=1)[:, 5]
+
     
 n_plot_x = 2*len(idx)
 n_plot_y = 5
@@ -42,12 +45,13 @@ for i, t_i in enumerate(idx):
     ax = fig.add_subplot(gs[2*i:2*i+2, 0:2])
     img = plti.imread(f"cache/x_u_tst_pred.{t_i}.png")
     ax.imshow(img)
-    ax.set_xlabel(f"$x$")
-    ax.set_ylabel(f"$y$")
+    # ax.set_xlabel(f"$x$")
+    # ax.set_ylabel(f"$y$")
     ax.set_xticks([])
     ax.set_yticks([])
     ax = fig.add_subplot(gs[2*i:2*i+2, 2:])
     lbl = r"{\scriptscriptstyle\textrm{tst},1}"
+    ax.plot(x_prime, b, "k:", label="$b$")
     ax.plot(x_prime, U_pred[:, i], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
     ax.plot(x_prime, U_tst[:, i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
     ax.fill_between(x_prime, U_pred_lo[:, i], U_pred_up[:, i],

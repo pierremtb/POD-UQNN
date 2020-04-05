@@ -33,6 +33,7 @@ model = PodnnModel.load("cache")
 #%% Sample the new model to generate a test prediction
 with open(os.path.join("cache", "train_tst_idx.pkl"), "rb") as f:
         train_tst_idx = pickle.load(f)
+print(train_tst_idx)
 # datadir = os.path.join("..", "..", "..", "scratch", "multi2swt") 
 datadir = "data"
 mu_path = os.path.join(datadir, "INPUT_MONTE_CARLO.dat")
@@ -114,6 +115,7 @@ plt.show()
 # %%
 
 # %% VTU export
+A
 print("Saving to .vtu")
 for s in [0]:
 # for s in [0, 1, 2]:
