@@ -1,7 +1,7 @@
 """Default hyperparameters for 1D time-dep Burgers Equation."""
 
 import numpy as np
-from poduqnn.custombnn import NORM_MEANSTD
+from poduqnn.custombnn import NORM_MEANSTD, NORM_MINMAX
 from scipy.optimize import brentq
 
 HP = {}
@@ -26,13 +26,14 @@ HP["x_noise"] = 0.
 # Train/val split
 HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
-HP["h_layers"] = [140, 140, 140]
+HP["h_layers"] = [140, 140]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 60000
-HP["lr"] = 0.005
-HP["soft_0"] = 0.1
-HP["sigma_alea"] = 1.
+HP["epochs"] = 200000
+HP["lr"] = 0.001
+HP["pi_1"] = 2.
+HP["pi_2"] = 0.1
 HP["norm"] = NORM_MEANSTD
+HP["norm"] = NORM_MINMAX
 # Frequency of the logger
 HP["log_frequency"] = 2000
 # Burgers params

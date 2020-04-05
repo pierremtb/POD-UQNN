@@ -77,9 +77,11 @@ def read_vtk_conf(filename, sel=None):
 def read_vtk_data(filename, idx, points_idx=None):
     vtk = meshio.read(filename)
     points = vtk.points
+    U_shape_0 = points.shape[0]
     if points_idx is not None:
-        points = points[points_idx]
-    U = np.zeros((points.shape[0], len(idx)))
+        U_shape_0 = len(points_idx)
+        # points = points[points_idx]
+    U = np.zeros((U_shape_0, len(idx)))
     for i, key in enumerate(idx):
         data = vtk.point_data[key]
         if points_idx is not None:

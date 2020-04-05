@@ -33,19 +33,14 @@ X_v_train, v_train, _, \
                                                     eps=hp["eps"], n_L=hp["n_L"],
                                                     t_min=hp["t_min"], t_max=hp["t_max"],
                                                     x_noise=hp["x_noise"])
-print(X_v_train)
-print(v_train)
-print("--")
-print(X_v_val)
-print(v_val)
 
 #%% Train
 model.initBNN(hp["h_layers"], hp["lr"], 1,
               hp["pi_1"], hp["pi_2"], hp["norm"])
-model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"], freq=hp["log_frequency"])
+model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
+            freq=hp["log_frequency"], div_max=True)
 
 #%% Generate the dataset from the mesh and params
 v_pred, _ = model.predict_v(X_v_val)
-
-err_val = re_s(v_val, v_pred)
+err_val = re_s(v_val.T, v_pred.T)
 print(f"RE_v: {err_val:4f}")

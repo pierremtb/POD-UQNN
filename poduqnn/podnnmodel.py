@@ -39,6 +39,7 @@ class PodnnModel:
         self.resdir = resdir
         self.setup_data_path = os.path.join(resdir, SETUP_DATA_NAME)
         self.train_data_path = os.path.join(resdir, TRAIN_DATA_NAME)
+        self.init_data_path = os.path.join(resdir, INIT_DATA_NAME)
         self.model_params_path = os.path.join(resdir, MODEL_PARAMS_NAME)
         self.model_path = os.path.join(resdir, MODEL_NAME)
 
@@ -282,7 +283,7 @@ class PodnnModel:
         self.regnn.summary()
 
     def train(self, X_v, v, X_v_val, v_val, epochs,
-              freq=100, silent=False, X_out=None):
+              freq=100, silent=False, X_out=None, div_max=False):
         """Train the POD-NN's regression model, and save it."""
         if self.regnn is None:
             raise ValueError("Regression model isn't defined.")
@@ -292,8 +293,9 @@ class PodnnModel:
         def err_fn():
             v_pred, sig = self.regnn.predict(X_v_val)
             log = {
-                "RE_v": re_s(v_val.T, v_pred.T),
+                "RE_v": re_s(v_val.T, v_pred.T, div_max=div_max),
                 "std": tf.reduce_sum(v_pred.std(0)),
+                "stdval": tf.reduce_sum(v_val.std(0)),
                 "in": tf.reduce_mean(sig)
             }
             if X_out is not None:
