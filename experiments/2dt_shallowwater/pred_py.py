@@ -61,8 +61,8 @@ U_pred_0 = model.restruct(U_pred_0)
 x = x_mesh[:, 0]
 y = x_mesh[:, 1]
 # X, Y = np.mgrid[int(x.min()):int(x.max()), int(y.min()):int(y.max())]
-xint = np.linspace(x.min(), x.max(), 2000)
-yint = np.linspace(y.min(), y.max(), 2000)
+xint = np.linspace(x.min(), x.max(), 5000)
+yint = np.linspace(y.min(), y.max(), 5000)
 X, Y = np.meshgrid(xint, yint)
 # X, Y = np.mgrid[0:1000, 0:1000]
 
@@ -71,43 +71,49 @@ dist_pts = [([277182.62, 277179.72], [5048838.87, 5048840.58]),
 
 method = "linear"
 
-for s in [0]:
-    for t in range(1, hp["n_t"] - 1):
-        h = U_tst[0, :, t, s]
-        h_pred = U_pred[0, :, t, s]
-        h_pred_up = U_pred[0, :, t, s] + 2 * U_pred_sig[0, :, t, s]
-        h_pred_lo = U_pred[0, :, t, s] - 2 * U_pred_sig[0, :, t, s]
+s = 0
+t = 0
+# for s in [0]:
+    # for t in range(1, hp["n_t"] - 1):
+h = U_tst[0, :, t, s]
+h_pred = U_pred[0, :, t, s]
+h_pred_up = U_pred[0, :, t, s] + 2 * U_pred_sig[0, :, t, s]
+h_pred_lo = U_pred[0, :, t, s] - 2 * U_pred_sig[0, :, t, s]
 
-        H_pred = griddata((x, y), h_pred, (X, Y), method=method)
-        H_pred_up = griddata((x, y), h_pred_up, (X, Y), method=method)
-        H_pred_lo = griddata((x, y), h_pred_lo, (X, Y), method=method)
-        H = griddata((x, y), h, (X, Y), method=method)
-        plt.imshow(H_pred)
-        # plt.contourf(X, Y, H_pred)
+H_pred = griddata((x, y), h_pred, (X, Y), method=method)
+# H_pred_up = griddata((x, y), h_pred_up, (X, Y), method=method)
+# H_pred_lo = griddata((x, y), h_pred_lo, (X, Y), method=method)
+# H = griddata((x, y), h, (X, Y), method=method)
+# plt.imshow(H_pred)
+n_plot_x = n_plot_y = 1
+fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=3.))
+plt.imshow(H_pred.T, interpolation='nearest', cmap='rainbow', 
+        extent=[x.min(), x.max(), y.min(), y.max()], 
+        origin='lower', aspect='equal')
+# plt.show()
+# plt.contourf(X, Y, H_pred)
 
-        # Convert the line to pixel/index coordinates
-        x_world = np.array([274962.05, 274805.82])
-        y_world = np.array([5043752.94, 5043861.34]) 
-        # x_world = np.array([0, 1000])
-        # y_world = np.array([0, 1000])
-        col = x_world
-        row = y_world
-        # col = H_pred.shape[1] * (x_world - X.min()) / X.ptp()
-        # row = H_pred.shape[0] * (y_world - Y.min()) / Y.ptp()
+# Convert the line to pixel/index coordinates
+x_p = np.array([274962.05787328, 274805.82000738464])
+y_p = np.array([5043861.339199714, 5043756.949180244])
 
-        # Interpolate the line at "num" points...
-        num = 1000
-        row, col = [np.linspace(item[0], item[1], num) for item in [row, col]]
+x_pd = (x_p - x.min()) / x.ptp()
+y_pd = (y_p - y.min()) / y.ptp()
 
-        # Extract the values along the line, using cubic interpolation
-        zi = scipy.ndimage.map_coordinates(H_pred, np.vstack((row, col)))
-        plt.plot(x_world, y_world, 'ro-')
-        savefig("test")
-        plt.plot(zi)
-        savefig("test2")
+# Interpolate the line at "num" points...
+num = 1000
+X_p = np.linspace(x_pd[0], x_pd[1], num)
+Y_p = np.linspace(y_pd[0], y_pd[1], num)
+
+plt.plot(x_p, y_p, 'ro-')
+plt.show()
+#%%
+zi = scipy.ndimage.map_coordinates(np.nan_to_num(H_pred), np.vstack((X_p, Y_p)))
+plt.plot(zi)
+plt.show()
         
+# %%
 
-exit(0)
 # %% VTU export
 A
 print("Saving to .vtu")

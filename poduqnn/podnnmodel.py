@@ -1,10 +1,9 @@
 """Module declaring a class for a POD-NN model."""
 
 import os
-import time
 import pickle
+import time
 import tensorflow as tf
-import tensorflow_probability as tfp
 import numpy as np
 from tqdm import tqdm
 import numba as nb
@@ -455,7 +454,6 @@ class PodnnModel:
 
     def save_init_data(self, X_v_train, v_train, U_train, X_v_val, v_val, U_val):
         """Save training data, such as datasets."""
-
         with open(self.init_data_path, "wb") as f:
             pickle.dump((X_v_train, v_train, U_train, X_v_val, v_val, U_val), f)
 
