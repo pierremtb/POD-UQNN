@@ -31,7 +31,7 @@ X_v_train, v_train, _, \
                                                     hp["train_val"],
                                                     eps=hp["eps"], n_L=hp["n_L"],
                                                     t_min=hp["t_min"], t_max=hp["t_max"],
-                                                    x_noise=hp["x_noise"])
+                                                    x_noise=hp["x_noise"], rm_init=True)
 
 # import matplotlib.pyplot as plt
 # import meshio
