@@ -38,7 +38,7 @@ X_v_train, v_train, _, \
 model.initBNN(hp["h_layers"], hp["lr"], 1,
               hp["pi_1"], hp["pi_2"], hp["norm"])
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
-            freq=hp["log_frequency"], div_max=True)
+            freq=hp["log_frequency"], div_max=False)
 
 #%% Generate the dataset from the mesh and params
 v_pred, _ = model.predict_v(X_v_val)

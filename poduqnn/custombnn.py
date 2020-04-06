@@ -169,7 +169,7 @@ class BayesianNeuralNetwork:
         def split_mean_var(data):
             mean, out_var = tf.split(data, num_or_size_splits=2, axis=1)
             # var = tf.math.log(1.0 + tf.exp(out_var)) + 1e-6
-            var = tf.math.softplus(0.01 * out_var) + 1e-6
+            var = tf.math.softplus(0.1 * out_var) + 1e-6
             return [mean, var]
         
         outputs = tf.keras.layers.Lambda(split_mean_var)(x)
