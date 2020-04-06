@@ -300,7 +300,7 @@ class PodnnModel:
             }
             if X_out is not None:
                 _, sig_out = self.predict_v(X_out)
-                log["ino"] = tf.reduce_mean(sig_out),
+                log["ino"] = tf.reduce_mean(sig_out)
             return log
         logger.set_val_err_fn(err_fn)
 

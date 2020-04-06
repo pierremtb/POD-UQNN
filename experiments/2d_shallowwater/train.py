@@ -28,13 +28,20 @@ with open(os.path.join("cache", "train_tst_idx.pkl"), "wb") as f:
 
 datadir = "data"
 mu_path = os.path.join(datadir, "INPUT_MONTE_CARLO.dat")
-x_mesh, connectivity, X_v, U = \
-        read_multi_space_sol_input_mesh(hp["n_s"], 1, 1, train_tst_idx[0],
-                                        hp["mesh_idx"], datadir, mu_path,
-                                        hp["mu_idx"])
 
-np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
-# x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
+# x_mesh, connectivity, X_v, U = \
+#         read_multi_space_sol_input_mesh(hp["n_s"], 1, 1, train_tst_idx[0],
+#                                         hp["mesh_idx"], datadir, mu_path,
+#                                         hp["mu_idx"])
+# np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
+# np.save(os.path.join("cache", "connectivity.npy"), connectivity)
+# np.save(os.path.join("cache", "X_v.npy"), X_v)
+# np.save(os.path.join("cache", "U.npy"), U)
+
+x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
+connectivity = np.load(os.path.join("cache", "connectivity.npy"))
+X_v = np.load(os.path.join("cache", "X_v.npy"))
+U = np.load(os.path.join("cache", "U.npy"))
 
 #%% Init the model
 model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
