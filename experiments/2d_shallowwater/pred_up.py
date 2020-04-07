@@ -65,13 +65,13 @@ n_plot_y = 2
 fig = plt.figure(figsize=figsize(n_plot_x, n_plot_x, scale=5.0))
 gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
-dist_pts1 = [([277192.60844560585, 277180.67152021887], [5048837.2642906627, 5048844.5442971954]),
-            ([277191.524497090668, 277180.51111323324], [5048835.4876065824, 5048842.5216993284])]
+dist_pts1 = [([277183.45492039167, 277198.46746226103], [5048847.323587381, 5048833.395284647]),
+            ([277184.99787608377, 277199.4682983857], [5048847.782303939, 5048834.479523783])]
 dist_pts2 = [([277388.21946463996, 277427.10081452655], [5049281.936758901, 5049254.797322375]),
             ([277385.8907249878, 277428.83142196125], [5049286.813559915, 5049257.285070563])]
 dist_pts_list = [dist_pts1, dist_pts2]
-offsets_1 = [(3.9, -1.5), (-5.1, -12.5)]
-offsets_2 = [(0, 8.2), (-32, 10.5)]
+offsets_1 = [(-20, -12), (7.9, 8.5)]
+offsets_2 = [(-30, -2), (1, 8.2)]
 offsets_list = [offsets_1, offsets_2]
 
 for i, sel in enumerate([sel1, sel2]):
@@ -115,7 +115,10 @@ for i, sel in enumerate([sel1, sel2]):
     dist_pts_i = dist_pts_list[i]
     offsets = offsets_list[i]
     for i, dist_pts in enumerate(dist_pts_i):
-        ax.plot(dist_pts[0], dist_pts[1], "k:")
+        if i == 0:
+            ax.plot(dist_pts[0], dist_pts[1], "k:", label="$d_{2\sigma}$")
+        else:
+            ax.plot(dist_pts[0], dist_pts[1], "k:")
         dist_i = np.sqrt((dist_pts[0][0] - dist_pts[0][1])**2 +
                            (dist_pts[1][0] - dist_pts[1][1])**2)
         print(offsets[i])

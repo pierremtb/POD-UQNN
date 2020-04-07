@@ -58,7 +58,7 @@ X, Y = np.mgrid[int(x.min()):int(x.max()), int(y.min()):int(y.max())]
 dist_pts = [([277183, 277179.55], [5048840, 5048842.38]),
             ([277212.77, 277205.61], [5048832.65, 5048838.01])]
 
-for i, s in enumerate([idx[2], idx[4]]):
+for i, s in enumerate([idx[7], idx[4]]):
         print(s)
         h = U_tst[0, sel, s]
         h_pred = U_pred[0, sel, s]
