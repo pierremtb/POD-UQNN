@@ -273,7 +273,7 @@ class PodnnModel:
         self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
         return X_v_train, v_train, U_train, X_v_val, v_val, U_val
 
-    def initVNNs(self, n_M, h_layers, lr, lam, adv_eps, soft_0=0.01,
+    def initVNNs(self, n_M, h_layers, lr, lam, adv_eps, soft_0=1.,
                  norm=NORM_MEANSTD):
         """Create the ensemble of dual-output Neural Networks."""
         clean_models(self.resdir)

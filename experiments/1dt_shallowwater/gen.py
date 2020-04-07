@@ -32,7 +32,5 @@ X_v_train, v_train, _, \
                                                     t_min=hp["t_min"], t_max=hp["t_max"],
                                                     x_noise=hp["x_noise"], rm_init=True)
 
-print(X_v_train.shape)
-
-model.initVNNs(hp["n_M"], hp["h_layers"],
-                hp["lr"], hp["lambda"], hp["adv_eps"], hp["norm"])
+model.initVNNs(hp["n_M"], hp["h_layers"], hp["lr"], hp["lambda"],
+               hp["adv_eps"], hp["soft_0"], hp["norm"])

@@ -96,8 +96,8 @@ for i, s in enumerate([idx[2], idx[4]]):
         ax.plot(dist_pts[i][0], dist_pts[i][1], "k:", label="$d_{2\sigma}$")
         dist_i = np.sqrt((dist_pts[i][0][0] - dist_pts[i][0][1])**2 +
                            (dist_pts[i][1][0] - dist_pts[i][1][1])**2)
-        ax.text(dist_pts[i][0][1] - 16, dist_pts[i][1][1] + 9.5,
-                f"$d_\sigma={dist_i:.2f}" + r"\ \textrm{m}$")
+        ax.text(dist_pts[i][0][1] - 10, dist_pts[i][1][1] + 9.5,
+                f"${dist_i:.2f}" + r"\ \textrm{m}$")
         # ax.text(277180, 850+5.048e6, "yo")
         plot_ax(ax)
         ax.legend()

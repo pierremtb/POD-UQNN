@@ -13,7 +13,7 @@ from poduqnn.handling import clean_dir, split_dataset
 from hyperparams import HP as hp
 
 resdir = "cache"
-clean_dir(resdir)
+# clean_dir(resdir)
 
 # Getting data from the files
 # fake_x = np.zeros(hp["n_s"] + hp["n_s_tst"])
@@ -25,15 +25,25 @@ with open(os.path.join("cache", "train_tst_idx.pkl"), "wb") as f:
 
 datadir = "data"
 mu_path = os.path.join(datadir, "INPUT_MONTE_CARLO.dat")
-x_mesh, connectivity, X_v, U = \
-        read_multi_space_sol_input_mesh(hp["n_s"], 1, 1, train_tst_idx[0],
-                                        hp["mesh_idx"], datadir, mu_path,
-                                        hp["mu_idx"])
+# x_mesh, connectivity, X_v, U = \
+#         read_multi_space_sol_input_mesh(hp["n_s"], 1, 1, train_tst_idx[0],
+#                                         hp["mesh_idx"], datadir, mu_path,
+#                                         hp["mu_idx"])
+# np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
+# np.save(os.path.join("cache", "connectivity.npy"), connectivity)
+# np.save(os.path.join("cache", "X_v.npy"), X_v)
+# np.save(os.path.join("cache", "U.npy"), U)
 
-np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
+x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
+connectivity = np.load(os.path.join("cache", "connectivity.npy"))
+X_v = np.load(os.path.join("cache", "X_v.npy"))
+U = np.load(os.path.join("cache", "U.npy"))
+
+
 # x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-# u_mesh = None
-# X_v = None
+# connectivity = np.load(os.path.join("cache", "connectivity.npy"))
+# X_v = np.load(os.path.join("cache", "X_v.npy"))
+# U = np.load(os.path.join("cache", "U.npy"))
 
 #%% Init the model
 model = PodnnModel(resdir, hp["n_v"], x_mesh, hp["n_t"])
@@ -44,5 +54,5 @@ X_v_train, v_train, \
     U_val = model.convert_multigpu_data(U, X_v, hp["train_val"], hp["eps"])
 
 
-model.initVNNs(hp["n_M"], hp["h_layers"],
-                hp["lr"], hp["lambda"], hp["adv_eps"], hp["norm"])
+model.initVNNs(hp["n_M"], hp["h_layers"], hp["lr"], hp["lambda"],
+               hp["adv_eps"], hp["soft_0"], hp["norm"])
