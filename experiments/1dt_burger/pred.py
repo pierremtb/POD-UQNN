@@ -91,7 +91,7 @@ for j, time in enumerate(times):
                 ax.set_xlabel("$t$")
                 ax.set_ylabel("$x$")
                 ax.axvline(X_i[times[0], 0], color="w", ls="-.")
-                ax.set_title(r"$u{\scriptsize\textrm{D}}(s=" + f"{X_i[0, 1]:.4f}" + ")$")
+                ax.set_title(r"$u_D(s=" + f"{X_i[0, 1]:.4f}" + ")$")
 
                 ax = fig.add_subplot(gs[1, 0])
                 U_pred_grid = griddata(XT, U_pred_i[:, :, 0].flatten(), (xx, tt), method='cubic')
@@ -104,14 +104,14 @@ for j, time in enumerate(times):
                 ax.set_xlabel("$t$")
                 ax.set_ylabel("$x$")
                 ax.axvline(X_i[times[1], 0], color="w", ls="-.")
-                ax.set_title(r"$\hat{u}{\scriptsize\textrm{D}}(s=" + f"{X_i[0, 1]:.4f}" + ")$")
+                ax.set_title(r"$\hat{u}^\mu_D(s=" + f"{X_i[0, 1]:.4f}" + ")$")
 
             ax = fig.add_subplot(gs[j, actual_row + 1])
-            ax.plot(x, U_pred_i[:, time, 0], "b-", label=r"$\hat{u}_D(s_{" + lbl + r"})$")
+            ax.plot(x, U_pred_i[:, time, 0], "b-", label=r"$\hat{u}^\mu_D(s_{" + lbl + r"})$")
             ax.plot(x, U_samples[:, time, col], "r--", label=r"$u_D(s_{" + lbl + r"})$")
             lower = U_pred_i[:, time, 0] - 2*U_pred_i_sig[:, time, 0]
             upper = U_pred_i[:, time, 0] + 2*U_pred_i_sig[:, time, 0]
-            ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
+            ax.fill_between(x, lower, upper, alpha=0.2, label=r"$\pm2\hat{u}^\sigma_D(s_{" + lbl + r"})$")
             ax.set_xlabel(f"$x$")
             if row == 0:
                 ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega,\ "
@@ -120,7 +120,7 @@ for j, time in enumerate(times):
                 ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega{\footnotesize\textrm{out}},\ "
                              + f"t={X_i[time, 0]:.2f}$")
             actual_row += 1
-            if j == 0 and actual_row == 0:
+            if j == 0:
                 ax.legend()
 plt.tight_layout()
 savefig("results/podbnn-burger-graph-meansamples")
