@@ -14,7 +14,7 @@ NORM_CENTER = "center"
 
 class VarNeuralNetwork:
     """Custom class defining a mean/variance Neural Network model."""
-    def __init__(self, layers, lr, lam, adv_eps=None, soft_0=0.01,
+    def __init__(self, layers, lr, lam, adv_eps=None, soft_0=1.,
                  norm=NORM_NONE, model=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float64"
@@ -40,6 +40,8 @@ class VarNeuralNetwork:
 
     def build_model(self):
         """Functional Keras model."""
+        soft_0 = self.soft_0
+
         inputs = tf.keras.Input(shape=(self.layers[0],), name="x", dtype=self.dtype)
         x = inputs
         for width in self.layers[1:-1]:
@@ -53,9 +55,7 @@ class VarNeuralNetwork:
         # Output processing function
         def split_mean_var(data):
             mean, out_var = tf.split(data, num_or_size_splits=2, axis=1)
-            # var = tf.math.log(1.0 + tf.exp(out_var)) + 1e-6
-            # var = tf.math.softplus(self.soft_0 * out_var) + 1e-6
-            var = tf.math.softplus(0.01 * out_var) + 1e-6
+            var = tf.math.softplus(soft_0 * out_var) + 1e-6
             return [mean, var]
         
         outputs = tf.keras.layers.Lambda(split_mean_var)(x)
@@ -181,7 +181,7 @@ class VarNeuralNetwork:
     def save_to(self, model_path, params_path):
         """Save the (trained) model and params for later use."""
         with open(params_path, "wb") as f:
-            pickle.dump((self.layers, self.lr, self.lam, self.norm, self.norm_bounds), f)
+            pickle.dump((self.layers, self.lr, self.lam, self.soft_0, self.norm, self.norm_bounds), f)
         tf.keras.models.save_model(self.model, model_path)
 
     @classmethod
@@ -195,7 +195,7 @@ class VarNeuralNetwork:
 
         print(f"Loading model from {model_path}")
         with open(params_path, "rb") as f:
-            layers, lr, lam, norm, norm_bounds = pickle.load(f)
+            layers, lr, lam, soft_0, norm, norm_bounds = pickle.load(f)
         print(f"Loading model params from {params_path}")
-        model = tf.keras.models.load_model(model_path)
+        model = tf.keras.models.load_model(model_path, custom_objects={"soft_0": soft_0})
         return cls(layers, lr, lam, model=model, norm=norm, norm_bounds=norm_bounds)

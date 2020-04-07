@@ -29,6 +29,7 @@ HP["epochs"] = 150000
 HP["lr"] = 0.005
 HP["lambda"] = 0.001
 HP["adv_eps"] = 0.001
+HP["soft_0"] = 0.01
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000

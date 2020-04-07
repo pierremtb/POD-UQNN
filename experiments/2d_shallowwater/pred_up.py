@@ -20,7 +20,7 @@ from hyperparams import HP as hp
 model = PodnnModel.load("cache")
 # X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
-X_v_up = np.linspace(800, 1200, 100).reshape(-1, 1)
+X_v_up = np.linspace(800, 1200, 400).reshape(-1, 1)
 U_pred_up, U_pred_sig_up = model.predict(X_v_up)
 
 U_up_mean = U_pred_up.mean(-1)
@@ -65,13 +65,13 @@ n_plot_y = 2
 fig = plt.figure(figsize=figsize(n_plot_x, n_plot_x, scale=5.0))
 gs = fig.add_gridspec(n_plot_x, n_plot_y)
 
-dist_pts1 = [([277192.60844560585, 277180.67152021887], [5048837.2642906627, 5048844.5442971954]),
-            ([277191.524497090668, 277180.51111323324], [5048835.4876065824, 5048842.5216993284])]
-dist_pts2 = [([276562.8857299936, 276574.6388779437], [5046804.622800197, 5046780.725850874]),
-            ([276555.931252808, 276571.7237823184], [5046812.108298524, 5046779.734621844])]
+dist_pts1 = [([277183.66342791764, 277197.3415216208], [5048847.406990391, 5048834.354419266]),
+             ([277184.99787608377, 277198.30065624014], [5048847.782303939, 5048835.5220614085])]
+dist_pts2 = [([277385.61177076836, 277427.10081452655], [5049284.109837127, 5049254.797322375]),
+            ([277391.2147666422, 277428.83142196125], [5049283.010673019, 5049257.285070563])]
 dist_pts_list = [dist_pts1, dist_pts2]
-offsets_1 = [(3.9, -1.5), (-5.1, -12.5)]
-offsets_2 = [(0, 8.2), (-32, 10.5)]
+offsets_1 = [(-20, -12), (7.9, 8.5)]
+offsets_2 = [(-30, -2), (1, 8.2)]
 offsets_list = [offsets_1, offsets_2]
 
 for i, sel in enumerate([sel1, sel2]):
@@ -115,7 +115,11 @@ for i, sel in enumerate([sel1, sel2]):
     dist_pts_i = dist_pts_list[i]
     offsets = offsets_list[i]
     for i, dist_pts in enumerate(dist_pts_i):
-        ax.plot(dist_pts[0], dist_pts[1], "k:")
+        if i == 0:
+            ax.plot(dist_pts[0], dist_pts[1], "k:", label="$d_{2\sigma}$")
+        else:
+            ax.plot(dist_pts[0], dist_pts[1], "k:")
+
         dist_i = np.sqrt((dist_pts[0][0] - dist_pts[0][1])**2 +
                            (dist_pts[1][0] - dist_pts[1][1])**2)
         print(offsets[i])

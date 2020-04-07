@@ -43,7 +43,5 @@ X_v_train, v_train, \
     X_v_val, v_val, \
     U_val = model.convert_multigpu_data(U, X_v, hp["train_val"], hp["eps"])
 
-model.initVNNs(hp["n_M"], hp["h_layers"],
-                hp["lr"], hp["lambda"], hp["adv_eps"], hp["norm"])
-
-print(v_train.shape)
+model.initVNNs(hp["n_M"], hp["h_layers"], hp["lr"], hp["lambda"],
+               hp["adv_eps"], hp["soft_0"], hp["norm"])

@@ -31,6 +31,7 @@ HP["h_layers"] = [256, 256, 256]
 HP["n_M"] = 5
 HP["epochs"] = 60000
 HP["lr"] = 0.01
+HP["soft_0"] = 1.
 HP["adv_eps"] = 0.001
 HP["lambda"] = 0.0001
 HP["norm"] = NORM_MEANSTD
