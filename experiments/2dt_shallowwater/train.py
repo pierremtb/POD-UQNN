@@ -14,7 +14,7 @@ from hyperparams import HP as hp
 
 #%% Prep GPUs
 distributed, local_num = check_distributed_args()
-print(f"Distributed: {distributed}, Local models: {local_num}")
+print(f"Distributed: {distributed}, Local models:{local_num}")
 tf.config.set_soft_device_placement(True)
 if distributed:
     import horovod.tensorflow as hvd
