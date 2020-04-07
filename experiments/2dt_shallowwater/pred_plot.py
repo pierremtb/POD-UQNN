@@ -46,7 +46,7 @@ for i, t_i in enumerate(idx):
     ax = fig.add_subplot(gs[2*i:2*i+2, 0:2])
     img = plti.imread(f"cache/x_u_tst_pred.{t_i}.png")
     ax.imshow(img)
-    ax.set_xlabel(r"Water depth $\eta$")
+    ax.set_xlabel(r"Surface elevation $\eta$")
     # ax.set_xlabel(f"$x$")
     # ax.set_ylabel(f"$y$")
     ax.set_xticks([])

@@ -24,8 +24,8 @@ HP["train_val"] = (.8, .2)
 HP["h_layers"] = [140, 140]
 # Setting up TF SGD-based optimizer
 HP["epochs"] = 75000
-HP["lr"] = 0.005
-HP["pi_1"] = 2.
+HP["lr"] = 0.001
+HP["pi_1"] = 1.5
 HP["pi_2"] = 0.1
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger

@@ -21,6 +21,7 @@ from hyperparams import u
 model = PodnnModel.load("cache")
 X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
+print(X_v_train)
 #%% Predict and restruct
 U_pred, U_pred_sig = model.predict(X_v_val)
 
@@ -37,7 +38,7 @@ X_v_tst, U_tst, _, _ = \
 U_pred, U_pred_sig = model.predict(X_v_tst)
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 U_tst = model.restruct(U_tst)[0]
-U_pred = model.restruct(U_pred, n_t=hp["n_t"] - 1)[0]
+# U_pred = model.restruct(U_pred, n_t=hp["n_t"] - 1)[0]
 
 #%% Samples graph
 # hp["mu_min_out"] = [0.0005]
@@ -86,6 +87,7 @@ for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
         st = hp["n_t"] * col
         en = hp["n_t"] * (col + 1)
         X_i = X_v_samples[st:en, :]
+        print(X_i)
         U_pred_i, U_pred_i_sig = model.predict(X_i)
         U_pred_i = np.reshape(U_pred_i, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
         U_pred_i_sig = np.reshape(U_pred_i_sig, (hp["n_v"], hp["n_x"], hp["n_t"], -1))
