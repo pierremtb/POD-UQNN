@@ -64,7 +64,7 @@ for i, t_i in enumerate(idx):
     ax.set_xlabel(f"$x'$")
     ax.set_ylabel("$\eta$")
     ax.set_ylim(ylim)
-    ax.set_title(f"$s=29.368\ m$, $t={t_i * hp['d_t']}\ s$")
+    ax.set_title(f"$\eta_0=29.368\ m$, $t={t_i * hp['d_t']}\ s$")
     if i == 0:
         ax.legend()
 plt.tight_layout()
