@@ -58,7 +58,7 @@ X, Y = np.mgrid[int(x.min()):int(x.max()), int(y.min()):int(y.max())]
 dist_pts = [([277183, 277179.55], [5048840, 5048842.38]),
             ([277212.77, 277205.61], [5048832.65, 5048838.01])]
 
-for i, s in enumerate([idx[7], idx[4]]):
+for i, s in enumerate([idx[2], idx[4]]):
         print(s)
         h = U_tst[0, sel, s]
         h_pred = U_pred[0, sel, s]
@@ -97,7 +97,7 @@ for i, s in enumerate([idx[7], idx[4]]):
         dist_i = np.sqrt((dist_pts[i][0][0] - dist_pts[i][0][1])**2 +
                            (dist_pts[i][1][0] - dist_pts[i][1][1])**2)
         ax.text(dist_pts[i][0][1] - 16, dist_pts[i][1][1] + 4.5,
-                f"$d_\sigma={dist_i:.2f}" + r"\ \textrm{m}$")
+                f"${dist_i:.2f}" + r"\ \textrm{m}$")
         # ax.text(277180, 850+5.048e6, "yo")
         plot_ax(ax)
         ax.legend()
