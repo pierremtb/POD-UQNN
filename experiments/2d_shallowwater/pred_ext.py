@@ -10,8 +10,6 @@ from poduqnn.podnnmodel import PodnnModel
 from poduqnn.metrics import re_s
 from poduqnn.mesh import read_space_sol_input_mesh
 from poduqnn.plotting import figsize, savefig
-from pyevtk.hl import unstructuredGridToVTK
-from pyevtk.vtk import VtkTriangle
 
 from hyperparams import HP as hp
 

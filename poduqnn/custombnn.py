@@ -158,7 +158,7 @@ class BayesianNeuralNetwork:
         x = inputs
         for width in self.layers[1:-1]:
             x = DenseVariational(
-                    width, activation=tf.nn.relu, dtype=self.dtype,
+                    width, activation=tf.nn.tanh, dtype=self.dtype,
                     prior_sigma_1=self.pi_1, prior_sigma_2=self.pi_2,
                     kl_weight=self.klw)(x)
         x = DenseVariational(
@@ -168,8 +168,7 @@ class BayesianNeuralNetwork:
         # Output processing function
         def split_mean_var(data):
             mean, out_var = tf.split(data, num_or_size_splits=2, axis=1)
-            # var = tf.math.log(1.0 + tf.exp(out_var)) + 1e-6
-            var = tf.math.softplus(0.001 * out_var) + 1e-6
+            var = tf.math.softplus(0.01 * out_var) + 1e-6
             return [mean, var]
         
         outputs = tf.keras.layers.Lambda(split_mean_var)(x)
@@ -188,6 +187,7 @@ class BayesianNeuralNetwork:
         """Compute the loss and its derivatives w.r.t. the inputs."""
         with tf.GradientTape() as tape:
             loss_value = self.loss(v, self.model(X))
+            loss_value += tf.reduce_sum(self.model.losses)
         grads = tape.gradient(loss_value, self.wrap_trainable_variables())
         return loss_value, grads
 

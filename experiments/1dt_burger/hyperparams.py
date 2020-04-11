@@ -29,11 +29,11 @@ HP["h_layers"] = [140, 140]
 # Setting up TF SGD-based optimizer
 HP["epochs"] = 100000
 HP["lr"] = 0.001
-HP["pi_1"] = 2.
+HP["pi_1"] = 1.5
 HP["pi_2"] = 0.1
-HP["norm"] = NORM_NONE
+HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 5000
+HP["log_frequency"] = 500
 # Burgers params
 HP["mu_min"] = [0.001]
 HP["mu_max"] = [0.0100]
