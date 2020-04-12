@@ -143,10 +143,9 @@ class BayesianNeuralNetwork:
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
-        if model is None:
-            self.model = self.build_model()
-        else:
-            self.model = model
+        self.model = self.build_model()
+        if model is not None:
+            self.model.load_weights(model)
 
     def build_model(self):
         """Functional Keras model."""
@@ -310,13 +309,14 @@ class BayesianNeuralNetwork:
         """Save the (trained) model and params for later use."""
         with open(params_path, "wb") as f:
             pickle.dump((self.layers, self.lr, self.klw, self.norm, self.norm_bounds), f)
-        tf.keras.models.save_model(self.model, model_path)
+        # tf.keras.models.save_model(self.model, model_path)
+        self.model.save_weights(model_path)
 
     @classmethod
     def load_from(cls, model_path, params_path):
         """Load a (trained) model and params."""
-        if not os.path.exists(model_path):
-            raise FileNotFoundError("Can't find cached model.")
+        # if not os.path.exists(model_path):
+        #     raise FileNotFoundError("Can't find cached model.")
         if not os.path.exists(params_path):
             raise FileNotFoundError("Can't find cached model params.")
 
@@ -325,6 +325,7 @@ class BayesianNeuralNetwork:
             layers, lr, klw, norm, norm_bounds = pickle.load(f)
         print(f"Loading model params from {params_path}")
         custom_dict = {"DenseVariational": DenseVariational}
-        model = tf.keras.models.load_model(model_path,
-                                           custom_objects=custom_dict)
+        # model = tf.keras.models.load_model(model_path,
+        #                                    custom_objects=custom_dict)
+        model = model_path
         return cls(layers, lr, klw, model=model, norm=norm, norm_bounds=norm_bounds)
