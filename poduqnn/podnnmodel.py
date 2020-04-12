@@ -17,7 +17,7 @@ from .handling import split_dataset, sample_mu
 SETUP_DATA_NAME = "setup_data.pkl"
 TRAIN_DATA_NAME = "train_data.pkl"
 INIT_DATA_NAME = "init_data.pkl"
-MODEL_NAME = "model.h5"
+MODEL_NAME = "model_weights"
 MODEL_PARAMS_NAME = "model_params.pkl"
 
 
@@ -454,8 +454,8 @@ class PodnnModel:
             
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""
-        if not os.path.exists(self.model_path):
-            raise FileNotFoundError("Can't find cached model.")
+        # if not os.path.exists(self.model_path):
+        #     raise FileNotFoundError("Can't find cached model.")
         if not os.path.exists(self.model_params_path):
             raise FileNotFoundError("Can't find cached model params.")
         self.regnn = BayesianNeuralNetwork.load_from(self.model_path, self.model_params_path)
