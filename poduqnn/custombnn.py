@@ -20,109 +20,12 @@ K = tf.keras.backend
 tfd = tfp.distributions
 
 
-class DenseVariational(tfk.layers.Layer):
-    """Bayesian Inference layer adapted from
-       http://krasserm.github.io/2019/03/14/bayesian-neural-networks/"""
-    def __init__(self,
-                 units,
-                 kl_weight,
-                 activation=None,
-                 prior_sigma_1=1.0,
-                 prior_sigma_2=0.1,
-                 prior_pi=0.5, **kwargs):
-        self.units = units
-        self.kl_weight = kl_weight
-        self.activation = tfk.activations.get(activation)
-        self.prior_sigma_1 = prior_sigma_1
-        self.prior_sigma_2 = prior_sigma_2
-        self.prior_pi = prior_pi
-        self.prior_pi_1 = prior_pi
-        self.prior_pi_2 = 1.0 - prior_pi
-        self.init_sigma = np.sqrt(self.prior_pi_1 * self.prior_sigma_1 ** 2 +
-                                  self.prior_pi_2 * self.prior_sigma_2 ** 2)
-        self.kernel_mu = None
-        self.bias_mu = None
-        self.kernel_rho = None
-        self.bias_rho = None
-        self.prior_mu = None
-        super().__init__(**kwargs)
-
-    def get_config(self):
-        """Overriden method to allow for saving/loading."""
-        config = super().get_config().copy()
-        config.update({
-            'units': self.units,
-            'kl_weight': self.kl_weight,
-            'activation': self.activation,
-            'prior_sigma_1': self.prior_sigma_1,
-            'prior_sigma_2': self.prior_sigma_2,
-            'prior_pi': self.prior_pi,
-        })
-        return config
-
-    def compute_output_shape(self, input_shape):
-        """Overriden method defining sizing."""
-        return input_shape[0], self.units
-
-    def build(self, input_shape):
-        """Overriden method defining the custom weights/biases."""
-        k_init = tfk.initializers.RandomNormal(stddev=self.tensor(self.init_sigma))
-        b_init = tfk.initializers.RandomNormal(stddev=self.tensor(self.init_sigma))
-        self.kernel_mu = self.add_weight(name='kernel_mu',
-                                         shape=(input_shape[1], self.units),
-                                         initializer=k_init,
-                                         dtype=self.dtype,
-                                         trainable=True)
-        self.bias_mu = self.add_weight(name='bias_mu',
-                                       shape=(self.units,),
-                                       initializer=b_init,
-                                       dtype=self.dtype,
-                                       trainable=True)
-        self.kernel_rho = self.add_weight(name='kernel_rho',
-                                          shape=(input_shape[1], self.units),
-                                          initializer=tfk.initializers.Constant(0.),
-                                          dtype=self.dtype,
-                                          trainable=True)
-        self.bias_rho = self.add_weight(name='bias_rho',
-                                        shape=(self.units,),
-                                        initializer=tfk.initializers.Constant(0.),
-                                        dtype=self.dtype,
-                                        trainable=True)
-        super().build(input_shape)
-
-    def call(self, inputs):
-        """Overriden method defining the forward pass."""
-        kernel_sigma = 1e-3 + tf.math.softplus(self.kernel_rho)
-        kernel = self.kernel_mu + kernel_sigma * tf.random.normal(self.kernel_mu.shape, dtype=self.dtype)
-        bias_sigma = 1e-3 + tf.math.softplus(self.bias_rho)
-        bias = self.bias_mu + bias_sigma * tf.random.normal(self.bias_mu.shape, dtype=self.dtype)
-        self.add_loss(self.kl_loss(kernel, self.kernel_mu, kernel_sigma) + self.kl_loss(bias, self.bias_mu, bias_sigma))
-        return self.activation(K.dot(inputs, kernel) + bias)
-
-    def kl_loss(self, w, mu, sigma):
-        """Kullback-Leibler loss to minimize."""
-        variational_dist = tfp.distributions.Normal(mu, sigma)
-        return self.kl_weight * K.sum(variational_dist.log_prob(w) - self.log_prior_prob(w))
-
-    def log_prior_prob(self, w):
-        """Prior on the weights, as a log."""
-        comp_1_dist = tfp.distributions.Normal(0.0, self.tensor(self.prior_sigma_1))
-        comp_2_dist = tfp.distributions.Normal(0.0, self.tensor(self.prior_sigma_2))
-        c = np.log(np.expm1(1.))
-        return K.log(c + self.prior_pi_1 * comp_1_dist.prob(w)
-                     + self.prior_pi_2 * comp_2_dist.prob(w))
-
-    def tensor(self, x):
-        """Helper to make sure quantities are tensor of dtype."""
-        return tf.convert_to_tensor(x, dtype=self.dtype)
-
-
 class BayesianNeuralNetwork:
     """Custom class defining a Bayesian Neural Network model."""
     def __init__(self, layers, lr, klw,
                  soft_0=0.01, adv_eps=None,
                  pi_1=1.0, pi_2=0.1,
-                 norm=NORM_NONE, model=None, norm_bounds=None):
+                 norm=NORM_NONE, weights_path=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float64"
         tf.keras.backend.set_floatx(self.dtype)
@@ -144,8 +47,8 @@ class BayesianNeuralNetwork:
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
         self.model = self.build_model()
-        if model is not None:
-            self.model.load_weights(model)
+        if weights_path is not None:
+            self.model.load_weights(weights_path)
 
     def build_model(self):
         """Functional Keras model."""
@@ -169,6 +72,8 @@ class BayesianNeuralNetwork:
                     tfd.Normal(loc=t, scale=1),
                     reinterpreted_batch_ndims=1)),
             ])
+
+        # Define the model
         inputs = tf.keras.Input(shape=(self.layers[0],), name="x", dtype=self.dtype)
         x = inputs
         for width in self.layers[1:-1]:
@@ -176,47 +81,25 @@ class BayesianNeuralNetwork:
                     width, posterior_mean_field, prior_trainable,
                     activation=tf.nn.tanh, dtype=self.dtype,
                     kl_weight=self.klw)(x)
-            # x = DenseVariational(
-            #         width, activation=tf.nn.tanh, dtype=self.dtype,
-            #         prior_sigma_1=self.pi_1, prior_sigma_2=self.pi_2,
-            #         kl_weight=self.klw)(x)
         x = tfp.layers.DenseVariational(
                 2 * self.layers[-1], posterior_mean_field, prior_trainable,
                 activation=None, dtype=self.dtype,
                 kl_weight=self.klw)(x)
-        # x = DenseVariational(
-        #         2 * self.layers[-1], activation=None, dtype=self.dtype,
-        #         kl_weight=self.klw)(x)
 
         outputs = tfp.layers.DistributionLambda(
             lambda t: tfd.Normal(loc=t[..., :self.layers[-1]],
                 scale=tf.math.sqrt(tf.math.softplus(0.01 * t[..., self.layers[-1]:]) + 1e-6))
         )(x)
 
-        # Output processing function
-        # def split_mean_var(data):
-        #     mean, out_var = tf.split(data, num_or_size_splits=2, axis=1)
-        #     var = tf.math.softplus(0.01 * out_var) + 1e-6
-        #     return [mean, var]
-        
-        # outputs = tf.keras.layers.Lambda(split_mean_var)(x)
         model = tf.keras.Model(inputs=inputs, outputs=outputs, name="bnn")
         return model
-
-    # @tf.function
-    # def loss(self, y_obs, y_pred):
-    #     """Negative Log-Likelihood loss function."""
-    #     return 
-        # y_pred_mean, y_pred_var = y_pred
-        # dist = tfp.distributions.Normal(loc=y_pred_mean, scale=tf.math.sqrt(y_pred_var))
-        # return K.sum(-dist.log_prob(y_obs))
 
     @tf.function
     def grad(self, X, y):
         """Compute the loss and its derivatives w.r.t. the inputs."""
         with tf.GradientTape() as tape:
             y_pred = self.model(X)
-            loss_value = K.sum(-y_pred.log_prob(y))
+            loss_value = tf.reduce_sum(-y_pred.log_prob(y))
             loss_value += tf.reduce_sum(self.model.losses)
         grads = tape.gradient(loss_value, self.wrap_trainable_variables())
         return loss_value, grads
@@ -275,9 +158,6 @@ class BayesianNeuralNetwork:
         """Get the prediction distribution for a new input X."""
         X = self.normalize(X)
         return self.model(X)
-        # y_pred_mean, y_pred_var = self.model(X)
-        # dist = tfp.distributions.Normal(loc=y_pred_mean, scale=tf.math.sqrt(y_pred_var))
-        # return dist
 
     def predict(self, X, samples=100):
         """Get the prediction for a new input X."""
@@ -286,7 +166,6 @@ class BayesianNeuralNetwork:
         v_pred_var_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
 
         for i in range(samples):
-            # v_dist = self.predict_dist(X)
             v_dist = self.model(X)
             v_pred, v_pred_var = v_dist.mean(), v_dist.variance()
             v_pred_samples[i] = v_pred.numpy()
@@ -309,23 +188,15 @@ class BayesianNeuralNetwork:
         """Save the (trained) model and params for later use."""
         with open(params_path, "wb") as f:
             pickle.dump((self.layers, self.lr, self.klw, self.norm, self.norm_bounds), f)
-        # tf.keras.models.save_model(self.model, model_path)
         self.model.save_weights(model_path)
 
     @classmethod
     def load_from(cls, model_path, params_path):
         """Load a (trained) model and params."""
-        # if not os.path.exists(model_path):
-        #     raise FileNotFoundError("Can't find cached model.")
         if not os.path.exists(params_path):
             raise FileNotFoundError("Can't find cached model params.")
 
-        print(f"Loading model from {model_path}")
         with open(params_path, "rb") as f:
             layers, lr, klw, norm, norm_bounds = pickle.load(f)
         print(f"Loading model params from {params_path}")
-        custom_dict = {"DenseVariational": DenseVariational}
-        # model = tf.keras.models.load_model(model_path,
-        #                                    custom_objects=custom_dict)
-        model = model_path
-        return cls(layers, lr, klw, model=model, norm=norm, norm_bounds=norm_bounds)
+        return cls(layers, lr, klw, weights_path=model_path, norm=norm, norm_bounds=norm_bounds)
