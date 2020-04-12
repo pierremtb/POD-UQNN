@@ -90,17 +90,13 @@ class DenseVariational(tfk.layers.Layer):
                                         trainable=True)
         super().build(input_shape)
 
-    def call(self, inputs, **kwargs):
+    def call(self, inputs):
         """Overriden method defining the forward pass."""
-        kernel_sigma = 1e-3 + tf.math.softplus(0.1 * self.kernel_rho)
-        kernel = self.kernel_mu + kernel_sigma \
-                 * tf.random.normal(self.kernel_mu.shape, dtype=self.dtype)
-        bias_sigma = 1e-3 + tf.math.softplus(0.1 * self.bias_rho)
-        bias = self.bias_mu + bias_sigma \
-                 * tf.random.normal(self.bias_mu.shape, dtype=self.dtype)
-
-        self.add_loss(self.kl_loss(kernel, self.kernel_mu, kernel_sigma) +
-                      self.kl_loss(bias, self.bias_mu, bias_sigma))
+        kernel_sigma = 1e-3 + tf.math.softplus(self.kernel_rho)
+        kernel = self.kernel_mu + kernel_sigma * tf.random.normal(self.kernel_mu.shape, dtype=self.dtype)
+        bias_sigma = 1e-3 + tf.math.softplus(self.bias_rho)
+        bias = self.bias_mu + bias_sigma * tf.random.normal(self.bias_mu.shape, dtype=self.dtype)
+        self.add_loss(self.kl_loss(kernel, self.kernel_mu, kernel_sigma) + self.kl_loss(bias, self.bias_mu, bias_sigma))
         return self.activation(K.dot(inputs, kernel) + bias)
 
     def kl_loss(self, w, mu, sigma):
@@ -154,39 +150,74 @@ class BayesianNeuralNetwork:
 
     def build_model(self):
         """Functional Keras model."""
+        # Specify the surrogate posterior over `keras.layers.Dense` `kernel` and `bias`.
+        def posterior_mean_field(kernel_size, bias_size=0, dtype=None):
+            n = kernel_size + bias_size
+            c = np.log(np.expm1(1.))
+            return tf.keras.Sequential([
+                tfp.layers.VariableLayer(2 * n, dtype=dtype),
+                tfp.layers.DistributionLambda(lambda t: tfd.Independent(
+                    tfd.Normal(loc=t[..., :n],
+                                scale=1e-5 + tf.nn.softplus(c + t[..., n:])),
+                    reinterpreted_batch_ndims=1)),
+            ])
+        # Specify the prior over `keras.layers.Dense` `kernel` and `bias`.
+        def prior_trainable(kernel_size, bias_size=0, dtype=None):
+            n = kernel_size + bias_size
+            return tf.keras.Sequential([
+                tfp.layers.VariableLayer(n, dtype=dtype),
+                tfp.layers.DistributionLambda(lambda t: tfd.Independent(
+                    tfd.Normal(loc=t, scale=1),
+                    reinterpreted_batch_ndims=1)),
+            ])
         inputs = tf.keras.Input(shape=(self.layers[0],), name="x", dtype=self.dtype)
         x = inputs
         for width in self.layers[1:-1]:
-            x = DenseVariational(
-                    width, activation=tf.nn.tanh, dtype=self.dtype,
-                    prior_sigma_1=self.pi_1, prior_sigma_2=self.pi_2,
+            x = tfp.layers.DenseVariational(
+                    width, posterior_mean_field, prior_trainable,
+                    activation=tf.nn.tanh, dtype=self.dtype,
                     kl_weight=self.klw)(x)
-        x = DenseVariational(
-                2 * self.layers[-1], activation=None, dtype=self.dtype,
+            # x = DenseVariational(
+            #         width, activation=tf.nn.tanh, dtype=self.dtype,
+            #         prior_sigma_1=self.pi_1, prior_sigma_2=self.pi_2,
+            #         kl_weight=self.klw)(x)
+        x = tfp.layers.DenseVariational(
+                2 * self.layers[-1], posterior_mean_field, prior_trainable,
+                activation=None, dtype=self.dtype,
                 kl_weight=self.klw)(x)
+        # x = DenseVariational(
+        #         2 * self.layers[-1], activation=None, dtype=self.dtype,
+        #         kl_weight=self.klw)(x)
+
+        outputs = tfp.layers.DistributionLambda(
+            lambda t: tfd.Normal(loc=t[..., :self.layers[-1]],
+                scale=tf.math.sqrt(tf.math.softplus(0.01 * t[..., self.layers[-1]:]) + 1e-6))
+        )(x)
 
         # Output processing function
-        def split_mean_var(data):
-            mean, out_var = tf.split(data, num_or_size_splits=2, axis=1)
-            var = tf.math.softplus(0.01 * out_var) + 1e-6
-            return [mean, var]
+        # def split_mean_var(data):
+        #     mean, out_var = tf.split(data, num_or_size_splits=2, axis=1)
+        #     var = tf.math.softplus(0.01 * out_var) + 1e-6
+        #     return [mean, var]
         
-        outputs = tf.keras.layers.Lambda(split_mean_var)(x)
+        # outputs = tf.keras.layers.Lambda(split_mean_var)(x)
         model = tf.keras.Model(inputs=inputs, outputs=outputs, name="bnn")
         return model
 
-    @tf.function
-    def loss(self, y_obs, y_pred):
-        """Negative Log-Likelihood loss function."""
-        y_pred_mean, y_pred_var = y_pred
-        dist = tfp.distributions.Normal(loc=y_pred_mean, scale=tf.math.sqrt(y_pred_var))
-        return K.sum(-dist.log_prob(y_obs))
+    # @tf.function
+    # def loss(self, y_obs, y_pred):
+    #     """Negative Log-Likelihood loss function."""
+    #     return 
+        # y_pred_mean, y_pred_var = y_pred
+        # dist = tfp.distributions.Normal(loc=y_pred_mean, scale=tf.math.sqrt(y_pred_var))
+        # return K.sum(-dist.log_prob(y_obs))
 
     @tf.function
-    def grad(self, X, v):
+    def grad(self, X, y):
         """Compute the loss and its derivatives w.r.t. the inputs."""
         with tf.GradientTape() as tape:
-            loss_value = self.loss(v, self.model(X))
+            y_pred = self.model(X)
+            loss_value = K.sum(-y_pred.log_prob(y))
             loss_value += tf.reduce_sum(self.model.losses)
         grads = tape.gradient(loss_value, self.wrap_trainable_variables())
         return loss_value, grads
@@ -244,9 +275,10 @@ class BayesianNeuralNetwork:
     def predict_dist(self, X):
         """Get the prediction distribution for a new input X."""
         X = self.normalize(X)
-        y_pred_mean, y_pred_var = self.model(X)
-        dist = tfp.distributions.Normal(loc=y_pred_mean, scale=tf.math.sqrt(y_pred_var))
-        return dist
+        return self.model(X)
+        # y_pred_mean, y_pred_var = self.model(X)
+        # dist = tfp.distributions.Normal(loc=y_pred_mean, scale=tf.math.sqrt(y_pred_var))
+        # return dist
 
     def predict(self, X, samples=100):
         """Get the prediction for a new input X."""
@@ -255,7 +287,9 @@ class BayesianNeuralNetwork:
         v_pred_var_samples = np.zeros((samples, X.shape[0], self.layers[-1]))
 
         for i in range(samples):
-            v_pred, v_pred_var = self.model(X)
+            # v_dist = self.predict_dist(X)
+            v_dist = self.model(X)
+            v_pred, v_pred_var = v_dist.mean(), v_dist.variance()
             v_pred_samples[i] = v_pred.numpy()
             v_pred_var_samples[i] = v_pred_var.numpy()
 
