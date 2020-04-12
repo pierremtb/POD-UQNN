@@ -184,7 +184,8 @@ class BayesianNeuralNetwork:
     def save_to(self, model_path, params_path):
         """Save the (trained) model and params for later use."""
         with open(params_path, "wb") as f:
-            pickle.dump((self.layers, self.lr, self.klw, self.norm, self.norm_bounds), f)
+            pickle.dump((self.layers, self.lr, self.klw, self.exact_kl, self.activation,
+                         self.norm, self.norm_bounds), f)
         self.model.save_weights(model_path)
 
     @classmethod
@@ -194,6 +195,7 @@ class BayesianNeuralNetwork:
             raise FileNotFoundError("Can't find cached model params.")
 
         with open(params_path, "rb") as f:
-            layers, lr, klw, norm, norm_bounds = pickle.load(f)
+            layers, lr, klw, exact_kl, activation, norm, norm_bounds = pickle.load(f)
         print(f"Loading model params from {params_path}")
-        return cls(layers, lr, klw, weights_path=model_path, norm=norm, norm_bounds=norm_bounds)
+        return cls(layers, lr, klw, exact_kl, activation,
+                   weights_path=model_path, norm=norm, norm_bounds=norm_bounds)
