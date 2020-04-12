@@ -22,9 +22,8 @@ tfd = tfp.distributions
 
 class BayesianNeuralNetwork:
     """Custom class defining a Bayesian Neural Network model."""
-    def __init__(self, layers, lr, klw,
-                 soft_0=0.01, adv_eps=None,
-                 pi_1=1.0, pi_2=0.1,
+    def __init__(self, layers, lr, klw=1,
+                 exact_kl=False, activation=tf.nn.relu,
                  norm=NORM_NONE, weights_path=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float64"
@@ -39,10 +38,8 @@ class BayesianNeuralNetwork:
         self.logger = None
         self.batch_size = 0
         self.norm = norm
-        self.adv_eps = adv_eps
-
-        self.pi_1 = pi_1
-        self.pi_2 = pi_2
+        self.activation = activation
+        self.exact_kl = exact_kl
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
@@ -79,8 +76,8 @@ class BayesianNeuralNetwork:
         for width in self.layers[1:-1]:
             x = tfp.layers.DenseVariational(
                     width, posterior_mean_field, prior_trainable,
-                    activation=tf.nn.tanh, dtype=self.dtype,
-                    kl_weight=self.klw)(x)
+                    activation=self.activation, dtype=self.dtype,
+                    kl_weight=self.klw, kl_use_exact=self.exact_kl)(x)
         x = tfp.layers.DenseVariational(
                 2 * self.layers[-1], posterior_mean_field, prior_trainable,
                 activation=None, dtype=self.dtype,

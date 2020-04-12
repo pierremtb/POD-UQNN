@@ -1,6 +1,7 @@
 """Default hyperparameters for 1D time-dep Burgers Equation."""
 
 import numpy as np
+import tensorflow as tf
 from poduqnn.custombnn import NORM_MEANSTD, NORM_MINMAX, NORM_NONE
 
 HP = {}
@@ -29,8 +30,8 @@ HP["h_layers"] = [40, 40]
 # Setting up TF SGD-based optimizer
 HP["epochs"] = 80000
 HP["lr"] = 0.003
-HP["pi_1"] = 2.
-HP["pi_2"] = 0.1
+HP["exact_kl"] = True
+HP["activation"] = tf.nn.tanh
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 500
