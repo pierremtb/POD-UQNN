@@ -23,10 +23,11 @@ tfd = tfp.distributions
 class BayesianNeuralNetwork:
     """Custom class defining a Bayesian Neural Network model."""
     def __init__(self, layers, lr, klw=1,
-                 exact_kl=False, activation=tf.nn.relu,
+                 exact_kl=False, activation="relu",
+                 pi_0=None, pi_1=None, pi_2=None,
                  norm=NORM_NONE, weights_path=None, norm_bounds=None):
         # Making sure the dtype is consistent
-        self.dtype = "float64"
+        self.dtype = "float32"
         tf.keras.backend.set_floatx(self.dtype)
 
         # Setting up optimizer and params
@@ -40,46 +41,36 @@ class BayesianNeuralNetwork:
         self.norm = norm
         self.activation = activation
         self.exact_kl = exact_kl
+        self.is_prior_trainable = pi_0 is None and pi_1 is None and pi_2 is None
+        self.pi_0 = pi_0
+        self.pi_1 = pi_1
+        self.pi_2 = pi_2
 
         # Setting up the model
-        tf.keras.backend.set_floatx(self.dtype)
         self.model = self.build_model()
         if weights_path is not None:
             self.model.load_weights(weights_path)
 
     def build_model(self):
         """Functional Keras model."""
-        # Specify the surrogate posterior over `keras.layers.Dense` `kernel` and `bias`.
-        def posterior_mean_field(kernel_size, bias_size=0, dtype=None):
-            n = kernel_size + bias_size
-            c = np.log(np.expm1(1.))
-            return tf.keras.Sequential([
-                tfp.layers.VariableLayer(2 * n, dtype=dtype),
-                tfp.layers.DistributionLambda(lambda t: tfd.Independent(
-                    tfd.Normal(loc=t[..., :n],
-                                scale=1e-5 + tf.nn.softplus(c + t[..., n:])),
-                    reinterpreted_batch_ndims=1)),
-            ])
-        # Specify the prior over `keras.layers.Dense` `kernel` and `bias`.
-        def prior_trainable(kernel_size, bias_size=0, dtype=None):
-            n = kernel_size + bias_size
-            return tf.keras.Sequential([
-                tfp.layers.VariableLayer(n, dtype=dtype),
-                tfp.layers.DistributionLambda(lambda t: tfd.Independent(
-                    tfd.Normal(loc=t, scale=1),
-                    reinterpreted_batch_ndims=1)),
-            ])
+        if self.is_prior_trainable:
+            print("Using trainable prior")
+            prior = self.prior_trainable
+        else:
+            print(f"Using fixed mixture prior with " + 
+                  f"pi_0={self.pi_0}, pi_1={self.pi_1}, pi_2={self.pi_2}")
+            prior = self.mixture_prior
 
-        # Define the model
+        # Defining the model
         inputs = tf.keras.Input(shape=(self.layers[0],), name="x", dtype=self.dtype)
         x = inputs
         for width in self.layers[1:-1]:
             x = tfp.layers.DenseVariational(
-                    width, posterior_mean_field, prior_trainable,
+                    width, self.posterior_mean_field, prior,
                     activation=self.activation, dtype=self.dtype,
                     kl_weight=self.klw, kl_use_exact=self.exact_kl)(x)
         x = tfp.layers.DenseVariational(
-                2 * self.layers[-1], posterior_mean_field, prior_trainable,
+                2 * self.layers[-1], self.posterior_mean_field, prior,
                 activation=None, dtype=self.dtype,
                 kl_weight=self.klw)(x)
 
@@ -90,6 +81,48 @@ class BayesianNeuralNetwork:
 
         model = tf.keras.Model(inputs=inputs, outputs=outputs, name="bnn")
         return model
+
+    # Specify the surrogate posterior over `keras.layers.Dense` `kernel` and `bias`.
+    def posterior_mean_field(self, kernel_size, bias_size=0, dtype=None):
+        n = kernel_size + bias_size
+        c = np.log(np.expm1(1.))
+        return tf.keras.Sequential([
+            tfp.layers.VariableLayer(2 * n, dtype=dtype),
+            tfp.layers.DistributionLambda(lambda t: tfd.Independent(
+                tfd.Normal(loc=t[..., :n],
+                            scale=1e-5 + tf.nn.softplus(c + t[..., n:])),
+                reinterpreted_batch_ndims=1)),
+        ])
+
+    # Specify the prior over `keras.layers.Dense` `kernel` and `bias`.
+    def prior_trainable(self, kernel_size, bias_size=0, dtype=None):
+        n = kernel_size + bias_size
+        return tf.keras.Sequential([
+            tfp.layers.VariableLayer(n, dtype=dtype),
+            tfp.layers.DistributionLambda(lambda t: tfd.Independent(
+                tfd.Normal(loc=t, scale=1),
+                reinterpreted_batch_ndims=1)),
+        ])
+
+    def mixture_prior(self, kernel_size, bias_size=0, dtype=None):
+        n = kernel_size + bias_size
+        pi_0 = tf.cast(self.pi_0, dtype=dtype)
+        pi_1 = tf.cast(self.pi_1, dtype=dtype)
+        pi_2 = tf.cast(self.pi_2, dtype=dtype)
+        return tf.keras.Sequential([
+            tfp.layers.VariableLayer(n, dtype=dtype, trainable=False),
+            tfp.layers.DistributionLambda(lambda t:
+                tfd.Mixture(
+                cat=tfd.Categorical(probs=[pi_0, 1. - pi_0]),
+                components=[
+                    tfd.Independent(
+                        tfd.Normal(loc=tf.zeros_like(t), scale=pi_1),
+                        reinterpreted_batch_ndims=1),
+                    tfd.Independent(
+                        tfd.Normal(loc=tf.zeros_like(t), scale=pi_2),
+                        reinterpreted_batch_ndims=1),
+                ]),)
+        ])
 
     @tf.function
     def grad(self, X, y):

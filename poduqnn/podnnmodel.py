@@ -273,13 +273,14 @@ class PodnnModel:
         self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
         return X_v_train, v_train, U_train, X_v_val, v_val, U_val
 
-    def initBNN(self, h_layers, lr, klw, 
-                activation, exact_kl, norm=NORM_MEANSTD):
+    def initBNN(self, h_layers, lr, klw, activation,
+                exact_kl=False, pi_0=None, pi_1=None, pi_2=None,
+                norm=NORM_MEANSTD):
         """Init the Bayesian Neural Network regression model."""
         self.layers = [self.n_d, *h_layers, self.n_L]
-        self.regnn = BayesianNeuralNetwork(self.layers, lr, klw,
-                                           exact_kl, activation,
-                                           norm=norm)
+        self.regnn = \
+            BayesianNeuralNetwork(self.layers, lr, klw, exact_kl, activation,
+                                  pi_0, pi_1, pi_2, norm)
         self.regnn.summary()
 
     def train(self, X_v, v, X_v_val, v_val, epochs,
