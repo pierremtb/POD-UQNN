@@ -367,13 +367,13 @@ class PodnnModel:
         U_pred_sig = 1/2 * np.abs(U_pred_up - U_pred)
         return U_pred, U_pred_sig
 
-    def predict(self, X_v, samples=100):
+    def predict(self, X_v, samples=5):
         print(f"Averaging {samples} model configurations...")
         v_pred, v_pred_var = self.regnn.predict(X_v, samples=samples)
         v_dist = tfp.distributions.Normal(loc=v_pred, scale=np.sqrt(v_pred_var))
         U_sum = np.zeros((self.n_h, X_v.shape[0]))
         U_sum_sq = np.zeros_like(U_sum)
-        for i in range(samples):
+        for i in tqdm(range(samples)):
             U_i = self.project_to_U(v_dist.sample().numpy())
             U_sum += U_i
             U_sum_sq += U_i**2

@@ -69,13 +69,14 @@ X_v_samples, _, U_samples, _ = \
 X_v_samples_out, _, U_samples_out, _ = \
     model.create_snapshots(model.n_d, model.n_h, u, mu_lhs_out,
                            t_min=hp["t_min"], t_max=hp["t_max"])
-print(X_v_samples)
+
 U_pred, U_pred_sig = model.predict(X_v_samples)
 U_pred_out, U_pred_sig_out = model.predict(X_v_samples_out)
 U_pred, U_pred_sig = model.restruct(U_pred), model.restruct(U_pred_sig)
 U_pred_out, U_pred_sig_out = model.restruct(U_pred_out), model.restruct(U_pred_sig_out)
 # idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
 idx = 0
+
 # First column: contour plot of the true value
 ax = fig.add_subplot(gs[0, 0])
 U_tst_grid = griddata(XT, U_samples[..., idx].flatten(), (xx, tt), method='cubic')
@@ -128,15 +129,12 @@ def plot_slice(row, col, t, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i):
                         + f"t={X_i[time, 0]:.2f}$")
 
 for row, time in enumerate(times):
-    col = 0
-    lbl = r"{\scriptscriptstyle\textrm{tst}}" if row == 0 else r"{\scriptscriptstyle\textrm{out}}"
+    lbl = r"{\scriptscriptstyle\textrm{tst}}" if col == 0 else r"{\scriptscriptstyle\textrm{out}}"
     X_v = X_v_samples
     U_pred_i, U_pred_i_sig = U_pred[0, :, :, idx], U_pred_sig[0, :, :, idx]
     U_true_i = U_samples[:, :, idx]
-    print(U_pred_i.shape, U_pred_i_sig.shape)
-    print(U_true_i.shape)
     plot_slice(row, 0, time, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i)
-    X_v = X_v_samples
+    X_v = X_v_samples_out
     U_pred_i, U_pred_i_sig = U_pred_out[0, :, :, idx], U_pred_sig_out[0, :, :, idx]
     U_true_i = U_samples_out[:, :, idx]
     plot_slice(row, 1, time, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i)
