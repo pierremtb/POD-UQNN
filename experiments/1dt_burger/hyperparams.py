@@ -19,9 +19,9 @@ HP["t_max"] = 5.
 HP["n_s"] = 50
 HP["n_s_tst"] = 100
 # POD stopping param
-HP["eps"] = 20
+HP["eps"] = 0
 HP["eps_init"] = None
-HP["n_L"] = 0
+HP["n_L"] = 20
 HP["x_noise"] = 0.
 # Train/val split
 HP["train_val"] = (4/5, 1/5)

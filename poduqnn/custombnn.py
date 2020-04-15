@@ -189,7 +189,7 @@ class BayesianNeuralNetwork:
         X = self.normalize(X)
         return self.model(X)
 
-    def predict(self, X, samples=100):
+    def predict(self, X, samples=5):
         """Get the prediction for a new input X."""
         X = self.normalize(X)
         v_pred_samples = np.zeros((samples, X.shape[0], self.layers[-1]))

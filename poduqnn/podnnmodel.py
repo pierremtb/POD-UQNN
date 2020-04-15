@@ -3,6 +3,7 @@
 import os
 import pickle
 import tensorflow as tf
+import tensorflow_probability as tfp
 import numpy as np
 from tqdm import tqdm
 import numba as nb
@@ -357,6 +358,30 @@ class PodnnModel:
                       - U_pred ** 2
         U_pred_sig = np.sqrt(U_pred_var)
         return U_pred, U_pred_sig
+    
+    def predict_fast(self, X_v, samples=5):
+        print(f"Averaging {samples} model configurations...")
+        v_pred, v_pred_var = self.regnn.predict(X_v, samples=samples)
+        U_pred = self.project_to_U(v_pred)
+        U_pred_up = self.project_to_U(v_pred + 2*np.sqrt(v_pred_var))
+        U_pred_sig = 1/2 * np.abs(U_pred_up - U_pred)
+        return U_pred, U_pred_sig
+
+    def predict_slow(self, X_v, samples=100):
+        print(f"Averaging {samples} model configurations...")
+        v_pred, v_pred_var = self.regnn.predict(X_v, samples=samples)
+        v_dist = tfp.distributions.Normal(loc=v_pred, scale=np.sqrt(v_pred_var))
+        U_sum = np.zeros((self.n_h, X_v.shape[0]))
+        U_sum_sq = np.zeros_like(U_sum)
+        for i in range(samples):
+            U_i = self.project_to_U(v_dist.sample().numpy())
+            U_sum += U_i
+            U_sum_sq += U_i**2
+        U_pred = U_sum / samples
+        U_pred_sig = np.sqrt((samples * U_sum_sq - U_sum**2) \
+                     / (samples * (samples - 1)))
+        return U_pred, U_pred_sig
+
 
     def restruct(self, U, no_s=False, n_t=None):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
