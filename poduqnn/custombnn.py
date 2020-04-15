@@ -53,24 +53,54 @@ class BayesianNeuralNetwork:
 
     def build_model(self):
         """Functional Keras model."""
-        if self.is_prior_trainable:
-            print("Using trainable prior")
-            prior = self.prior_trainable
-        else:
-            print(f"Using fixed mixture prior with " + 
-                  f"pi_0={self.pi_0}, pi_1={self.pi_1}, pi_2={self.pi_2}")
-            prior = self.mixture_prior
+        # if self.is_prior_trainable:
+        #     print("Using trainable prior")
+        #     prior = self.prior_trainable
+        # else:
+        #     print(f"Using fixed mixture prior with " + 
+        #           f"pi_0={self.pi_0}, pi_1={self.pi_1}, pi_2={self.pi_2}")
+        #     prior = self.mixture_prior
+        def mixture_prior(kernel_size, bias_size=0, dtype=None):
+            n = kernel_size + bias_size
+            # pi_0 = tf.cast(self.pi_0, dtype=dtype)
+            # pi_1 = tf.cast(self.pi_1, dtype=dtype)
+            # pi_2 = tf.cast(self.pi_2, dtype=dtype)
+            return tf.keras.Sequential([
+                tfp.layers.VariableLayer(n, dtype=dtype, trainable=False, initializer="zeros"),
+                tfp.layers.DistributionLambda(lambda t:
+                    tfd.Mixture(
+                    # cat=tfd.Categorical(probs=[pi_0, 1. - pi_0]),
+                    cat=tfd.Categorical(probs=[0.5, 0.5]),
+                    components=[
+                        tfd.Independent(
+                            tfd.Normal(loc=t, scale=4.),
+                            reinterpreted_batch_ndims=1),
+                        tfd.Independent(
+                            tfd.Normal(loc=t, scale=0.1),
+                            reinterpreted_batch_ndims=1),
+                    ]),)
+            ])
 
+        def posterior_mean_field(kernel_size, bias_size=0, dtype=None):
+            n = kernel_size + bias_size
+            c = np.log(np.expm1(1.))
+            return tf.keras.Sequential([
+                tfp.layers.VariableLayer(2 * n, dtype=dtype),
+                tfp.layers.DistributionLambda(lambda t: tfd.Independent(
+                    tfd.Normal(loc=t[..., :n],
+                                scale=1e-5 + tf.nn.softplus(c + t[..., n:])),
+                    reinterpreted_batch_ndims=1)),
+            ])
         # Defining the model
         inputs = tf.keras.Input(shape=(self.layers[0],), name="x", dtype=self.dtype)
         x = inputs
         for width in self.layers[1:-1]:
             x = tfp.layers.DenseVariational(
-                    width, self.posterior_mean_field, prior,
+                    width, posterior_mean_field, mixture_prior,
                     activation=self.activation, dtype=self.dtype,
                     kl_weight=self.klw, kl_use_exact=self.exact_kl)(x)
         x = tfp.layers.DenseVariational(
-                2 * self.layers[-1], self.posterior_mean_field, prior,
+                2 * self.layers[-1], posterior_mean_field, mixture_prior,
                 activation=None, dtype=self.dtype,
                 kl_weight=self.klw)(x)
 
@@ -106,20 +136,21 @@ class BayesianNeuralNetwork:
 
     def mixture_prior(self, kernel_size, bias_size=0, dtype=None):
         n = kernel_size + bias_size
-        pi_0 = tf.cast(self.pi_0, dtype=dtype)
-        pi_1 = tf.cast(self.pi_1, dtype=dtype)
-        pi_2 = tf.cast(self.pi_2, dtype=dtype)
+        # pi_0 = tf.cast(self.pi_0, dtype=dtype)
+        # pi_1 = tf.cast(self.pi_1, dtype=dtype)
+        # pi_2 = tf.cast(self.pi_2, dtype=dtype)
         return tf.keras.Sequential([
-            tfp.layers.VariableLayer(n, dtype=dtype, trainable=False),
+            tfp.layers.VariableLayer(n, dtype=dtype, trainable=False, initializer="zeros"),
             tfp.layers.DistributionLambda(lambda t:
                 tfd.Mixture(
-                cat=tfd.Categorical(probs=[pi_0, 1. - pi_0]),
+                # cat=tfd.Categorical(probs=[pi_0, 1. - pi_0]),
+                cat=tfd.Categorical(probs=[0.5, 0.5]),
                 components=[
                     tfd.Independent(
-                        tfd.Normal(loc=tf.zeros_like(t), scale=pi_1),
+                        tfd.Normal(loc=t, scale=4.),
                         reinterpreted_batch_ndims=1),
                     tfd.Independent(
-                        tfd.Normal(loc=tf.zeros_like(t), scale=pi_2),
+                        tfd.Normal(loc=t, scale=0.1),
                         reinterpreted_batch_ndims=1),
                 ]),)
         ])

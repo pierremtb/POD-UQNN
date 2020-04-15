@@ -19,16 +19,16 @@ model = PodnnModel.load("cache")
 X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
 #%% Validation metrics
-# U_pred, _ = model.predict(X_v_val)
-# err_val = re_s(U_val, U_pred)
-# print(f"RE_v: {err_val:4f}")
+U_pred, _ = model.predict(X_v_val)
+err_val = re_s(U_val, U_pred)
+print(f"RE_v: {err_val:4f}")
 
 #%% Sample the new model to generate a test prediction
-# mu_lhs = sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
-# X_v_tst, U_tst, _, _ = \
-#     model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
-# U_pred, U_pred_sig = model.predict(X_v_tst)
-# print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
+mu_lhs = sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
+X_v_tst, U_tst, _, _ = \
+    model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
+U_pred, U_pred_sig = model.predict(X_v_tst)
+print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 #%% Samples graph
 n_samples = 2
@@ -92,17 +92,17 @@ ax.set_ylabel("$y$")
 
 # Slices
 def plot_slice(row, col, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i):
+    print(U_pred_i.shape)
     ax = fig.add_subplot(gs[row, col + 1])
-    ax.plot(x, U_pred_i[:, 199, 0], "b-", label=r"$\hat{u}^\mu_D(s_{" + lbl + r"})$")
-    ax.plot(x, U_samples[:, 199, idx_i], "r--", label=r"$u_D(s_{" + lbl + r"})$")
-    lower = U_pred_i[:, 199, 0] - 2*U_pred_i_sig[:, 199, 0]
-    upper = U_pred_i[:, 199, 0] + 2*U_pred_i_sig[:, 199, 0]
+    ax.plot(x, U_pred_i[:, 199], "b-", label=r"$\hat{u}^\mu_D(s_{" + lbl + r"})$")
+    ax.plot(x, U_true_i[:, 199], "r--", label=r"$u_D(s_{" + lbl + r"})$")
+    lower = U_pred_i[:, 199] - 2*U_pred_i_sig[:, 199]
+    upper = U_pred_i[:, 199] + 2*U_pred_i_sig[:, 199]
     ax.fill_between(x, lower, upper, alpha=0.2, label=r"$\pm 2\hat{u}^\sigma_D(s_{" + lbl + r"})$")
     ax.set_xlabel("$x\ (y=0)$")
     title_st = r"$s=[" + f"{X_v[0, 0]:.2f}," + f"{X_v[0, 1]:.2f}," + f"{X_v[0, 2]:.2f}] "
     title_st += r"\in \Omega{\footnotesize\textrm{out}}$" if col + 1 == 2 else r"\in \Omega$"
     ax.set_title(title_st)
-    # if col == len(idx) - 1 and row == 0:
     if row == 0:
         ax.legend()
 
@@ -110,14 +110,14 @@ for row, idx_i in enumerate(idx):
     col = 0
     lbl = r"{\scriptscriptstyle\textrm{tst}}"
     X_v = X_v_samples
-    U_pred_i, U_pred_i_sig = U_pred[..., idx], U_pred_sig[..., idx]
-    U_true_i = U_samples[..., idx]
+    U_pred_i, U_pred_i_sig = U_pred[..., idx_i], U_pred_sig[..., idx_i]
+    U_true_i = U_samples[..., idx_i]
     plot_slice(row, col, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i)
     col = 1
     lbl = r"{\scriptscriptstyle\textrm{out}}"
     X_v = X_v_samples_out
-    U_pred_i, U_pred_i_sig = U_pred_out[..., idx], U_pred_sig_out[..., idx]
-    U_true_i = U_samples_out[..., idx]
+    U_pred_i, U_pred_i_sig = U_pred_out[..., idx_i], U_pred_sig_out[..., idx_i]
+    U_true_i = U_samples_out[..., idx_i]
     plot_slice(row, col, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i)
 
 plt.tight_layout()

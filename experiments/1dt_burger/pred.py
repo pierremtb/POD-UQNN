@@ -18,25 +18,25 @@ from hyperparams import u
 
 #%% Load models
 model = PodnnModel.load("cache")
-# X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
+X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
-# #%% Predict and restruct
-# U_pred, U_pred_sig = model.predict(X_v_val)
+#%% Predict and restruct
+U_pred, U_pred_sig = model.predict(X_v_val)
 
-# #%% Validation metrics
-# U_pred, _ = model.predict(X_v_val)
-# err_val = re_s(U_val, U_pred)
-# print(f"RE_v: {err_val:4f}")
+#%% Validation metrics
+U_pred, _ = model.predict(X_v_val)
+err_val = re_s(U_val, U_pred)
+print(f"RE_v: {err_val:4f}")
 
-#%% Sample the new model to generate a test prediction
-# mu_lhs = sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
-# X_v_tst, U_tst, _, _ = \
-#     model.create_snapshots(model.n_d, model.n_h, u, mu_lhs,
-#                            t_min=hp["t_min"], t_max=hp["t_max"])
-# U_pred, U_pred_sig = model.predict(X_v_tst)
-# print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
-# U_tst = model.restruct(U_tst)[0]
-# U_pred = model.restruct(U_pred)[0]
+%% Sample the new model to generate a test prediction
+mu_lhs = sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
+X_v_tst, U_tst, _, _ = \
+    model.create_snapshots(model.n_d, model.n_h, u, mu_lhs,
+                           t_min=hp["t_min"], t_max=hp["t_max"])
+U_pred, U_pred_sig = model.predict(X_v_tst)
+print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
+U_tst = model.restruct(U_tst)[0]
+U_pred = model.restruct(U_pred)[0]
 
 #%% Samples graph
 hp["mu_min_out"] = [0.0005]
@@ -129,11 +129,12 @@ def plot_slice(row, col, t, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i):
                         + f"t={X_i[time, 0]:.2f}$")
 
 for row, time in enumerate(times):
-    lbl = r"{\scriptscriptstyle\textrm{tst}}" if col == 0 else r"{\scriptscriptstyle\textrm{out}}"
+    lbl = r"{\scriptscriptstyle\textrm{tst}}"
     X_v = X_v_samples
     U_pred_i, U_pred_i_sig = U_pred[0, :, :, idx], U_pred_sig[0, :, :, idx]
     U_true_i = U_samples[:, :, idx]
     plot_slice(row, 0, time, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i)
+    lbl = r"{\scriptscriptstyle\textrm{out}}"
     X_v = X_v_samples_out
     U_pred_i, U_pred_i_sig = U_pred_out[0, :, :, idx], U_pred_sig_out[0, :, :, idx]
     U_true_i = U_samples_out[:, :, idx]
