@@ -343,7 +343,7 @@ class PodnnModel:
         v_pred_sig = np.sqrt(v_pred_var)
         return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
-    def predict(self, X_v, samples=5):
+    def predict_mc(self, X_v, samples=5):
         """Predict the expanded solution."""
         U_pred_samples = np.zeros((samples, self.n_h, X_v.shape[0]))
         U_pred_sig_samples = np.zeros_like(U_pred_samples)
@@ -359,7 +359,7 @@ class PodnnModel:
         U_pred_sig = np.sqrt(U_pred_var)
         return U_pred, U_pred_sig
     
-    def predict_fast(self, X_v, samples=5):
+    def predict_fast(self, X_v, samples=100):
         print(f"Averaging {samples} model configurations...")
         v_pred, v_pred_var = self.regnn.predict(X_v, samples=samples)
         U_pred = self.project_to_U(v_pred)
@@ -367,7 +367,7 @@ class PodnnModel:
         U_pred_sig = 1/2 * np.abs(U_pred_up - U_pred)
         return U_pred, U_pred_sig
 
-    def predict_slow(self, X_v, samples=100):
+    def predict(self, X_v, samples=100):
         print(f"Averaging {samples} model configurations...")
         v_pred, v_pred_var = self.regnn.predict(X_v, samples=samples)
         v_dist = tfp.distributions.Normal(loc=v_pred, scale=np.sqrt(v_pred_var))
