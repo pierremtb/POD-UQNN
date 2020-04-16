@@ -53,34 +53,28 @@ class BayesianNeuralNetwork:
 
     def build_model(self):
         """Functional Keras model."""
-        # if self.is_prior_trainable:
-        #     print("Using trainable prior")
-        #     prior = self.prior_trainable
-        # else:
-        #     print(f"Using fixed mixture prior with " + 
-        #           f"pi_0={self.pi_0}, pi_1={self.pi_1}, pi_2={self.pi_2}")
-        #     prior = self.mixture_prior
+
+        # Priors and posteriors
         def mixture_prior(kernel_size, bias_size=0, dtype=None):
             n = kernel_size + bias_size
-            # pi_0 = tf.cast(self.pi_0, dtype=dtype)
-            # pi_1 = tf.cast(self.pi_1, dtype=dtype)
-            # pi_2 = tf.cast(self.pi_2, dtype=dtype)
+            pi_0 = tf.cast(self.pi_0, dtype=dtype)
+            pi_1 = tf.cast(self.pi_1, dtype=dtype)
+            pi_2 = tf.cast(self.pi_2, dtype=dtype)
             return tf.keras.Sequential([
                 tfp.layers.VariableLayer(n, dtype=dtype, trainable=False, initializer="zeros"),
                 tfp.layers.DistributionLambda(lambda t:
                     tfd.Mixture(
-                    # cat=tfd.Categorical(probs=[pi_0, 1. - pi_0]),
-                    cat=tfd.Categorical(probs=[0.5, 0.5]),
+                    cat=tfd.Categorical(probs=[pi_0, 1. - pi_0]),
+                    # cat=tfd.Categorical(probs=[0.5, 0.5]),
                     components=[
                         tfd.Independent(
-                            tfd.Normal(loc=t, scale=4.),
+                            tfd.Normal(loc=t, scale=pi_1),
                             reinterpreted_batch_ndims=1),
                         tfd.Independent(
-                            tfd.Normal(loc=t, scale=0.1),
+                            tfd.Normal(loc=t, scale=pi_2),
                             reinterpreted_batch_ndims=1),
                     ]),)
             ])
-
         def posterior_mean_field(kernel_size, bias_size=0, dtype=None):
             n = kernel_size + bias_size
             c = np.log(np.expm1(1.))
@@ -91,6 +85,23 @@ class BayesianNeuralNetwork:
                                 scale=1e-5 + tf.nn.softplus(c + t[..., n:])),
                     reinterpreted_batch_ndims=1)),
             ])
+        def prior_trainable(kernel_size, bias_size=0, dtype=None):
+            n = kernel_size + bias_size
+            return tf.keras.Sequential([
+                tfp.layers.VariableLayer(n, dtype=dtype),
+                tfp.layers.DistributionLambda(lambda t: tfd.Independent(
+                    tfd.Normal(loc=t, scale=1),
+                    reinterpreted_batch_ndims=1)),
+            ])
+
+        if self.is_prior_trainable:
+            print("Using trainable prior")
+            prior = prior_trainable
+        else:
+            print(f"Using fixed mixture prior with " + 
+                  f"pi_0={self.pi_0}, pi_1={self.pi_1}, pi_2={self.pi_2}")
+            prior = mixture_prior
+
         # Defining the model
         inputs = tf.keras.Input(shape=(self.layers[0],), name="x", dtype=self.dtype)
         x = inputs
@@ -249,6 +260,7 @@ class BayesianNeuralNetwork:
         """Save the (trained) model and params for later use."""
         with open(params_path, "wb") as f:
             pickle.dump((self.layers, self.lr, self.klw, self.exact_kl, self.activation,
+                         self.pi_0, self.pi_1, self.pi_2,
                          self.norm, self.norm_bounds), f)
         self.model.save_weights(model_path)
 
@@ -259,7 +271,8 @@ class BayesianNeuralNetwork:
             raise FileNotFoundError("Can't find cached model params.")
 
         with open(params_path, "rb") as f:
-            layers, lr, klw, exact_kl, activation, norm, norm_bounds = pickle.load(f)
+            layers, lr, klw, exact_kl, activation, pi_0, pi_1, pi_2, norm, norm_bounds = pickle.load(f)
         print(f"Loading model params from {params_path}")
         return cls(layers, lr, klw, exact_kl, activation,
+                   pi_0, pi_1, pi_2,
                    weights_path=model_path, norm=norm, norm_bounds=norm_bounds)
