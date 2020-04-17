@@ -24,11 +24,11 @@ X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 U_pred, U_pred_sig = model.predict(X_v_val)
 
 #%% Validation metrics
-U_pred, _ = model.predict(X_v_val)
-err_val = re_s(U_val, U_pred)
-print(f"RE_v: {err_val:4f}")
+# U_pred, _ = model.predict(X_v_val)
+# err_val = re_s(U_val, U_pred)
+# print(f"RE_v: {err_val:4f}")
 
-%% Sample the new model to generate a test prediction
+# %% Sample the new model to generate a test prediction
 mu_lhs = sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
 X_v_tst, U_tst, _, _ = \
     model.create_snapshots(model.n_d, model.n_h, u, mu_lhs,
@@ -121,7 +121,7 @@ def plot_slice(row, col, t, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i):
     en = hp["n_t"] * (col + 1)
     X_i = X_v[st:en, :]
 
-    if row == 0:
+    if col == 0:
         ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega,\ "
                         + f"t={X_i[time, 0]:.2f}$")
     else:

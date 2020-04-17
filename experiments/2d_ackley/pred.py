@@ -19,16 +19,16 @@ model = PodnnModel.load("cache")
 X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
 #%% Validation metrics
-U_pred, _ = model.predict(X_v_val)
-err_val = re_s(U_val, U_pred)
-print(f"RE_v: {err_val:4f}")
+# U_pred, _ = model.predict(X_v_val)
+# err_val = re_s(U_val, U_pred)
+# print(f"RE_v: {err_val:4f}")
 
-#%% Sample the new model to generate a test prediction
-mu_lhs = sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
-X_v_tst, U_tst, _, _ = \
-    model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
-U_pred, U_pred_sig = model.predict(X_v_tst)
-print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
+# #%% Sample the new model to generate a test prediction
+# mu_lhs = sample_mu(hp["n_s_tst"], np.array(hp["mu_min"]), np.array(hp["mu_max"]))
+# X_v_tst, U_tst, _, _ = \
+#     model.create_snapshots(model.n_d, model.n_h, u, mu_lhs)
+# U_pred, U_pred_sig = model.predict(X_v_tst)
+# print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
 
 #%% Samples graph
 n_samples = 2
@@ -121,5 +121,5 @@ for row, idx_i in enumerate(idx):
     plot_slice(row, col, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i)
 
 plt.tight_layout()
-plt.show()
-# savefig(os.path.join("results", "podbnn-ackley-graph-meansamples"))
+# plt.show()
+savefig(os.path.join("results", "podbnn-ackley-graph-meansamples"))
