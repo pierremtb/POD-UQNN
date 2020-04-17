@@ -121,7 +121,7 @@ def plot_slice(row, col, t, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i):
     en = hp["n_t"] * (col + 1)
     X_i = X_v[st:en, :]
 
-    if row == 0:
+    if col == 0:
         ax.set_title(r"$s=" + f"{X_i[0, 1]:.4f}" + r" \in \Omega,\ "
                         + f"t={X_i[time, 0]:.2f}$")
     else:
