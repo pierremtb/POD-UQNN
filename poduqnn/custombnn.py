@@ -91,7 +91,7 @@ class BayesianNeuralNetwork:
         pi_0 = self.pi_0 or 0.5
         pi_1 = self.pi_1 or 1.5
         pi_2 = self.pi_2 or 0.1
-        init_sig = np.sqrt(pi_0 * pi_1**2 + (1-pi_0) * pi_1**2)
+        init_sig = np.sqrt(pi_0 * pi_1**2 + (1-pi_0) * pi_2**2)
 
         def _initializer(shape, dtype=None, partition_info=None):
             n = int(shape / 2)
@@ -133,7 +133,7 @@ class BayesianNeuralNetwork:
 
         outputs = tfp.layers.DistributionLambda(
             lambda t: tfd.Normal(loc=t[..., :self.layers[-1]],
-                scale=tf.math.sqrt(tf.math.softplus(0.01 * t[..., self.layers[-1]:]) + 1e-6))
+                scale=tf.math.softplus(0.01 * t[..., self.layers[-1]:]) + 1e-6),
         )(x)
 
         model = tf.keras.Model(inputs=inputs, outputs=outputs, name="bnn")
