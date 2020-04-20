@@ -21,7 +21,7 @@ model = PodnnModel.load("cache")
 X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
 #%% Predict and restruct
-U_pred, U_pred_sig = model.predict(X_v_val)
+# U_pred, U_pred_sig = model.predict(X_v_val)
 
 #%% Validation metrics
 # U_pred, _ = model.predict(X_v_val)
