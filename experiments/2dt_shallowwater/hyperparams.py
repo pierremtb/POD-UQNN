@@ -21,7 +21,7 @@ HP["n_L"] = 0
 # Train/val split
 HP["train_val"] = (.8, .2)
 # DeepNN Topology
-HP["h_layers"] = [80, 80]
+HP["h_layers"] = [40, 40]
 # Setting up TF SGD-based optimizer
 HP["epochs"] = 50000
 HP["lr"] = 0.01
