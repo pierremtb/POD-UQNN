@@ -24,7 +24,7 @@ class BayesianNeuralNetwork:
     """Custom class defining a Bayesian Neural Network model."""
     def __init__(self, layers, lr, klw=1,
                  exact_kl=False, activation="relu",
-                 pi_0=None, pi_1=None, pi_2=None,
+                 pi_0=None, pi_1=None, pi_2=None, soft_0=0.01,
                  norm=NORM_NONE, weights_path=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float32"
@@ -45,6 +45,7 @@ class BayesianNeuralNetwork:
         self.pi_0 = pi_0
         self.pi_1 = pi_1
         self.pi_2 = pi_2
+        self.soft_0 = soft_0
 
         # Setting up the model
         self.model = self.build_model()
@@ -54,12 +55,30 @@ class BayesianNeuralNetwork:
     def get_prior(self):
         if self.is_prior_trainable:
             print("Using trainable prior")
+            # def prior_trainable(kernel_size, bias_size=0, dtype=None):
+            #     n = kernel_size + bias_size
+            #     c = np.log(np.expm1(1.))
+            #     return tf.keras.Sequential([
+            #         tfp.layers.VariableLayer(2 * n, dtype=dtype),
+            #         tfp.layers.DistributionLambda(lambda t: tfd.Independent(
+            #             tfd.Normal(loc=t[..., :n],
+            #                         scale=1e-5 + tf.nn.softplus(c + t[..., n:])),
+            #             reinterpreted_batch_ndims=1)),
+            #     ])
+            # def prior_trainable(kernel_size, bias_size=0, dtype=None):
+            #     n = kernel_size + bias_size
+            #     return tf.keras.Sequential([
+            #         tfp.layers.VariableLayer(n, dtype=dtype),
+            #         tfp.layers.DistributionLambda(lambda t: tfd.Independent(
+            #             tfd.Normal(loc=t, scale=1),
+            #             reinterpreted_batch_ndims=1)),
+            #     ])
             def prior_trainable(kernel_size, bias_size=0, dtype=None):
                 n = kernel_size + bias_size
                 return tf.keras.Sequential([
                     tfp.layers.VariableLayer(n, dtype=dtype),
                     tfp.layers.DistributionLambda(lambda t: tfd.Independent(
-                        tfd.Normal(loc=t, scale=1),
+                        tfd.Normal(loc=tf.zeros_like(t), scale=t),
                         reinterpreted_batch_ndims=1)),
                 ])
             return prior_trainable
@@ -133,7 +152,7 @@ class BayesianNeuralNetwork:
 
         outputs = tfp.layers.DistributionLambda(
             lambda t: tfd.Normal(loc=t[..., :self.layers[-1]],
-                scale=tf.math.softplus(0.01 * t[..., self.layers[-1]:]) + 1e-6),
+                scale=tf.math.softplus(self.soft_0 * t[..., self.layers[-1]:]) + 1e-4),
         )(x)
 
         model = tf.keras.Model(inputs=inputs, outputs=outputs, name="bnn")

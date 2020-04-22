@@ -20,7 +20,7 @@ HP["n_s"] = 40
 HP["n_s_tst"] = 3
 # POD stopping param
 HP["eps"] = 1e-4
-HP["eps_init"] = None
+HP["eps_init"] = 1e-4
 HP["n_L"] = 0
 HP["x_noise"] = 0.
 # Train/val split
@@ -28,8 +28,8 @@ HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
 HP["h_layers"] = [40, 40]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 160000
-HP["lr"] = 0.003
+HP["epochs"] = 50000
+HP["lr"] = 0.005
 HP["exact_kl"] = False
 HP["activation"] = "tanh"
 HP["norm"] = NORM_MEANSTD
