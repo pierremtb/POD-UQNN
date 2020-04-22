@@ -60,7 +60,7 @@ XT = np.hstack((xx.flatten()[:, None], tt.flatten()[:, None]))
 # Slices
 n_samples = 1
 times = [0, 25]
-ylim = [[(-1, 26), (-1, 26)], [(-1, 26), (-1, 26)]]
+ylim = [[(-3, 28), (-3, 26)], [(-3, 28), (-3, 28)]]
 
 has_sim_data = False
 if os.path.exists(os.path.join("data", "sel.csv")):
@@ -70,7 +70,7 @@ if os.path.exists(os.path.join("data", "sel.csv")):
 for j, time in enumerate(times):
     n_plot_x = 1
     n_plot_y = 3
-    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
+    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
     actual_row = 0
     for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
@@ -142,7 +142,7 @@ for j, time in enumerate(times):
             upper = U_pred_i[:, time, 0] + 2*U_pred_i_sig[:, time, 0]
             ax.fill_between(x, lower, upper, alpha=0.2, label=r"$\pm2\hat{u}^\sigma_D(s_{" + lbl + r"})$")
             if row == 0 and j == 1:
-                ax.text(0, 23,  "POD-EnsNN")
+                ax.text(0, 20,  "POD-EnsNN")
             ax.set_xlabel(r"$x\ [\textrm{m}]$")
             ax.set_ylabel(r"$h\ [\textrm{m}]$")
             ax.set_ylim(ylim[j][row])
@@ -156,16 +156,16 @@ for j, time in enumerate(times):
             if j == 0:
                 ax.legend()
     plt.tight_layout()
-    savefig(os.path.join("results", f"podensnn-1dswt-graph-meansamples-h-{j}"), False)
+    savefig(os.path.join("results", f"podensnn-1dswt-graph-meansamples-h-{j}"), True)
 
 #%% Velocity plots
 times = [0, 25]
 # ylim = [(-1, 1), (-1, 10)]
-ylim = [[(-1, 15), (-1, 15)], [(-1, 15), (-1, 15)]]
+ylim = [[(-3, 17), (-3, 17)], [(-3, 17), (-3, 17)]]
 for j, time in enumerate(times):
     n_plot_x = 1
     n_plot_y = 3
-    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.0))
+    fig = plt.figure(figsize=figsize(n_plot_x, n_plot_y, scale=2.))
     gs = fig.add_gridspec(n_plot_x, n_plot_y)
     actual_row = 0
     for row, mu_lhs in enumerate([mu_lhs_in, mu_lhs_out]):
@@ -237,7 +237,7 @@ for j, time in enumerate(times):
             upper = U_pred_i[:, time, 0] + 2*U_pred_i_sig[:, time, 0]
             ax.fill_between(x, lower, upper, alpha=0.2, label=r"$2\sigma_D(s_{" + lbl + r"})$")
             if row == 0 and j == 1:
-                ax.text(0, 13, "POD-EnsNN")
+                ax.text(0, 10, "POD-EnsNN")
             ax.set_xlabel(r"$x\ [\textrm{m}]$")
             ax.set_ylabel(r"$u\ [\textrm{m/s}]$")
             ax.set_ylim(ylim[j][row])
@@ -251,5 +251,5 @@ for j, time in enumerate(times):
             if j == 0:
                 ax.legend()
     plt.tight_layout()
-    savefig(os.path.join("results", f"podensnn-1dswt-graph-meansamples-u-{j}"), False)
+    savefig(os.path.join("results", f"podensnn-1dswt-graph-meansamples-u-{j}"), True)
 

@@ -29,8 +29,8 @@ HP["train_val"] = (4/5, 1/5)
 HP["h_layers"] = [256, 256, 256]
 # Setting up TF SGD-based optimizer
 HP["n_M"] = 5
-HP["epochs"] = 60000
-HP["lr"] = 0.01
+HP["epochs"] = 100000
+HP["lr"] = 0.005
 HP["soft_0"] = 1.
 HP["adv_eps"] = 0.001
 HP["lambda"] = 0.0001

@@ -15,6 +15,7 @@ import matplotlib.font_manager
 # From https://github.com/maziarraissi/PINNs (MIT License, maziarraissi)
 def figsize(n_plot_x, n_plot_y, scale=1.):
     plot_width_pt = 100.                          # Get this from LaTeX using \the\textwidth
+    # plot_width_pt = 125.                          # Get this from LaTeX using \the\textwidth
     plot_height_pt = 100.                          # Get this from LaTeX using \the\textwidth
     inches_per_pt = 1.0/72.27                       # Convert pt to inch
     fig_width = n_plot_y*plot_width_pt*inches_per_pt*scale    # width in inches
@@ -83,8 +84,8 @@ def savefig(filename, tight_box=True):
     """Saves current matplotlib plot in an image and a pdf file."""
 
     if tight_box:
-        plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0)
-        plt.savefig('{}.pdf'.format(filename), bbox_inches='tight', pad_inches=0)
+        plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0.05)
+        plt.savefig('{}.pdf'.format(filename), bbox_inches='tight', pad_inches=0.05)
     else:
         plt.savefig("{}.png".format(filename))
         plt.savefig("{}.pdf".format(filename))
