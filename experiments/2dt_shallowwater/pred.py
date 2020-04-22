@@ -25,6 +25,11 @@ U_pred, U_pred_sig = model.predict(X_v_val)
 U_pred, _ = model.predict(X_v_val)
 err_val = re_s(U_val, U_pred, div_max=True)
 print(f"RE_v: {err_val:4f}")
+t_max = 50
+U_pred_s = model.restruct(U_pred)[0, :, :t_max+1, :]
+U_val_s = model.restruct(U_val)[0, :, :t_max+1, :]
+err_val = re_s(U_val_s, U_pred_s, div_max=True)
+print(f"RE_v_<=5: {err_val:4f}")
 
 #%% Sample the new model to generate a test prediction
 with open(os.path.join("cache", "train_tst_idx.pkl"), "rb") as f:
@@ -45,6 +50,10 @@ U_pred, U_pred_sig = model.predict(X_v_tst)
 U_tst_des = model.destruct(U_tst)
 err_val = re_s(U_tst_des, U_pred, div_max=True)
 print(f"RE_tst: {err_val:4f}")
+U_pred_s = model.restruct(U_pred)[0, :, :t_max+1, :]
+U_tst_s = U_tst[0, :, :t_max+1, :]
+err_val = re_s(U_tst_s, U_pred_s, div_max=True)
+print(f"RE_tst_<=5: {err_val:4f}")
 
 U_pred = model.restruct(U_pred)
 U_pred_sig = model.restruct(U_pred_sig)

@@ -81,8 +81,8 @@ def savefig(filename, tight_box=True):
     """Saves current matplotlib plot in an image and a pdf file."""
 
     if tight_box:
-        plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0)
-        plt.savefig('{}.pdf'.format(filename), bbox_inches='tight', pad_inches=0)
+        plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0.05)
+        plt.savefig('{}.pdf'.format(filename), bbox_inches='tight', pad_inches=0.05)
     else:
         plt.savefig("{}.png".format(filename))
         plt.savefig("{}.pdf".format(filename))
