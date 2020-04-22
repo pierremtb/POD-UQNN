@@ -48,7 +48,7 @@ X_v_train, v_train, _, \
 # exit(0)
 #%% Train
 model.initBNN(hp["h_layers"], hp["lr"], 1,
-              hp["pi_1"], hp["pi_2"], hp["norm"])
+              hp["activation"], hp["exact_kl"], norm=hp["norm"])
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"], freq=hp["log_frequency"])
 
 #%% Generate the dataset from the mesh and params

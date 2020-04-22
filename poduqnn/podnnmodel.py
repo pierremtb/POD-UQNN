@@ -3,6 +3,7 @@
 import os
 import pickle
 import tensorflow as tf
+import tensorflow_probability as tfp
 import numpy as np
 from tqdm import tqdm
 import numba as nb
@@ -17,7 +18,7 @@ from .handling import split_dataset, sample_mu
 SETUP_DATA_NAME = "setup_data.pkl"
 TRAIN_DATA_NAME = "train_data.pkl"
 INIT_DATA_NAME = "init_data.pkl"
-MODEL_NAME = "model.h5"
+MODEL_NAME = "model_weights"
 MODEL_PARAMS_NAME = "model_params.pkl"
 
 
@@ -273,13 +274,14 @@ class PodnnModel:
         self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
         return X_v_train, v_train, U_train, X_v_val, v_val, U_val
 
-    def initBNN(self, h_layers, lr, klw, 
-                pi_1=1., pi_2=0.1, norm=NORM_MEANSTD):
+    def initBNN(self, h_layers, lr, klw, activation,
+                exact_kl=False, pi_0=None, pi_1=None, pi_2=None,
+                norm=NORM_MEANSTD):
         """Init the Bayesian Neural Network regression model."""
         self.layers = [self.n_d, *h_layers, self.n_L]
-        self.regnn = BayesianNeuralNetwork(self.layers, lr, klw,
-                                           pi_1=pi_1, pi_2=pi_2,
-                                           norm=norm)
+        self.regnn = \
+            BayesianNeuralNetwork(self.layers, lr, klw, exact_kl, activation,
+                                  pi_0, pi_1, pi_2, norm)
         self.regnn.summary()
 
     def train(self, X_v, v, X_v_val, v_val, epochs,
@@ -341,7 +343,7 @@ class PodnnModel:
         v_pred_sig = np.sqrt(v_pred_var)
         return v_pred.astype(self.dtype), v_pred_sig.astype(self.dtype)
 
-    def predict(self, X_v, samples=5):
+    def predict_mc(self, X_v, samples=5):
         """Predict the expanded solution."""
         U_pred_samples = np.zeros((samples, self.n_h, X_v.shape[0]))
         U_pred_sig_samples = np.zeros_like(U_pred_samples)
@@ -356,6 +358,30 @@ class PodnnModel:
                       - U_pred ** 2
         U_pred_sig = np.sqrt(U_pred_var)
         return U_pred, U_pred_sig
+
+    def predict_fast(self, X_v, samples=100):
+        print(f"Averaging {samples} model configurations...")
+        v_pred, v_pred_var = self.regnn.predict(X_v, samples=samples)
+        U_pred = self.project_to_U(v_pred)
+        U_pred_up = self.project_to_U(v_pred + 2*np.sqrt(v_pred_var))
+        U_pred_sig = 1/2 * np.abs(U_pred_up - U_pred)
+        return U_pred, U_pred_sig
+
+    def predict(self, X_v, samples=100, B=100):
+        print(f"Averaging {samples} model configurations...")
+        v_pred, v_pred_var = self.regnn.predict(X_v, samples=B)
+        v_dist = tfp.distributions.Normal(loc=v_pred, scale=np.sqrt(v_pred_var))
+        U_sum = np.zeros((self.n_h, X_v.shape[0]))
+        U_sum_sq = np.zeros_like(U_sum)
+        for i in tqdm(range(samples)):
+            U_i = self.project_to_U(v_dist.sample().numpy())
+            U_sum += U_i
+            U_sum_sq += U_i**2
+        U_pred = U_sum / samples
+        U_pred_sig = np.sqrt((samples * U_sum_sq - U_sum**2) \
+                     / (samples * (samples - 1)))
+        return U_pred, U_pred_sig
+
 
     def restruct(self, U, no_s=False, n_t=None):
         """Restruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
@@ -454,8 +480,8 @@ class PodnnModel:
             
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""
-        if not os.path.exists(self.model_path):
-            raise FileNotFoundError("Can't find cached model.")
+        # if not os.path.exists(self.model_path):
+        #     raise FileNotFoundError("Can't find cached model.")
         if not os.path.exists(self.model_params_path):
             raise FileNotFoundError("Can't find cached model params.")
         self.regnn = BayesianNeuralNetwork.load_from(self.model_path, self.model_params_path)

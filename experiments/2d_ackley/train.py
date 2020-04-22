@@ -51,8 +51,8 @@ mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
 X_v_samples, U_samples, _, _ = \
     model.create_snapshots(model.n_d, model.n_h, u, mu_lhs_out)
 #%% Model creation
-# model.initBNN(hp["h_layers"], hp["lr"], 1/X_v_train.shape[0],
-model.initBNN(hp["h_layers"], hp["lr"], 1,
-              hp["pi_1"], hp["pi_2"], hp["norm"])
+model.initBNN(hp["h_layers"], hp["lr"], 1, hp["activation"],
+              pi_0=hp["pi_0"], pi_1=hp["pi_1"], pi_2=hp["pi_2"],
+              norm=hp["norm"])
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
             freq=hp["log_frequency"], X_out=X_v_samples)

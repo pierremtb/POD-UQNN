@@ -39,7 +39,7 @@ def perform_pod(U, eps=0., n_L=0, verbose=True):
 
     U = np.ascontiguousarray(U)
 
-    V = np.zeros((n_h, n_L))
+    V = np.zeros((int(n_h), int(n_L)))
     for i in range(n_L):
         Z_i = np.ascontiguousarray(Z[:, i])
         V[:, i] = U.dot(Z_i) / np.sqrt(lambdas_trunc[i])

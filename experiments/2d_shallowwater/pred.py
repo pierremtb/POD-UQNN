@@ -1,4 +1,4 @@
-"""POD-NN modeling for 1D Shekel Equation."""
+"""POD-NN modeling for 2D Shallowwater Equation."""
 #%% Imports
 import sys
 import os
@@ -55,8 +55,10 @@ h_0 = 0.05
 method = 'linear'
 X, Y = np.mgrid[int(x.min()):int(x.max()), int(y.min()):int(y.max())]
 
-dist_pts = [([277183, 277179.55], [5048840, 5048842.38]),
-            ([277212.77, 277205.61], [5048832.65, 5048838.01])]
+# dist_pts = [([277183, 277179.55], [5048840, 5048842.38]),
+#             ([277212.77, 277205.61], [5048832.65, 5048838.01])]
+dist_pts = [([277178.32208889234, 277181.8481363159], [5048841.865994133, 5048839.33643837]),
+            ([277192.90547237627, 277211.3202895609], [5048842.324619031, 5048830.880382362])]
 
 for i, s in enumerate([idx[2], idx[4]]):
         print(s)
@@ -96,7 +98,8 @@ for i, s in enumerate([idx[2], idx[4]]):
         ax.plot(dist_pts[i][0], dist_pts[i][1], "k:", label="$d_{2\sigma}$")
         dist_i = np.sqrt((dist_pts[i][0][0] - dist_pts[i][0][1])**2 +
                            (dist_pts[i][1][0] - dist_pts[i][1][1])**2)
-        ax.text(dist_pts[i][0][1] - 16, dist_pts[i][1][1] + 4.5,
+        # ax.text(dist_pts[i][0][1] - 16, dist_pts[i][1][1] + 4.5,
+        ax.text(dist_pts[i][0][1] - 10, dist_pts[i][1][1] + 9.5,
                 f"${dist_i:.2f}" + r"\ \textrm{m}$")
         # ax.text(277180, 850+5.048e6, "yo")
         plot_ax(ax)

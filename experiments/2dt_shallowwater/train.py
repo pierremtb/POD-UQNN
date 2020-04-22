@@ -56,8 +56,8 @@ X_v_train, v_train, \
 # X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
 #%% Model creation
-model.initBNN(hp["h_layers"], hp["lr"], 1,
-              hp["pi_1"], hp["pi_2"], hp["norm"])
+model.initBNN(hp["h_layers"], hp["lr"], 1, hp["activation"],
+              hp["exact_kl"], norm=hp["norm"])
 # X_out = np.linspace(500, 1500, 300).reshape(-1, 1)
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
             freq=hp["log_frequency"], div_max=True)

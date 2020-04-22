@@ -15,7 +15,6 @@ from hyperparams import HP as hp
 
 #%% Load models
 model = PodnnModel.load("cache")
-X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
 X_v_in_n_out = np.linspace(500, 1500, 300).reshape(-1, 1)
 _, U_pred_sig_in_n_out = model.predict(X_v_in_n_out)
@@ -27,7 +26,6 @@ ax.axvline(x=800, color="k", ls="-.")
 ax.axvline(x=1200, color="k", ls="-.", label="Study scope")
 ax.set_xlabel(r"$s=Q\ [\textrm{m}/\textrm{s}]$")
 ax.set_ylabel(r"$\bar{\sigma}_h\ [\textrm{m}]$")
-ax.set_ylim((0, 3))
+ax.set_ylim((0, 0.5))
 plt.legend()
-savefig("in_n_out")
-print("saved")
+savefig(os.path.join("results", "podbnn_in_n_out"))

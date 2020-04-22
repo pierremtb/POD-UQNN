@@ -1,6 +1,7 @@
 """Default hyperparameters for 1D time-dep Burgers Equation."""
 
 import numpy as np
+import tensorflow as tf
 from poduqnn.custombnn import NORM_MEANSTD, NORM_MINMAX, NORM_NONE
 
 HP = {}
@@ -18,19 +19,19 @@ HP["t_max"] = 5.
 HP["n_s"] = 50
 HP["n_s_tst"] = 100
 # POD stopping param
-HP["eps"] = 0
-HP["eps_init"] = None
-HP["n_L"] = 20
+HP["eps"] = 1e-3
+HP["eps_init"] = 1e-3
+HP["n_L"] = 0
 HP["x_noise"] = 0.
 # Train/val split
 HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
-HP["h_layers"] = [140, 140]
+HP["h_layers"] = [40, 40]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 100000
-HP["lr"] = 0.001
-HP["pi_1"] = 1.5
-HP["pi_2"] = 0.1
+HP["epochs"] = 70000
+HP["lr"] = 0.005
+HP["exact_kl"] = False
+HP["activation"] = "tanh"
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 500
