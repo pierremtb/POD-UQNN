@@ -32,7 +32,7 @@ x_mesh, connectivity, X_v_tst, U_tst = \
                                         hp["mu_idx"])
 
 U_pred, U_pred_sig = model.predict(X_v_tst)
-print(f"RE_tst: {re_s(model.destruct(U_tst), U_pred):4f}")
+print(f"RE_tst: {re_s(model.destruct(U_tst), U_pred, div_max=True):4f}")
 
 U_pred = model.restruct(U_pred)
 U_pred_sig = model.restruct(U_pred_sig)
@@ -55,8 +55,8 @@ h_0 = 0.05
 method = 'linear'
 X, Y = np.mgrid[int(x.min()):int(x.max()), int(y.min()):int(y.max())]
 
-dist_pts = [([277182.62, 277179.72], [5048838.87, 5048840.58]),
-            ([277206.94, 277211.94], [5048835.51, 5048831.72])]
+dist_pts = [([277178.0247350766, 277182.21150720556], [5048841.5132263, 5048838.796184769]),
+            ([277190.0474752589, 277211.294530966], [5048844.845154031, 5048831.004738009])]
 
 for i, s in enumerate([idx[2], idx[4]]):
         print(s)

@@ -22,12 +22,15 @@ HP["n_L"] = 0
 # Train/val split
 HP["train_val"] = (3/5, 1/5)
 # Deep NN hidden layers topology
-HP["h_layers"] = [128, 128, 128]
+HP["h_layers"] = [40, 40]
+# HP["h_layers"] = [128, 128, 128]
 # Setting up TF SGD-based optimizer
 HP["n_M"] = 5
-HP["epochs"] = 120000
-HP["lr"] = 0.003
-HP["lambda"] = 0.
+# HP["epochs"] = 120000
+HP["epochs"] = 50000
+HP["lr"] = 0.01
+# HP["lr"] = 0.003
+HP["lambda"] = 1e-8
 HP["soft_0"] = 1.
 HP["adv_eps"] = 0.
 HP["norm"] = NORM_MEANSTD
