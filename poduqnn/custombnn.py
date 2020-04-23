@@ -24,7 +24,7 @@ class BayesianNeuralNetwork:
     """Custom class defining a Bayesian Neural Network model."""
     def __init__(self, layers, lr, klw=1,
                  exact_kl=False, activation="relu",
-                 pi_0=None, pi_1=None, pi_2=None, soft_0=0.01,
+                 pi_0=None, pi_1=None, pi_2=None, soft_0=0.01, adv_eps=None,
                  norm=NORM_NONE, weights_path=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float32"
@@ -46,6 +46,7 @@ class BayesianNeuralNetwork:
         self.pi_1 = pi_1
         self.pi_2 = pi_2
         self.soft_0 = soft_0
+        self.adv_eps = adv_eps
 
         # Setting up the model
         self.model = self.build_model()
@@ -161,11 +162,18 @@ class BayesianNeuralNetwork:
     @tf.function
     def grad(self, X, y):
         """Compute the loss and its derivatives w.r.t. the inputs."""
-        with tf.GradientTape() as tape:
+        with tf.GradientTape(persistent=True) as tape:
+            tape.watch(X)
             y_pred = self.model(X)
             loss_value = tf.reduce_sum(-y_pred.log_prob(y))
             loss_value += tf.reduce_sum(self.model.losses)
+            if self.adv_eps is not None:
+                loss_x = tape.gradient(loss_value, X)
+                X_adv = X + self.adv_eps * tf.math.sign(loss_x)
+                y_adv_pred = self.model(X_adv)
+                loss_value += tf.reduce_sum(-y_adv_pred.log_prob(y))
         grads = tape.gradient(loss_value, self.wrap_trainable_variables())
+        del tape
         return loss_value, grads
 
     def wrap_trainable_variables(self):

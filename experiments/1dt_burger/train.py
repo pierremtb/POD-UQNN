@@ -39,7 +39,7 @@ model.initBNN(hp["h_layers"], hp["lr"], 1,
               hp["activation"],
             #   hp["exact_kl"],
               pi_0=hp["pi_0"], pi_1=hp["pi_1"], pi_2=hp["pi_2"],
-              soft_0=0.01, norm=hp["norm"])
+              soft_0=hp["soft_0"], adv_eps=hp["adv_eps"], norm=hp["norm"])
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
             freq=hp["log_frequency"], div_max=False)
 
