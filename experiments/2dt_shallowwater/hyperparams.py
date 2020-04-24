@@ -23,8 +23,8 @@ HP["train_val"] = (.8, .2)
 # DeepNN Topology
 HP["h_layers"] = [40, 40, 40]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 80000
-HP["lr"] = 0.01
+HP["epochs"] = 100000
+HP["lr"] = 0.005
 HP["activation"] = "relu"
 HP["exact_kl"] = False
 HP["pi_0"] = 0.5
