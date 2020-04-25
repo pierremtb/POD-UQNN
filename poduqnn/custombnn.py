@@ -153,7 +153,7 @@ class BayesianNeuralNetwork:
 
         outputs = tfp.layers.DistributionLambda(
             lambda t: tfd.Normal(loc=t[..., :self.layers[-1]],
-                scale=tf.math.softplus(self.soft_0 * t[..., self.layers[-1]:]) + 1e-6),
+                scale=tf.math.softplus(self.soft_0 * t[..., self.layers[-1]:]) + 1e-5),
         )(x)
 
         model = tf.keras.Model(inputs=inputs, outputs=outputs, name="bnn")
