@@ -26,20 +26,20 @@ HP["x_noise"] = 0.
 # Train/val split
 HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
-HP["h_layers"] =[40,40,40,40,40]
+HP["h_layers"] = [40, 40, 40, 40]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 150000
-HP["lr"] = 0.005
+HP["epochs"] = 50000
+HP["lr"] = 0.01
 HP["exact_kl"] = False
 HP["activation"] = "tanh"
 HP["pi_0"] = 0.5
-HP["pi_1"] = 1.5
+HP["pi_1"] = 0.7
 HP["pi_2"] = 0.1
-HP["soft_0"] = 0.1
-HP["adv_eps"] = 0.00001
+HP["soft_0"] = 0.01
+HP["adv_eps"] = None
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
-HP["log_frequency"] = 2000
+HP["log_frequency"] = 1000
 # Burgers params
 HP["mu_min"] = [2.]
 HP["mu_max"] = [20.]
