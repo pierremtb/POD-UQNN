@@ -40,8 +40,6 @@ HP["log_frequency"] = 500
 # Burgers params
 HP["mu_min"] = [2.]
 HP["mu_max"] = [20.]
-HP["mu_min_out"] = [10]
-HP["mu_max_out"] = [12]
 
 def u(X, t, mu, h0=1.):
     """1D Shallow Water analytical solution."""
