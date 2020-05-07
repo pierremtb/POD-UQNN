@@ -43,6 +43,7 @@ print("Elements count: ", connectivity.shape[0])
 print("Nodes count: ", x_mesh.shape[0])
 U_pred, U_pred_sig = model.predict(X_v_tst)
 U_tst_des = model.destruct(U_tst)
+U_tst_pod = model.restruct(model.project_to_U(model.project_to_v(U_tst_des)))
 err_val = re_s(U_tst_des, U_pred, div_max=True)
 print(f"RE_tst: {err_val:4f}")
 
