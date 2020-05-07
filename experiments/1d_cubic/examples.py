@@ -196,13 +196,13 @@ import tensorflow as tf
 tfk = tf.keras
 
 model = tfk.Sequential([
-    tfk.layers.Dense(5,
+    *[tfk.layers.Dense(5,
         activation="relu",
-        kernel_regularizer=tfk.regularizers.l2(0.001)),
+        kernel_regularizer=tfk.regularizers.l2(0.1)) for _ in range(3)],
     tfk.layers.Dense(1),
 ])
-model.compile(optimizer=tfk.optimizers.Adam(0.1), loss="mse")
-model.fit(x, y, epochs=1000, verbose=0)
+model.compile(optimizer=tfk.optimizers.Adam(0.05), loss="mse")
+model.fit(x, y, epochs=5000, verbose=0)
 f_post = model.predict(x_tst)
 
 fig = plt.figure(figsize=figsize(1, 1, scale=2.5))
