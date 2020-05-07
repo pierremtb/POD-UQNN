@@ -15,6 +15,7 @@ import matplotlib.font_manager
 # From https://github.com/maziarraissi/PINNs (MIT License, maziarraissi)
 def figsize(n_plot_x, n_plot_y, scale=1.):
     plot_width_pt = 100.                          # Get this from LaTeX using \the\textwidth
+    # plot_width_pt = 125.                          # Get this from LaTeX using \the\textwidth
     plot_height_pt = 100.                          # Get this from LaTeX using \the\textwidth
     inches_per_pt = 1.0/72.27                       # Convert pt to inch
     fig_width = n_plot_y*plot_width_pt*inches_per_pt*scale    # width in inches

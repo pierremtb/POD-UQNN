@@ -16,7 +16,7 @@ HP["n_t"] = 51
 HP["t_min"] = 0.
 HP["t_max"] = 5.
 # Snapshots count
-HP["n_s"] = 40
+HP["n_s"] = 140
 HP["n_s_tst"] = 3
 # POD stopping param
 HP["eps"] = 1e-5
@@ -26,16 +26,17 @@ HP["x_noise"] = 0.
 # Train/val split
 HP["train_val"] = (4/5, 1/5)
 # Deep NN hidden layers topology
-HP["h_layers"] = [128, 128, 128]
+# HP["h_layers"] = [128, 128, 128]
+HP["h_layers"] = [256, 256, 256]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 100000
-HP["lr"] = 0.002
+HP["epochs"] = 50000
+HP["lr"] = 0.003
 HP["exact_kl"] = False
 HP["activation"] = "tanh"
 HP["pi_0"] = 0.5
-HP["pi_1"] = 1.
+HP["pi_1"] = 0.3
 HP["pi_2"] = 0.1
-HP["soft_0"] = 0.001
+HP["soft_0"] = 0.005
 HP["adv_eps"] = 0.001
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
@@ -43,8 +44,6 @@ HP["log_frequency"] = 1000
 # Burgers params
 HP["mu_min"] = [2.]
 HP["mu_max"] = [20.]
-HP["mu_min_out"] = [10]
-HP["mu_max_out"] = [12]
 
 def u(X, t, mu, h0=1.):
     """1D Shallow Water analytical solution."""
