@@ -173,6 +173,89 @@ class PodnnModel:
 
         return X_v_train, v_train, X_v_test, v_test, U_test
 
+        def convert_multigpu_data(self, U_struct, X_v, train_val, eps, eps_init=None,
+                              n_L=0, use_cache=False, save_cache=False):
+        """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
+        """U is (n_v, n_xyz, n_t, n_s)."""
+        if use_cache and os.path.exists(self.train_data_path):
+            return self.load_train_data()
+
+        self.n_xyz = self.x_mesh.shape[0]
+        self.n_h = self.n_xyz * self.n_v
+        n_st = X_v.shape[0]
+        n_s = U_struct.shape[-1]
+        n_t = self.n_t
+        if n_t == 0:
+            n_t = 1
+
+        # Number of input in time (1) + number of params
+        self.n_d = X_v.shape[1]
+        
+        # Getting random indices to manually do the split
+        idx_s = np.random.permutation(n_s)
+        limit = np.floor(n_s * (1. - train_val[1])).astype(int)
+        train_idx, val_idx = idx_s[:limit], idx_s[limit:]
+
+        # Splitting the struct matrix
+        U_train_s = U_struct[..., train_idx]
+        U_val_s = U_struct[..., val_idx]
+
+        # Splitting the n_st-sized inputs
+        X_v_train = np.zeros((len(train_idx)*n_t, X_v.shape[1]))
+        X_v_val = np.zeros((len(val_idx)*n_t, X_v.shape[1]))
+        for i, idx in enumerate(train_idx):
+            X_v_train[i*n_t:(i+1)*n_t] = X_v[idx*n_t:(idx+1)*n_t]
+        for i, idx in enumerate(val_idx):
+            X_v_val[i*n_t:(i+1)*n_t] = X_v[idx*n_t:(idx+1)*n_t]
+
+        # Reshaping manually
+        U_train = self.destruct(U_train_s) 
+        U_val = self.destruct(U_val_s) 
+
+        # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
+        # u_rb are the reduced coefficients we're looking for
+        if eps_init is not None and self.has_t:
+            # Never tested
+            n_s = int(n_s / self.n_t)
+            self.V = perform_fast_pod(U_train.reshape((self.n_h, self.n_t, n_s)),
+                                      eps, eps_init)
+        else:
+            self.V = perform_pod(U_train, eps, n_L, True)
+
+        self.n_L = self.V.shape[1]
+
+        # Projecting
+        # v = (self.V.T.dot(U)).T
+        v_train = self.project_to_v(U_train)
+        v_val = self.project_to_v(U_val)
+        
+        # Checking the POD error
+        U_pod = self.V.dot(v_train.T)
+        v_train_pod = self.project_to_v(U_pod)
+        self.pod_sig = np.stack((U_train, U_pod), axis=-1).std(-1).mean(-1)
+        print(f"Mean pod sig: {self.pod_sig.mean()}")
+
+        # Removing the initial condition from the training set
+        if self.n_t > 0:
+            idx = np.arange(limit) * self.n_t
+            X_v_train_0 = X_v_train[idx]
+            X_v_train = np.delete(X_v_train, idx, axis=0)
+            v_train_0 = v_train[idx]
+            v_train = np.delete(v_train, idx, axis=0)
+            U_train_0 = U_train[:, idx]
+            U_train = np.delete(U_train, idx, axis=1)
+            idx = np.arange(n_s - limit - 1) * self.n_t
+            X_v_val_0 = X_v_val[idx]
+            X_v_val = np.delete(X_v_val, idx, axis=0)
+            v_val_0 = X_v_val[idx]
+            v_val = np.delete(v_val, idx, axis=0)
+            U_val_0 = U_train[:, idx]
+            U_val = np.delete(U_val, idx, axis=1)
+            self.save_init_data(X_v_train_0, v_train_0, U_train_0, X_v_val_0, v_val_0, U_val_0)
+
+        self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
+        return X_v_train, v_train, X_v_val, v_val, U_val
+
     def initNN(self, h_layers, lr, lam, norm):
         """Create the neural net model."""
         self.layers = pack_layers(self.n_d, h_layers, self.n_L)
