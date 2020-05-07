@@ -45,7 +45,7 @@ for i, n_s in enumerate(list_samples):
                                            hp["eps"])
 
         #%% Train
-        model.initNN(hp["h_layers"], hp["lr"], hp["lambda"])
+        model.initNN(hp["h_layers"], hp["lr"], hp["lambda"], norm=hp["norm"])
         train_res = model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
                                 hp["log_frequency"])
 
