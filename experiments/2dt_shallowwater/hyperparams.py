@@ -16,22 +16,22 @@ HP["t_max"] = 99.
 HP["n_s"] = 50
 HP["n_s_tst"] = 1
 # POD stopping param
-HP["eps"] = 1e-7
+HP["eps"] = 1e-8
 HP["n_L"] = 0
 # Train/val split
 HP["train_val"] = (.8, .2)
 # DeepNN Topology
-HP["h_layers"] = [40, 40, 40]
+HP["h_layers"] = [140, 140, 140]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 100000
-HP["lr"] = 0.005
+HP["epochs"] = 180000
+HP["lr"] = 0.003
 HP["activation"] = "relu"
 HP["exact_kl"] = False
 HP["pi_0"] = 0.5
 HP["pi_1"] = 0.2
 HP["pi_2"] = 0.1
 HP["soft_0"] = 0.01
-HP["adv_eps"] = 0.00001
+HP["adv_eps"] = 0.001
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000
