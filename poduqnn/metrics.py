@@ -11,7 +11,9 @@ def mse(v, v_pred):
 
 def re(U, U_pred):
     """Return relative error, inputs should be (n_h,)."""
-    return norm(U - U_pred) / norm(U)
+    return norm(U - U_pred) / max(norm(U), norm(U_pred))
+    # return norm(U - U_pred) / norm(U)
+    # return norm(U - U_pred) / max(norm(U), norm(U_pred))
 
 def re_s(U, U_pred):
     """Return relative error, inputs should be (n_h,)."""

@@ -173,7 +173,7 @@ class PodnnModel:
 
         return X_v_train, v_train, X_v_test, v_test, U_test
 
-        def convert_multigpu_data(self, U_struct, X_v, train_val, eps, eps_init=None,
+    def convert_multigpu_data(self, U_struct, X_v, train_val, eps, eps_init=None,
                               n_L=0, use_cache=False, save_cache=False):
         """Convert spatial mesh/solution to usable inputs/snapshot matrix."""
         """U is (n_v, n_xyz, n_t, n_s)."""
@@ -220,18 +220,20 @@ class PodnnModel:
             self.V = perform_fast_pod(U_train.reshape((self.n_h, self.n_t, n_s)),
                                       eps, eps_init)
         else:
-            self.V = perform_pod(U_train, eps, n_L, True)
+            self.V = perform_pod(U_train, eps, n_L)
 
         self.n_L = self.V.shape[1]
 
         # Projecting
         # v = (self.V.T.dot(U)).T
-        v_train = self.project_to_v(U_train)
-        v_val = self.project_to_v(U_val)
+        # v_train = self.project_to_v(U_train)
+        v_train = (self.V.T.dot(U_train)).T
+        # v_val = self.project_to_v(U_val)
+        v_val = (self.V.T.dot(U_val)).T
         
         # Checking the POD error
         U_pod = self.V.dot(v_train.T)
-        v_train_pod = self.project_to_v(U_pod)
+        # v_train_pod = self.project_to_v(U_pod)
         self.pod_sig = np.stack((U_train, U_pod), axis=-1).std(-1).mean(-1)
         print(f"Mean pod sig: {self.pod_sig.mean()}")
 
@@ -251,7 +253,7 @@ class PodnnModel:
             v_val = np.delete(v_val, idx, axis=0)
             U_val_0 = U_train[:, idx]
             U_val = np.delete(U_val, idx, axis=1)
-            self.save_init_data(X_v_train_0, v_train_0, U_train_0, X_v_val_0, v_val_0, U_val_0)
+            # self.save_init_data(X_v_train_0, v_train_0, U_train_0, X_v_val_0, v_val_0, U_val_0)
 
         self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
         return X_v_train, v_train, X_v_val, v_val, U_val
@@ -316,6 +318,25 @@ class PodnnModel:
         for i in range(n_s):
             U_struct[:, :, i] = U[:, i].reshape(self.get_u_tuple())
         return U_struct
+
+    def destruct(self, U_struct):
+        """Destruct the snapshots matrix DOFs/space-wise and time/snapshots-wise."""
+        if self.has_t:
+            # (n_v, n_xyz, n_t, n_s) -> (n_h, n_st)
+            n_s = int(U_struct.shape[-1])
+            U = np.zeros((self.n_h, self.n_t * n_s))
+            for i in range(n_s):
+                s = self.n_t * i
+                e = self.n_t * (i + 1)
+                U[:, s:e] = U_struct[:, :, :, i].reshape((self.n_h, self.n_t))
+            return U
+
+        # (n_v, n_xyz, n_s) -> (n_h, n_s)
+        n_s = U_struct.shape[-1]
+        U = np.zeros((self.n_h, n_s))
+        for i in range(n_s):
+            U[:, i] = U_struct[:, :, i].reshape((self.n_h))
+        return U
 
     def get_u_tuple(self):
         """Construct solution shape."""

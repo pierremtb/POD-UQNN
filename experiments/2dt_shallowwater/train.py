@@ -8,7 +8,7 @@ import numpy as np
 sys.path.append(os.path.join("..", ".."))
 from poduqnn.podnnmodel import PodnnModel
 from poduqnn.mesh import read_multi_space_sol_input_mesh
-from poduqnn.handling import clean_dir, split_dataset
+from poduqnn.handling import split_dataset
 
 from hyperparams import HP as hp
 
@@ -55,3 +55,5 @@ X_v_train, v_train, \
     U_val = model.convert_multigpu_data(U, X_v, hp["train_val"], hp["eps"])
 
 model.initNN(hp["h_layers"], hp["lr"], hp["lambda"], hp["norm"])
+model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
+            hp["log_frequency"])
