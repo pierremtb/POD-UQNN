@@ -19,6 +19,7 @@ from .handling import sample_mu, split_dataset
 
 SETUP_DATA_NAME = "setup_data.pkl"
 TRAIN_DATA_NAME = "train_data.pkl"
+INIT_DATA_NAME = "init_data.pkl"
 MODEL_NAME = "model.h5"
 MODEL_PARAMS_NAME = "model_params.pkl"
 
@@ -41,6 +42,7 @@ class PodnnModel:
         self.save_dir = save_dir
         self.setup_data_path = os.path.join(save_dir, SETUP_DATA_NAME)
         self.train_data_path = os.path.join(save_dir, TRAIN_DATA_NAME)
+        self.init_data_path = os.path.join(save_dir, INIT_DATA_NAME)
         self.model_path = os.path.join(save_dir, MODEL_NAME)
         self.model_params_path = os.path.join(save_dir, MODEL_PARAMS_NAME)
 
@@ -121,7 +123,7 @@ class PodnnModel:
 
     def generate_dataset(self, u, mu_min, mu_max, n_s,
                          train_val, eps, eps_init=None,
-                         t_min=0, t_max=0,
+                         t_min=0, t_max=0, rm_init=False,
                          use_cache=False):
         """Generate a training dataset for benchmark problems."""
         if use_cache:
@@ -155,7 +157,7 @@ class PodnnModel:
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
         if eps_init is None:
-            self.V = perform_pod(U, eps, True)
+            self.V = perform_pod(U, eps)
         else:
             self.V = perform_fast_pod(U_struct, eps, eps_init)
 
@@ -168,6 +170,26 @@ class PodnnModel:
 
         # Creating the validation snapshots matrix
         U_test = self.V.dot(v_test.T)
+        U_train = self.V.dot(v_train.T)
+
+        # Removing the initial condition from the training set
+        if self.n_t > 0 and rm_init:
+            limit = np.floor(n_s * (1. - train_val[1])).astype(int)
+            idx = np.arange(limit) * self.n_t
+            X_v_train_0 = X_v_train[idx]
+            X_v_train = np.delete(X_v_train, idx, axis=0)
+            v_train_0 = v_train[idx]
+            v_train = np.delete(v_train, idx, axis=0)
+            U_train_0 = U_train[:, idx]
+            U_train = np.delete(U_train, idx, axis=1)
+            idx = np.arange(n_s - limit - 1) * self.n_t
+            X_v_test_0 = X_v_test[idx]
+            X_v_test = np.delete(X_v_test, idx, axis=0)
+            v_test_0 = X_v_test[idx]
+            v_test = np.delete(v_test, idx, axis=0)
+            U_test_0 = U_test[:, idx]
+            U_test = np.delete(U_test, idx, axis=1)
+            self.save_init_data(X_v_train_0, v_train_0, U_train_0, X_v_test_0, v_test_0, U_test_0)
 
         self.save_train_data(X_v, X_v_train, v_train, X_v_test, v_test, U_test)
 
@@ -253,7 +275,7 @@ class PodnnModel:
             v_val = np.delete(v_val, idx, axis=0)
             U_val_0 = U_train[:, idx]
             U_val = np.delete(U_val, idx, axis=1)
-            # self.save_init_data(X_v_train_0, v_train_0, U_train_0, X_v_val_0, v_val_0, U_val_0)
+            self.save_init_data(X_v_train_0, v_train_0, U_train_0, X_v_val_0, v_val_0, U_val_0)
 
         self.save_train_data(X_v_train, v_train, U_train, X_v_val, v_val, U_val)
         return X_v_train, v_train, X_v_val, v_val, U_val
@@ -361,6 +383,14 @@ class PodnnModel:
             self.V = data[2]
             return data[3:]
 
+    def load_init_data(self):
+        """Load training data, such as datasets."""
+        if not os.path.exists(self.init_data_path):
+            raise FileNotFoundError("Can't find train data.")
+        with open(self.init_data_path, "rb") as f:
+            print("Loading train data")
+            return pickle.load(f)
+
     def save_train_data(self, X_v, X_v_train, v_train, X_v_test, v_test, U_test):
         """Save training data, such as datasets."""
         # Set dataset dependent params
@@ -370,6 +400,11 @@ class PodnnModel:
         with open(self.train_data_path, "wb") as f:
             pickle.dump((self.n_L, self.n_d, self.V,
                          X_v_train, v_train, X_v_test, v_test, U_test), f)
+
+    def save_init_data(self, X_v_train, v_train, U_train, X_v_val, v_val, U_val):
+        """Save training data, such as datasets."""
+        with open(self.init_data_path, "wb") as f:
+            pickle.dump((X_v_train, v_train, U_train, X_v_val, v_val, U_val), f)
 
     def load_model(self):
         """Load the (trained) POD-NN's regression nn and params."""

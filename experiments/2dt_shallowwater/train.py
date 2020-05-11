@@ -28,8 +28,8 @@ with open(os.path.join("cache", "train_tst_idx.pkl"), "rb") as f:
 # datadir = os.path.join("..", "..", "..", "scratch", "multi2swt") 
 datadir = "data"
 mu_path = os.path.join(datadir, "INPUT_MONTE_CARLO.dat")
-sel = np.loadtxt(os.path.join(datadir, "sel.csv"),
-                 skiprows=1, delimiter=",")[:, 0].astype("int")
+# sel = np.loadtxt(os.path.join(datadir, "sel.csv"),
+#                  skiprows=1, delimiter=",")[:, 0].astype("int")
 x_u_mesh_path = datadir
 # x_mesh, connectivity, X_v, U = read_multi_space_sol_input_mesh(hp["n_s"], hp["n_t"], hp["d_t"],
 #                                                  train_tst_idx[0],
