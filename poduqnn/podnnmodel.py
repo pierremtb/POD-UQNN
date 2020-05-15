@@ -155,9 +155,7 @@ class PodnnModel:
         # Getting the POD bases, with u_L(x, mu) = V.u_rb(x, mu) ~= u_h(x, mu)
         # u_rb are the reduced coefficients we're looking for
         if eps_init is not None and self.has_t:
-            # Never tested
-            n_s = int(n_s / self.n_t)
-            self.V = perform_fast_pod(U_train.reshape((self.n_h, self.n_t, n_s)),
+            self.V = perform_fast_pod(U_struct.reshape((self.n_h, n_t, n_s)),
                                       eps, eps_init)
         else:
             self.V = perform_pod(U_train, eps, n_L, True)

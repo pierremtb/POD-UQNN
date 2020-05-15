@@ -17,7 +17,8 @@ HP["t_max"] = 99.
 HP["n_s"] = 50
 HP["n_s_tst"] = 1
 # POD stopping param
-HP["eps"] = 1e-8
+HP["eps"] = 1e-5
+HP["eps_init"] = 1e-6
 HP["n_L"] = 0
 # Train/val split
 HP["train_val"] = (.8, .2)

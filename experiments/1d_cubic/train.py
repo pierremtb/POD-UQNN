@@ -25,7 +25,10 @@ from poduqnn.varneuralnetwork import NORM_MEANSTD, NORM_NONE
 from poduqnn.plotting import figsize
 from poduqnn.handling import check_distributed_args
 
-distributed, local_num = check_distributed_args()
+from hyperparams import HP as hp
+
+distributed = check_distributed_args()
+local_num = hp["n_M"]
 print(f"Distributed: {distributed}, Local models: {local_num}")
 
 #%% Loading data

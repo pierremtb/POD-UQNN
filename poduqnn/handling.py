@@ -48,9 +48,8 @@ def sample_mu(n_s, mu_min, mu_max, indices=None):
 def check_distributed_args():
     pa = argparse.ArgumentParser()
     pa.add_argument("--distributed", action="store_true", default=False)
-    pa.add_argument("--models", type=int, default=1)
     args = pa.parse_args()
-    return args.distributed, args.models
+    return args.distributed
 
 
 def clean_dir(dirname):

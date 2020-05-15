@@ -13,7 +13,8 @@ from poduqnn.handling import check_distributed_args
 from hyperparams import HP as hp
 
 #%% Prep GPUs
-distributed, local_num = check_distributed_args()
+local_num = hp["n_M"]
+distributed = check_distributed_args()
 print(f"Distributed: {distributed}, Local models:{local_num}")
 tf.config.set_soft_device_placement(True)
 if distributed:
