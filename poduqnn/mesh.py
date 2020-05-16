@@ -88,6 +88,13 @@ def read_vtk_data(filename, idx, points_idx=None):
     return U.T
 
 
+def read_txt_data(filename, idx, points_idx=None):
+    U = pd.read_table(filename, header=None).to_numpy()
+    if points_idx is not None:
+        U = U[points_idx]
+    return U.T
+
+
 def read_multi_space_sol_input_mesh(n_s, n_t, d_t, picked_idx, qties, x_u_mesh_path,
                                     mu_mesh_path, mu_mesh_idx,
                                     sel=None):
@@ -138,6 +145,59 @@ def read_multi_space_sol_input_mesh(n_s, n_t, d_t, picked_idx, qties, x_u_mesh_p
         # Flattening the time dimension in steady case
         U = U[:, :, 0, :]
     return x_mesh, connectivity, X_v, U
+
+def read_multi_space_sol_input_mesh_txt(n_s, n_t, d_t, picked_idx, qties, x_u_mesh_path,
+                                    mu_mesh_path, mu_mesh_idx,
+                                    sel=None):
+    x_mesh = None
+    U = None
+    connectivity = None
+
+    # Number of parameters, 1+others
+    n_p = len(mu_mesh_idx)
+    if n_t > 1:
+        n_p += 1
+    mu = np.loadtxt(mu_mesh_path, skiprows=1)
+    mu = mu[picked_idx, mu_mesh_idx]
+    print(mu)
+    t = np.arange(n_t)*d_t
+    tT = t.reshape((n_t, 1))
+    X_v = np.zeros((n_s*n_t, n_p))
+
+    first = True
+    # Getting data
+    print(f"Loading {n_s} samples...")
+    for i, mu_i in enumerate(tqdm(mu)):
+        dirname = os.path.join(x_u_mesh_path, f"multi_{picked_idx[i]+1}")
+        # Get files of directories
+        for sub_root, _, files in os.walk(dirname):
+            # Sorting and picking the righ ones
+            picked_files = filter(lambda file: file.startswith("0_FV-Paraview"), files)
+            picked_files = sorted(picked_files, key=natural_keys)
+            if n_t == 1:
+                picked_files = picked_files[-1:]
+            # For filtered/sorted files
+            for j, filename in enumerate(picked_files[:n_t]):
+                # First sample
+                if first:
+                    first = False
+                    samplename = os.path.join(sub_root, filename)
+                    x_mesh, connectivity, points_idx = read_vtk_conf(samplename, sel)
+                    U = np.zeros((len(qties), x_mesh.shape[0], n_t, n_s))
+
+                # Parse the file and append
+                filename = f"0_sol_nodes_{j}.txt"
+                U_ij = read_txt_data(os.path.join(sub_root, filename), qties, points_idx)
+                U[:, :, j, i] = U_ij
+
+            if n_t == 1:
+                X_v[i] = mu_i
+            else:
+                X_v[n_t * i:n_t* (i+1)] = np.hstack((tT, np.ones_like(tT)*mu_i))
+    if n_t == 1:
+        # Flattening the time dimension in steady case
+        U = U[:, :, 0, :]
+    return x_mesh, connectivity, X_v, U, points_idx
 
 
 def read_space_sol_input_mesh(n_s, idx, x_u_mesh_path, mu_mesh_path):
