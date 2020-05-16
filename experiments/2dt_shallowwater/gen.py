@@ -51,7 +51,7 @@ model = PodnnModel(resdir, hp["n_v"], x_mesh, hp["n_t"])
 #%% Generate the dataset from the mesh and params
 X_v_train, v_train, \
     X_v_val, v_val, \
-    U_val = model.convert_multigpu_data(U, X_v, hp["train_val"], hp["eps"])
+    U_val = model.convert_multigpu_data(U, X_v, hp["train_val"], hp["eps"], hp["eps_init"])
 
 model.initVNNs(hp["n_M"], hp["h_layers"], hp["lr"], hp["lambda"],
                hp["adv_eps"], hp["soft_0"], hp["norm"])

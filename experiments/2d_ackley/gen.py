@@ -29,9 +29,7 @@ X_v_train, v_train, _, \
     X_v_val, v_val, U_val = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                                     hp["n_s"],
                                                     hp["train_val"],
-                                                    eps=hp["eps"], n_L=hp["n_L"],
-                                                    u_noise=hp["u_noise"],
-                                                    x_noise=hp["x_noise"])
+                                                    eps=hp["eps"], n_L=hp["n_L"])
 
 model.initVNNs(hp["n_M"], hp["h_layers"], hp["lr"], hp["lambda"],
                hp["adv_eps"], hp["soft_0"], hp["norm"])

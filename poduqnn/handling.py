@@ -6,6 +6,8 @@ import numpy as np
 
 from .acceleration import lhs
 
+MODEL_NAME = "model_weights"
+
 
 def pack_layers(i, hiddens, o):
     """Create the full NN topology from input size, hidden layers, and output."""
@@ -48,15 +50,14 @@ def sample_mu(n_s, mu_min, mu_max, indices=None):
 def check_distributed_args():
     pa = argparse.ArgumentParser()
     pa.add_argument("--distributed", action="store_true", default=False)
-    pa.add_argument("--models", type=int, default=1)
     args = pa.parse_args()
-    return args.distributed, args.models
+    return args.distributed
 
 
 def clean_dir(dirname):
     for root, dirs, files in os.walk(dirname):
         for name in files:
-            if not name.endswith(".gitignore"):
+            if name.startswith(MODEL_NAME):
                 os.remove(os.path.join(root, name))
 
 
