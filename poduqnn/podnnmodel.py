@@ -20,6 +20,8 @@ SETUP_DATA_NAME = "setup_data.pkl"
 TRAIN_DATA_NAME = "train_data.pkl"
 INIT_DATA_NAME = "init_data.pkl"
 MODEL_PARAMS_NAME = "model_params.pkl"
+MODEL_NAME = "model_weights"
+MODEL_NAME_EXT = ".index"
 
 
 class PodnnModel:
@@ -282,7 +284,7 @@ class PodnnModel:
         for i in range(n_M):
             self.regnn.append(VarNeuralNetwork(self.layers, lr, lam, adv_eps,
                                                soft_0, norm))
-            self.model_path.append(os.path.join(self.resdir, f"model-{i}.{time.time()}.h5"))
+            self.model_path.append(os.path.join(self.resdir, f"{MODEL_NAME}-{i}-{time.time()}"))
         self.regnn[0].summary()
         self.save_model()
 
@@ -477,7 +479,7 @@ class PodnnModel:
 
         models_exist = True
         for path in self.model_path:
-            models_exist = models_exist and os.path.exists(path)
+            models_exist = models_exist and os.path.exists(path + MODEL_NAME_EXT)
         if not models_exist:
             raise FileNotFoundError("Can't find cached model.")
         if not os.path.exists(self.model_params_path):
@@ -514,11 +516,10 @@ class PodnnModel:
     def load(cls, save_dir):
         """Recreate a pre-trained POD-NN model."""
         n_v, x_mesh, n_t = PodnnModel.load_setup_data(save_dir)
-
         model_path = []
         for file in sorted(os.listdir(save_dir)):
-            if file.startswith("model-"):
-                model_path.append(os.path.join(save_dir, file))
+            if file.startswith(MODEL_NAME) and file.endswith(MODEL_NAME_EXT):
+                model_path.append(os.path.join(save_dir, file[:-len(MODEL_NAME_EXT)]))
 
         podnnmodel = cls(save_dir, n_v, x_mesh, n_t)
         podnnmodel.model_path = model_path

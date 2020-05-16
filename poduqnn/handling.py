@@ -6,6 +6,8 @@ import numpy as np
 
 from .acceleration import lhs
 
+MODEL_NAME = "model_weights"
+
 
 def pack_layers(i, hiddens, o):
     """Create the full NN topology from input size, hidden layers, and output."""
@@ -55,7 +57,7 @@ def check_distributed_args():
 def clean_dir(dirname):
     for root, dirs, files in os.walk(dirname):
         for name in files:
-            if not name.endswith(".gitignore"):
+            if name.startswith(MODEL_NAME):
                 os.remove(os.path.join(root, name))
 
 

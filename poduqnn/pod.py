@@ -21,6 +21,7 @@ def perform_pod(U, eps=0., n_L=0, verbose=True):
     # Storing eigenvalues and their sum
     lambdas = D**2
     sum_lambdas = np.sum(lambdas)
+    print(eps)
   
     # Finding n_L
     if n_L == 0:

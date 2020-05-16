@@ -7,6 +7,8 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import numpy as np
 
+tfd = tfp.distributions
+
 NORM_NONE = "none"
 NORM_MEANSTD = "meanstd"
 NORM_CENTER = "center"
@@ -15,7 +17,7 @@ NORM_CENTER = "center"
 class VarNeuralNetwork:
     """Custom class defining a mean/variance Neural Network model."""
     def __init__(self, layers, lr, lam, adv_eps=None, soft_0=1.,
-                 norm=NORM_NONE, model=None, norm_bounds=None):
+                 norm=NORM_NONE, weights_path=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float64"
 
@@ -33,16 +35,14 @@ class VarNeuralNetwork:
 
         # Setting up the model
         tf.keras.backend.set_floatx(self.dtype)
-        if model is None:
-            self.model = self.build_model()
-        else:
-            self.model = model
+        self.model = self.build_model()
+        if weights_path is not None:
+            self.model.load_weights(weights_path)
 
     def build_model(self):
         """Functional Keras model."""
-        soft_0 = self.soft_0
-
         inputs = tf.keras.Input(shape=(self.layers[0],), name="x", dtype=self.dtype)
+
         x = inputs
         for width in self.layers[1:-1]:
             x = tf.keras.layers.Dense(
@@ -53,12 +53,11 @@ class VarNeuralNetwork:
                 kernel_initializer="glorot_normal")(x)
 
         # Output processing function
-        def split_mean_var(data):
-            mean, out_var = tf.split(data, num_or_size_splits=2, axis=1)
-            var = tf.math.softplus(soft_0 * out_var) + 1e-6
-            return [mean, var]
-        
-        outputs = tf.keras.layers.Lambda(split_mean_var)(x)
+        outputs = tfp.layers.DistributionLambda(
+            lambda t: tfd.Normal(loc=t[..., :self.layers[-1]],
+                scale=tf.math.softplus(self.soft_0 * t[..., self.layers[-1]:]) + 1e-6),
+        )(x)
+
         model = tf.keras.Model(inputs=inputs, outputs=outputs, name="varnn")
         return model
 
@@ -93,23 +92,17 @@ class VarNeuralNetwork:
         return self.lam * l2_norm
         
     @tf.function
-    def loss(self, y, y_pred):
-        """Gaussian NLL loss function between the pred and true value."""
-        y_pred_mean, y_pred_var = y_pred
-        return tf.reduce_mean(tf.math.log(y_pred_var) / 2) + \
-               tf.reduce_mean(tf.divide(tf.square(y -  y_pred_mean), 2*y_pred_var)) + \
-               self.regularization()
-
-    @tf.function
     def grad(self, X, v):
         """Compute the loss and its derivatives w.r.t. the inputs."""
         with tf.GradientTape(persistent=True) as tape:
             tape.watch(X)
-            loss_value = self.loss(v, self.model(X))
+            y_pred = self.model(X)
+            loss_value = tf.reduce_sum(-y_pred.log_prob(v)) + self.regularization()
             if self.adv_eps is not None:
                 loss_x = tape.gradient(loss_value, X)
                 X_adv = X + self.adv_eps * tf.math.sign(loss_x)
-                loss_value += self.loss(v, self.model(X_adv))
+                v_adv_pred = self.model(X_adv)
+                loss_value += tf.reduce_sum(-v_adv_pred.log_prob(v)) + self.regularization()
         grads = tape.gradient(loss_value, self.wrap_trainable_variables())
         del tape
         return loss_value, grads
@@ -161,14 +154,15 @@ class VarNeuralNetwork:
     def predict(self, X):
         """Get the prediction for a new input X."""
         X = self.normalize(X)
-        y_pred_mean, y_pred_var = self.model(X)
+        y_dist = self.model(X)
+        y_pred_mean = y_dist.mean()
+        y_pred_var = y_dist.variance()
         return y_pred_mean.numpy(), y_pred_var.numpy()
 
     def predict_dist(self, X):
         """Get the prediction for a new input X."""
         X = self.normalize(X)
-        y_pred, y_pred_var = self.model(X)
-        return tfp.distributions.Normal(y_pred, np.sqrt(y_pred_var))
+        return self.model(X)
 
     def summary(self):
         """Print a summary of the TensorFlow/Keras model."""
@@ -182,20 +176,18 @@ class VarNeuralNetwork:
         """Save the (trained) model and params for later use."""
         with open(params_path, "wb") as f:
             pickle.dump((self.layers, self.lr, self.lam, self.soft_0, self.norm, self.norm_bounds), f)
-        tf.keras.models.save_model(self.model, model_path)
+        # tf.keras.models.save_model(self.model, model_path)
+        self.model.save_weights(model_path)
 
     @classmethod
-    def load_from(cls, model_path, params_path):
+    def load_from(cls, weights_path, params_path):
         """Load a (trained) model and params."""
 
-        if not os.path.exists(model_path):
-            raise FileNotFoundError("Can't find cached model.")
         if not os.path.exists(params_path):
             raise FileNotFoundError("Can't find cached model params.")
 
-        print(f"Loading model from {model_path}")
+        print(f"Loading model from {params_path}")
         with open(params_path, "rb") as f:
             layers, lr, lam, soft_0, norm, norm_bounds = pickle.load(f)
         print(f"Loading model params from {params_path}")
-        model = tf.keras.models.load_model(model_path, custom_objects={"soft_0": soft_0})
-        return cls(layers, lr, lam, model=model, norm=norm, norm_bounds=norm_bounds)
+        return cls(layers, lr, lam, weights_path=weights_path, norm=norm, norm_bounds=norm_bounds)

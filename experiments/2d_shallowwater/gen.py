@@ -13,7 +13,7 @@ from poduqnn.handling import clean_dir, split_dataset
 from hyperparams import HP as hp
 
 resdir = "cache"
-# clean_dir(resdir)
+clean_dir(resdir)
 
 # Getting data from the files
 # fake_x = np.zeros(hp["n_s"] + hp["n_s_tst"])
