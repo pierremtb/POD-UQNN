@@ -39,7 +39,7 @@ def perform_pod(U, eps=0., n_L=0, verbose=True):
 
     U = np.ascontiguousarray(U)
 
-    V = np.zeros((int(n_h), int(n_L)))
+    V = np.zeros((n_h, n_L))
     for i in range(n_L):
         Z_i = np.ascontiguousarray(Z[:, i])
         V[:, i] = U.dot(Z_i) / np.sqrt(lambdas_trunc[i])
@@ -47,32 +47,22 @@ def perform_pod(U, eps=0., n_L=0, verbose=True):
     return np.ascontiguousarray(V)
 
 
-@njit(parallel=True)
+# @njit(parallel=False)
 def perform_fast_pod(U, eps, eps_init):
     """Two-step version of POD algorithm."""
     print("Performing initial time-trajectory POD")
-    # Number of DOFs
-    n_h = U.shape[0]
     # Number of snapshots n_s x Number of space nodes (n_x * n_y * ...)
     n_s = U.shape[-1]
 
-    # Init at the max it can be, n_t
-    n_L_init = U.shape[1]
-    
-    T = np.zeros((n_h, n_L_init, n_s))
+    T_list = []
     for k in range(n_s):
         U_k = U[:, :, k]
+        # Retrieving each time-trajectory
         T_k = perform_pod(U_k, eps=eps_init, n_L=0, verbose=False)
-        n_L_k = T_k.shape[1]
-        if n_L_k < n_L_init:
-            n_L_init = n_L_k
-        for i in range(n_L_init):
-            T[:, i, k] = T_k[:, i]
-        # T[:, :n_L_init, k] = T_k[:, :n_L_init]
+        T_list.append(T_k)
 
-    # Cropping the results accordingly and stacking
-    T = np.ascontiguousarray(T[:, :n_L_init, :])
     # Reshaping the 3d-mat into a 2d-mat
-    U_f = np.reshape(T, (n_h, n_s*n_L_init))
+    U_f = np.concatenate(T_list, axis=1)
+
     print("Performing SVD")
     return perform_pod(U_f, eps=eps, n_L=0, verbose=True)

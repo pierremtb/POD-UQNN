@@ -28,11 +28,11 @@ with open(os.path.join("cache", "train_tst_idx.pkl"), "rb") as f:
      train_tst_idx = pickle.load(f)
 
 datadir = "data"
-mu_path = os.path.join(datadir, "INPUT_MONTE_CARLO.dat")
+mu_path = os.path.join(datadir, "INPUT")
 sel = np.loadtxt(os.path.join(datadir, "sel.csv"),
                  skiprows=1, delimiter=",")[:, 0].astype("int")
-# x_mesh, connectivity, X_v, U = \
-#         read_multi_space_sol_input_mesh(hp["n_s"], hp["n_t"], hp["d_t"],
+# x_mesh, connectivity, X_v, U, _ = \
+#         read_multi_space_sol_input_mesh_txt(hp["n_s"], hp["n_t"], hp["d_t"],
 #                                         train_tst_idx[0],
 #                                         hp["mesh_idx"], datadir, mu_path,
 #                                         hp["mu_idx"], sel)
