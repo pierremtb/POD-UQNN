@@ -72,7 +72,7 @@ U_pred_0 = model.restruct(U_pred_0)
 
 print("Saving to .vtu")
 for s in [0]:
-    print(f"Sample is {30.0 - X_v_tst[s*hp['n_t']][1]}")
+    print(f"Sample is {X_v_tst[s*hp['n_t']][1]}")
     meshio.write_points_cells(os.path.join("cache", f"x_u_tst_pred_{s}.{0}.vtu"),
                               x_mesh,
                               [("triangle", connectivity)],
@@ -146,9 +146,14 @@ for _ in [1]:
     for i, t_i in enumerate(idx):
         # Projections
         U_tst_ = project(U_tst[0, :, t_i, s])
-        U_pred_ = project(U_pred[0, :, t_i, s])
-        U_pred_lo_ = project(U_pred_lo[0, :, t_i, s])
-        U_pred_up_ = project(U_pred_up[0, :, t_i, s])
+        if i == 0:
+            U_pred_ = project(U_pred_0[0, :, t_i, s])
+            U_pred_lo_ = project(U_pred_0[0, :, t_i, s])
+            U_pred_up_ = project(U_pred_0[0, :, t_i, s])
+        else:
+            U_pred_ = project(U_pred[0, :, t_i, s])
+            U_pred_lo_ = project(U_pred_lo[0, :, t_i, s])
+            U_pred_up_ = project(U_pred_up[0, :, t_i, s])
         # U_pred_ = project(U_pred[:, 0])
         # U_pred_lo_ = project(U_pred[:, 0])
         # U_pred_up_ = project(U_pred[:, 0])
@@ -175,7 +180,7 @@ for _ in [1]:
         ax.set_xlabel(f"$x'$")
         ax.set_ylabel("$\eta$")
         ax.set_ylim(ylim)
-        ax.set_title(f"$\eta_0=29.368\ m$, $t={t_i * hp['d_t']}\ s$")
+        ax.set_title(f"$\eta_0={X_v_tst[s*hp['n_t']][1]:.3f}\ m$, $t={t_i * hp['d_t']}\ s$")
         if i == 0:
             ax.legend()
     plt.tight_layout()
