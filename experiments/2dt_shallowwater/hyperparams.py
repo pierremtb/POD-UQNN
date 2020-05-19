@@ -8,22 +8,23 @@ HP["mu_idx"] = [2]
 # Dimension of u(x, t, mu)
 HP["n_v"] = 1
 # Time
-HP["n_t"] = 100
-HP["d_t"] = 0.1
+HP["n_t"] = 101
+HP["d_t"] = 0.3
 HP["t_min"] = 0.
-HP["t_max"] = 99.
+HP["t_max"] = 100.
 # Snapshots count
-HP["n_s"] = 50
-HP["n_s_tst"] = 1
+HP["n_s"] = 98
+HP["n_s_tst"] = 2
 # POD stopping param
-HP["eps"] = 1e-8
+HP["eps"] = 1e-6
+HP["eps_init"] = 1e-6
 HP["n_L"] = 0
 # Train/val split
 HP["train_val"] = (.8, .2)
 # DeepNN Topology
-HP["h_layers"] = [140, 140, 140]
+HP["h_layers"] = [128, 128, 128]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 180000
+HP["epochs"] = 70000
 HP["lr"] = 0.003
 HP["activation"] = "relu"
 HP["exact_kl"] = False
