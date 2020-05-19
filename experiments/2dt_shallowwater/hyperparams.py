@@ -4,7 +4,7 @@ from poduqnn.custombnn import NORM_MEANSTD
 
 HP = {}
 HP["mesh_idx"] = ["eta"]
-HP["mu_idx"] = [2]
+HP["mu_idx"] = [1]
 # Dimension of u(x, t, mu)
 HP["n_v"] = 1
 # Time
@@ -24,7 +24,7 @@ HP["train_val"] = (.8, .2)
 # DeepNN Topology
 HP["h_layers"] = [128, 128, 128]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 70000
+HP["epochs"] = 100000
 HP["lr"] = 0.003
 HP["activation"] = "relu"
 HP["exact_kl"] = False

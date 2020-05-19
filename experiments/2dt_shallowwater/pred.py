@@ -107,7 +107,7 @@ line = (
         )
 
 # Load bathymetry
-b = np.loadtxt(os.path.join("cache", "b.csv"), delimiter=',', skiprows=1)[:, 5]
+# b = np.loadtxt(os.path.join("cache", "b.csv"), delimiter=',', skiprows=1)[:, 5]
 
 # Create coordinates from bathymethry line
 num = 1000
