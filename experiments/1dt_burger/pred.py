@@ -35,6 +35,7 @@ X_v_tst, U_tst, _, _ = \
                            t_min=hp["t_min"], t_max=hp["t_max"])
 U_pred, U_pred_sig = model.predict(X_v_tst)
 print(f"RE_tst: {re_s(U_tst, U_pred):4f}")
+
 U_tst = model.restruct(U_tst)[0]
 U_pred = model.restruct(U_pred)[0]
 
@@ -72,6 +73,12 @@ X_v_samples_out, _, U_samples_out, _ = \
 
 U_pred, U_pred_sig = model.predict(X_v_samples)
 U_pred_out, U_pred_sig_out = model.predict(X_v_samples_out)
+
+mpiw_tst = 4 * U_pred_sig.mean()
+print(f"MPIW_tst: {mpiw_tst:.4e}")
+mpiw_tst_out = 4 * U_pred_sig_out.mean()
+print(f"MPIW_tst_out: {mpiw_tst_out:.4e}")
+
 U_pred, U_pred_sig = model.restruct(U_pred), model.restruct(U_pred_sig)
 U_pred_out, U_pred_sig_out = model.restruct(U_pred_out), model.restruct(U_pred_sig_out)
 # idx = np.random.choice(X_v_samples.shape[0], n_samples, replace=False)
