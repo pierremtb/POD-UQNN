@@ -293,10 +293,10 @@ class PodnnModel:
         def err_fn():
             v_pred, sig = self.regnn.predict(X_v_val)
             log = {
-                "RE_v": re_s(v_val.T, v_pred.T, div_max=div_max),
+                "RE_val": re_s(v_val.T, v_pred.T, div_max=div_max),
+                "MPIW_val": 4 * sig.mean(),
                 "std": tf.reduce_sum(v_pred.std(0)),
-                "stdval": tf.reduce_sum(v_val.std(0)),
-                "in": tf.reduce_mean(sig)
+                "std_val": tf.reduce_sum(v_val.std(0)),
             }
             if X_out is not None:
                 _, sig_out = self.predict_v(X_out)
