@@ -53,6 +53,7 @@ X_v_samples, U_samples, _, _ = \
 #%% Model creation
 model.initBNN(hp["h_layers"], hp["lr"], 1, hp["activation"],
               pi_0=hp["pi_0"], pi_1=hp["pi_1"], pi_2=hp["pi_2"],
+              soft_0=0.01, soft_1=1e-5,
               norm=hp["norm"])
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
             freq=hp["log_frequency"], X_out=X_v_samples)

@@ -274,12 +274,12 @@ class PodnnModel:
 
     def initBNN(self, h_layers, lr, klw, activation,
                 exact_kl=False, pi_0=None, pi_1=None, pi_2=None,
-                soft_0=0.01, adv_eps=None, norm=NORM_MEANSTD):
+                soft_0=0.01, soft_1=1e-6, adv_eps=None, norm=NORM_MEANSTD):
         """Init the Bayesian Neural Network regression model."""
         self.layers = [self.n_d, *h_layers, self.n_L]
         self.regnn = \
             BayesianNeuralNetwork(self.layers, lr, klw, exact_kl, activation,
-                                  pi_0, pi_1, pi_2, soft_0, adv_eps, norm)
+                                  pi_0, pi_1, pi_2, soft_0, soft_1, adv_eps, norm)
         self.regnn.summary()
 
     def train(self, X_v, v, X_v_val, v_val, epochs,

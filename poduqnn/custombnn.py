@@ -24,7 +24,7 @@ class BayesianNeuralNetwork:
     """Custom class defining a Bayesian Neural Network model."""
     def __init__(self, layers, lr, klw=1,
                  exact_kl=False, activation="relu",
-                 pi_0=None, pi_1=None, pi_2=None, soft_0=0.01, adv_eps=None,
+                 pi_0=None, pi_1=None, pi_2=None, soft_0=0.01, soft_1=1e-6, adv_eps=None,
                  norm=NORM_NONE, weights_path=None, norm_bounds=None):
         # Making sure the dtype is consistent
         self.dtype = "float32"
@@ -46,6 +46,7 @@ class BayesianNeuralNetwork:
         self.pi_1 = pi_1
         self.pi_2 = pi_2
         self.soft_0 = soft_0
+        self.soft_1 = soft_1
         self.adv_eps = adv_eps
 
         # Setting up the model
@@ -153,7 +154,7 @@ class BayesianNeuralNetwork:
 
         outputs = tfp.layers.DistributionLambda(
             lambda t: tfd.Normal(loc=t[..., :self.layers[-1]],
-                scale=tf.math.softplus(self.soft_0 * t[..., self.layers[-1]:]) + 1e-4),
+                scale=tf.math.softplus(self.soft_0 * t[..., self.layers[-1]:]) + self.soft_1),
         )(x)
 
         model = tf.keras.Model(inputs=inputs, outputs=outputs, name="bnn")
