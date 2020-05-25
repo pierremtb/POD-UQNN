@@ -50,6 +50,20 @@ U_tst = model.restruct(U_tst)[0]
 mu_lhs_in = np.array([12]).reshape(-1, 1)
 mu_lhs_out = np.array([25]).reshape(-1, 1)
 
+X_v_samples, _, _, _ = \
+    model.create_snapshots(model.n_d, model.n_h, u, mu_lhs_in,
+                           t_min=hp["t_min"], t_max=hp["t_max"])
+X_v_samples_out, _, _, _ = \
+    model.create_snapshots(model.n_d, model.n_h, u, mu_lhs_out,
+                           t_min=hp["t_min"], t_max=hp["t_max"])
+U_pred, U_pred_sig = model.predict(X_v_samples)
+U_pred_out, U_pred_sig_out = model.predict(X_v_samples_out)
+
+mpiw_tst = 4 * U_pred_sig.mean()
+print(f"MPIW_tst: {mpiw_tst:.4e}")
+mpiw_tst_out = 4 * U_pred_sig_out.mean()
+print(f"MPIW_tst_out: {mpiw_tst_out:.4e}")
+
 #%% Contours for demo
 n_plot_x = 1
 n_plot_y = 3
