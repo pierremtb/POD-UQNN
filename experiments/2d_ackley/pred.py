@@ -62,6 +62,12 @@ U_samples_out = np.reshape(U_samples_out, (hp["n_x"], hp["n_y"], -1))
 U_pred, U_pred_sig = model.predict(X_v_samples)
 U_pred_out, U_pred_sig_out = model.predict(X_v_samples_out)
 U_pred, U_pred_sig = model.restruct(U_pred), model.restruct(U_pred_sig)
+
+mpiw_tst = 4 * U_pred_sig.mean()
+print(f"MPIW_tst: {mpiw_tst:.4e}")
+mpiw_tst_out = 4 * U_pred_sig_out.mean()
+print(f"MPIW_tst_out: {mpiw_tst_out:.4e}")
+
 U_pred = np.reshape(U_pred, (hp["n_x"], hp["n_y"], -1))
 U_pred_sig = np.reshape(U_pred_sig, (hp["n_x"], hp["n_y"], -1))
 U_pred_out, U_pred_sig_out = model.restruct(U_pred_out), model.restruct(U_pred_sig_out)

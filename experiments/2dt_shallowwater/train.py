@@ -9,7 +9,7 @@ import numpy as np
 
 sys.path.append(os.path.join("..", ".."))
 from poduqnn.podnnmodel import PodnnModel
-from poduqnn.mesh import read_multi_space_sol_input_mesh
+from poduqnn.mesh import read_multi_space_sol_input_mesh_txt
 from poduqnn.handling import split_dataset
 from poduqnn.metrics import re_s, re
 from poduqnn.plotting import savefig, figsize
@@ -26,6 +26,7 @@ print(hp)
 #      pickle.dump(train_tst_idx, f)
 with open(os.path.join("cache", "train_tst_idx.pkl"), "rb") as f:
      train_tst_idx = pickle.load(f)
+print(train_tst_idx)
 
 datadir = "data"
 mu_path = os.path.join(datadir, "INPUT")

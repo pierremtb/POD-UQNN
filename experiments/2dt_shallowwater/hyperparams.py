@@ -4,7 +4,7 @@ from poduqnn.custombnn import NORM_MEANSTD
 
 HP = {}
 HP["mesh_idx"] = ["eta"]
-HP["mu_idx"] = [2]
+HP["mu_idx"] = [1]
 # Dimension of u(x, t, mu)
 HP["n_v"] = 1
 # Time
@@ -29,7 +29,7 @@ HP["lr"] = 0.003
 HP["activation"] = "relu"
 HP["exact_kl"] = False
 HP["pi_0"] = 0.5
-HP["pi_1"] = 0.2
+HP["pi_1"] = 0.3
 HP["pi_2"] = 0.1
 HP["soft_0"] = 0.01
 HP["adv_eps"] = 0.001
