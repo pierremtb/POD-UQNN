@@ -21,6 +21,7 @@ if distributed:
     import horovod.tensorflow as hvd
     hvd.init()
     gpu_id = hvd.local_rank()
+    local_num = 1
     # tf.config.experimental.set_memory_growth(gpu, True)
     phys_devices = tf.config.experimental.get_visible_devices('GPU')
     tf.config.experimental.set_visible_devices(phys_devices[gpu_id], 'GPU')
@@ -28,10 +29,6 @@ if distributed:
 #%% Train
 model = PodnnModel.load("cache")
 X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
-
-# model.initVNNs(hp["n_M"], hp["h_layers"],
-#                hp["lr"], hp["lambda"], hp["adv_eps"], hp["norm"])
-# exit(0)
 
 #%%
 for i in range(local_num):
