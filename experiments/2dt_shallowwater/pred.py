@@ -69,7 +69,6 @@ U_pred_up = U_pred + 2*U_pred_sig
 U_pred_lo = U_pred - 2*U_pred_sig
 
 U_pred_0 = model.project_to_U(model.project_to_v(U_tst_des))
-U_pred_0 = U_tst_des
 U_pred_0 = model.restruct(U_pred_0)
 
 print("Saving to .vtu")
@@ -187,5 +186,5 @@ for _ in [1]:
             ax.legend()
     plt.tight_layout()
     # plt.show()
-    savefig("results/podensnn-swt-samples", True)
+    savefig("results/podbnn-swt-samples", True)
     # savefig(f"results/{filename}", True)

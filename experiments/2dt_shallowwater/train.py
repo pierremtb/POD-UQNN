@@ -53,14 +53,14 @@ model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
 #%% Generate the dataset from the mesh and params
 X_v_train, v_train, \
     X_v_val, v_val, \
-    U_val = model.convert_multigpu_data(U, X_v, hp["train_val"], hp["eps"])
+    U_val = model.convert_multigpu_data(U, X_v, hp["train_val"], hp["eps"], hp["eps_init"])
 # X_v_train, v_train, U_train, X_v_val, v_val, U_val = model.load_train_data()
 
 #%% Model creation
 model.initBNN(hp["h_layers"], hp["lr"], 1, hp["activation"],
               hp["exact_kl"],
               pi_0=hp["pi_0"], pi_1=hp["pi_1"], pi_2=hp["pi_2"],
-              soft_0=hp["soft_0"], adv_eps=hp["adv_eps"], norm=hp["norm"])
+              soft_0=hp["soft_0"], soft_1=hp["soft_1"], adv_eps=hp["adv_eps"], norm=hp["norm"])
 # X_out = np.linspace(500, 1500, 300).reshape(-1, 1)
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
             freq=hp["log_frequency"], div_max=True)
