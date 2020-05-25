@@ -18,9 +18,9 @@ HP["t_max"] = 5.
 HP["n_s"] = 50
 HP["n_s_tst"] = int(1e3)
 # POD stopping param
-HP["eps"] = 0
-HP["eps_init"] = None
-HP["n_L"] = 20
+HP["eps"] = 1e-4
+HP["eps_init"] = 1e-4
+HP["n_L"] = 0
 HP["x_noise"] = 0.
 # Train/val split
 HP["train_val"] = (4/5, 1/5)
@@ -30,9 +30,9 @@ HP["h_layers"] = [128, 128, 128]
 HP["n_M"] = 5
 HP["epochs"] = 13000
 HP["lr"] = 0.01
-HP["lambda"] = 0.
-HP["adv_eps"] = 1.
-HP["soft_0"] = 1.
+HP["lambda"] = 1e-8
+HP["adv_eps"] = 0.01
+HP["soft_0"] = 0.01
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 5000
