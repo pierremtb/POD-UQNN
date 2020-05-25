@@ -32,20 +32,20 @@ datadir = "data"
 mu_path = os.path.join(datadir, "INPUT")
 sel = np.loadtxt(os.path.join(datadir, "sel.csv"),
                  skiprows=1, delimiter=",")[:, 0].astype("int")
-x_mesh, connectivity, X_v, U, _ = \
-        read_multi_space_sol_input_mesh_txt(hp["n_s"], hp["n_t"], hp["d_t"],
-                                        train_tst_idx[0],
-                                        hp["mesh_idx"], datadir, mu_path,
-                                        hp["mu_idx"], sel)
+# x_mesh, connectivity, X_v, U, _ = \
+#         read_multi_space_sol_input_mesh_txt(hp["n_s"], hp["n_t"], hp["d_t"],
+#                                         train_tst_idx[0],
+#                                         hp["mesh_idx"], datadir, mu_path,
+#                                         hp["mu_idx"], sel)
 
-np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
-np.save(os.path.join("cache", "connectivity.npy"), connectivity)
-np.save(os.path.join("cache", "X_v.npy"), X_v)
-np.save(os.path.join("cache", "U.npy"), U)
-# x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
-# connectivity = np.load(os.path.join("cache", "connectivity.npy"))
-# X_v = np.load(os.path.join("cache", "X_v.npy"))
-# U = np.load(os.path.join("cache", "U.npy"))
+# np.save(os.path.join("cache", "x_mesh.npy"), x_mesh)
+# np.save(os.path.join("cache", "connectivity.npy"), connectivity)
+# np.save(os.path.join("cache", "X_v.npy"), X_v)
+# np.save(os.path.join("cache", "U.npy"), U)
+x_mesh = np.load(os.path.join("cache", "x_mesh.npy"))
+connectivity = np.load(os.path.join("cache", "connectivity.npy"))
+X_v = np.load(os.path.join("cache", "X_v.npy"))
+U = np.load(os.path.join("cache", "U.npy"))
 
 #%% Init the model
 model = PodnnModel("cache", hp["n_v"], x_mesh, hp["n_t"])
