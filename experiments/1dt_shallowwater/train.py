@@ -29,7 +29,7 @@ X_v_train, v_train, _, \
     X_v_val, v_val, U_val = model.generate_dataset(u, hp["mu_min"], hp["mu_max"],
                                                     hp["n_s"],
                                                     hp["train_val"],
-                                                    eps=hp["eps"], n_L=hp["n_L"],
+                                                    eps=hp["eps"], eps_init=hp["eps_init"], n_L=hp["n_L"],
                                                     t_min=hp["t_min"], t_max=hp["t_max"],
                                                     x_noise=hp["x_noise"], rm_init=True)
 

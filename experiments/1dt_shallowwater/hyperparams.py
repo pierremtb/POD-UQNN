@@ -19,8 +19,8 @@ HP["t_max"] = 5.
 HP["n_s"] = 140
 HP["n_s_tst"] = 3
 # POD stopping param
-HP["eps"] = 1e-5
-HP["eps_init"] = None
+HP["eps"] = 1e-3
+HP["eps_init"] = 1e-3
 HP["n_L"] = 0
 HP["x_noise"] = 0.
 # Train/val split
@@ -29,7 +29,7 @@ HP["train_val"] = (4/5, 1/5)
 # HP["h_layers"] = [128, 128, 128]
 HP["h_layers"] = [256, 256, 256]
 # Setting up TF SGD-based optimizer
-HP["epochs"] = 50000
+HP["epochs"] = 20000
 HP["lr"] = 0.01
 HP["exact_kl"] = False
 HP["activation"] = "tanh"
@@ -37,7 +37,7 @@ HP["pi_0"] = 0.5
 HP["pi_1"] = 0.2
 HP["pi_2"] = 0.1
 HP["soft_0"] = 0.01
-HP["adv_eps"] = 0.001
+HP["adv_eps"] = 0.0001
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
 HP["log_frequency"] = 1000
