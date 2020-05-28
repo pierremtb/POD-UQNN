@@ -1,37 +1,60 @@
-## Welcome to GitHub Pages
+---
+layout: default
+---
+### Authors
+[Pierre Jacquier](https://pierrejacquier.com), Azzedine Abdedou, Vincent Delmas, [Azzeddine Soulaïmani](https://www.etsmtl.ca/en/research/professors/asoulaimani/)
 
-You can use the [editor on GitHub](https://github.com/pierremtb/POD-UQNN/edit/master/index.md) to maintain and preview the content for your website in Markdown files.
+### Abstract
+Deep Learning research is advancing at a fantastic rate, and there is
+much to gain from transferring this knowledge to older fields like
+Computational Fluid Dynamics in practical engineering contexts. This
+work compares state-of-the-art methods that address uncertainty
+quantification in Deep Neural Networks, pushing forward the
+reduced-order modeling approach of Proper Orthogonal
+Decomposition-Neural Networks (POD-NN) with Deep Ensembles and
+Variational Inference-based Bayesian Neural Networks on two-dimensional
+problems in space. These are first tested on benchmark problems, and
+then applied to a real-life application: flooding predictions in the
+Mille Îles river in the Montreal, Quebec, Canada metropolitan area. Our
+setup involves a set of input parameters, with a potentially noisy
+distribution, and accumulates the simulation data resulting from these
+parameters. The goal is to build a non-intrusive surrogate model that is
+able to know when it doesn't know, which is still an open research area
+in Neural Networks (and in AI in general). With the help of this model,
+probabilistic flooding maps are generated, aware of the model
+uncertainty. These insights on the unknown are also utilized for an
+uncertainty propagation task, allowing for flooded area predictions that
+are broader and safer than those made with a regular
+uncertainty-uninformed surrogate model. Our study of the time-dependent
+and highly nonlinear case of a dam break is also presented. Both the
+ensembles and the Bayesian approach lead to reliable results for
+multiple smooth physical solutions, providing the correct warning when
+going *out-of-distribution*. However, the former, referred to as
+POD-EnsNN, proved much easier to implement and showed greater
+flexibility than the latter in the case of discontinuities, where
+standard algorithms may oscillate or fail to converge.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+* * * * * *
 
-### Markdown
+### Non-Intrusive Reduced-Order Modeling Using Uncertainty-Aware Deep Neural Networks and Proper Orthogonal Decomposition: Application to Flood Modeling
+...
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+**Acknowledgements**
 
-```markdown
-Syntax highlighted code block
+This research was enabled in part by funding from the National Sciences
+and Engineering Research Council of Canada and Hydro-Québec; by bathymetry data from the
+[Communauté métropolitaine de Montréal](https://cmm.qc.ca/); and by
+computational support from [Calcul Québec](www.calculquebec.ca) and
+[Compute Canada](www.computecanada.ca).
 
-# Header 1
-## Header 2
-### Header 3
+* * * * *
 
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/pierremtb/POD-UQNN/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+## Citation
+@misc{jacquier2020nonintrusive,
+    title={Non-Intrusive Reduced-Order Modeling Using Uncertainty-Aware Deep Neural Networks and Proper Orthogonal Decomposition: Application to Flood Modeling},
+    author={Pierre Jacquier and Azzedine Abdedou and Vincent Delmas and Azzeddine Soulaimani},
+    year={2020},
+    eprint={2005.13506},
+    archivePrefix={arXiv},
+    primaryClass={physics.comp-ph}
+}
