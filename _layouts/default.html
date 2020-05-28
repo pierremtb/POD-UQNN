@@ -45,6 +45,22 @@
 
         ga('create', '{{ site.google_analytics }}', 'auto');
         ga('send', 'pageview');
+
+        MathJax.Hub.Config({
+          TeX: {
+            extensions: ["boldsymbol.js"],
+            Augment: {
+              Definitions: {macros: {
+                bm: 'myBoldSwitch'
+              }},
+              Parse: {prototype: {
+                myBoldSwitch: function (name) {
+                  this.stack.env.boldsymbol = true;
+                }
+              }}
+            }
+          }
+        });
       </script>
     {% endif %}
   </body>
