@@ -1,6 +1,7 @@
 ---
 layout: default
 ---
+# Non-Intrusive Reduced-Order Modeling Using Uncertainty-Aware Deep Neural Networks and Proper Orthogonal Decomposition: Application to Flood Modeling
 ### Authors
 [Pierre Jacquier](https://pierrejacquier.com), Azzedine Abdedou, Vincent Delmas, [Azzeddine Soulaïmani](https://www.etsmtl.ca/en/research/professors/asoulaimani/)
 
@@ -36,9 +37,7 @@ standard algorithms may oscillate or fail to converge.
 
 * * * * * *
 
-### Non-Intrusive Reduced-Order Modeling Using Uncertainty-Aware Deep Neural Networks and Proper Orthogonal Decomposition: Application to Flood Modeling
-
-**Objective and setup**
+### Objective and setup
 
 We start by defining $u$, our ${\rm I\!R}^{D}$-valued function of
 interest $$\begin{aligned}
@@ -125,7 +124,7 @@ computational support from [Calcul Québec](www.calculquebec.ca) and
 
 * * * * *
 
-## Citation
+### Citation
 ```
 @misc{jacquier2020nonintrusive,
     title={Non-Intrusive Reduced-Order Modeling Using Uncertainty-Aware Deep Neural Networks and Proper Orthogonal Decomposition: Application to Flood Modeling},
