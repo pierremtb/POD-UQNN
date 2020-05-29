@@ -5,7 +5,29 @@
 <html lang="{{ site.lang | default: "en-US" }}">
   <head>
     <meta charset="UTF-8">
-
+    <script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+       <script type="text/x-mathjax-config">
+         MathJax.Hub.Config({
+           tex2jax: {
+             inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+             processEscapes: true
+           },
+           TeX: {
+            extensions: ["boldsymbol.js"],
+            Augment: {
+              Definitions: {macros: {
+                bm: 'myBoldSwitch'
+              }},
+              Parse: {prototype: {
+                myBoldSwitch: function (name) {
+                  this.stack.env.boldsymbol = true;
+                }
+              }}
+            }
+          }
+         });
+       </script>
+       <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
 {% seo %}
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#157878">
@@ -45,22 +67,6 @@
 
         ga('create', '{{ site.google_analytics }}', 'auto');
         ga('send', 'pageview');
-
-        MathJax.Hub.Config({
-          TeX: {
-            extensions: ["boldsymbol.js"],
-            Augment: {
-              Definitions: {macros: {
-                bm: 'myBoldSwitch'
-              }},
-              Parse: {prototype: {
-                myBoldSwitch: function (name) {
-                  this.stack.env.boldsymbol = true;
-                }
-              }}
-            }
-          }
-        });
       </script>
     {% endif %}
   </body>
