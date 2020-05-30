@@ -67,21 +67,21 @@ For the finite truncation of the first $L$ modes, the following
 criterion on the singular values is imposed, with a hyperparameter
 $\epsilon$ given as
 
-$$
+##
     \dfrac{\sum_{l=L+1}^{r} \xi_l^2}{\sum_{l=1}^{r} \xi_l^2} \leq \epsilon,
-$$
+##
 and then each mode vector $\bm{V}_j \in \mathbb{R}^{S}$ can be found
 from $\bm{U}$ and the $j$-th column of $\bm{Z}$, $\bm{Z}_j$, with
 
-$$
+##
     \bm{V}_j = \dfrac{1}{\xi_j} \bm{U} \bm{Z}_j,
-$$
+##
 so that we can
 finally construct our POD mode matrix
 
-$$
+##
     \bm{V} = \left[\bm{V}_1 | \ldots | \bm{V}_j | \ldots | \bm{V}_L\right] \in \mathbb{R}^{H \times L}.
-$$
+##
 
 * * * * * 
 
