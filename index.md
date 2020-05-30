@@ -82,6 +82,20 @@ finally construct our POD mode matrix
 ##
     \bm{V} = \left[\bm{V}_1 | \ldots | \bm{V}_j | \ldots | \bm{V}_L\right] \in \mathbb{R}^{H \times L}.
 ##
+To project to and from the low-rank approximation requires projection
+coefficients; those *corresponding* to the matrix of snapshots are
+obtained by the following
+
+##
+    \bm{v} = \bm{V}^\intercal \bm{U},
+##
+and then $\bm{U}_\textrm{POD}$,
+the approximation of $\bm{U}$, can be projected back to the expanded
+space:
+
+##
+\bm{U}_\textrm{POD} = \bm{V}\bm{V}^\intercal\bm{U} = \bm{V} \bm{v}.
+##
 
 * * * * * 
 
