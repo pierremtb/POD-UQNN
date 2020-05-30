@@ -40,34 +40,10 @@ standard algorithms may oscillate or fail to converge.
 ## Reduced Basis Generation with Proper Orthogonal Decomposition
 
 We start by defining $u$, our ${\rm I\!R}^{D}$-valued function of
-interest $$\begin{aligned}
-\label{eq:podensnn-u-base}
-    u:\ {\rm I\!R}^{n + P} &\rightarrow {\rm I\!R}^{D} \\
-                         (\bm{x}, \bm{s}) &\mapsto u(\bm{x}, \bm{s}), \nonumber\end{aligned}$$
-with $\bm{x} \in {\rm I\!R}^{n}$ as the spatial parameters and
-$\bm{s} \in {\rm I\!R}^{P}$ as the additional non-spatial parameters,
-for anything from a fluid viscosity to the time variable.
-
-Computing this function is costly, so only a finite number $S$ of
-solutions called *snapshots* can be realized. These are obtained over a
-discretized space, which can either be a uniform grid or an unstructured
-mesh, with $n$ representing the number of dimensions and $D$ the total
-number of nodes. $N_s$ is the number of non-spatial parameters sampled,
-and $N_t$ counts the considered time-steps, which would be higher than
-one in a time-dependent setting, leading the total number of snapshots
-to be $S=N_sN_t$.
-
-In our applications, the spatial mesh of $N_D$ nodes is considered fixed
-in time, and since it is known and defined upfront, it can be
-incorporated in
-([\[eq:podensnn-u-base\]](#eq:podensnn-u-base){reference-type="ref"
-reference="eq:podensnn-u-base"}), removing $\bm{x}$ as a parameter in
-$u$, and making $H=N_D\times D$ the total number of degrees of freedom
-(DOFs) of the mesh $$\begin{aligned}
-\label{eq:podensnn-u-D}
-    u_D:\ {\rm I\!R}^{P} &\rightarrow {\rm I\!R}^{H} \\
-                         \bm{s} &\mapsto u_D(\bm{s}). \nonumber\end{aligned}$$
-
+interest. Computing this function is costly, so only a finite number $S$ of
+solutions called *snapshots* can be realized. In our applications, the spatial mesh of $N_D$ nodes is considered fixed
+in time, and since it is known and defined upfront, so we consider the number of outputs $H=N_D\times D$, the total number of degrees of freedom
+(DOFs) of the mesh.
 The simulation data, obtained from computing the function $u$ with $S$
 parameter sets $\bm{s}^{(i)}$, is stored in a matrix of snapshots
 $\bm{U} = [u_D(\bm{s}^{(1)})|\ldots|u_D(\bm{s}^{(S)})] \in {\rm I\!R}^{H \times S}$.
@@ -82,20 +58,29 @@ $\bm{W} \in {\rm I\!R}^{H \times H}$,
 $\bm{Z} \in {\rm I\!R}^{S \times S}$ and the $r$ descending-ordered
 positive singular values matrix
 $\bm{D} = \text{diag}(\xi_1, \xi_2, \ldots, \xi_r)$ such that
-$$\label{eq:podensnn-svd}
+
+$$
     \bm{U} = \bm{W} \begin{bmatrix} \bm{D} & 0 \\ 0 & 0 \end{bmatrix} \bm{Z}^\intercal.$$
 
 For the finite truncation of the first $L$ modes, the following
 criterion on the singular values is imposed, with a hyperparameter
-$\epsilon$ given as $$\label{eq:podensnn-svd-criterion}
-    \dfrac{\sum_{l=L+1}^{r} \xi_l^2}{\sum_{l=1}^{r} \xi_l^2} \leq \epsilon,$$
+$\epsilon$ given as
+
+$$
+    \dfrac{\sum_{l=L+1}^{r} \xi_l^2}{\sum_{l=1}^{r} \xi_l^2} \leq \epsilon,
+$$
 and then each mode vector $\bm{V}_j \in {\rm I\!R}^{S}$ can be found
 from $\bm{U}$ and the $j$-th column of $\bm{Z}$, $\bm{Z}_j$, with
-$$\label{eq:podensnn-pod-bases-i}
-    \bm{V}_j = \dfrac{1}{\xi_j} \bm{U} \bm{Z}_j,$$ so that we can
+
+$$
+    \bm{V}_j = \dfrac{1}{\xi_j} \bm{U} \bm{Z}_j,
+$$
+so that we can
 finally construct our POD mode matrix
-$$\label{eq:podensnn-svd-bases-group}
-    \bm{V} = \left[\bm{V}_1 | \ldots | \bm{V}_j | \ldots | \bm{V}_L\right] \in {\rm I\!R}^{H \times L}.$$
+
+$$
+    \bm{V} = \left[\bm{V}_1 | \ldots | \bm{V}_j | \ldots | \bm{V}_L\right] \in {\rm I\!R}^{H \times L}.
+$$
 
 * * * * * 
 
