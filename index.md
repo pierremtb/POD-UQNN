@@ -254,7 +254,11 @@ approximated by summing on the $N$ samples at the output level (for each
 training input).
 
 ## A Few Results
-
+### Benchmark: 2D Ackley Function
+**POD-EnsNN**
+![](images/podensnn-ackley-graph-meansamples.png)
+**POD-BNN**
+![](images/podbnn-ackley-graph-meansamples.png)
 
 
 
