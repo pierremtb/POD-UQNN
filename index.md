@@ -120,9 +120,9 @@ $\bm{\mu}^v$ and a *raw variance* $\bm{\rho}^v$, which will then be
 constrained for positiveness through a softplus function, finally
 outputting ${\bm{\sigma^v}}^2$ as
 
-$$
+##
     {\bm{\sigma}^v}^2 = \textrm{softplus}(\bm{\rho}^v) := \log(1 + \exp(\bm{\bm{\rho}^v})).
-$$
+##
 
 Since this predicted variance reports the spread, or noise, in data (the
 inputs' data are drawn from a distribution), and so it would not be
@@ -141,19 +141,21 @@ the matrix of snapshots $\bm{U}$, an *optimizer* performs several
 Log-Likelihood loss function with respect to the network weights and
 biases parametrized by $\bm{\theta}=(\bm{w}, \bm{b})$
 
-$$\begin{aligned}
+##
+\begin{aligned}
     % \mathcal{L}(\bm{w}, \bm{b}; \bm{X}, \bm{v}) = \dfrac{1}{N} \sum_{i=1}^{N} \left[ \hat{u}_{DB}(\bm{X}; \bm{w}, \bm{b})_i - (\bm{v})_i\right]^2 + \lambda r(\bm{w}, \bm{b}),
-   \mathcal{L}_{\textrm{NLL}}(\mathcal{D},\bm{\theta}):=\dfrac{1}{N} \sum_{i=1}^{N}\left[\dfrac{\log\ \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}{2}+ \dfrac{(\bm{v}_i-\bm{\mu}^v_{\bm{\theta}}(\bm{X}_i))^2}{2 \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}\right],\end{aligned}$$
+   \mathcal{L}_{\textrm{NLL}}(\mathcal{D},\bm{\theta}):=\dfrac{1}{N} \sum_{i=1}^{N}\left[\dfrac{\log\ \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}{2}+ \dfrac{(\bm{v}_i-\bm{\mu}^v_{\bm{\theta}}(\bm{X}_i))^2}{2 \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}\right],\end{aligned}
+##
 with the normalized inputs $\bm{X}$, $\bm{\mu}^v_{\bm{\theta}}(\bm{X})$
 and $\bm{\sigma}_{\bm{\theta}}^v(\bm{X})^2$ as the mean and variance,
 respectively, retrieved from the $\bm{\theta}$-parametrized network.
 
 In practice, this loss gets an L2 regularization as an additional term, producing
 
-$$
+##
 \begin{aligned}
    \mathcal{L}^\lambda_{\textrm{NLL}}(\mathcal{D}, \bm{\theta}):=\mathcal{L}_\textrm{NLL}(\mathcal{D}, \bm{\theta})+\lambda ||\bm{w}||^2.\end{aligned}
-$$
+##
 
 The idea behind Deep Ensembles is
 to randomly initialize $M$ sets of $\bm{\theta}_m=(\bm{w}, \bm{b})$,
@@ -164,14 +166,14 @@ each NN create a probability mixture, which, as suggested by the
 original authors, we can approximate in a single Gaussian distribution,
 leading to a mean expressed as
 
-$$
+##
 \bm{\mu}^v_*(\bm{X}) = \dfrac{1}{M} \sum_{m=1}^{M}\bm{\mu}^v_{\bm{\theta}_m}(\bm{X}),
-$$
+##
 and a variance subsequently obtained as
 
-$$
+##
 \bm{\sigma}^v_*(\bm{X})^2 = \dfrac{1}{M} \sum_{m=1}^{M} \left[\bm{\sigma}_{\bm{\theta}_m}^v(\bm{X})^2 + \bm{\mu}^v_{\bm{\theta}_m}(\bm{X})^2\right] - \bm{\mu}_*^v(\bm{X})^2.
-$$
+##
 
 The model is now accounting for the *epistemic uncertainty* through
 random initialization and variability in the training step. This
@@ -195,9 +197,9 @@ simplicity. The goal is then to construct a *posterior distribution*
 $p(\bm{w}|\mathcal{D})$ to achieve the following *posterior predictive
 distribution* on the target $\bm{v}$ for a new input $\bm{X}$
 
-$$
+##
 p(\bm{v}|\bm{X},\mathcal{D}) = \int p(\bm{v}|\bm{X},\bm{w})p(\bm{w}|\mathcal{D})\,d\bm{w},
-$$
+##
 
 which cannot be achieved directly in a NN context, due to the infinite
 possibilities for the weights $\bm{w}$, leaving the posterior
@@ -209,21 +211,22 @@ $\textrm{KL}(q(\bm{w}|\bm{\theta}),||p(\bm{w}|\mathcal{D}))$ with
 respect to the new parameters $\bm{\theta}$ called *latent variables*,
 such as
 
-$$\begin{aligned}
+##
+\begin{aligned}
 \textrm{KL}(q(\bm{w} | \bm{\theta}) || p(\bm{w} | \mathcal{D})) &=
 \int q(\bm{w} | \bm{\theta}) \log 
     \dfrac{q(\bm{w} | \bm{\theta})}{p(\bm{w}|\mathcal{D})}\, d\bm{w}=\mathbb{E}_{q(\bm{w} | \bm{\theta})}\log 
     \dfrac{q(\bm{w} | \bm{\theta})}{p(\bm{w}|\mathcal{D})},\end{aligned}
-$$
+##
 which can be show to written as 
 
-$$
+##
  \begin{aligned}
   \textrm{KL}(q(\bm{w} | \bm{\theta}) || p(\bm{w} | \mathcal{D}))
     &=\textrm{KL}(q(\bm{w}|\bm{\theta})||p(\bm{w})) - \mathbb{E}_{q(\bm{w} | \bm{\theta})} \log p(\mathcal{D}|\bm{w}) + \log p(\mathcal{D})\\
     &=:\mathcal{F}(\mathcal{D}, \bm{\theta}) + \log p(\mathcal{D}).
     \end{aligned}
- $$
+ ##
 The term $\mathcal{F}(\mathcal{D}, \bm{\theta})$ is commonly known as
 the *variational free energy*, and minimizing it with respect to the
 weights does not involve the last term $\log p(\mathcal{D})$, and so it
@@ -237,14 +240,14 @@ $q(\bm{w}|\bm{\theta})$ at the layer level, it is possible to construct
 a tractable Monte-Carlo approximation of the variational free energy,
 such as
 
-$$
+##
 \mathcal{F}(\mathcal{D},\bm{\theta}) \approx
 \sum_{i=1}^{N_\textrm{mc}} \left[
 \log q(\bm{w}^{(i)} | \bm{\theta}) -
 \log p(\bm{w}^{(i)})\right] -
 \sum_{m=1}^{N}
 \log p(\mathcal{D} | \bm{w}_m),
-$$
+##
 with $p(\bm{w}^{(i)})$ denoting the *prior* on the drawn weight
 $\bm{w}^{(i)}$, which is chosen by the user. The last term shows to be
 approximated by summing on the $N$ samples at the output level (for each
