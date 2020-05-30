@@ -97,6 +97,91 @@ space:
 \bm{U}_\textrm{POD} = \bm{V}\bm{V}^\intercal\bm{U} = \bm{V} \bm{v}.
 ##
 
+## Learning Expansion Coefficients Distributions using Deep Ensembles
+
+
+### Deep Neural Networks with built-in variance
+
+This statistical step is handled in the POD-NN framework by inferring
+the mapping with a Deep Neural Network,
+$\hat{u}_{DB}(\bm{s};\bm{w},\bm{b})$. The *weights* and *biases* of the
+network, $\bm{w}$ and $\bm{b}$, respectively, represent the model
+parameters and are learned during training (*offline* phase), to be
+later reused to make predictions (*online* phase). The network's number
+of hidden layers is called the *depth*, $d$, which is chosen without
+accounting for the input and output layers. Each layer has a specific
+number of neurons that constitutes its *width*, $l^{(j)}$.
+
+The main difference here with an ordinary DNN architecture for
+regression resides in the dual output, where
+the final layer size is twice the number of expansion coefficients to
+project, $l^{(d+1)}=2L$, since it outputs both a *mean* value
+$\bm{\mu}^v$ and a *raw variance* $\bm{\rho}^v$, which will then be
+constrained for positiveness through a softplus function, finally
+outputting ${\bm{\sigma^v}}^2$ as
+
+$$
+    {\bm{\sigma}^v}^2 = \textrm{softplus}(\bm{\rho}^v) := \log(1 + \exp(\bm{\bm{\rho}^v})).
+$$
+
+Since this predicted variance reports the spread, or noise, in data (the
+inputs' data are drawn from a distribution), and so it would not be
+reduced even if we were to grow our dataset larger, it accounts for the
+*aleatoric uncertainty*, which is usually separated from *epistemic
+uncertainty*.
+
+### Ensemble training
+
+Considering an $N$-sized training dataset
+$\mathcal{D}=\{\bm{X}_i, \bm{v}_i\}$, with $\bm{X}_i$ denoting the
+normalized non-spatial parameters $\bm{s}$, and $\bm{v}_i$ the
+corresponding expansion coefficients from a training/validation-split of
+the matrix of snapshots $\bm{U}$, an *optimizer* performs several
+*training epochs* $N_e$ to minimize the following Negative
+Log-Likelihood loss function with respect to the network weights and
+biases parametrized by $\bm{\theta}=(\bm{w}, \bm{b})$
+
+$$\begin{aligned}
+    % \mathcal{L}(\bm{w}, \bm{b}; \bm{X}, \bm{v}) = \dfrac{1}{N} \sum_{i=1}^{N} \left[ \hat{u}_{DB}(\bm{X}; \bm{w}, \bm{b})_i - (\bm{v})_i\right]^2 + \lambda r(\bm{w}, \bm{b}),
+   \mathcal{L}_{\textrm{NLL}}(\mathcal{D},\bm{\theta}):=\dfrac{1}{N} \sum_{i=1}^{N}\left[\dfrac{\log\ \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}{2}+ \dfrac{(\bm{v}_i-\bm{\mu}^v_{\bm{\theta}}(\bm{X}_i))^2}{2 \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}\right],\end{aligned}$$
+with the normalized inputs $\bm{X}$, $\bm{\mu}^v_{\bm{\theta}}(\bm{X})$
+and $\bm{\sigma}_{\bm{\theta}}^v(\bm{X})^2$ as the mean and variance,
+respectively, retrieved from the $\bm{\theta}$-parametrized network.
+
+In practice, this loss gets an L2 regularization as an additional term, producing
+
+$$
+\begin{aligned}
+   \mathcal{L}^\lambda_{\textrm{NLL}}(\mathcal{D}, \bm{\theta}):=\mathcal{L}_\textrm{NLL}(\mathcal{D}, \bm{\theta})+\lambda ||\bm{w}||^2.\end{aligned}
+$$
+
+The idea behind Deep Ensembles is
+to randomly initialize $M$ sets of $\bm{\theta}_m=(\bm{w}, \bm{b})$,
+thereby creating $M$ independent neural networks (NNs). Each NN is then
+subsequently trained. Overall, the predictions moments in the reduced
+space $(\bm{\mu}^v_{\bm{\theta}_m},\bm{\sigma}^v_{\bm{\theta}_m})$ of
+each NN create a probability mixture, which, as suggested by the
+original authors, we can approximate in a single Gaussian distribution,
+leading to a mean expressed as
+
+$$
+\bm{\mu}^v_*(\bm{X}) = \dfrac{1}{M} \sum_{m=1}^{M}\bm{\mu}^v_{\bm{\theta}_m}(\bm{X}),
+$$
+and a variance subsequently obtained as
+
+$$
+\bm{\sigma}^v_*(\bm{X})^2 = \dfrac{1}{M} \sum_{m=1}^{M} \left[\bm{\sigma}_{\bm{\theta}_m}^v(\bm{X})^2 + \bm{\mu}^v_{\bm{\theta}_m}(\bm{X})^2\right] - \bm{\mu}_*^v(\bm{X})^2.
+$$
+
+The model is now accounting for the *epistemic uncertainty* through
+random initialization and variability in the training step. This
+uncertainty is directly linked to the model and could be reduced if we
+had more data. The uncertainty is directly related to the data-fitting
+capabilities of the model and thus will snowball in the absence of such
+data since there are no more constraints.
+
+This model will be referred to as POD-EnsNN.
+
 * * * * * 
 
 **Acknowledgements**
