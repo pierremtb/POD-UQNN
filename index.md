@@ -40,10 +40,11 @@ standard algorithms may oscillate or fail to converge.
 ## Reduced Basis Generation with Proper Orthogonal Decomposition
 
 We start by defining \(u\), our \({\rm I\!R}^{D}\)-valued function of
-interest \[\begin{aligned}
+interest
+$$\[\begin{aligned}
 \label{eq:podensnn-u-base}
     u:\ {\rm I\!R}^{n + P} &\rightarrow {\rm I\!R}^{D} \\
-                         (\bm{x}, \bm{s}) &\mapsto u(\bm{x}, \bm{s}), \nonumber\end{aligned}\]
+                         (\bm{x}, \bm{s}) &\mapsto u(\bm{x}, \bm{s}), \nonumber\end{aligned}\]$$
 with \(\bm{x} \in {\rm I\!R}^{n}\) as the spatial parameters and
 \(\bm{s} \in {\rm I\!R}^{P}\) as the additional non-spatial parameters,
 for anything from a fluid viscosity to the time variable.
