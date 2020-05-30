@@ -50,10 +50,10 @@ $\bm{U} = [u_D(\bm{s}^{(1)})|\ldots|u_D(\bm{s}^{(S)})] \in \mathbb{R}^{H \times 
 Proper Orthogonal Decomposition (POD) is used to build a Reduced-Order
 Model (ROM) and produce a *low-rank approximation*, which will be much
 more efficient to compute and use when rapid multi-query simulations are
-required. With the snapshots method, [@sirovich1987turbulence], a
+required. With the snapshots method, a
 reduced POD basis can be efficiently extracted in a finite-dimension
 context. In our case, we begin with the $\bm{U}$ matrix, and use the
-Singular Value Decomposition algorithm, [@Burkardt2006], to extract
+Singular Value Decomposition algorithm, to extract
 $\bm{W} \in \mathbb{R}^{H \times H}$,
 $\bm{Z} \in \mathbb{R}^{S \times S}$ and the $r$ descending-ordered
 positive singular values matrix
