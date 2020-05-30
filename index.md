@@ -97,7 +97,7 @@ space:
 \bm{U}_\textrm{POD} = \bm{V}\bm{V}^\intercal\bm{U} = \bm{V} \bm{v}.
 ##
 
-## Learning Expansion Coefficients Distributions using Deep Ensembles
+## POD-EnsNN: Learning Expansion Coefficients Distributions using Deep Ensembles
 
 
 ### Deep Neural Networks with built-in variance
@@ -180,7 +180,83 @@ had more data. The uncertainty is directly related to the data-fitting
 capabilities of the model and thus will snowball in the absence of such
 data since there are no more constraints.
 
-This model will be referred to as POD-EnsNN.
+## POD-BNN: Bayesian Neural Networks and Variational Inference as an Alternative
+For this model, the *epistemic uncertainty* treatment 
+is very different. Earlier, even though the NNs were providing us with
+a mean and variance, they were still deterministic, and variability was
+obtained by assembling randomly initialized models. The Bayesian
+treatment instead aims to assign distributions according to the
+network's weights, and so they therefore have a probabilistic output by
+design. 
+Considering a dataset $\mathcal{D}=\{\bm{X}_i, \bm{v}_i\}$, a
+*likelihood* function $p(\mathcal{D}|\bm{w})$ can be built, with
+$\bm{w}$ denoting both the weights $\bm{w}$ and the biases $\bm{b}$ for
+simplicity. The goal is then to construct a *posterior distribution*
+$p(\bm{w}|\mathcal{D})$ to achieve the following *posterior predictive
+distribution* on the target $\bm{v}$ for a new input $\bm{X}$
+
+$$
+p(\bm{v}|\bm{X},\mathcal{D}) = \int p(\bm{v}|\bm{X},\bm{w})p(\bm{w}|\mathcal{D})\,d\bm{w},
+$$
+
+which cannot be achieved directly in a NN context, due to the infinite
+possibilities for the weights $\bm{w}$, leaving the posterior
+$p(\bm{w}|\mathcal{D})$ intractable.
+
+Variational inference aims at construction an approximate posterior distribution $q(\bm{w}|\bm{\theta})$, by minimizing the KL divergence with the real posterior.
+ In our case, it writes as
+$\textrm{KL}(q(\bm{w}|\bm{\theta}),||p(\bm{w}|\mathcal{D}))$ with
+respect to the new parameters $\bm{\theta}$ called *latent variables*,
+such as
+
+$$\begin{aligned}
+\textrm{KL}(q(\bm{w} | \bm{\theta}) || p(\bm{w} | \mathcal{D})) &=
+\int q(\bm{w} | \bm{\theta}) \log 
+    \dfrac{q(\bm{w} | \bm{\theta})}{p(\bm{w}|\mathcal{D})}\, d\bm{w}=\mathbb{E}_{q(\bm{w} | \bm{\theta})}\log 
+    \dfrac{q(\bm{w} | \bm{\theta})}{p(\bm{w}|\mathcal{D})},\end{aligned}
+$$
+which can be show to written as 
+
+$$
+ \begin{aligned}
+  \textrm{KL}(q(\bm{w} | \bm{\theta}) || p(\bm{w} | \mathcal{D}))
+    &=\textrm{KL}(q(\bm{w}|\bm{\theta})||p(\bm{w})) - \mathbb{E}_{q(\bm{w} | \bm{\theta})} \log p(\mathcal{D}|\bm{w}) + \log p(\mathcal{D})\\
+    &=:\mathcal{F}(\mathcal{D}, \bm{\theta}) + \log p(\mathcal{D}).
+    \end{aligned}
+ $$
+The term $\mathcal{F}(\mathcal{D}, \bm{\theta})$ is commonly known as
+the *variational free energy*, and minimizing it with respect to the
+weights does not involve the last term $\log p(\mathcal{D})$, and so it
+is equivalent to the goal of minimizing
+$\textrm{KL}(q(\bm{w}|\bm{\theta}),||p(\bm{w}|\mathcal{D}))$. If an
+appropriate choice of $q$ is made, the predictive posterior can
+become computationally tractable.
+
+By drawing $N_\textrm{mc}$ samples $\bm{w}^{(i)}$ from the distribution
+$q(\bm{w}|\bm{\theta})$ at the layer level, it is possible to construct
+a tractable Monte-Carlo approximation of the variational free energy,
+such as
+
+$$
+\mathcal{F}(\mathcal{D},\bm{\theta}) \approx
+\sum_{i=1}^{N_\textrm{mc}} \left[
+\log q(\bm{w}^{(i)} | \bm{\theta}) -
+\log p(\bm{w}^{(i)})\right] -
+\sum_{m=1}^{N}
+\log p(\mathcal{D} | \bm{w}_m),
+$$
+with $p(\bm{w}^{(i)})$ denoting the *prior* on the drawn weight
+$\bm{w}^{(i)}$, which is chosen by the user. The last term shows to be
+approximated by summing on the $N$ samples at the output level (for each
+training input).
+
+## A Few Results
+
+
+
+
+
+
 
 * * * * * 
 
