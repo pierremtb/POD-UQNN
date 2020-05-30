@@ -18,16 +18,9 @@
           processEscapes: true
         },
         TeX: {
-        extensions: ["boldsymbol.js"],
-        Augment: {
-          Definitions: {macros: {
-            bm: 'myBoldSwitch'
-          }},
-          Parse: {prototype: {
-            myBoldSwitch: function (name) {
-              this.stack.env.boldsymbol = true;
-            }
-          }}
+          Macros: {
+            bm: ["{\\boldsymbol #1}",1],
+          }
         }
       }
       });
