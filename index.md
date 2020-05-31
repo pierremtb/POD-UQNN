@@ -158,7 +158,7 @@ In practice, this loss gets an L2 regularization as an additional term, producin
 ##
 
 The idea behind Deep Ensembles is
-to randomly initialize $M$ sets of $\bm{\theta}_m=(\bm{w}, \bm{b})$,
+to randomly initialize $M$ sets of $\bm{\theta}_m=({\bm{w}},{\bm{b}})$,
 thereby creating $M$ independent neural networks (NNs). Each NN is then
 subsequently trained. Overall, the predictions moments in the reduced
 space $(\bm{\mu}^v_{\bm{\theta}_m},\bm{\sigma}^v_{\bm{\theta}_m})$ of
@@ -225,8 +225,9 @@ which can be show to written as
   \textrm{KL}(q(\bm{w} | \bm{\theta}) || p(\bm{w} | \mathcal{D}))
     &=\textrm{KL}(q(\bm{w}|\bm{\theta})||p(\bm{w})) - \mathbb{E}_{q(\bm{w} | \bm{\theta})} \log p(\mathcal{D}|\bm{w}) + \log p(\mathcal{D})\\
     &=:\mathcal{F}(\mathcal{D}, \bm{\theta}) + \log p(\mathcal{D}).
-    \end{aligned}
- ##
+\end{aligned}
+##
+
 The term $\mathcal{F}(\mathcal{D}, \bm{\theta})$ is commonly known as
 the *variational free energy*, and minimizing it with respect to the
 weights does not involve the last term $\log p(\mathcal{D})$, and so it
