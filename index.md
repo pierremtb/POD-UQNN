@@ -158,7 +158,7 @@ In practice, this loss gets an L2 regularization as an additional term, producin
 ##
 
 The idea behind Deep Ensembles is
-to randomly initialize $M$ sets of $\bm{\theta}_m=({\bm{w}},{\bm{b}})$,
+to randomly initialize $M$ sets of $\bm{\theta}=({\bm{w}},{\bm{b}})$,
 thereby creating $M$ independent neural networks (NNs). Each NN is then
 subsequently trained. Overall, the predictions moments in the reduced
 space $(\bm{\mu}^v_{\bm{\theta}_m},\bm{\sigma}^v_{\bm{\theta}_m})$ of
