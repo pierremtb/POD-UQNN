@@ -59,9 +59,9 @@ $\bm{Z} \in \mathbb{R}^{S \times S}$ and the $r$ descending-ordered
 positive singular values matrix
 $\bm{D} = \text{diag}(\xi_1, \xi_2, \ldots, \xi_r)$ such that
 
-!!
+\[
     \bm{U} = \bm{W} \begin{bmatrix} \bm{D} & 0 \\ 0 & 0 \end{bmatrix} \bm{Z}^\intercal.
-!!
+\]
 
 For the finite truncation of the first $L$ modes, the following
 criterion on the singular values is imposed, with a hyperparameter
