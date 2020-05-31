@@ -145,6 +145,7 @@ biases parametrized by $\bm{\theta}=(\bm{w}, \bm{b})$
 \begin{aligned}
    \mathcal{L}_{\textrm{NLL}}(\mathcal{D},\bm{\theta}):=\dfrac{1}{N} \sum_{i=1}^{N}\left[\dfrac{\log\ \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}{2}+ \dfrac{(\bm{v}_i-\bm{\mu}^v_{\bm{\theta}}(\bm{X}_i))^2}{2 \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}\right],\end{aligned}
 ##
+
 with the normalized inputs $\bm{X}$, $\bm{\mu}^v_{\bm{\theta}}(\bm{X})$
 and $\bm{\sigma}_{\bm{\theta}}^v(\bm{X})^2$ as the mean and variance,
 respectively, retrieved from the $\bm{\theta}$-parametrized network.
