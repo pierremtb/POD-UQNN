@@ -60,42 +60,45 @@ positive singular values matrix
 $\bm{D} = \text{diag}(\xi_1, \xi_2, \ldots, \xi_r)$ such that
 
 \\[
+\begin{aligned}
     \bm{U} = \bm{W} \begin{bmatrix} \bm{D} & 0 \\ 0 & 0 \end{bmatrix} \bm{Z}^\intercal.
+   \end{aligned}
 \\]
 
 For the finite truncation of the first $L$ modes, the following
 criterion on the singular values is imposed, with a hyperparameter
 $\epsilon$ given as
 
-!!
+\\[
     \dfrac{\sum_{l=L+1}^{r} \xi_l^2}{\sum_{l=1}^{r} \xi_l^2} \leq \epsilon,
-!!
+\\]
+
 and then each mode vector $\bm{V}_j \in \mathbb{R}^{S}$ can be found
 from $\bm{U}$ and the $j$-th column of $\bm{Z}$, $\bm{Z}_j$, with
 
-!!
+\\[
     \bm{V}_j = \dfrac{1}{\xi_j} \bm{U} \bm{Z}_j,
-!!
+\\]
 so that we can
 finally construct our POD mode matrix
 
-!!
+\\[
     \bm{V} = \left[\bm{V}_1 | \ldots | \bm{V}_j | \ldots | \bm{V}_L\right] \in \mathbb{R}^{H \times L}.
-!!
+\\]
 To project to and from the low-rank approximation requires projection
 coefficients; those *corresponding* to the matrix of snapshots are
 obtained by the following
 
-!!
+\\[
     \bm{v} = \bm{V}^\intercal \bm{U},
-!!
+\\]
 and then $\bm{U}_\textrm{POD}$,
 the approximation of $\bm{U}$, can be projected back to the expanded
 space:
 
-!!
+\\[
 \bm{U}_\textrm{POD} = \bm{V}\bm{V}^\intercal\bm{U} = \bm{V} \bm{v}.
-!!
+\\]
 
 ## POD-EnsNN: Learning Expansion Coefficients Distributions using Deep Ensembles
 
@@ -120,9 +123,9 @@ $\bm{\mu}^v$ and a *raw variance* $\bm{\rho}^v$, which will then be
 constrained for positiveness through a softplus function, finally
 outputting ${\bm{\sigma^v}}^2$ as
 
-!!
+\\[
     {\bm{\sigma}^v}^2 = \textrm{softplus}(\bm{\rho}^v) := \log(1 + \exp(\bm{\bm{\rho}^v})).
-!!
+\\]
 
 Since this predicted variance reports the spread, or noise, in data (the
 inputs' data are drawn from a distribution), and so it would not be
@@ -130,7 +133,7 @@ reduced even if we were to grow our dataset larger, it accounts for the
 *aleatoric uncertainty*, which is usually separated from *epistemic
 uncertainty*.
 
-!!# Ensemble training
+### Ensemble training
 
 Considering an $N$-sized training dataset
 $\mathcal{D}=\{\bm{X}_i, \bm{v}_i\}$, with $\bm{X}_i$ denoting the
@@ -141,11 +144,11 @@ the matrix of snapshots $\bm{U}$, an *optimizer* performs several
 Log-Likelihood loss function with respect to the network weights and
 biases parametrized by $\bm{\theta}=(\bm{w}, \bm{b})$
 
-!!
+\\[
 \begin{aligned}
    \mathcal{L}_{\textrm{NLL}}(\mathcal{D},\bm{\theta}):=\dfrac{1}{N} \sum_{i=1}^{N}\left[\dfrac{\log\ \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}{2}+ \dfrac{(\bm{v}_i-\bm{\mu}^v_{\bm{\theta}}(\bm{X}_i))^2}{2 \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}\right],
    \end{aligned}
-!!
+\\]
 
 with the normalized inputs $\bm{X}$, $\bm{\mu}^v_{\bm{\theta}}(\bm{X})$
 and $\bm{\sigma}_{\bm{\theta}}^v(\bm{X})^2$ as the mean and variance,
@@ -153,10 +156,10 @@ respectively, retrieved from the $\bm{\theta}$-parametrized network.
 
 In practice, this loss gets an L2 regularization as an additional term, producing
 
-!!
+\\[
 \begin{aligned}
    \mathcal{L}^\lambda_{\textrm{NLL}}(\mathcal{D}, \bm{\theta}):=\mathcal{L}_\textrm{NLL}(\mathcal{D}, \bm{\theta})+\lambda ||\bm{w}||^2.\end{aligned}
-!!
+\\]
 
 The idea behind Deep Ensembles is
 to randomly initialize $M$ sets of $\bm{\theta}\_{m}=({\bm{w}},{\bm{b}})$,
@@ -167,16 +170,16 @@ each NN create a probability mixture, which, as suggested by the
 original authors, we can approximate in a single Gaussian distribution,
 leading to a mean expressed as
 
-!!
+\\[
 \begin{aligned}
 \bm{\mu}^v_*(\bm{X}) = \dfrac{1}{M} \sum_{m=1}^{M}\bm{\mu}^v_{\bm{\theta}_\m}(\bm{X}),
    \end{aligned}
-!!
+\\]
 and a variance subsequently obtained as
 
-!!
+\\[
 \bm{\sigma}^v_*(\bm{X})^2 = \dfrac{1}{M} \sum_{m=1}^{M} \left[\bm{\sigma}_{\bm{\theta}\_m}^v(\bm{X})^2 + \bm{\mu}^v_{\bm{\theta}\_m}(\bm{X})^2\right] - \bm{\mu}_*^v(\bm{X})^2.
-!!
+\\]
 
 The model is now accounting for the *epistemic uncertainty* through
 random initialization and variability in the training step. This
@@ -200,9 +203,9 @@ simplicity. The goal is then to construct a *posterior distribution*
 $p(\bm{w}|\mathcal{D})$ to achieve the following *posterior predictive
 distribution* on the target $\bm{v}$ for a new input $\bm{X}$
 
-!!
+\\[
 p(\bm{v}|\bm{X},\mathcal{D}) = \int p(\bm{v}|\bm{X},\bm{w})p(\bm{w}|\mathcal{D})\,d\bm{w},
-!!
+\\]
 
 which cannot be achieved directly in a NN context, due to the infinite
 possibilities for the weights $\bm{w}$, leaving the posterior
@@ -214,22 +217,22 @@ $\textrm{KL}(q(\bm{w}|\bm{\theta}),||p(\bm{w}|\mathcal{D}))$ with
 respect to the new parameters $\bm{\theta}$ called *latent variables*,
 such as
 
-!!
+\\[
 \begin{aligned}
 \textrm{KL}(q(\bm{w} | \bm{\theta}) || p(\bm{w} | \mathcal{D})) &=
 \int q(\bm{w} | \bm{\theta}) \log 
     \dfrac{q(\bm{w} | \bm{\theta})}{p(\bm{w}|\mathcal{D})}\, d\bm{w}=\mathbb{E}_{q(\bm{w} | \bm{\theta})}\log 
     \dfrac{q(\bm{w} | \bm{\theta})}{p(\bm{w}|\mathcal{D})},\end{aligned}
-!!
+\\]
 which can be show to written as 
 
-!!
+\\[
  \begin{aligned}
   \textrm{KL}(q(\bm{w} | \bm{\theta}) || p(\bm{w} | \mathcal{D}))
     &=\textrm{KL}(q(\bm{w}|\bm{\theta})||p(\bm{w})) - \mathbb{E}_{q(\bm{w} | \bm{\theta})} \log p(\mathcal{D}|\bm{w}) + \log p(\mathcal{D})\\
     &=:\mathcal{F}(\mathcal{D}, \bm{\theta}) + \log p(\mathcal{D}).
 \end{aligned}
-!!
+\\]
 
 The term $\mathcal{F}(\mathcal{D}, \bm{\theta})$ is commonly known as
 the *variational free energy*, and minimizing it with respect to the
@@ -244,14 +247,14 @@ $q(\bm{w}|\bm{\theta})$ at the layer level, it is possible to construct
 a tractable Monte-Carlo approximation of the variational free energy,
 such as
 
-!!
+\\[
 \mathcal{F}(\mathcal{D},\bm{\theta}) \approx
 \sum_{i=1}^{N_\textrm{mc}} \left[
 \log q(\bm{w}^{(i)} | \bm{\theta}) -
 \log p(\bm{w}^{(i)})\right] -
 \sum_{m=1}^{N}
 \log p(\mathcal{D} | \bm{w}_m),
-!!
+\\]
 with $p(\bm{w}^{(i)})$ denoting the *prior* on the drawn weight
 $\bm{w}^{(i)}$, which is chosen by the user. The last term shows to be
 approximated by summing on the $N$ samples at the output level (for each
