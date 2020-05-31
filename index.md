@@ -143,7 +143,6 @@ biases parametrized by $\bm{\theta}=(\bm{w}, \bm{b})$
 
 ##
 \begin{aligned}
-    % \mathcal{L}(\bm{w}, \bm{b}; \bm{X}, \bm{v}) = \dfrac{1}{N} \sum_{i=1}^{N} \left[ \hat{u}_{DB}(\bm{X}; \bm{w}, \bm{b})_i - (\bm{v})_i\right]^2 + \lambda r(\bm{w}, \bm{b}),
    \mathcal{L}_{\textrm{NLL}}(\mathcal{D},\bm{\theta}):=\dfrac{1}{N} \sum_{i=1}^{N}\left[\dfrac{\log\ \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}{2}+ \dfrac{(\bm{v}_i-\bm{\mu}^v_{\bm{\theta}}(\bm{X}_i))^2}{2 \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}\right],\end{aligned}
 ##
 with the normalized inputs $\bm{X}$, $\bm{\mu}^v_{\bm{\theta}}(\bm{X})$
