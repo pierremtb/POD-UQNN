@@ -161,7 +161,7 @@ The idea behind Deep Ensembles is
 to randomly initialize $M$ sets of $\bm{\theta}\_{m}=({\bm{w}},{\bm{b}})$,
 thereby creating $M$ independent neural networks (NNs). Each NN is then
 subsequently trained. Overall, the predictions moments in the reduced
-space $(\bm{\mu}^v_{\bm{\theta}_m},\bm{\sigma}^v_{\bm{\theta}_m})$ of
+space $(\bm{\mu}^v_{\bm{\theta}\_m},\bm{\sigma}^v_{\bm{\theta}\_m})$ of
 each NN create a probability mixture, which, as suggested by the
 original authors, we can approximate in a single Gaussian distribution,
 leading to a mean expressed as
@@ -172,7 +172,7 @@ leading to a mean expressed as
 and a variance subsequently obtained as
 
 ##
-\bm{\sigma}^v_*(\bm{X})^2 = \dfrac{1}{M} \sum_{m=1}^{M} \left[\bm{\sigma}_{\bm{\theta}_m}^v(\bm{X})^2 + \bm{\mu}^v_{\bm{\theta}_m}(\bm{X})^2\right] - \bm{\mu}_*^v(\bm{X})^2.
+\bm{\sigma}^v_*(\bm{X})^2 = \dfrac{1}{M} \sum_{m=1}^{M} \left[\bm{\sigma}_{\bm{\theta}\_m}^v(\bm{X})^2 + \bm{\mu}^v_{\bm{\theta}\_m}(\bm{X})^2\right] - \bm{\mu}_*^v(\bm{X})^2.
 ##
 
 The model is now accounting for the *epistemic uncertainty* through
