@@ -156,7 +156,7 @@ In practice, this loss gets an L2 regularization as an additional term, producin
 
 \\[
 \begin{aligned}
-   \mathcal{L}^\lambda_{\textrm{NLL}}(\mathcal{D}, \bm{\theta}):=\mathcal{L}_\textrm{NLL}(\mathcal{D}, \bm{\theta})+\lambda ||\bm{w}||^2.\end{aligned}
+   \mathcal{L}^\lambda\_{\textrm{NLL}}(\mathcal{D}, \bm{\theta}):=\mathcal{L}_\textrm{NLL}(\mathcal{D}, \bm{\theta})+\lambda ||\bm{w}||^2.\end{aligned}
 \\]
 
 The idea behind Deep Ensembles is
@@ -176,7 +176,7 @@ leading to a mean expressed as
 and a variance subsequently obtained as
 
 \\[
-\bm{\sigma}^v_*(\bm{X})^2 = \dfrac{1}{M} \sum_{m=1}^{M} \left[\bm{\sigma}_{\bm{\theta}_m}^v(\bm{X})^2 + \bm{\mu}^v_{\bm{\theta}_m}(\bm{X})^2\right] - \bm{\mu}_*^v(\bm{X})^2.
+\bm{\sigma}^v_\*(\bm{X})^2 = \dfrac{1}{M} \sum_{m=1}^{M} \left[\bm{\sigma}_{\bm{\theta}_m}^v(\bm{X})^2 + \bm{\mu}^v_{\bm{\theta}_m}(\bm{X})^2\right] - \bm{\mu}_\*^v(\bm{X})^2.
 \\]
 
 The model is now accounting for the *epistemic uncertainty* through
