@@ -268,6 +268,14 @@ training input).
 ![](images/podbnn-ackley-graph-meansamples.png)
 
 ### Shallow Water equations validation: 1D dam break
+**Water depth $h$**
+![](images/podensnn-1dswt-graph-meansamples-h-0.png)
+![](images/podensnn-1dswt-graph-meansamples-h-1.png)
+![](images/podbnn-1dswt-graph-meansamples-h.png)
+**Velocity $u$**
+![](images/podensnn-1dswt-graph-meansamples-u-0.png)
+![](images/podensnn-1dswt-graph-meansamples-u-1.png)
+![](images/podbnn-1dswt-graph-meansamples-u.png)
 ...
 
 ### Rendering training data from CuteFlow, our numerical solver
