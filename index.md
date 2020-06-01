@@ -145,9 +145,7 @@ Log-Likelihood loss function with respect to the network weights and
 biases parametrized by $\bm{\theta}=(\bm{w}, \bm{b})$
 
 \\[
-\begin{aligned}
-   \mathcal{L}_{\textrm{NLL}}(\mathcal{D},\bm{\theta}):=\dfrac{1}{N} \sum_{i=1}^{N}\left[\dfrac{\log\ \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}{2}+ \dfrac{(\bm{v}_i-\bm{\mu}^v_{\bm{\theta}}(\bm{X}_i))^2}{2 \bm{\sigma}_{\bm{\theta}}^v(\bm{X}_i)^2}\right],
-   \end{aligned}
+\begin{aligned} \mathcal{L}_{\textrm{NLL}}(\mathcal{D},\bm{\theta}):=\dfrac{1}{N} \sum{i=1}^{N}\left[\dfrac{\log\ \bm{\sigma}{\bm{\theta}}^v(\bm{X}_i)^2}{2}+ \dfrac{(\bm{v}_i-\bm{\mu}^v{\bm{\theta}}(\bm{X}i))^2}{2 \bm{\sigma}{\bm{\theta}}^v(\bm{X}_i)^2}\right], \end{aligned}
 \\]
 
 with the normalized inputs $\bm{X}$, $\bm{\mu}^v_{\bm{\theta}}(\bm{X})$
