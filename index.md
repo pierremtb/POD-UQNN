@@ -224,13 +224,13 @@ such as
 \\]
 which can be show to written as 
 
-\\[
+\\\[
  \begin{aligned}
   \textrm{KL}(q(\bm{w} | \bm{\theta}) || p(\bm{w} | \mathcal{D}))
     &=\textrm{KL}(q(\bm{w}|\bm{\theta})||p(\bm{w})) - \mathbb{E}_{q(\bm{w} | \bm{\theta})} \log p(\mathcal{D}|\bm{w}) + \log p(\mathcal{D})\\
     &=:\mathcal{F}(\mathcal{D}, \bm{\theta}) + \log p(\mathcal{D}).
 \end{aligned}
-\\]
+\\\]
 
 The term $\mathcal{F}(\mathcal{D}, \bm{\theta})$ is commonly known as
 the *variational free energy*, and minimizing it with respect to the
