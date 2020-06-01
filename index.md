@@ -204,8 +204,9 @@ $p(\bm{w}|\mathcal{D})$ to achieve the following *posterior predictive
 distribution* on the target $\bm{v}$ for a new input $\bm{X}$
 
 \\[
-p(\bm{v}|\bm{X},\mathcal{D}) = \int p(\bm{v}|\bm{X},\bm{w})p(\bm{w}|\mathcal{D})\,d\bm{w},
+    3+3
 \\]
+<!-- p(\bm{v}|\bm{X},\mathcal{D}) = \int p(\bm{v}|\bm{X},\bm{w})p(\bm{w}|\mathcal{D})\,d\bm{w}, -->
 
 which cannot be achieved directly in a NN context, due to the infinite
 possibilities for the weights $\bm{w}$, leaving the posterior
