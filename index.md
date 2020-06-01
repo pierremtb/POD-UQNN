@@ -168,16 +168,16 @@ each NN create a probability mixture, which, as suggested by the
 original authors, we can approximate in a single Gaussian distribution,
 leading to a mean expressed as
 
-\\[
+\\\[
 \begin{aligned}
 \bm{\mu}^v_*(\bm{X}) = \dfrac{1}{M} \sum_{m=1}^{M}\bm{\mu}^v_{\bm{\theta}_m}(\bm{X}),
    \end{aligned}
-\\]
+\\\]
 and a variance subsequently obtained as
 
-\\[
+\\\[
 \bm{\sigma}^v_\*(\bm{X})^2 = \dfrac{1}{M} \sum_{m=1}^{M} \left[\bm{\sigma}\_{\bm{\theta}\_m}^v(\bm{X})^2 + \bm{\mu}^v_{\bm{\theta}\_m}(\bm{X})^2\right] - \bm{\mu}_\*^v(\bm{X})^2.
-\\]
+\\\]
 
 The model is now accounting for the *epistemic uncertainty* through
 random initialization and variability in the training step. This
