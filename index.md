@@ -267,7 +267,11 @@ training input).
 **POD-BNN**
 ![](images/podbnn-ackley-graph-meansamples.png)
 
+### Shallow Water equations validation: 1D dam break
+...
 
+### Rendering training data from CuteFlow, our numerical solver
+![](https://youtu.be/LNr0EwB-PJU)
 
 
 
