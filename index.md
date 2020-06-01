@@ -172,13 +172,13 @@ leading to a mean expressed as
 
 \\[
 \begin{aligned}
-\bm{\mu}^v_*(\bm{X}) = \dfrac{1}{M} \sum_{m=1}^{M}\bm{\mu}^v_{\bm{\theta}_\m}(\bm{X}),
+\bm{\mu}^v_*(\bm{X}) = \dfrac{1}{M} \sum_{m=1}^{M}\bm{\mu}^v_{\bm{\theta}_m}(\bm{X}),
    \end{aligned}
 \\]
 and a variance subsequently obtained as
 
 \\[
-\bm{\sigma}^v_*(\bm{X})^2 = \dfrac{1}{M} \sum_{m=1}^{M} \left[\bm{\sigma}_{\bm{\theta}\_m}^v(\bm{X})^2 + \bm{\mu}^v_{\bm{\theta}\_m}(\bm{X})^2\right] - \bm{\mu}_*^v(\bm{X})^2.
+\bm{\sigma}^v_*(\bm{X})^2 = \dfrac{1}{M} \sum_{m=1}^{M} \left[\bm{\sigma}_{\bm{\theta}\_m}^v(\bm{X})^2 + \bm{\mu}^v_{\bm{\theta}_m}(\bm{X})^2\right] - \bm{\mu}_*^v(\bm{X})^2.
 \\]
 
 The model is now accounting for the *epistemic uncertainty* through
@@ -204,9 +204,8 @@ $p(\bm{w}|\mathcal{D})$ to achieve the following *posterior predictive
 distribution* on the target $\bm{v}$ for a new input $\bm{X}$
 
 \\[
-    3+3
+p(\bm{v}|\bm{X},\mathcal{D})=\int p(\bm{v}|\bm{X},\bm{w})p(\bm{w}|\mathcal{D})\,d\bm{w},
 \\]
-<!-- p(\bm{v}|\bm{X},\mathcal{D}) = \int p(\bm{v}|\bm{X},\bm{w})p(\bm{w}|\mathcal{D})\,d\bm{w}, -->
 
 which cannot be achieved directly in a NN context, due to the infinite
 possibilities for the weights $\bm{w}$, leaving the posterior
