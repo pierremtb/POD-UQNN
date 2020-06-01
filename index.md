@@ -61,7 +61,7 @@ $\bm{D} = \text{diag}(\xi_1, \xi_2, \ldots, \xi_r)$ such that
 
 \\[
 \begin{aligned}
-    \bm{U} = \bm{W} \begin{bmatrix} \bm{D} & 0 \\ 0 & 0 \end{bmatrix} \bm{Z}^\intercal.
+    \bm{U} = \bm{W} \begin{bmatrix} \bm{D} & 0 \\\\ 0 & 0 \end{bmatrix} \bm{Z}^\intercal.
    \end{aligned}
 \\]
 
@@ -227,7 +227,7 @@ which can be show to written as
 \\\[
  \begin{aligned}
   \textrm{KL}(q(\bm{w} | \bm{\theta}) || p(\bm{w} | \mathcal{D}))
-    &=\textrm{KL}(q(\bm{w}|\bm{\theta})||p(\bm{w})) - \mathbb{E}\_{q(\bm{w} | \bm{\theta})} \log p(\mathcal{D}|\bm{w}) + \log p(\mathcal{D})\\\\
+    &=\textrm{KL}(q(\bm{w}|\bm{\theta})||p(\bm{w})) - \mathbb{E}\_{q(\bm{w} | \bm{\theta})} \log p(\mathcal{D}|\bm{w}) + \log p(\mathcal{D}) \\\\
     &=:\mathcal{F}(\mathcal{D}, \bm{\theta}) + \log p(\mathcal{D}).
 \end{aligned}
 \\\]
