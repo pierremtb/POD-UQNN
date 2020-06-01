@@ -287,6 +287,8 @@ In the following video, we render using the visualization software [ParaView](ht
 ](https://img.youtube.com/vi/LNr0EwB-PJU/0.jpg)](https://www.youtube.com/watch?v=LNr0EwB-PJU)
 
 
+For more details and results, please check out [the full paper](https://arxiv.org/abs/2005.13506).
+
 
 * * * * * 
 
