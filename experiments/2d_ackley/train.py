@@ -44,16 +44,10 @@ X_v_train, v_train, _, \
                                                 u_noise=hp["u_noise"],
                                                 x_noise=hp["x_noise"])
 
-n_samples = 2
-mu_lhs_out_min = sample_mu(n_samples, np.array(hp["mu_min_out"]), np.array(hp["mu_min"]))
-mu_lhs_out_max = sample_mu(n_samples, np.array(hp["mu_max"]), np.array(hp["mu_max_out"]))
-mu_lhs_out = np.vstack((mu_lhs_out_min, mu_lhs_out_max))
-X_v_samples, U_samples, _, _ = \
-    model.create_snapshots(model.n_d, model.n_h, u, mu_lhs_out)
 #%% Model creation
 model.initBNN(hp["h_layers"], hp["lr"], 1, hp["activation"],
               pi_0=hp["pi_0"], pi_1=hp["pi_1"], pi_2=hp["pi_2"],
               soft_0=0.01, soft_1=1e-5,
               norm=hp["norm"])
 model.train(X_v_train, v_train, X_v_val, v_val, hp["epochs"],
-            freq=hp["log_frequency"], X_out=X_v_samples)
+            freq=hp["log_frequency"])

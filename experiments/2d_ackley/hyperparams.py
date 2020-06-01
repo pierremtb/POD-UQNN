@@ -34,7 +34,7 @@ HP["epochs"] = 120000
 HP["lr"] = 0.01
 HP["activation"] = "relu"
 HP["pi_0"] = 0.5
-HP["pi_1"] = 4.
+HP["pi_1"] = 3.
 HP["pi_2"] = 0.1
 HP["norm"] = NORM_MEANSTD
 # Frequency of the logger
