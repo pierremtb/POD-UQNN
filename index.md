@@ -283,6 +283,7 @@ The final validation case was a 1D, time-unsteady problem involving the equation
 
 ### Rendering training data from CuteFlow, our numerical solver
 In the following video, we render using the visualization software [ParaView](https://www.paraview.org/) one of the snapshot, representing the training data in the case of a dam break, here on dry soil.
+
 [![Dam break, CuteFlow numerical solver, 300s 10fps
 ](https://img.youtube.com/vi/LNr0EwB-PJU/0.jpg)](https://www.youtube.com/watch?v=LNr0EwB-PJU)
 
