@@ -101,6 +101,7 @@ space:
 \\]
 
 ## POD-EnsNN: Learning Expansion Coefficients Distributions using Deep Ensembles
+![](images/ensnn.png)
 
 
 ### Deep Neural Networks with built-in variance
@@ -187,6 +188,7 @@ capabilities of the model and thus will snowball in the absence of such
 data since there are no more constraints.
 
 ## POD-BNN: Bayesian Neural Networks and Variational Inference as an Alternative
+![](images/bnn.png)
 For this model, the *epistemic uncertainty* treatment 
 is very different. Earlier, even though the NNs were providing us with
 a mean and variance, they were still deterministic, and variability was
