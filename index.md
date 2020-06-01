@@ -262,12 +262,16 @@ training input).
 
 ## A Few Results
 ### Benchmark: 2D Ackley Function
+To test the methods, one of the chosen benchmark was a stochastic version of [Ackley Function](https://en.wikipedia.org/wiki/Ackley_function). The following result show the predictions in the second and third column, respectively, in and out of the training scope. We see the uncertainties correctly snowballing in the latter.
+
 **POD-EnsNN**
 ![](images/podensnn-ackley-graph-meansamples.png)
 **POD-BNN**
 ![](images/podbnn-ackley-graph-meansamples.png)
 
 ### Shallow Water equations validation: 1D dam break
+The final validation case was a 1D, time-unsteady problem involving the equations of interest in flood modeling: the [Shallow Water Equations](https://en.wikipedia.org/wiki/Shallow_water_equations). In this case, the POD handles 2 DOFs per node, the water depth $h$ and the velocity $u$. For both, the results are displayed for the two methods, with the second and third column denoting again in- and out-of-distribution input parameters.
+
 **Water depth $h$**
 ![](images/podensnn-1dswt-graph-meansamples-h-0.png)
 ![](images/podensnn-1dswt-graph-meansamples-h-1.png)
@@ -276,9 +280,9 @@ training input).
 ![](images/podensnn-1dswt-graph-meansamples-u-0.png)
 ![](images/podensnn-1dswt-graph-meansamples-u-1.png)
 ![](images/podbnn-1dswt-graph-meansamples-u.png)
-...
 
 ### Rendering training data from CuteFlow, our numerical solver
+In the following video, we render using the visualization software [ParaView](https://www.paraview.org/) one of the snapshot, representing the training data in the case of a dam break, here on dry soil.
 [![Dam break, CuteFlow numerical solver, 300s 10fps
 ](https://img.youtube.com/vi/LNr0EwB-PJU/0.jpg)](https://www.youtube.com/watch?v=LNr0EwB-PJU)
 
