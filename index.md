@@ -271,8 +271,8 @@ training input).
 ...
 
 ### Rendering training data from CuteFlow, our numerical solver
-![](https://youtu.be/LNr0EwB-PJU)
-
+[![Dam break, CuteFlow numerical solver, 300s 10fps
+](https://img.youtube.com/vi/LNr0EwB-PJU/0.jpg)](https://www.youtube.com/watch?v=LNr0EwB-PJU)
 
 
 
