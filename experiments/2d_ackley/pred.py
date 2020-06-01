@@ -127,5 +127,5 @@ for row, idx_i in enumerate(idx):
     plot_slice(row, col, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i)
 
 plt.tight_layout()
-plt.show()
-# savefig(os.path.join("results", "podbnn-ackley-graph-meansamples"))
+# plt.show()
+savefig(os.path.join("results", "podbnn-ackley-graph-meansamples"))
