@@ -38,6 +38,7 @@ standard algorithms may oscillate or fail to converge.
 * * * * * *
 
 ## Reduced Basis Generation with Proper Orthogonal Decomposition
+![](images/pod.png)
 
 We start by defining $u$, our $\mathbb{R}^{D}$-valued function of
 interest. Computing this function is costly, so only a finite number $S$ of
