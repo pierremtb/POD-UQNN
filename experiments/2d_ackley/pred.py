@@ -106,7 +106,7 @@ def plot_slice(row, col, lbl, X_v, U_pred_i, U_pred_i_sig, U_true_i):
     upper = U_pred_i[:, 199] + 2*U_pred_i_sig[:, 199]
     ax.fill_between(x, lower, upper, alpha=0.2, label=r"$\pm 2\hat{u}^\sigma_D(s_{" + lbl + r"})$")
     ax.set_xlabel("$x\ (y=0)$")
-    title_st = r"$s=[" + f"{X_v[0, 0]:.2f}," + f"{X_v[0, 1]:.2f}," + f"{X_v[0, 2]:.2f}] "
+    title_st = r"$s=[" + f"{X_v[row, 0]:.2f}," + f"{X_v[row, 1]:.2f}," + f"{X_v[row, 2]:.2f}] "
     title_st += r"\in \Omega{\footnotesize\textrm{out}}$" if col + 1 == 2 else r"\in \Omega$"
     ax.set_title(title_st)
     if row == 0:

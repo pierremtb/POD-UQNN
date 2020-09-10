@@ -85,7 +85,7 @@ def savefig(filename, tight_box=True):
 
     if tight_box:
         plt.savefig('{}.png'.format(filename), bbox_inches='tight', pad_inches=0.05)
-        plt.savefig('{}.pdf'.format(filename), bbox_inches='tight', pad_inches=0.05)
+        plt.savefig('{}.pdf'.format(filename), bbox_inches='tight', pad_inches=0.0)
     else:
         plt.savefig("{}.png".format(filename))
         plt.savefig("{}.pdf".format(filename))
